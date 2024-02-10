@@ -1,0 +1,71 @@
+# folders
+.vs/
+.vscode
+schetool/
+bin/
+obj/ 
+Debug/
+Release/
+resources/
+
+# luarocks build files
+*.src.rock
+*.zip
+*.tar.gz
+
+# Object files
+*.o
+*.os
+*.ko
+*.obj
+*.elf
+*.tlog
+*.idb
+
+# VS project files
+*.exp
+*.filters
+*.ilk
+*.pdb
+#*.sln easier to build when it's included
+#*.vcxproj
+
+# premake5 generated files when using the gmake2 configuration
+Makefile
+include/blf/Makefile
+include/glad/Makefile
+include/glfw/Makefile
+
+# clangd
+compile_commands.json
+.cache/
+
+# Linux executable
+schetool_bin
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.a
+*.def
+*.exp
+*.la
+*.lib
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+#*.dll
+*.dylib
+*.so
+*.so.*
+
+# Executables
+*.app
+*.bat
+*.exe
+*.hex
+*.i*86
+*.out
+*.x86_64
