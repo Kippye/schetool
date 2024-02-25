@@ -4,15 +4,14 @@
 #include <gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-#include <main.h>
 #include <render.h>
 #include <chrono>
 
-class Program;
-extern Program program;
-
-void Render::setup()
+void Render::init(Window* windowManager, Camera* camera, Interface* interface)
 {
+	m_windowManager = windowManager;
+	m_camera = camera;
+	m_interface = interface;
 	// [debug] glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	//~ // general settings
@@ -46,22 +45,22 @@ void Render::render()
 	}
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	//glClearColor(program.editor.backgroundColor.r, program.editor.backgroundColor.g, program.editor.backgroundColor.b, 1.0f);
+	//glClearColor(program->editor.backgroundColor.r, program->editor.backgroundColor.g, program->editor.backgroundColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// use the general purpose shader
-	shader.use();
+	// shader.use();
 
 	// set uniforms
-	shader.setMat4("view", program.camera.view);
-	shader.setMat4("projection", program.camera.projection);
+	shader.setMat4("view", m_camera->view);
+	shader.setMat4("projection", m_camera->projection);
 	shader.setFloat("time", timeSinceStart);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	program.gui.drawGui();
+	m_interface->draw();
 
-	glfwSwapBuffers(program.windowManager.window);
+	glfwSwapBuffers(m_windowManager->window);
 }
 
 void Render::terminate()

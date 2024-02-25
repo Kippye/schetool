@@ -1,10 +1,20 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <window.h>
+#include <camera.h>
+#include <interface.h>
+
+class Window;
+class Camera;
+class Interface;
 
 class Input
 {
 	private:
+		Window* m_windowManager;
+		Camera* m_camera;
+		Interface* m_interface;
 		bool firstMouseMovement = true;
 	public:
 		glm::vec2 mousePos;
@@ -12,7 +22,7 @@ class Input
 		bool ctrl_down = false, shift_down = false, alt_down = false, lmb_down = false, rmb_down = false, lmb_down_last = false, rmb_down_last = false;
 		const float mouseRepeatDelay = 0.05f;
 
-		void setup();
+		void init(Window*, Camera*, Interface*);
 		void processInput(GLFWwindow* window);
 
 		void key_event(GLFWwindow* window, int key, int scancode, int action, int mods);

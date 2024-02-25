@@ -1,13 +1,34 @@
 #include <GLFW/glfw3.h>
 #include <input.h>
-#include <main.h>
 #include <iostream>
 #include <glm/gtx/norm.hpp>
 
-class Program;
-extern Program program;
+void Input::init(Window* windowManager, Camera* camera, Interface* interface)
+{ 
+	m_windowManager = windowManager;
+	m_camera = camera;
+	m_interface = interface;
 
-void Input::setup(){ /* nothing to see here */ }
+	m_windowManager->key_callback = [=](auto self, int key, int scancode, int action, int mods)
+	{
+		this->key_event(self->window, key, scancode, action, mods);
+	};
+
+	m_windowManager->mouse_button_callback = [=](auto self, int button, int action, int mods)
+	{
+		this->mouse_button_event(self->window, button, action, mods);
+	};
+
+	m_windowManager->cursor_pos_callback = [=](auto self, double xPos, double yPos)
+	{
+		this->cursor_pos_event(self->window, xPos, yPos);
+	};
+
+	m_windowManager->scroll_callback = [=](auto self, double xOffset, double yOffset)
+	{
+		this->scroll_event(self->window, xOffset, yOffset);
+	};
+}
 
 void Input::processInput(GLFWwindow* window)
 {
@@ -22,13 +43,13 @@ void Input::processInput(GLFWwindow* window)
 	rmb_down = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 
 	/// check any situations in which we would not want to control the camera or send inputs to other listeners
-	if (program.gui.guiWantKeyboard) { return; }
+	if (m_interface->guiWantKeyboard) { return; }
 
-	glm::vec3 cameraPosBefore = program.camera.cameraPos;
+	glm::vec3 cameraPosBefore = m_camera->cameraPos;
 
-	if (cameraPosBefore == program.camera.cameraPos)
+	if (cameraPosBefore == m_camera->cameraPos)
 	{
-		program.camera.lastMovement = glm::vec3(0.0f);
+		m_camera->lastMovement = glm::vec3(0.0f);
 	}
 
 	// reset mouse movement as it only updates when the mouse is ACTUALLY moved
@@ -39,7 +60,7 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 {
 	if (action == GLFW_PRESS)
 	{
-		if (program.gui.guiWantKeyboard) { return; }
+		if (m_interface->guiWantKeyboard) { return; }
 		switch (key)
 		{
 			/// program manipulators
@@ -70,11 +91,11 @@ void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods
 	{
 		if (key == GLFW_MOUSE_BUTTON_LEFT)
 		{
-			program.windowManager.hasFocus = true;
+			m_windowManager->hasFocus = true;
 		}
 		else if (key == GLFW_MOUSE_BUTTON_RIGHT)
 		{
-			program.windowManager.hasFocus = true;
+			m_windowManager->hasFocus = true;
 		}
 	}
 	else if (action == GLFW_RELEASE)
@@ -93,7 +114,7 @@ void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods
 
 void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos)
 {
-	if (program.windowManager.hasFocus)
+	if (m_windowManager->hasFocus)
 	{
 		mouseMovement.x = xPos - mousePos.x;
 		mouseMovement.y = yPos - mousePos.y;

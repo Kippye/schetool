@@ -1,12 +1,18 @@
 #pragma once
 
-#include <shader.h>
 #include <glm.hpp>
 #include <vector>
+#include <window.h>
+#include <camera.h>
+#include <interface.h>
+#include <shader.h>
 
 class Render
 {
 	private:
+		Window* m_windowManager;
+		Camera* m_camera;
+		Interface* m_interface;
 		Shader shader;
 
 		float timeCounter = 0.0f;
@@ -17,7 +23,7 @@ class Render
 		glm::mat4 projection = glm::mat4(1.0f);
 
 	public:
-		void setup();
+		void init(Window*, Camera*, Interface*);
 		void render();
 		void terminate();
 };

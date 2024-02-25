@@ -1,25 +1,21 @@
-#include <main.h>
 #include <gui.h>
+#include <window.h>
 
-class Program;
-extern Program program;
-
-void Gui::guiInit(Window* windowManager)
+Gui::Gui()
 {
-    return;
+    
 }
 
-void Gui::drawGui()
+Gui::Gui(const char* ID)
 {
-    return;
+    m_ID = std::string(ID);
 }
 
-void Gui::openFileDialog(GUI_PROMPT type)
+std::string Gui::getID()
 {
-    return;
+    return m_ID;
 }
 
-void Gui::checkFileDialog()
+void Gui::draw(Window& window)
 {
-    return;
 }

@@ -12,12 +12,10 @@ extern "C" {
 //include <windows.h>
 #include <vector>
 
-#include <main.h>
-class Program;
-extern Program program;
-
-void Window::initialize()
+void Window::init(TextureLoader* textureLoader)
 {
+	m_textureLoader = textureLoader;
+
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -34,13 +32,12 @@ void Window::initialize()
 		glfwTerminate();
 		return;
 	}
-	Window* thisWindow = &(program.windowManager);
 
 	// make the window current and maximize 8)
 	glfwMakeContextCurrent(window);
 	glfwMaximizeWindow(window);
 	glfwSetWindowSizeLimits(window, 0, 0, GLFW_DONT_CARE, GLFW_DONT_CARE);
-	glfwSetWindowUserPointer(window, thisWindow);
+	glfwSetWindowUserPointer(window, this);
 	// load address of OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -50,13 +47,13 @@ void Window::initialize()
 
 	// load and set the window's icon
 	GLFWimage images[1] = { GLFWimage() } ;
-	images[0].pixels = program.textureLoader.loadTextureData("icon.png", &images[0].width, &images[0].height, program.textureLoader.textureFolder, false);
+	images[0].pixels = m_textureLoader->loadTextureData("icon.png", &images[0].width, &images[0].height, m_textureLoader->textureFolder, false);
 	glfwSetWindowIcon(window, 1, images);
 
 	// load and create cursors
 	// cursors[NORMAL] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
 	// GLFWimage drawCursor = GLFWimage();
-	// drawCursor.pixels = program.textureLoader.loadTextureData("cursor_draw.png", &drawCursor.width, &drawCursor.height, program.textureLoader.textureFolder, false);
+	// drawCursor.pixels = program->textureLoader.loadTextureData("cursor_draw.png", &drawCursor.width, &drawCursor.height, program->textureLoader.textureFolder, false);
 	// cursors[DRAW] = glfwCreateCursor(&drawCursor, 8, 8);
 
 	// set up the viewport (xpos, ypos, w, h)
@@ -83,7 +80,7 @@ void Window::initialize()
 	glfwSetScrollCallback(window, genericCallback(scroll_callback));
 
 	// linking callback events
-	thisWindow->framebuffer_size_callback = [](auto self, int width, int height)
+	this->framebuffer_size_callback = [](auto self, int width, int height)
 	{
 		if (width > 0 && height > 0)
 		{
@@ -93,11 +90,11 @@ void Window::initialize()
 		}
 	};
 
-	thisWindow->window_focus_callback = [](auto self, int focused)
+	this->window_focus_callback = [](auto self, int focused)
 	{
 		if (focused)
 		{
-			//program.file_system.updateTextures();
+			//program->file_system.updateTextures();
 			//glfwSetInputMode(self->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 		else
@@ -107,30 +104,10 @@ void Window::initialize()
 		self->hasFocus = focused;
 	};
 
-	thisWindow->window_close_callback = [](auto self)
+	this->window_close_callback = [](auto self)
 	{
 		self->shouldClose = true;
 		std::cout << "Program close requested." << std::endl;
-	};
-
-	thisWindow->key_callback = [](auto self, int key, int scancode, int action, int mods)
-	{
-		program.input.key_event(self->window, key, scancode, action, mods);
-	};
-
-	thisWindow->mouse_button_callback = [](auto self, int button, int action, int mods)
-	{
-		program.input.mouse_button_event(self->window, button, action, mods);
-	};
-
-	thisWindow->cursor_pos_callback = [](auto self, double xPos, double yPos)
-	{
-		program.input.cursor_pos_event(self->window, xPos, yPos);
-	};
-
-	thisWindow->scroll_callback = [](auto self, double xOffset, double yOffset)
-	{
-		program.input.scroll_event(self->window, xOffset, yOffset);
 	};
 }
 
@@ -152,6 +129,6 @@ void Window::setTitle(const char* _title)
 
 void Window::terminate()
 {
-	glfwDestroyWindow(program.windowManager.window);
+	glfwDestroyWindow(window);
 	glfwTerminate();
 }

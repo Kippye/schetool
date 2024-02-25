@@ -11,6 +11,8 @@ extern "C" {
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include <string>
+#include <input.h>
+#include <textures.h>
 
 enum CURSOR_TYPE
 {
@@ -20,9 +22,11 @@ enum CURSOR_TYPE
 
 class Window
 {
+	private:
+		TextureLoader* m_textureLoader;
 	public:
 		GLFWwindow* window;
-		const char* titleBase = "blue";
+		const char* titleBase = "schetool";
 		std::string title = "";
 		CURSOR_TYPE cursor = NORMAL;
 		GLFWcursor* cursors[2] = {};
@@ -35,7 +39,7 @@ class Window
 	void setCursor(CURSOR_TYPE _cursor);
 	void setTitle(const char* _title);
 	// lifecycle functions
-	void initialize();
+	void init(TextureLoader*);
 	void terminate();
 
 	// window events

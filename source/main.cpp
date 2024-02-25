@@ -2,7 +2,9 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-Program program;
+// TEMP
+#include <schedule.h>
+#include <time_container.h>
 
 Program::Program()
 {
@@ -10,14 +12,17 @@ Program::Program()
 	// TODO: load user preferences here!
 	// TODO: load last opened schedule file here!
 
-	windowManager.initialize();
-	input.setup();
-	render.setup();
+	windowManager.init(&textureLoader);
+	input.init(&windowManager, &camera, &interface);
+	camera.init(&windowManager);
+	render.init(&windowManager, &camera, &interface);
+	interface.init(&windowManager, &schedule);
 
 	// TODO: load textures
 	//file_system.loadGUITextures();
 	//file_system.updateTextures();
-	gui.guiInit(&windowManager);
+
+	schedule.test_setup();
 }
 
 void Program::loop()
@@ -47,6 +52,7 @@ void Program::loop()
 
 int main()
 {
+	Program program = Program();
 	program.loop();
 	return 0;
 }

@@ -5,31 +5,39 @@
 #include <camera.h>
 #include <render.h>
 #include <input.h>
-#include <gui.h>
+#include <interface.h>
+
+// TEMP?
+#include <schedule.h>
 
 #define PROGRAM_VERSION "0.1.0"
 
-class Window;
-class TextureLoader;
-class Camera;
-class Render;
-class Input;
+// class Window;
+// class TextureLoader;
+// class Camera;
+// class Render;
+// class Input;
+// class Interface;
+// class Schedule;
 
 class Program
 {
 	public:
-		Window& windowManager = *(new Window());
-		TextureLoader& textureLoader = *(new TextureLoader());
-		Camera& camera = *(new Camera());
-		Render& render = *(new Render());
-		Input& input = *(new Input());
-		Gui& gui = *(new Gui());
+		Window windowManager;
+		TextureLoader textureLoader;
+		Camera camera;
+		Render render;
+		Input input;
+		Interface interface;
+
+		// TEMP
+		Schedule schedule;
 
 		bool programWillClose = false;
 		bool quitProgram = false;
 
-		Program(const Program&) = default;
-		Program& operator=(const Program&) = default;
+		// Program(const Program&) = default;
+		// Program& operator=(const Program&) = default;
 		Program();
 		void loop();
 };

@@ -4,6 +4,10 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
+#include <window.h>
+#include <input.h>
+
+class Window;
 
 class Ray
 {
@@ -18,6 +22,8 @@ class Ray
 
 class Camera
 {
+	private:
+		Window* m_windowManager;
 	public:
 		float cameraNearPos = 2.0f, cameraFarPos = 100.0f;
 		float nearZ = 0.1f, farZ = 100.1f;
@@ -39,6 +45,7 @@ class Camera
 
 	public:
 		Camera();
+		void init(Window*);
 		void moveCamera(glm::vec3 movement);
 		void updateView();
 		// Function that calculates the world ray from eye coordinates and distance.

@@ -1,8 +1,4 @@
 #include <camera.h>
-#include <main.h>
-
-class Program;
-extern Program program;
 
 Ray::Ray(glm::vec3 _startPos, glm::vec3 _direction, float _distance)
 {
@@ -23,22 +19,13 @@ Camera::Camera()
 	projection = glm::mat4(1.0f);
 }
 
+void Camera::init(Window* windowManager)
+{
+	m_windowManager = windowManager;
+}
+
 void Camera::moveCamera(glm::vec3 movement)
 {
-	// apply speed modifiers if necessary
-	if (program.input.shift_down)
-	{
-		currentCameraSpeed = CAMERA_SPEED * 2.5f;
-	}
-	else if (program.input.alt_down)
-	{
-		currentCameraSpeed = CAMERA_SPEED * 0.25f;
-	}
-	else
-	{
-		currentCameraSpeed = CAMERA_SPEED;
-	}
-
 	lastMovement = movement;
 	cameraPos += movement * currentCameraSpeed;
 	cameraPos.z = std::clamp(cameraPos.z, cameraNearPos, cameraFarPos);
@@ -64,9 +51,9 @@ void Camera::updateView()
 	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	// perspective projection
 	// projection  				   					FOV													ASPECT RATIO									CLIP RANGE
-	// projection = glm::perspective(glm::radians(FOV), (float(program.windowManager.SCREEN_WIDTH) / float(program.windowManager.SCREEN_HEIGHT)), 0.1f, 100.1f);
+	// projection = glm::perspective(glm::radians(FOV), (float(m_windowManager->SCREEN_WIDTH) / float(m_windowManager->SCREEN_HEIGHT)), 0.1f, 100.1f);
 	// orthographic projection
-	float aspectRatio = (float(program.windowManager.SCREEN_WIDTH) / float(program.windowManager.SCREEN_HEIGHT));
+	float aspectRatio = (float(m_windowManager->SCREEN_WIDTH) / float(m_windowManager->SCREEN_HEIGHT));
 	float sizeMultiplier = cameraPos.z / cameraFarPos;
 	float baseSize = 41.4675f;
 	projection = glm::ortho(-baseSize * sizeMultiplier * aspectRatio, baseSize * sizeMultiplier * aspectRatio, -baseSize * sizeMultiplier, baseSize * sizeMultiplier, nearZ, farZ);
@@ -87,8 +74,8 @@ Ray Camera::to_world_ray(glm::vec4 eyeCoords, float distance)
 // function converting pixel coordinates to NDCs
 glm::vec2 Camera::to_NDC(glm::vec2 pos)
 {
-	float x = (2.0f * pos.x) / program.windowManager.SCREEN_WIDTH - 1.0f;
-	float y = (2.0f * (program.windowManager.SCREEN_HEIGHT - pos.y)) / program.windowManager.SCREEN_HEIGHT - 1.0f;
+	float x = (2.0f * pos.x) / m_windowManager->SCREEN_WIDTH - 1.0f;
+	float y = (2.0f * (m_windowManager->SCREEN_HEIGHT - pos.y)) / m_windowManager->SCREEN_HEIGHT - 1.0f;
 
  	return glm::vec2(x, y);
 }
