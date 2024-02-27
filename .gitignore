@@ -7,6 +7,7 @@ obj/
 Debug/
 Release/
 resources/
+compile_commands/
 
 # luarocks build files
 *.src.rock
@@ -39,6 +40,9 @@ include/glfw/Makefile
 # clangd
 compile_commands.json
 .cache/
+
+# imgui ini file
+imgui.ini
 
 # Linux executable
 schetool_bin

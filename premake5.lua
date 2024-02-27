@@ -28,7 +28,6 @@ project "schetool"
 		"include/glm",
 		"include/imgui",
 		"include/glew",
-		"include/ImGuiFileDialog-Lib_Only",
 		"include/libconfig/lib",
 		"include/rectpack2D/include"
 	}

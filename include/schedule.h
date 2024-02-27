@@ -1,8 +1,11 @@
 #pragma once
 #include <vector>
 #include <any>
-#include <iostream>
-#include <time_container.h>
+#include <map>
+#include <string>
+
+const unsigned int ELEMENT_TEXT_MAX_LENGTH = 1024;
+const unsigned int COLUMN_NAME_MAX_LENGTH = 64;
 
 enum SCHEDULE_TYPE
 {
@@ -11,43 +14,50 @@ enum SCHEDULE_TYPE
     SCH_DOUBLE,
     SCH_TEXT,
     SCH_TIME,
+    SCH_LAST,
     // TODO: Enum? how would that work?
 };
-// This component handles the following:
-// The actual vectors, maps containing schedule data
-// Any modifications to the schedule data (coming from the Interface)
-// So yeah this is mostly just a container for the data
-// There will be separate components for stuff like the time that will also affect this
+
 class Schedule
 {
-    // NOTE: Ok. what kind of things does this have to support?
-    // It has to be 2-Dimensional and contain many different types of values (Text, enums, times, dates, bools)
-    // 1. Obviously, editing the fields themselves
-    // 2. Reordering both rows and columns!!
-    // 3. Deleting rows (and columns?)
-
     /* IDEA how i could make select or multiple select ones:
     // a specific class that contains -> a vector of strings (and colours)
     // then i can just use it as a type in std::any
-    // and later it won't matter what enum it is since they're all the same class
-     maybe i'll have some kinda IDs for them since? actually no they'll all be in the same column anyway! */
-  
-    // NOTE: it seems like imgui's column reordering is purely visual, which is actually SMART! why would i reorder the underlying data if i can just reorder the visual part?
-    // and i guess to save the ordering i could just save it somehow, then reapply it (imgui probs supports that)
+    // and later it won't matter what enum it is since they're all the same class */
+
     private:
-        std::vector<std::tuple<std::vector<std::any>, SCHEDULE_TYPE, std::string>> m_schedule = {};
+        // a tuple containing: 0 - rows; 1 - column type; 2 - column name; 3 - whether the column is permanent
+        std::vector<std::tuple<std::vector<std::any>, SCHEDULE_TYPE, std::string, bool>> m_schedule = {};
 
     public:
+        const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
+        {
+            {SCH_BOOL, "Bool"},
+            {SCH_INT, "Integer"},
+            {SCH_DOUBLE, "Decimal"},
+            {SCH_TEXT, "Text"},
+            {SCH_TIME, "Time"},
+        };
         // TEMP
         void test_setup();
+
         SCHEDULE_TYPE getColumnType(unsigned int column);
         void setColumnType(unsigned int column, SCHEDULE_TYPE type);
         const char* getColumnName(unsigned int column);
-        void setColumnName(unsigned int column, std::string name);
+        void setColumnName(unsigned int column, const char* name);
+        bool getColumnPermanent(unsigned int column);
+
+        void resetColumn(unsigned int column);
+
         unsigned int getColumnCount();
         unsigned int getRowCount();
+
         void addRow(unsigned int index);
         void removeRow(unsigned int index);
+        void addColumn(unsigned int index);
+        void addColumnWithData(unsigned int index, std::vector<std::any> rows, SCHEDULE_TYPE type = SCH_TEXT, std::string name = "New Column", bool permanent = false);
+        void removeColumn(unsigned int index);
+
         template <typename T>
         T getElement(unsigned int column, unsigned int row)
         {

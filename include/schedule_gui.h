@@ -5,10 +5,6 @@
 
 class Schedule;
 
-// TEMP
-#include <vector>
-#include <deque>
-
 class ScheduleGui : public Gui
 {
     private:
@@ -16,7 +12,5 @@ class ScheduleGui : public Gui
     public:
         ScheduleGui(const char* ID) : Gui(ID) { }
         ScheduleGui(const char* ID, Schedule*);
-        // TEMP
-        std::deque<bool> finishStates = std::deque(12, bool(false));
         void draw(Window& window) override;
 };
