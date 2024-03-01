@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 #include <deque>
+#include <string>
+#include <sstream>
 
 #include <glm.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -31,6 +33,18 @@ class containers
 				std::rotate(d.rend() - oldIndex - 1, d.rend() - oldIndex, d.rend() - newIndex);
 			else        
 				std::rotate(d.begin() + oldIndex, d.begin() + oldIndex + 1, d.begin() + newIndex + 1);
+		}
+		static std::vector<std::string> split (const std::string &s, char delim) 
+		{
+			std::vector<std::string> result;
+			std::stringstream ss (s);
+			std::string item;
+
+			while (getline (ss, item, delim)) {
+				result.push_back (item);
+			}
+
+			return result;
 		}
 };
 

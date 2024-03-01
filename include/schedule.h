@@ -27,7 +27,7 @@ class Schedule
 
     private:
         // a tuple containing: 0 - rows; 1 - column type; 2 - column name; 3 - whether the column is permanent
-        std::vector<std::tuple<std::vector<std::any>, SCHEDULE_TYPE, std::string, bool>> m_schedule = {};
+        std::vector<std::tuple<std::vector<std::any>, SCHEDULE_TYPE, std::string, bool, bool, bool, bool>> m_schedule = {};
 
     public:
         const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
@@ -46,6 +46,12 @@ class Schedule
         const char* getColumnName(unsigned int column);
         void setColumnName(unsigned int column, const char* name);
         bool getColumnPermanent(unsigned int column);
+        void setColumnDisplayDate(unsigned int column, bool displayDate);
+        void setColumnDisplayTime(unsigned int column, bool displayTime);
+        void setColumnDisplayWeekday(unsigned int column, bool displayWeekday);
+        bool getColumnDisplayDate(unsigned int column);
+        bool getColumnDisplayTime(unsigned int column);
+        bool getColumnDisplayWeekday(unsigned int column);
 
         void resetColumn(unsigned int column);
 
@@ -55,7 +61,7 @@ class Schedule
         void addRow(unsigned int index);
         void removeRow(unsigned int index);
         void addColumn(unsigned int index);
-        void addColumnWithData(unsigned int index, std::vector<std::any> rows, SCHEDULE_TYPE type = SCH_TEXT, std::string name = "New Column", bool permanent = false);
+        void addColumnWithData(unsigned int index, std::vector<std::any> rows, SCHEDULE_TYPE type = SCH_TEXT, std::string name = "New Column", bool permanent = false, bool displayDate = true, bool displayTime = false, bool displayWeekday = false);
         void removeColumn(unsigned int index);
 
         template <typename T>

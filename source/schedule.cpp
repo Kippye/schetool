@@ -11,10 +11,13 @@
 
 void Schedule::test_setup()
 {
-    addColumnWithData(0, std::vector<std::any>{std::string("Zmitiusz"), std::string("Kip Kipperson")}, SCH_TEXT, std::string("Name"), true);
-    addColumnWithData(1, std::vector<std::any>{std::byte(0), std::byte(0)}, SCH_BOOL, std::string("Finished"), true);
+    addColumnWithData(getColumnCount(), std::vector<std::any>{std::string("Zmitiusz"), std::string("Kip Kipperson")}, SCH_TEXT, std::string("Name"), true);
+    addColumnWithData(getColumnCount(), std::vector<std::any>{std::byte(0), std::byte(0)}, SCH_BOOL, std::string("Finished"), true);
     time_t now = time(0);
-    addColumnWithData(2, std::vector<std::any>{Time(*gmtime(&now), true, false), Time(*localtime(&now), false, false)}, SCH_TIME, std::string("Date"));
+    addColumnWithData(getColumnCount(), std::vector<std::any>{Time(*gmtime(&now)), Time(*localtime(&now))}, SCH_TIME, std::string("Start"), true, false, true, false);
+    addColumnWithData(getColumnCount(), std::vector<std::any>{Time(*gmtime(&now)), Time(*localtime(&now))}, SCH_TIME, std::string("Duration"), true, false, true, false);
+    addColumnWithData(getColumnCount(), std::vector<std::any>{Time(*gmtime(&now)), Time(*localtime(&now))}, SCH_TIME, std::string("End"), true, false, true, false);
+    addColumnWithData(getColumnCount(), std::vector<std::any>{Time(*gmtime(&now)), Time(*localtime(&now))}, SCH_TIME, std::string("Date"));
     //m_schedule.push_back({std::vector<std::any>{std::string("Zmitiusz"), std::string("Kip Kipperson")}, SCH_TEXT, std::string("Name"), true});
     // m_schedule.push_back({std::vector<std::any>{std::byte(0), std::byte(0)}, SCH_BOOL, std::string("Finished"), true});
     // m_schedule.push_back({std::vector<std::any>{69, 1254544}, SCH_INT, std::string("Coolness"), false});
@@ -51,6 +54,32 @@ void Schedule::setColumnName(unsigned int column, const char* name)
 bool Schedule::getColumnPermanent(unsigned int column)
 {
     return std::get<3>(m_schedule[column]);
+}
+
+void Schedule::setColumnDisplayDate(unsigned int column, bool displayDate)
+{
+    std::get<4>(m_schedule[column]) = displayDate;
+}
+void Schedule::setColumnDisplayTime(unsigned int column, bool displayTime)
+{
+    std::get<5>(m_schedule[column]) = displayTime;
+}
+void Schedule::setColumnDisplayWeekday(unsigned int column, bool displayWeekday)
+{
+    std::get<6>(m_schedule[column]) = displayWeekday;
+}
+
+bool Schedule::getColumnDisplayDate(unsigned int column)
+{
+    return std::get<4>(m_schedule[column]);
+}
+bool Schedule::getColumnDisplayTime(unsigned int column)
+{
+    return std::get<5>(m_schedule[column]);
+}
+bool Schedule::getColumnDisplayWeekday(unsigned int column)
+{
+    return std::get<6>(m_schedule[column]);
 }
 
 void Schedule::resetColumn(unsigned int column)
@@ -96,7 +125,7 @@ void Schedule::resetColumn(unsigned int column)
             for (unsigned int row = 0; row < std::get<0>(m_schedule[column]).size(); row++)
             {
                 time_t now = time(0);
-                setElement<Time>(column, row, Time(*gmtime(&now), true, false));
+                setElement<Time>(column, row, Time(*gmtime(&now)));
             }
             break;
         }    
@@ -181,7 +210,7 @@ void Schedule::addColumn(unsigned int index)
     // the last index = just add to the end
     if (index == getColumnCount())
     {
-        m_schedule.push_back({std::vector<std::any>(getRowCount(), std::string("")), SCH_TEXT, std::string("Text"), false});
+        m_schedule.push_back({std::vector<std::any>(getRowCount(), std::string("")), SCH_TEXT, std::string("Text"), false, true, false, false});
     }
     else
     {
@@ -190,14 +219,14 @@ void Schedule::addColumn(unsigned int index)
 }
 
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
-void Schedule::addColumnWithData(unsigned int index, std::vector<std::any> rows, SCHEDULE_TYPE type, std::string name, bool permanent)
+void Schedule::addColumnWithData(unsigned int index, std::vector<std::any> rows, SCHEDULE_TYPE type, std::string name, bool permanent, bool displayDate, bool displayTime, bool displayWeekday)
 {
     // TODO: make sure that EVERY column has the same amount of rows!!!
 
     // the last index = just add to the end
     if (index == getColumnCount())
     {
-        m_schedule.push_back({rows, type, name, permanent});
+        m_schedule.push_back({rows, type, name, permanent, displayDate, displayTime, displayWeekday});
     }
     else
     {

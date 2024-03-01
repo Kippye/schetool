@@ -1,3 +1,7 @@
+#include <algorithm>
+#include <cctype>
+#include <ctime>
+#include <iterator>
 #include <schedule_gui.h>
 #include <schedule.h>
 #include <imgui.h>
@@ -5,9 +9,10 @@
 #include <window.h>
 #include <any>
 #include <cstdio>
+#include <regex>
+#include <util.h>
 
 #include <iostream>
-#include <time_container.h>
 
 ScheduleGui::ScheduleGui(const char* ID, Schedule* schedule)
 {
@@ -233,7 +238,69 @@ void ScheduleGui::draw(Window& window)
 								try
 								{
 									auto value = m_schedule->getElement<Time>(column, row);
-									ImGui::Text(value.getString().c_str());
+									if (m_schedule->getColumnDisplayWeekday(column))
+									{
+										const bool* selectedWeekdays = value.getSelectedWeekdays();
+										unsigned int selectedWeekdayCount = 0;
+										
+										for (int i = 0; i < 7; i++)
+										{
+											if (selectedWeekdays[i] == true) { selectedWeekdayCount += 1; }
+										}
+
+										std::vector<std::string> displayedWeekdayNames = containers::split(value.getString(m_schedule->getColumnDisplayDate(column), m_schedule->getColumnDisplayTime(column), m_schedule->getColumnDisplayWeekday(column)), ' ');
+										unsigned int weekdayNameIndex = 0;
+
+										for (int i = 0; i < 7; i++)
+										{
+											if (selectedWeekdays[i] == true)
+											{
+												if (weekdayNameIndex % 3 != 0)
+												{
+													ImGui::SameLine();
+												}
+												ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
+											 	if (ImGui::ButtonEx(displayedWeekdayNames[weekdayNameIndex].append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+												{
+													// left clicking opens the time editor like the user would expect
+													if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+													{
+														m_timeEditorColumn = column;
+														m_timeEditorRow = row;
+														ImGui::OpenPopup("Test#TimeEditor");
+													}
+													// right clicking erases the day - bonus feature
+													else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && selectedWeekdayCount > 1)
+													{
+														value.setWeekdaySelected(i, !selectedWeekdays[i]);
+														m_schedule->setElement<Time>(column, row, value);
+													}
+												}
+												ImGui::PopStyleColor(1);
+												weekdayNameIndex++;
+											}
+										}
+									}
+									else
+									{
+										// Button displaying the date, time or selected weekdays of the current Time element
+										if (ImGui::Button(value.getString(m_schedule->getColumnDisplayDate(column), m_schedule->getColumnDisplayTime(column), m_schedule->getColumnDisplayWeekday(column)).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+										{
+											m_timeEditorColumn = column;
+											m_timeEditorRow = row;
+											ImGui::OpenPopup("Test#TimeEditor");
+										}
+									}
+									if (column == m_timeEditorColumn && row == m_timeEditorRow && ImGui::BeginPopupEx(ImGui::GetID("Test#TimeEditor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration))
+									{
+										// display popup contents. if any fields were edited, copy the value to the Schedule.
+										if (displayTimeEditor(value))
+										{
+											// set the actual value in the schedule, because getElement passes element *values*, not pointers or references. maybe this should be changed?
+											m_schedule->setElement<Time>(column, row, value);
+										}
+										ImGui::EndPopup();
+									}
 								}
 								catch(const std::exception& e)
 								{
@@ -258,4 +325,83 @@ void ScheduleGui::draw(Window& window)
 		}
 		ImGui::PopStyleVar();
     ImGui::End();
+}
+
+// Display the time editor popup's contents. The returned bool indicates whether any of the elements were edited.
+bool ScheduleGui::displayTimeEditor(Time& value)
+{
+	bool valueEdited = false;
+
+	bool tempDisplayTime = m_schedule->getColumnDisplayTime(m_timeEditorColumn);
+
+	if (ImGui::Checkbox("##DisplayTime?", &tempDisplayTime))
+	{
+		m_schedule->setColumnDisplayTime(m_timeEditorColumn, tempDisplayTime);
+	}
+	ImGui::SameLine();
+	char hourBuf[3];
+	std::strftime(hourBuf, sizeof(hourBuf), "%H", value.getTime());
+	ImGui::SetNextItemWidth(24);
+	if (ImGui::InputText("##EditTimeHours", hourBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, filterNumbers))
+	{
+		int hourValue = 0;
+		if (std::regex_match(hourBuf, std::regex("[0-9]+")))
+		{
+			hourValue = std::stoi(hourBuf);
+		}
+		value.setClockTime(hourValue, value.getTime()->tm_min);
+		valueEdited = true;
+	}
+	ImGui::SameLine();
+	char minBuf[3];
+	std::strftime(minBuf, sizeof(minBuf), "%M", value.getTime());
+	ImGui::SetNextItemWidth(24);
+	if (ImGui::InputText("Time##Minutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, filterNumbers))
+	{
+		int minValue = 0;
+		if (std::regex_match(minBuf, std::regex("[0-9]+")))
+		{
+			minValue = std::stoi(minBuf);
+		}
+		value.setClockTime(value.getTime()->tm_hour, minValue);
+		valueEdited = true;
+	}
+
+	tm weekdayTime;
+	bool selections[7];
+	const bool* previousSelections = value.getSelectedWeekdays();
+	std::copy(previousSelections, previousSelections + 7, std::begin(selections));
+
+	bool tempDisplayWeekday = m_schedule->getColumnDisplayWeekday(m_timeEditorColumn);
+
+	if (ImGui::Checkbox("##DisplayWeekday?", &tempDisplayWeekday))
+	{
+		m_schedule->setColumnDisplayWeekday(m_timeEditorColumn, tempDisplayWeekday);
+	}
+	ImGui::SameLine();
+	for (int i = 0; i < 7; i++)
+	{
+		weekdayTime.tm_wday = i == 0 ? 1 : (i == 6 ? 0 : i + 1);
+		char dayName[100];
+		std::strftime(dayName, sizeof(dayName), "%a", &weekdayTime);
+
+		if (ImGui::Selectable(dayName, &selections[i], ImGuiSelectableFlags_DontClosePopups, ImVec2(24, 0)))
+		{
+			value.setWeekdaySelected(i, selections[i]);
+			valueEdited = true;
+		}
+		if (i != 6)
+		{
+			ImGui::SameLine();
+		}
+	}
+
+	return valueEdited;
+}
+
+int ScheduleGui::filterNumbers(ImGuiInputTextCallbackData* data)
+{
+	if (data->EventChar > 47 && data->EventChar < 58)
+		return 0;
+	return 1;
 }
