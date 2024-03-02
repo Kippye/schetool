@@ -4,7 +4,18 @@ workspace "schetool"
 	
 project "schetool"
 	location "schetool"
-	kind "ConsoleApp"
+	
+	filter "configurations:Debug"
+		kind "ConsoleApp"
+		defines { "DEBUG" }
+		symbols "On"
+	filter "configurations:Release"
+		kind "WindowedApp"
+		defines { "NDEBUG" }
+		optimize "On"
+		
+	filter {}
+		
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "on"
@@ -43,14 +54,6 @@ project "schetool"
 		"glfw",
 		"imgui",
 	}
-
-	filter "configurations:Debug"
-		defines { "DEBUG" }
-		symbols "On"
-
-	filter "configurations:Release"
-		defines { "NDEBUG" }
-		optimize "On"
 
 	filter "system:windows"
 		links {"libconfig++"}

@@ -5,6 +5,9 @@
 // TEMP
 #include <schedule.h>
 #include <time_container.h>
+#ifdef NDEBUG
+#include <Windows.h>
+#endif
 
 Program::Program()
 {
@@ -13,10 +16,16 @@ Program::Program()
 	// TODO: load last opened schedule file here!
 
 	windowManager.init(&textureLoader);
-	input.init(&windowManager, &camera, &interface);
 	camera.init(&windowManager);
+	#ifdef NDEBUG
+	input.init(&windowManager, &camera, intie);
+	render.init(&windowManager, &camera, intie);
+	intie->init(&windowManager, &schedule);
+	#else
+	input.init(&windowManager, &camera, &interface);
 	render.init(&windowManager, &camera, &interface);
 	interface.init(&windowManager, &schedule);
+	#endif
 
 	// TODO: load textures
 	//file_system.loadGUITextures();
@@ -50,9 +59,18 @@ void Program::loop()
 	// file_system.trySaveConfigs();
 }
 
+#ifdef NDEBUG
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow)
+{
+	Program program = Program();
+	program.loop();
+	return 0;
+}
+#else
 int main()
 {
 	Program program = Program();
 	program.loop();
 	return 0;
 }
+#endif

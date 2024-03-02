@@ -6,19 +6,9 @@
 #include <render.h>
 #include <input.h>
 #include <interface.h>
-
-// TEMP?
 #include <schedule.h>
 
-#define PROGRAM_VERSION "0.1.0"
-
-// class Window;
-// class TextureLoader;
-// class Camera;
-// class Render;
-// class Input;
-// class Interface;
-// class Schedule;
+#define PROGRAM_VERSION "0.3.0-pre"
 
 class Program
 {
@@ -29,6 +19,9 @@ class Program
 		Render render;
 		Input input;
 		Interface interface;
+		#ifdef NDEBUG
+		Interface* intie = &interface;
+		#endif
 
 		// TEMP
 		Schedule schedule;
@@ -36,8 +29,6 @@ class Program
 		bool programWillClose = false;
 		bool quitProgram = false;
 
-		// Program(const Program&) = default;
-		// Program& operator=(const Program&) = default;
 		Program();
 		void loop();
 };

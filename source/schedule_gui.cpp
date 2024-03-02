@@ -35,7 +35,7 @@ void ScheduleGui::draw(Window& window)
 			ImGui::BeginTable("ScheduleTable", m_schedule->getColumnCount(), tableFlags);
 				for (int column = 0; column < m_schedule->getColumnCount(); column++)
 				{
-					ImGui::TableSetupColumn(m_schedule->getColumnName(column));
+					ImGui::TableSetupColumn(m_schedule->getColumn(column)->name.c_str());
 				}
 				// custom header row
 				ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
@@ -46,7 +46,7 @@ void ScheduleGui::draw(Window& window)
 					ImGui::PushID(column);
 					// close button
 					// permanent columns can't be removed so there's no need for a remove button
-					if (m_schedule->getColumnPermanent(column) == false)
+					if (m_schedule->getColumn(column)->permanent == false)
 					{
 						if (ImGui::Button("X##removecolumn", ImVec2(20.0, 20.0)))
 						{
@@ -63,7 +63,7 @@ void ScheduleGui::draw(Window& window)
 						//ImGui::TableFindByID(ImGui::GetID("ScheduleTable"));
 
 						// renaming
-						std::string name = m_schedule->getColumnName(column);
+						std::string name = m_schedule->getColumn(column)->name.c_str();
 						name.reserve(COLUMN_NAME_MAX_LENGTH);
 						char* buf = name.data();
 						
@@ -71,10 +71,10 @@ void ScheduleGui::draw(Window& window)
 						m_schedule->setColumnName(column, buf);
 
 						// select type (for non-permanent columns)
-						if (m_schedule->getColumnPermanent(column) == false)
+						if (m_schedule->getColumn(column)->permanent == false)
 						{
 							ImGui::Separator();
-							SCHEDULE_TYPE selected = m_schedule->getColumnType(column);
+							SCHEDULE_TYPE selected = m_schedule->getColumn(column)->type;
 							for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++)
 							{
 								if (ImGui::Selectable(m_schedule->scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
@@ -114,7 +114,7 @@ void ScheduleGui::draw(Window& window)
 							ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
 							for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++)
 							{
-								if (m_schedule->getColumnPermanent(otherColumnIndex))
+								if (m_schedule->getColumn(otherColumnIndex)->permanent)
 								{
 									continue;
 								}
@@ -158,7 +158,7 @@ void ScheduleGui::draw(Window& window)
 							ImGui::SameLine();
 						}
 
-						SCHEDULE_TYPE columnType = m_schedule->getColumnType(column);
+						SCHEDULE_TYPE columnType = m_schedule->getColumn(column)->type;
 						// TODO: i could probably reduce the code repetition here
 						ImGui::SetNextItemWidth(-FLT_MIN);
 						switch(columnType)
@@ -238,7 +238,7 @@ void ScheduleGui::draw(Window& window)
 								try
 								{
 									auto value = m_schedule->getElement<Time>(column, row);
-									if (m_schedule->getColumnDisplayWeekday(column))
+									if (m_schedule->getColumn(column)->displayWeekday)
 									{
 										const bool* selectedWeekdays = value.getSelectedWeekdays();
 										unsigned int selectedWeekdayCount = 0;
@@ -248,7 +248,7 @@ void ScheduleGui::draw(Window& window)
 											if (selectedWeekdays[i] == true) { selectedWeekdayCount += 1; }
 										}
 
-										std::vector<std::string> displayedWeekdayNames = containers::split(value.getString(m_schedule->getColumnDisplayDate(column), m_schedule->getColumnDisplayTime(column), m_schedule->getColumnDisplayWeekday(column)), ' ');
+										std::vector<std::string> displayedWeekdayNames = containers::split(value.getString(m_schedule->getColumn(column)->displayDate, m_schedule->getColumn(column)->displayTime, m_schedule->getColumn(column)->displayWeekday), ' ');
 										unsigned int weekdayNameIndex = 0;
 
 										for (int i = 0; i < 7; i++)
@@ -284,7 +284,7 @@ void ScheduleGui::draw(Window& window)
 									else
 									{
 										// Button displaying the date, time or selected weekdays of the current Time element
-										if (ImGui::Button(value.getString(m_schedule->getColumnDisplayDate(column), m_schedule->getColumnDisplayTime(column), m_schedule->getColumnDisplayWeekday(column)).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+										if (ImGui::Button(value.getString(m_schedule->getColumn(column)->displayDate, m_schedule->getColumn(column)->displayTime, m_schedule->getColumn(column)->displayWeekday).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
 										{
 											m_timeEditorColumn = column;
 											m_timeEditorRow = row;
@@ -317,7 +317,7 @@ void ScheduleGui::draw(Window& window)
 		ImGui::SameLine();
 		if (ImGui::Button("+", ImVec2(32, window.SCREEN_HEIGHT - 52)))
 		{
-			m_schedule->addColumn(m_schedule->getColumnCount());
+			m_schedule->addDefaultColumn(m_schedule->getColumnCount());
 		}
 		if (ImGui::Button("Add row", ImVec2(window.SCREEN_WIDTH - 58, 32)))
 		{
@@ -331,10 +331,11 @@ void ScheduleGui::draw(Window& window)
 bool ScheduleGui::displayTimeEditor(Time& value)
 {
 	bool valueEdited = false;
+	bool isPermanentColumn = m_schedule->getColumn(m_timeEditorColumn)->permanent;
 
-	bool tempDisplayTime = m_schedule->getColumnDisplayTime(m_timeEditorColumn);
+	bool tempDisplayTime = m_schedule->getColumn(m_timeEditorColumn)->displayTime;
 
-	if (ImGui::Checkbox("##DisplayTime?", &tempDisplayTime))
+	if (isPermanentColumn == false && ImGui::Checkbox("##DisplayTime?", &tempDisplayTime))
 	{
 		m_schedule->setColumnDisplayTime(m_timeEditorColumn, tempDisplayTime);
 	}
@@ -372,9 +373,9 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 	const bool* previousSelections = value.getSelectedWeekdays();
 	std::copy(previousSelections, previousSelections + 7, std::begin(selections));
 
-	bool tempDisplayWeekday = m_schedule->getColumnDisplayWeekday(m_timeEditorColumn);
+	bool tempDisplayWeekday = m_schedule->getColumn(m_timeEditorColumn)->displayWeekday;
 
-	if (ImGui::Checkbox("##DisplayWeekday?", &tempDisplayWeekday))
+	if (isPermanentColumn == false && ImGui::Checkbox("##DisplayWeekday?", &tempDisplayWeekday))
 	{
 		m_schedule->setColumnDisplayWeekday(m_timeEditorColumn, tempDisplayWeekday);
 	}

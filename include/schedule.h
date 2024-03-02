@@ -1,11 +1,28 @@
 #pragma once
+#include <time_container.h>
+#include <algorithm>
 #include <vector>
 #include <any>
 #include <map>
 #include <string>
 
+// TEMP
+#include <iostream>
+
 const unsigned int ELEMENT_TEXT_MAX_LENGTH = 1024;
 const unsigned int COLUMN_NAME_MAX_LENGTH = 64;
+
+typedef int ScheduleElementFlags;
+
+enum ScheduleElementFlags_
+{
+    ScheduleElementFlags_None     = 0,
+    ScheduleElementFlags_Name     = 1 << 0,
+    ScheduleElementFlags_Finished = 1 << 1,
+    ScheduleElementFlags_Start    = 1 << 2,
+    ScheduleElementFlags_Duration = 1 << 3,
+    ScheduleElementFlags_End      = 1 << 4,
+};
 
 enum SCHEDULE_TYPE
 {
@@ -18,6 +35,18 @@ enum SCHEDULE_TYPE
     // TODO: Enum? how would that work?
 };
 
+struct Column
+{
+    std::vector<std::any> rows;
+    SCHEDULE_TYPE type;
+    std::string name;
+    bool permanent;
+    bool displayDate;
+    bool displayTime;
+    bool displayWeekday;
+    ScheduleElementFlags flags;
+};
+
 class Schedule
 {
     /* IDEA how i could make select or multiple select ones:
@@ -26,8 +55,8 @@ class Schedule
     // and later it won't matter what enum it is since they're all the same class */
 
     private:
-        // a tuple containing: 0 - rows; 1 - column type; 2 - column name; 3 - whether the column is permanent
-        std::vector<std::tuple<std::vector<std::any>, SCHEDULE_TYPE, std::string, bool, bool, bool, bool>> m_schedule = {};
+        std::vector<Column> m_schedule = {};
+        Column* getColumnWithFlags(ScheduleElementFlags flags);
 
     public:
         const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
@@ -41,17 +70,12 @@ class Schedule
         // TEMP
         void test_setup();
 
-        SCHEDULE_TYPE getColumnType(unsigned int column);
+        const Column* getColumn(unsigned int column);
         void setColumnType(unsigned int column, SCHEDULE_TYPE type);
-        const char* getColumnName(unsigned int column);
         void setColumnName(unsigned int column, const char* name);
-        bool getColumnPermanent(unsigned int column);
         void setColumnDisplayDate(unsigned int column, bool displayDate);
         void setColumnDisplayTime(unsigned int column, bool displayTime);
         void setColumnDisplayWeekday(unsigned int column, bool displayWeekday);
-        bool getColumnDisplayDate(unsigned int column);
-        bool getColumnDisplayTime(unsigned int column);
-        bool getColumnDisplayWeekday(unsigned int column);
 
         void resetColumn(unsigned int column);
 
@@ -60,18 +84,32 @@ class Schedule
 
         void addRow(unsigned int index);
         void removeRow(unsigned int index);
-        void addColumn(unsigned int index);
-        void addColumnWithData(unsigned int index, std::vector<std::any> rows, SCHEDULE_TYPE type = SCH_TEXT, std::string name = "New Column", bool permanent = false, bool displayDate = true, bool displayTime = false, bool displayWeekday = false);
-        void removeColumn(unsigned int index);
+        void addDefaultColumn(unsigned int index);
+        void addColumn(unsigned int index, Column& column);
+        void removeColumn(unsigned int column);
 
+        // TODO: make this return a (const?) reference instead. too much copying!
         template <typename T>
         T getElement(unsigned int column, unsigned int row)
         {
-            return std::any_cast<T>(std::get<0>(m_schedule[column])[row]);
+            return std::any_cast<T>(m_schedule[column].rows[row]);
         }
         template <typename T>
         void setElement(unsigned int column, unsigned int row, T value)
         {
-            std::get<0>(m_schedule[column])[row] = value;
+            m_schedule[column].rows[row] = value;
+            ScheduleElementFlags columnFlags = getColumn(column)->flags;
+            if (columnFlags & ScheduleElementFlags_Start)
+            {
+                getColumnWithFlags(ScheduleElementFlags_End)->rows[row] = std::any_cast<Time>(getColumn(column)->rows[row]) + std::any_cast<Time>(getColumnWithFlags(ScheduleElementFlags_Duration)->rows[row]);
+            }
+            else if (columnFlags & ScheduleElementFlags_Duration)
+            {
+                getColumnWithFlags(ScheduleElementFlags_End)->rows[row] = std::any_cast<Time>(getColumnWithFlags(ScheduleElementFlags_Start)->rows[row]) + std::any_cast<Time>(getColumn(column)->rows[row]);
+            }
+            else if (columnFlags & ScheduleElementFlags_End)
+            {
+                getColumnWithFlags(ScheduleElementFlags_Duration)->rows[row] = std::any_cast<Time>(getColumn(column)->rows[row]) - std::any_cast<Time>(getColumnWithFlags(ScheduleElementFlags_Start)->rows[row]);
+            }
         }
 };
