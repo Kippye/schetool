@@ -99,6 +99,7 @@ void Time::setTime(const tm& time)
 {
     m_stored_time = tm(time);
 }
+// NOTE: Values are automatically clamped below 23 for hours and below 59 for minutes
 void Time::setClockTime(unsigned int hour, unsigned int minute)
 {
     m_stored_time.tm_hour = std::min(hour, 23U);
@@ -108,13 +109,17 @@ void Time::setMonthDay(unsigned int day)
 {
     m_stored_time.tm_mday = day;
 }
-void Time::setMonth(unsigned int month)
+// NOTE: If the given month is < 0, it will be set to 11. If it's > 11, it will be set to 0
+void Time::setMonth(int month)
 {
-    m_stored_time.tm_mon = month - 1;
+    m_stored_time.tm_mon = month < 0 ? 11 : (month > 11 ? 0 : month);
 }
-void Time::setYear(unsigned int year)
+// NOTE: hasBeenSubtracted is used to determine which range the year should be limited to (if 1900 has already been subtracted from the year)
+// subtractTmBaseYear - if this is true, then 1900 will be subtracted from the year before doing other validation
+void Time::setYear(int year, bool convert)
 {
-    m_stored_time.tm_year = year - 1900;
+    year = convertToValidYear(year, !convert, convert);
+    m_stored_time.tm_year = year;
 }
 
 // Set the weekday at index weekday (0-6) selection to selected
@@ -122,4 +127,25 @@ void Time::setWeekdaySelected(unsigned int weekday, bool selected)
 {
     weekday = std::min(weekday, 6U);
     m_selectedWeekdays[weekday] = selected;
+}
+
+// Helper function that converts any unsigned integer to a year usable in the tm struct
+int Time::convertToValidYear(int year, bool hasBeenSubtracted, bool subtractTmBaseYear)
+{
+    // if subtractTmBaseYear = false just clamp, return
+    // if subtactTmBaseYear = true, subtract, then clamp to diff range
+
+    if (subtractTmBaseYear)
+    {
+        year -= 1900;
+    }
+
+    if (hasBeenSubtracted)
+    {
+        return std::max(std::min(year, 8000), -1900);
+    }
+    else
+    {
+        return std::max(std::min(year, 8000 + 1900), 0);
+    }
 }

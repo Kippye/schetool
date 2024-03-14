@@ -22,8 +22,6 @@ class Program
 		#ifdef NDEBUG
 		Interface* intie = &interface;
 		#endif
-
-		// TEMP
 		Schedule schedule;
 
 		bool programWillClose = false;

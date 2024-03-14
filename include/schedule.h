@@ -4,6 +4,7 @@
 #include <vector>
 #include <any>
 #include <map>
+#include <cstddef>
 #include <string>
 
 // TEMP
@@ -35,6 +36,15 @@ enum SCHEDULE_TYPE
     // TODO: Enum? how would that work?
 };
 
+typedef int COLUMN_SORT;
+
+enum COLUMN_SORT_
+{
+    COLUMN_SORT_NONE,
+    COLUMN_SORT_ASCENDING,
+    COLUMN_SORT_DESCENDING
+};
+
 struct Column
 {
     std::vector<std::any> rows;
@@ -45,18 +55,57 @@ struct Column
     bool displayTime;
     bool displayWeekday;
     ScheduleElementFlags flags;
+    COLUMN_SORT sort;
+    bool sorted = false;
+};
+
+struct ColumnSortComparison 
+{
+    SCHEDULE_TYPE type;
+    COLUMN_SORT sortDirection;
+
+    bool operator () (const std::any& left, const std::any& right)
+    {
+        switch(type)
+        {
+            case(SCH_BOOL):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? std::any_cast<std::byte>(left) > std::any_cast<std::byte>(right) : std::any_cast<std::byte>(left) < std::any_cast<std::byte>(right);
+            }
+            case(SCH_INT):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? std::any_cast<int>(left) > std::any_cast<int>(right) : std::any_cast<int>(left) < std::any_cast<int>(right);
+            }
+            case(SCH_DOUBLE):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? std::any_cast<double>(left) > std::any_cast<double>(right) : std::any_cast<double>(left) < std::any_cast<double>(right);
+            }
+            case(SCH_TEXT):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? std::any_cast<std::string>(left) > std::any_cast<std::string>(right) : std::any_cast<std::string>(left) < std::any_cast<std::string>(right);
+            }
+            case(SCH_TIME):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? std::any_cast<Time>(left) > std::any_cast<Time>(right) : std::any_cast<Time>(left) < std::any_cast<Time>(right);
+            }
+        }
+    }
+
+    // Setup the sort comparison information before using it
+    void setup(SCHEDULE_TYPE _type, COLUMN_SORT _sortDirection)
+    {
+        type = _type;
+        sortDirection = _sortDirection;
+    }
 };
 
 class Schedule
 {
-    /* IDEA how i could make select or multiple select ones:
-    // a specific class that contains -> a vector of strings (and colours)
-    // then i can just use it as a type in std::any
-    // and later it won't matter what enum it is since they're all the same class */
-
     private:
         std::vector<Column> m_schedule = {};
+        ColumnSortComparison m_columnSortComparison;
         Column* getColumnWithFlags(ScheduleElementFlags flags);
+        std::vector<size_t> getColumnSortedNewIndices(unsigned int index);
 
     public:
         const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
@@ -76,11 +125,14 @@ class Schedule
         void setColumnDisplayDate(unsigned int column, bool displayDate);
         void setColumnDisplayTime(unsigned int column, bool displayTime);
         void setColumnDisplayWeekday(unsigned int column, bool displayWeekday);
+        void setColumnSort(unsigned int column, COLUMN_SORT sortDirection);
 
         void resetColumn(unsigned int column);
 
         unsigned int getColumnCount();
         unsigned int getRowCount();
+
+        void sortColumns();
 
         void addRow(unsigned int index);
         void removeRow(unsigned int index);
@@ -95,7 +147,7 @@ class Schedule
             return std::any_cast<T>(m_schedule[column].rows[row]);
         }
         template <typename T>
-        void setElement(unsigned int column, unsigned int row, T value)
+        void setElement(unsigned int column, unsigned int row, T value, bool resort = true)
         {
             m_schedule[column].rows[row] = value;
             ScheduleElementFlags columnFlags = getColumn(column)->flags;
@@ -110,6 +162,12 @@ class Schedule
             else if (columnFlags & ScheduleElementFlags_End)
             {
                 getColumnWithFlags(ScheduleElementFlags_Duration)->rows[row] = std::any_cast<Time>(getColumn(column)->rows[row]) - std::any_cast<Time>(getColumnWithFlags(ScheduleElementFlags_Start)->rows[row]);
+            }
+
+            m_schedule[column].sorted = false;
+            if (resort)
+            {
+                sortColumns();
             }
         }
 };

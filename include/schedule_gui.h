@@ -13,6 +13,8 @@ class ScheduleGui : public Gui
         Schedule* m_schedule;
         int m_timeEditorColumn = -1;
         int m_timeEditorRow = -1;
+        tm m_timeEditorTime;
+        ImRect m_timeEditorAvoidRect;
         ImVec4 m_dayColours[7] =
         {
             ImVec4(0.0f / 255.0f, 62.0f / 255.0f, 186.0f / 255.0f, 1),
@@ -23,6 +25,7 @@ class ScheduleGui : public Gui
             ImVec4(94.0f / 255.0f, 60.0f / 255.0f, 188.0f / 255.0f, 1),
             ImVec4(216.0f / 255.0f, 188.0f / 255.0f, 47.0f / 255.0f, 1),
         };
+        void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
         bool displayTimeEditor(Time& value);
     public:
         ScheduleGui(const char* ID) : Gui(ID) { }

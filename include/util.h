@@ -7,13 +7,11 @@
 #include <deque>
 #include <string>
 #include <sstream>
+#include <ctime>
 
 #include <glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
-
-// constants
-const int MAX_TAGS = 5;
 
 class containers
 {
@@ -45,6 +43,44 @@ class containers
 			}
 
 			return result;
+		}
+};
+
+class mytime
+{
+	public:
+		static unsigned int get_month_day_count(unsigned int year, unsigned int month)
+		{
+			switch(month)
+			{
+				case(0):
+				{
+					return 31;
+				}
+				case(1):
+				{
+					if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
+					{
+						return 29;
+					}
+					else
+					{
+						return 28;
+					}
+				}
+				case(3, 5, 8, 10):
+				{
+					return 30;
+				}
+				default:
+				{
+					return 31;
+				}
+			}
+		}
+		static unsigned int get_month_day_count(const tm& time)
+		{
+			return get_month_day_count(time.tm_year + 1900, time.tm_mon);
 		}
 };
 

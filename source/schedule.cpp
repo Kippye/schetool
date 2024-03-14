@@ -1,11 +1,12 @@
+#include <cstdlib>
 #include <schedule.h>
 #include <string.h>
 #include <time.h>
 #include <vector>
 #include <any>
-#include <cstddef>
 #include <ctime>
 #include <time_container.h>
+#include <numeric>
 
 // TEMP
 #include <iostream>
@@ -22,7 +23,6 @@ void Schedule::test_setup()
     addColumn(getColumnCount(), Column{std::vector<std::any>{Time(defaultTime), Time(defaultTime)}, SCH_TIME, std::string("Duration"), true, false, true, false, ScheduleElementFlags_Duration});
     addColumn(getColumnCount(), Column{std::vector<std::any>{Time(defaultTime), Time(defaultTime)}, SCH_TIME, std::string("End"), true, false, true, false, ScheduleElementFlags_End});
     addColumn(getColumnCount(), Column{std::vector<std::any>{Time(defaultTime), Time(defaultTime)}, SCH_TIME, std::string("Date"), false, true, false, false});
-    std::cout << getColumn(5)->flags;
 }
 
 // Private function, because it returns a mutable column pointer. NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
@@ -36,6 +36,19 @@ Column* Schedule::getColumnWithFlags(ScheduleElementFlags flags)
         }
     }
     return nullptr;
+}
+
+// Sorts a copy of the column's rows. Then compares each element of the two rows vectors and returns a vector that contains which index of the OLD rows vector corresponds to that position in the NEW SORTED rows
+std::vector<size_t> Schedule::getColumnSortedNewIndices(unsigned int index)
+{
+    Column& column = m_schedule[index];
+    std::vector<std::any> rows = column.rows;
+    std::vector<size_t> newIndices(rows.size());
+    std::iota(newIndices.begin(), newIndices.end(), 0);
+
+    m_columnSortComparison.setup(column.type, column.sort);
+    std::sort(newIndices.begin(), newIndices.end(), [&](size_t i, size_t j){ return m_columnSortComparison(rows[i], rows[j]); });
+    return newIndices;
 }
 
 const Column* Schedule::getColumn(unsigned int column)
@@ -70,6 +83,16 @@ void Schedule::setColumnDisplayWeekday(unsigned int column, bool displayWeekday)
     m_schedule[column].displayWeekday = displayWeekday;
 } 
 
+void Schedule::setColumnSort(unsigned int column, COLUMN_SORT sortDirection)
+{
+    m_schedule[column].sort = sortDirection;
+    if (sortDirection != COLUMN_SORT_NONE)
+    {
+        m_schedule[column].sorted = false;
+        sortColumns();
+    }
+}
+
 void Schedule::resetColumn(unsigned int column)
 {
     unsigned int rowCount = m_schedule[column].rows.size();
@@ -80,7 +103,7 @@ void Schedule::resetColumn(unsigned int column)
         {
             for (unsigned int row = 0; row < rowCount; row++)
             {
-                setElement<std::byte>(column, row, std::byte(0));
+                setElement<std::byte>(column, row, std::byte(0), false);
             }
             break;
         }
@@ -88,7 +111,7 @@ void Schedule::resetColumn(unsigned int column)
         {
             for (unsigned int row = 0; row < rowCount; row++)
             {
-                setElement<int>(column, row, 0);
+                setElement<int>(column, row, 0, false);
             }
             break;
         }
@@ -96,7 +119,7 @@ void Schedule::resetColumn(unsigned int column)
         {
             for (unsigned int row = 0; row < rowCount; row++)
             {
-                setElement<double>(column, row, 0);
+                setElement<double>(column, row, 0, false);
             }  
             break;
         }
@@ -104,7 +127,7 @@ void Schedule::resetColumn(unsigned int column)
         {
             for (unsigned int row = 0; row < rowCount; row++)
             {
-                setElement<std::string>(column, row, std::string(""));
+                setElement<std::string>(column, row, std::string(""), false);
             }     
             break;
         }
@@ -113,7 +136,7 @@ void Schedule::resetColumn(unsigned int column)
             for (unsigned int row = 0; row < rowCount; row++)
             {
                 time_t now = time(0);
-                setElement<Time>(column, row, Time(*gmtime(&now)));
+                setElement<Time>(column, row, Time(*gmtime(&now)), false);
             }
             break;
         }    
@@ -129,6 +152,37 @@ unsigned int Schedule::getColumnCount()
 unsigned int Schedule::getRowCount()
 {
     return (m_schedule.size() > 0 ? m_schedule[0].rows.size() : 0);
+}
+
+// Sorts every column's rows based on "sorter" columns
+void Schedule::sortColumns()
+{
+    for (int sorterColumn = 0; sorterColumn < getColumnCount(); sorterColumn++)
+    {
+        if (m_schedule[sorterColumn].sort != COLUMN_SORT_NONE)
+        {
+            std::vector<size_t> newRowIndices = getColumnSortedNewIndices(sorterColumn);
+
+            // actually sort the rows vector in every column
+            for (int affectedColumn = 0; affectedColumn < getColumnCount(); affectedColumn++)
+            {
+                // vector that will replace the old rows vector
+                std::vector<std::any> sortedRows = {};
+                std::vector<std::any>& unsortedRows = m_schedule[affectedColumn].rows;
+                sortedRows.reserve(unsortedRows.size());
+
+                for (int rowIndex = 0; rowIndex < newRowIndices.size(); rowIndex++)
+                {
+                    sortedRows.push_back(unsortedRows[newRowIndices[rowIndex]]);
+                }
+
+                m_schedule[affectedColumn].rows = sortedRows;
+                m_schedule[affectedColumn].sorted = true;
+            }
+            // NOTE: for now, we only sort by one column
+            break;
+        }
+    }
 }
 
 void Schedule::addRow(unsigned int index)
@@ -175,6 +229,8 @@ void Schedule::addRow(unsigned int index)
     {
         
     }
+
+    sortColumns();
 }
 
 void Schedule::removeRow(unsigned int index)

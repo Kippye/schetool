@@ -18,7 +18,7 @@ ScheduleGui::ScheduleGui(const char* ID, Schedule* schedule)
 {
 	m_ID = ID;
 	m_schedule = schedule;
-}
+} 
 
 void ScheduleGui::draw(Window& window)
 {
@@ -44,6 +44,12 @@ void ScheduleGui::draw(Window& window)
 					ImGui::TableSetColumnIndex(column);
 					const char* columnName = ImGui::TableGetColumnName(column); // get name passed to TableSetupColumn()
 					ImGui::PushID(column);
+					// sort button!
+					if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_schedule->getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_schedule->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+					{
+						m_schedule->setColumnSort(column, m_schedule->getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_schedule->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
+					}
+					ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					// close button
 					// permanent columns can't be removed so there's no need for a remove button
 					if (m_schedule->getColumn(column)->permanent == false)
@@ -58,83 +64,7 @@ void ScheduleGui::draw(Window& window)
 					// column header context menu
                     if (ImGui::BeginPopupContextItem("#ColumnEdit"))
                     {
-						// FIXME TODO STUPID HACK !!
-						ImGuiTable* table = ImGui::GetCurrentContext()->Tables.GetByIndex(0) ;
-						//ImGui::TableFindByID(ImGui::GetID("ScheduleTable"));
-
-						// renaming
-						std::string name = m_schedule->getColumn(column)->name.c_str();
-						name.reserve(COLUMN_NAME_MAX_LENGTH);
-						char* buf = name.data();
-						
-                        ImGui::InputText(std::string("##columnName").append(std::to_string(column)).c_str(), buf, name.capacity());
-						m_schedule->setColumnName(column, buf);
-
-						// select type (for non-permanent columns)
-						if (m_schedule->getColumn(column)->permanent == false)
-						{
-							ImGui::Separator();
-							SCHEDULE_TYPE selected = m_schedule->getColumn(column)->type;
-							for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++)
-							{
-								if (ImGui::Selectable(m_schedule->scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
-									m_schedule->setColumnType(column, SCHEDULE_TYPE(i));
-							}
-						}
-
-						ImGui::Separator(); 
-						
-						// resizing
-						if (tableFlags & ImGuiTableFlags_Resizable)
-						{
-							if (ImGui::MenuItem("Size column to fit###SizeOne", NULL, false))
-								ImGui::TableSetColumnWidthAutoSingle(table, column);
-
-							const char* size_all_desc;
-							//if (table->ColumnsEnabledFixedCount == table->ColumnsEnabledCount && (table->Flags & ImGuiTableFlags_SizingMask_) != ImGuiTableFlags_SizingFixedSame)
-							//	size_all_desc = "Size all columns to fit###SizeAll";        // All fixed
-							//else
-							size_all_desc = "Size all columns to default###SizeAll";    // All stretch or mixed
-							if (ImGui::MenuItem(size_all_desc, NULL))
-								ImGui::TableSetColumnWidthAutoAll(table);
-						}
-
-						// Ordering
-						if (tableFlags & ImGuiTableFlags_Reorderable)
-						{
-							if (ImGui::MenuItem("Reset order", NULL, false, !table->IsDefaultDisplayOrder))
-								table->IsResetDisplayOrderRequest = true;
-						}
-
-						ImGui::Separator();
-
-						// Hiding / Visibility
-						if (tableFlags & ImGuiTableFlags_Hideable)
-						{
-							ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
-							for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++)
-							{
-								if (m_schedule->getColumn(otherColumnIndex)->permanent)
-								{
-									continue;
-								}
-								ImGuiTableColumn* otherColumn = &table->Columns[otherColumnIndex];
-								const char* name = ImGui::TableGetColumnName(table, otherColumnIndex);
-								if (name == NULL || name[0] == 0)
-									name = "<Unknown>";
-
-								// Make sure we can't hide the last active column
-								bool menu_item_active = (otherColumn->Flags & ImGuiTableColumnFlags_NoHide) ? false : true;
-								if (otherColumn->IsEnabled && table->ColumnsEnabledCount <= 1)
-									menu_item_active = false;
-								if (ImGui::MenuItem(name, NULL, otherColumn->IsEnabled, menu_item_active))
-									otherColumn->IsUserEnabledNextFrame = !otherColumn->IsEnabled;
-							}
-							ImGui::PopItemFlag();
-						}
-
-                        if (ImGui::Button("Close"))
-                            ImGui::CloseCurrentPopup();
+						displayColumnContextPopup(column, tableFlags);
                         ImGui::EndPopup();
                     }
 					ImGui::PopID();
@@ -182,7 +112,7 @@ void ScheduleGui::draw(Window& window)
 								try
 								{
 									auto value = m_schedule->getElement<int>(column, row);
-									ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &value, 0);
+									ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &value, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue);
 									m_schedule->setElement<int>(column, row, value);
 								}
 								catch(const std::exception& e)
@@ -196,7 +126,7 @@ void ScheduleGui::draw(Window& window)
 								try
 								{
 									auto value = m_schedule->getElement<double>(column, row);
-									ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &value);
+									ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &value, 0.0, 0.0, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue);
 									m_schedule->setElement<double>(column, row, value);
 								}
 								catch(const std::exception& e)
@@ -214,7 +144,10 @@ void ScheduleGui::draw(Window& window)
 									value.reserve(ELEMENT_TEXT_MAX_LENGTH);
 									char* buf = value.data();
 									//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
-									ImGui::InputTextMultiline(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity(), ImVec2(0, 0));
+									if (ImGui::InputTextMultiline(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+									{
+										m_schedule->setElement<std::string>(column, row, std::string(buf));
+									}
 									// ImVec2 textSize = ImGui::CalcTextSize(buf);
 									// if (textSize.x == 106 && textSize.y == 16)
 									// {
@@ -224,7 +157,6 @@ void ScheduleGui::draw(Window& window)
 									// 	std::cout << buf << std::endl;
 									// }
 									// std::cout << textSize.x << "; " << textSize.y << std::endl;
-									m_schedule->setElement<std::string>(column, row, std::string(buf));
 								}
 								catch(const std::exception& e)
 								{
@@ -267,10 +199,12 @@ void ScheduleGui::draw(Window& window)
 													{
 														m_timeEditorColumn = column;
 														m_timeEditorRow = row;
-														ImGui::OpenPopup("Test#TimeEditor");
+														m_timeEditorTime = tm(*value.getTime());
+														m_timeEditorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+														ImGui::OpenPopup("TimeEditor");
 													}
 													// right clicking erases the day - bonus feature
-													else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && selectedWeekdayCount > 1)
+													else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
 													{
 														value.setWeekdaySelected(i, !selectedWeekdays[i]);
 														m_schedule->setElement<Time>(column, row, value);
@@ -278,6 +212,18 @@ void ScheduleGui::draw(Window& window)
 												}
 												ImGui::PopStyleColor(1);
 												weekdayNameIndex++;
+											}
+										}
+										// TEMP ? if there are no weekdays selected, just show an "Edit" button to prevent kind of a softlock
+										if (selectedWeekdayCount == 0)
+										{
+											if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+											{
+												m_timeEditorColumn = column;
+												m_timeEditorRow = row;
+												m_timeEditorTime = tm(*value.getTime());
+												m_timeEditorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+												ImGui::OpenPopup("TimeEditor");
 											}
 										}
 									}
@@ -288,11 +234,21 @@ void ScheduleGui::draw(Window& window)
 										{
 											m_timeEditorColumn = column;
 											m_timeEditorRow = row;
-											ImGui::OpenPopup("Test#TimeEditor");
+											m_timeEditorTime = tm(*value.getTime());
+											m_timeEditorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+											ImGui::OpenPopup("TimeEditor");
 										}
 									}
-									if (column == m_timeEditorColumn && row == m_timeEditorRow && ImGui::BeginPopupEx(ImGui::GetID("Test#TimeEditor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration))
+									if (column == m_timeEditorColumn && row == m_timeEditorRow && ImGui::BeginPopupEx(ImGui::GetID("TimeEditor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
 									{
+										// TODO!
+										ImGuiDir dir = ImGuiDir_Down;
+										ImGuiWindow* popup = ImGui::GetCurrentWindow();
+										ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
+										ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
+										ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_timeEditorAvoidRect, ImGuiPopupPositionPolicy_Default));
+										//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
+
 										// display popup contents. if any fields were edited, copy the value to the Schedule.
 										if (displayTimeEditor(value))
 										{
@@ -327,19 +283,103 @@ void ScheduleGui::draw(Window& window)
     ImGui::End();
 }
 
+void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags)
+{
+	// FIXME TODO STUPID HACK !!
+	ImGuiTable* table = ImGui::GetCurrentContext()->Tables.GetByIndex(0) ;
+	//ImGui::TableFindByID(ImGui::GetID("ScheduleTable"));
+
+	// renaming
+	std::string name = m_schedule->getColumn(column)->name.c_str();
+	name.reserve(COLUMN_NAME_MAX_LENGTH);
+	char* buf = name.data();
+	
+	ImGui::InputText(std::string("##columnName").append(std::to_string(column)).c_str(), buf, name.capacity());
+	m_schedule->setColumnName(column, buf);
+
+	// select type (for non-permanent columns)
+	if (m_schedule->getColumn(column)->permanent == false)
+	{
+		ImGui::Separator();
+		SCHEDULE_TYPE selected = m_schedule->getColumn(column)->type;
+		for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++)
+		{
+			if (ImGui::Selectable(m_schedule->scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
+				m_schedule->setColumnType(column, SCHEDULE_TYPE(i));
+		}
+	}
+
+	ImGui::Separator(); 
+	
+	// resizing
+	if (tableFlags & ImGuiTableFlags_Resizable)
+	{
+		if (ImGui::MenuItem("Size column to fit###SizeOne", NULL, false))
+			ImGui::TableSetColumnWidthAutoSingle(table, column);
+
+		const char* size_all_desc;
+		//if (table->ColumnsEnabledFixedCount == table->ColumnsEnabledCount && (table->Flags & ImGuiTableFlags_SizingMask_) != ImGuiTableFlags_SizingFixedSame)
+		//	size_all_desc = "Size all columns to fit###SizeAll";        // All fixed
+		//else
+		size_all_desc = "Size all columns to default###SizeAll";    // All stretch or mixed
+		if (ImGui::MenuItem(size_all_desc, NULL))
+			ImGui::TableSetColumnWidthAutoAll(table);
+	}
+
+	// Ordering
+	if (tableFlags & ImGuiTableFlags_Reorderable)
+	{
+		if (ImGui::MenuItem("Reset order", NULL, false, !table->IsDefaultDisplayOrder))
+			table->IsResetDisplayOrderRequest = true;
+	}
+
+	ImGui::Separator();
+
+	// Hiding / Visibility
+	if (tableFlags & ImGuiTableFlags_Hideable)
+	{
+		ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
+		for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++)
+		{
+			if (m_schedule->getColumn(otherColumnIndex)->permanent)
+			{
+				continue;
+			}
+			ImGuiTableColumn* otherColumn = &table->Columns[otherColumnIndex];
+			const char* name = ImGui::TableGetColumnName(table, otherColumnIndex);
+			if (name == NULL || name[0] == 0)
+				name = "Unnamed";
+
+			// Make sure we can't hide the last active column
+			bool menu_item_active = (otherColumn->Flags & ImGuiTableColumnFlags_NoHide) ? false : true;
+			if (otherColumn->IsEnabled && table->ColumnsEnabledCount <= 1)
+				menu_item_active = false;
+			if (ImGui::MenuItem(name, NULL, otherColumn->IsEnabled, menu_item_active))
+				otherColumn->IsUserEnabledNextFrame = !otherColumn->IsEnabled;
+		}
+		ImGui::PopItemFlag();
+	}
+
+	if (ImGui::Button("Close"))
+		ImGui::CloseCurrentPopup();
+}
+
 // Display the time editor popup's contents. The returned bool indicates whether any of the elements were edited.
 bool ScheduleGui::displayTimeEditor(Time& value)
 {
 	bool valueEdited = false;
 	bool isPermanentColumn = m_schedule->getColumn(m_timeEditorColumn)->permanent;
-
+	// TIME
 	bool tempDisplayTime = m_schedule->getColumn(m_timeEditorColumn)->displayTime;
 
-	if (isPermanentColumn == false && ImGui::Checkbox("##DisplayTime?", &tempDisplayTime))
+	if (isPermanentColumn == false)
 	{
-		m_schedule->setColumnDisplayTime(m_timeEditorColumn, tempDisplayTime);
+		if (ImGui::Checkbox("##DisplayTime?", &tempDisplayTime))
+		{
+			m_schedule->setColumnDisplayTime(m_timeEditorColumn, tempDisplayTime);
+		}
+		ImGui::SameLine();
 	}
-	ImGui::SameLine();
 	char hourBuf[3];
 	std::strftime(hourBuf, sizeof(hourBuf), "%H", value.getTime());
 	ImGui::SetNextItemWidth(24);
@@ -357,7 +397,7 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 	char minBuf[3];
 	std::strftime(minBuf, sizeof(minBuf), "%M", value.getTime());
 	ImGui::SetNextItemWidth(24);
-	if (ImGui::InputText("Time##Minutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, filterNumbers))
+	if (ImGui::InputText("##Minutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, filterNumbers))
 	{
 		int minValue = 0;
 		if (std::regex_match(minBuf, std::regex("[0-9]+")))
@@ -368,6 +408,7 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 		valueEdited = true;
 	}
 
+	// WEEKDAY
 	tm weekdayTime;
 	bool selections[7];
 	const bool* previousSelections = value.getSelectedWeekdays();
@@ -375,11 +416,14 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 
 	bool tempDisplayWeekday = m_schedule->getColumn(m_timeEditorColumn)->displayWeekday;
 
-	if (isPermanentColumn == false && ImGui::Checkbox("##DisplayWeekday?", &tempDisplayWeekday))
+	if (isPermanentColumn == false)
 	{
-		m_schedule->setColumnDisplayWeekday(m_timeEditorColumn, tempDisplayWeekday);
+		if (ImGui::Checkbox("##DisplayWeekday?", &tempDisplayWeekday))
+		{
+			m_schedule->setColumnDisplayWeekday(m_timeEditorColumn, tempDisplayWeekday);
+		}
+		ImGui::SameLine();
 	}
-	ImGui::SameLine();
 	for (int i = 0; i < 7; i++)
 	{
 		weekdayTime.tm_wday = i == 0 ? 1 : (i == 6 ? 0 : i + 1);
@@ -392,6 +436,60 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 			valueEdited = true;
 		}
 		if (i != 6)
+		{
+			ImGui::SameLine();
+		}
+	}
+
+	// DATE / CALENDAR
+	bool tempDisplayDate = m_schedule->getColumn(m_timeEditorColumn)->displayDate;
+
+	if (isPermanentColumn == false)
+	{
+		if (ImGui::Checkbox("##DisplayDate?", &tempDisplayDate))
+		{
+			m_schedule->setColumnDisplayDate(m_timeEditorColumn, tempDisplayDate);
+		}
+		ImGui::SameLine();
+	}
+
+	if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
+	{
+		m_timeEditorTime.tm_mon = m_timeEditorTime.tm_mon == 0 ? 11 : m_timeEditorTime.tm_mon - 1;
+	}
+	ImGui::SameLine();
+	char monthName[16];
+	std::strftime(monthName, sizeof(monthName), "%B", &m_timeEditorTime);
+	ImGui::Button(std::string(monthName).append(std::string("##Month")).c_str(), ImVec2(96, 0));
+	ImGui::SameLine();
+	if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
+	{
+		m_timeEditorTime.tm_mon = m_timeEditorTime.tm_mon == 11 ? 0 : m_timeEditorTime.tm_mon + 1;
+	}
+	int yearInput = m_timeEditorTime.tm_year + 1900;
+	if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
+	{
+		m_timeEditorTime.tm_year = Time::convertToValidYear(yearInput);
+	}
+
+	// TODO: actual calendar :(
+	unsigned int daysInMonth = mytime::get_month_day_count(m_timeEditorTime);
+
+	for (unsigned int day = 1; day <= daysInMonth; day++)
+	{
+		if (ImGui::Button(std::to_string(day).c_str(), ImVec2(24, 24)))
+		{
+			m_timeEditorTime.tm_mday = day;
+			value.setYear(m_timeEditorTime.tm_year, false);
+			value.setMonth(m_timeEditorTime.tm_mon);
+			value.setMonthDay(m_timeEditorTime.tm_mday); 
+			valueEdited = true;
+		}
+		if (day == value.getTime()->tm_mday)
+		{
+			// TODO: Highlight this day as selected in the calendar
+		}
+		if (day % 7 != 0)
 		{
 			ImGui::SameLine();
 		}
