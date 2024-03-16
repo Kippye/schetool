@@ -199,7 +199,9 @@ void ScheduleGui::draw(Window& window)
 													{
 														m_timeEditorColumn = column;
 														m_timeEditorRow = row;
-														m_timeEditorTime = tm(*value.getTime());
+														m_timeEditorTime = value;
+														m_timeEditorViewedMonth = m_timeEditorTime.getTime()->tm_mon;
+														m_timeEditorViewedYear = m_timeEditorTime.getTime()->tm_year;
 														m_timeEditorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 														ImGui::OpenPopup("TimeEditor");
 													}
@@ -221,7 +223,9 @@ void ScheduleGui::draw(Window& window)
 											{
 												m_timeEditorColumn = column;
 												m_timeEditorRow = row;
-												m_timeEditorTime = tm(*value.getTime());
+												m_timeEditorTime = value;
+												m_timeEditorViewedMonth = m_timeEditorTime.getTime()->tm_mon;
+												m_timeEditorViewedYear = m_timeEditorTime.getTime()->tm_year;
 												m_timeEditorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 												ImGui::OpenPopup("TimeEditor");
 											}
@@ -234,28 +238,41 @@ void ScheduleGui::draw(Window& window)
 										{
 											m_timeEditorColumn = column;
 											m_timeEditorRow = row;
-											m_timeEditorTime = tm(*value.getTime());
+											m_timeEditorTime = value;
+											m_timeEditorViewedMonth = m_timeEditorTime.getTime()->tm_mon;
+											m_timeEditorViewedYear = m_timeEditorTime.getTime()->tm_year;
 											m_timeEditorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 											ImGui::OpenPopup("TimeEditor");
 										}
 									}
-									if (column == m_timeEditorColumn && row == m_timeEditorRow && ImGui::BeginPopupEx(ImGui::GetID("TimeEditor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
+									if (column == m_timeEditorColumn && row == m_timeEditorRow)
 									{
-										// TODO!
-										ImGuiDir dir = ImGuiDir_Down;
-										ImGuiWindow* popup = ImGui::GetCurrentWindow();
-										ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
-										ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
-										ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_timeEditorAvoidRect, ImGuiPopupPositionPolicy_Default));
-										//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
-
-										// display popup contents. if any fields were edited, copy the value to the Schedule.
-										if (displayTimeEditor(value))
+										if (ImGui::BeginPopupEx(ImGui::GetID("TimeEditor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
 										{
-											// set the actual value in the schedule, because getElement passes element *values*, not pointers or references. maybe this should be changed?
-											m_schedule->setElement<Time>(column, row, value);
+											// TODO!
+											ImGuiDir dir = ImGuiDir_Down;
+											ImGuiWindow* popup = ImGui::GetCurrentWindow();
+											ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
+											ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
+											ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_timeEditorAvoidRect, ImGuiPopupPositionPolicy_Default));
+											//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
+
+											// display popup contents. if any fields were edited, copy the value to the Schedule.
+											if (bool timeWasEdited = displayTimeEditor() == true)
+											{
+											}
+											m_timeEditorOpenLastFrame = true;
+											ImGui::EndPopup();
 										}
-										ImGui::EndPopup();
+										else
+										{
+											if (m_timeEditorOpenLastFrame == true)
+											{
+												// set the actual value in the schedule, because getElement passes element *values*, not pointers or references. maybe this should be changed?
+												m_schedule->setElement<Time>(column, row, m_timeEditorTime);
+												m_timeEditorOpenLastFrame = false;
+											}
+										}
 									}
 								}
 								catch(const std::exception& e)
@@ -365,7 +382,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 }
 
 // Display the time editor popup's contents. The returned bool indicates whether any of the elements were edited.
-bool ScheduleGui::displayTimeEditor(Time& value)
+bool ScheduleGui::displayTimeEditor()
 {
 	bool valueEdited = false;
 	bool isPermanentColumn = m_schedule->getColumn(m_timeEditorColumn)->permanent;
@@ -381,7 +398,7 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 		ImGui::SameLine();
 	}
 	char hourBuf[3];
-	std::strftime(hourBuf, sizeof(hourBuf), "%H", value.getTime());
+	std::strftime(hourBuf, sizeof(hourBuf), "%H", m_timeEditorTime.getTime());
 	ImGui::SetNextItemWidth(24);
 	if (ImGui::InputText("##EditTimeHours", hourBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, filterNumbers))
 	{
@@ -390,12 +407,12 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 		{
 			hourValue = std::stoi(hourBuf);
 		}
-		value.setClockTime(hourValue, value.getTime()->tm_min);
+		m_timeEditorTime.setClockTime(hourValue, m_timeEditorTime.getTime()->tm_min);
 		valueEdited = true;
 	}
 	ImGui::SameLine();
 	char minBuf[3];
-	std::strftime(minBuf, sizeof(minBuf), "%M", value.getTime());
+	std::strftime(minBuf, sizeof(minBuf), "%M", m_timeEditorTime.getTime());
 	ImGui::SetNextItemWidth(24);
 	if (ImGui::InputText("##Minutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, filterNumbers))
 	{
@@ -404,14 +421,14 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 		{
 			minValue = std::stoi(minBuf);
 		}
-		value.setClockTime(value.getTime()->tm_hour, minValue);
+		m_timeEditorTime.setClockTime(m_timeEditorTime.getTime()->tm_hour, minValue);
 		valueEdited = true;
 	}
 
 	// WEEKDAY
-	tm weekdayTime;
+	tm formatTime;
 	bool selections[7];
-	const bool* previousSelections = value.getSelectedWeekdays();
+	const bool* previousSelections = m_timeEditorTime.getSelectedWeekdays();
 	std::copy(previousSelections, previousSelections + 7, std::begin(selections));
 
 	bool tempDisplayWeekday = m_schedule->getColumn(m_timeEditorColumn)->displayWeekday;
@@ -426,13 +443,13 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 	}
 	for (int i = 0; i < 7; i++)
 	{
-		weekdayTime.tm_wday = i == 0 ? 1 : (i == 6 ? 0 : i + 1);
+		formatTime.tm_wday = i == 0 ? 1 : (i == 6 ? 0 : i + 1);
 		char dayName[100];
-		std::strftime(dayName, sizeof(dayName), "%a", &weekdayTime);
+		std::strftime(dayName, sizeof(dayName), "%a", &formatTime);
 
 		if (ImGui::Selectable(dayName, &selections[i], ImGuiSelectableFlags_DontClosePopups, ImVec2(24, 0)))
 		{
-			value.setWeekdaySelected(i, selections[i]);
+			m_timeEditorTime.setWeekdaySelected(i, selections[i]);
 			valueEdited = true;
 		}
 		if (i != 6)
@@ -455,37 +472,37 @@ bool ScheduleGui::displayTimeEditor(Time& value)
 
 	if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
 	{
-		m_timeEditorTime.tm_mon = m_timeEditorTime.tm_mon == 0 ? 11 : m_timeEditorTime.tm_mon - 1;
+		m_timeEditorViewedMonth = m_timeEditorViewedMonth == 0 ? 11 : m_timeEditorViewedMonth - 1;
 	}
 	ImGui::SameLine();
 	char monthName[16];
-	std::strftime(monthName, sizeof(monthName), "%B", &m_timeEditorTime);
+	formatTime.tm_mon = m_timeEditorViewedMonth;
+	std::strftime(monthName, sizeof(monthName), "%B", &formatTime);
 	ImGui::Button(std::string(monthName).append(std::string("##Month")).c_str(), ImVec2(96, 0));
 	ImGui::SameLine();
 	if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
 	{
-		m_timeEditorTime.tm_mon = m_timeEditorTime.tm_mon == 11 ? 0 : m_timeEditorTime.tm_mon + 1;
+		m_timeEditorViewedMonth = m_timeEditorViewedMonth == 11 ? 0 : m_timeEditorViewedMonth + 1;
 	}
-	int yearInput = m_timeEditorTime.tm_year + 1900;
+	int yearInput = m_timeEditorViewedYear + 1900;
 	if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
 	{
-		m_timeEditorTime.tm_year = Time::convertToValidYear(yearInput);
+		m_timeEditorViewedYear = Time::convertToValidYear(yearInput);
 	}
 
 	// TODO: actual calendar :(
-	unsigned int daysInMonth = mytime::get_month_day_count(m_timeEditorTime);
+	unsigned int daysInMonth = mytime::get_month_day_count(m_timeEditorViewedYear, m_timeEditorViewedMonth);
 
 	for (unsigned int day = 1; day <= daysInMonth; day++)
 	{
 		if (ImGui::Button(std::to_string(day).c_str(), ImVec2(24, 24)))
 		{
-			m_timeEditorTime.tm_mday = day;
-			value.setYear(m_timeEditorTime.tm_year, false);
-			value.setMonth(m_timeEditorTime.tm_mon);
-			value.setMonthDay(m_timeEditorTime.tm_mday); 
+			m_timeEditorTime.setYear(m_timeEditorViewedYear, false);
+			m_timeEditorTime.setMonth(m_timeEditorViewedMonth);
+			m_timeEditorTime.setMonthDay(day); 
 			valueEdited = true;
 		}
-		if (day == value.getTime()->tm_mday)
+		if (day == m_timeEditorTime.getTime()->tm_mday)
 		{
 			// TODO: Highlight this day as selected in the calendar
 		}

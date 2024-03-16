@@ -92,7 +92,7 @@ struct ColumnSortComparison
     }
 
     // Setup the sort comparison information before using it
-    void setup(SCHEDULE_TYPE _type, COLUMN_SORT _sortDirection)
+    void setup(SCHEDULE_TYPE _type, COLUMN_SORT _sortDirection, bool _sortByClockTime = false)
     {
         type = _type;
         sortDirection = _sortDirection;
