@@ -1,3 +1,4 @@
+#include "select_container.h"
 #include <cstdlib>
 #include <schedule.h>
 #include <string.h>
@@ -5,7 +6,6 @@
 #include <vector>
 #include <any>
 #include <ctime>
-#include <time_container.h>
 #include <numeric>
 
 // TEMP
@@ -13,16 +13,14 @@
 
 void Schedule::test_setup()
 {
-    addColumn(getColumnCount(), Column{std::vector<std::any>{std::string("Zmitiusz"), std::string("Kip Kipperson")}, SCH_TEXT, std::string("Name"), true, true, false, false, ScheduleElementFlags_Name});
-    addColumn(getColumnCount(), Column{std::vector<std::any>{std::byte(0), std::byte(0)}, SCH_BOOL, std::string("Finished"), true, true, false, false, ScheduleElementFlags_Finished});
+    addColumn(getColumnCount(), Column{std::vector<std::any>{std::string("Zmitiusz"), std::string("Kip Kipperson")}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name});
+    addColumn(getColumnCount(), Column{std::vector<std::any>{std::byte(0), std::byte(0)}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished});
     time_t now = time(0);
     tm defaultTime = *localtime(&now);
-    defaultTime.tm_hour = 0;
-    defaultTime.tm_min = 0;
-    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(defaultTime), Time(defaultTime)}, SCH_TIME, std::string("Start"), true, false, true, false, ScheduleElementFlags_Start});
-    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(defaultTime), Time(defaultTime)}, SCH_TIME, std::string("Duration"), true, false, true, false, ScheduleElementFlags_Duration});
-    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(defaultTime), Time(defaultTime)}, SCH_TIME, std::string("End"), true, false, true, false, ScheduleElementFlags_End});
-    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(defaultTime), Time(defaultTime)}, SCH_TIME, std::string("Date"), false, true, false, false});
+    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(0, 0), Time(0, 0)}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start});
+    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(0, 0), Time(0, 0)}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration});
+    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(0, 0), Time(0, 0)}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End});
+    addColumn(getColumnCount(), Column{std::vector<std::any>{Date(defaultTime), Date(defaultTime)}, SCH_DATE, std::string("Date"), false});
 }
 
 // Private function, because it returns a mutable column pointer. NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
@@ -56,6 +54,11 @@ const Column* Schedule::getColumn(unsigned int column)
     return &m_schedule[column];
 }
 
+SelectOptions& Schedule::getColumnSelectOptions(unsigned int column)
+{
+    return m_schedule[column].selectOptions;
+}
+
 void Schedule::setColumnType(unsigned int column, SCHEDULE_TYPE type)
 {
     if (type == m_schedule[column].type) { return; }
@@ -69,19 +72,6 @@ void Schedule::setColumnName(unsigned int column, const char* name)
 {
     m_schedule[column].name = std::string(name);
 }
-
-void Schedule::setColumnDisplayDate(unsigned int column, bool displayDate)
-{
-    m_schedule[column].displayDate = displayDate;
-}
-void Schedule::setColumnDisplayTime(unsigned int column, bool displayTime)
-{
-    m_schedule[column].displayTime = displayTime;
-}
-void Schedule::setColumnDisplayWeekday(unsigned int column, bool displayWeekday)
-{
-    m_schedule[column].displayWeekday = displayWeekday;
-} 
 
 void Schedule::setColumnSort(unsigned int column, COLUMN_SORT sortDirection)
 {
@@ -131,15 +121,41 @@ void Schedule::resetColumn(unsigned int column)
             }     
             break;
         }
+        case(SCH_SELECT):
+        {
+            for (unsigned int row = 0; row < rowCount; row++)
+            {
+                m_schedule[column].selectOptions.clear();
+                setElement<Select>(column, row, Select(m_schedule[column].selectOptions), false);
+            }     
+            break;
+        }
         case(SCH_TIME):
         {
             for (unsigned int row = 0; row < rowCount; row++)
             {
                 time_t now = time(0);
-                setElement<Time>(column, row, Time(*gmtime(&now)), false);
+                setElement<Time>(column, row, Time(0, 0), false);
             }
             break;
-        }    
+        }   
+        case(SCH_DATE):
+        {
+            for (unsigned int row = 0; row < rowCount; row++)
+            {
+                time_t now = time(0);
+                setElement<Date>(column, row, Date(*gmtime(&now)), false);
+            }
+            break;
+        }   
+        case(SCH_WEEKDAY):
+        {
+            for (unsigned int row = 0; row < rowCount; row++)
+            {
+                setElement<Weekday>(column, row, Weekday(), false);
+            }
+            break;
+        }     
     }
 }
 
@@ -185,6 +201,22 @@ void Schedule::sortColumns()
     }
 }
 
+// Updates all Select type elements in the Column, if the Column is the right type
+void Schedule::updateColumnSelects(unsigned int index)
+{
+    // TODO: some way to check if it's any type of Select rather than just one by one YESS i can use flags maybe?!!
+    if (m_schedule[index].type == SCH_SELECT)
+    {
+        for (int i = 0; i < m_schedule[index].rows.size(); i++)
+        {
+            Select sel = getElement<Select>(index, i);
+            sel.update();
+            setElement<Select>(index, i, sel);
+        }
+    }
+    m_schedule[index].selectOptions.modificationApplied();
+}
+
 void Schedule::addRow(unsigned int index)
 {
     // the last index = just add to the end
@@ -215,10 +247,25 @@ void Schedule::addRow(unsigned int index)
                     columnValues.push_back(std::string(""));
                     break;
                 }
+                case(SCH_SELECT):
+                { 
+                    columnValues.push_back(Select(m_schedule[index].selectOptions));      
+                    break;
+                }
                 case(SCH_TIME):
                 { 
+                    columnValues.push_back(Time(0, 0));      
+                    break;
+                }
+                case(SCH_DATE):
+                { 
                     time_t now = time(0);
-                    columnValues.push_back(Time(*localtime(&now)));      
+                    columnValues.push_back(Date(*localtime(&now)));      
+                    break;
+                }
+                case(SCH_WEEKDAY):
+                { 
+                    columnValues.push_back(Weekday());      
                     break;
                 }
             }
@@ -254,7 +301,7 @@ void Schedule::addDefaultColumn(unsigned int index)
     // the last index = just add to the end
     if (index == getColumnCount())
     {
-        m_schedule.push_back(Column{std::vector<std::any>(getRowCount(), std::string("")), SCH_TEXT, std::string("Text"), false, true, false, false});
+        m_schedule.push_back(Column{std::vector<std::any>(getRowCount(), std::string("")), SCH_TEXT, std::string("Text"), false});
     }
     else
     {

@@ -12,13 +12,17 @@ class ScheduleGui : public Gui
     private:
         Schedule* m_schedule;
         // time editor data (should these be saved somewhere like a struct? i've always thought of making it its separate file, too)
-        int m_timeEditorColumn = -1;
-        int m_timeEditorRow = -1;
-        bool m_timeEditorOpenLastFrame = false;
-        Time m_timeEditorTime;
-        unsigned int m_timeEditorViewedYear = 0;
-        unsigned int m_timeEditorViewedMonth = 0;
-        ImRect m_timeEditorAvoidRect;
+        bool m_editorOpenLastFrame = false;
+        bool m_editorOpenThisFrame = false;
+        int m_editorColumn = -1;
+        int m_editorRow = -1;
+        unsigned int m_editorViewedYear = 0;
+        unsigned int m_editorViewedMonth = 0;
+        Time m_editorTime;
+        Date m_editorDate;
+        Weekday m_editorWeekday;
+        Select m_editorSelect;
+        ImRect m_editorAvoidRect;
 
         ImVec4 m_dayColours[7] =
         {
@@ -31,7 +35,7 @@ class ScheduleGui : public Gui
             ImVec4(216.0f / 255.0f, 188.0f / 255.0f, 47.0f / 255.0f, 1),
         };
         void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
-        bool displayTimeEditor();
+        bool displayEditor(SCHEDULE_TYPE type);
     public:
         ScheduleGui(const char* ID) : Gui(ID) { }
         ScheduleGui(const char* ID, Schedule*);

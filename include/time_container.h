@@ -9,29 +9,29 @@
 class Time
 {
     private:
-        tm m_stored_time;
-        bool m_selectedWeekdays[7] = {false, false, false, false, false, false, false};
+        int m_hours;
+        int m_minutes;
     public:
         Time();
-        explicit Time(const tm& time);
+        Time(int hours, int minutes);
 
         Time& operator+=(const Time& rhs) // compound assignment (does not need to be a member,
         {                           // but often is, to modify the private members)
-            this->m_stored_time.tm_min += rhs.m_stored_time.tm_min;
-            this->m_stored_time.tm_hour += this->m_stored_time.tm_min / 60;
-            this->m_stored_time.tm_min -= this->m_stored_time.tm_min / 60 * 60;
-            this->m_stored_time.tm_hour += rhs.m_stored_time.tm_hour;
-            this->m_stored_time.tm_hour = this->m_stored_time.tm_hour > 23 ? this->m_stored_time.tm_hour - this->m_stored_time.tm_hour / 24 * 24 : this->m_stored_time.tm_hour;
+            this->m_minutes += rhs.m_minutes;
+            this->m_hours += this->m_minutes / 60;
+            this->m_minutes -= this->m_minutes / 60 * 60;
+            this->m_hours += rhs.m_hours;
+            this->m_hours = this->m_hours > 23 ? this->m_hours - this->m_hours / 24 * 24 : this->m_hours;
             return *this; // return the result by reference
         }
 
         Time& operator-=(const Time& rhs) // compound assignment (does not need to be a member,
         {                           // but often is, to modify the private members)
-            this->m_stored_time.tm_min -= rhs.m_stored_time.tm_min;
-            this->m_stored_time.tm_hour = this->m_stored_time.tm_min < 0 ? this->m_stored_time.tm_hour - 1 : this->m_stored_time.tm_hour;
-            this->m_stored_time.tm_min = this->m_stored_time.tm_min < 0 ? 60 + this->m_stored_time.tm_min : this->m_stored_time.tm_min;
-            this->m_stored_time.tm_hour -= rhs.m_stored_time.tm_hour;
-            this->m_stored_time.tm_hour = this->m_stored_time.tm_hour < 0 ? 24 + this->m_stored_time.tm_hour : this->m_stored_time.tm_hour;
+            this->m_minutes -= rhs.m_minutes;
+            this->m_hours = this->m_minutes < 0 ? this->m_hours - 1 : this->m_hours;
+            this->m_minutes = this->m_minutes < 0 ? 60 + this->m_minutes : this->m_minutes;
+            this->m_hours -= rhs.m_hours;
+            this->m_hours = this->m_hours < 0 ? 24 + this->m_hours : this->m_hours;
             return *this; // return the result by reference
         }
         
@@ -50,64 +50,27 @@ class Time
 
         friend bool operator<(const Time& left, const Time& right)
         {
-            if (left.m_stored_time.tm_year < right.m_stored_time.tm_year) { return true; }
-            else if (left.m_stored_time.tm_year == right.m_stored_time.tm_year)
-            {
-                if (left.m_stored_time.tm_mon < right.m_stored_time.tm_mon) { return true; }
-                else if (left.m_stored_time.tm_mon == right.m_stored_time.tm_mon)
-                {
-                    if (left.m_stored_time.tm_mday < right.m_stored_time.tm_mday) { return true; }
-                    else if (left.m_stored_time.tm_mday == right.m_stored_time.tm_mday)
-                    {
-                        if (left.m_stored_time.tm_hour < right.m_stored_time.tm_hour) { return true; }
-                        else if (left.m_stored_time.tm_hour == right.m_stored_time.tm_hour) 
-                        {  
-                            return left.m_stored_time.tm_min < right.m_stored_time.tm_min;
-                        }
-                        else return false;
-                    }
-                    else return false;
-                }
-                else return false;
+            if (left.m_hours < right.m_hours) { return true; }
+            else if (left.m_hours == right.m_hours) 
+            {  
+                return left.m_minutes < right.m_minutes;
             }
             else return false;
         }
 
         friend bool operator>(const Time& left, const Time& right)
         {
-            if (left.m_stored_time.tm_year > right.m_stored_time.tm_year) { return true; }
-            else if (left.m_stored_time.tm_year == right.m_stored_time.tm_year)
-            {
-                if (left.m_stored_time.tm_mon > right.m_stored_time.tm_mon) { return true; }
-                else if (left.m_stored_time.tm_mon == right.m_stored_time.tm_mon)
-                {
-                    if (left.m_stored_time.tm_mday > right.m_stored_time.tm_mday) { return true; }
-                    else if (left.m_stored_time.tm_mday == right.m_stored_time.tm_mday)
-                    {
-                        if (left.m_stored_time.tm_hour > right.m_stored_time.tm_hour) { return true; }
-                        else if (left.m_stored_time.tm_hour == right.m_stored_time.tm_hour) 
-                        {  
-                            return left.m_stored_time.tm_min > right.m_stored_time.tm_min;
-                        }
-                        else return false;
-                    }
-                    else return false;
-                }
-                else return false;
+            if (left.m_hours > right.m_hours) { return true; }
+            else if (left.m_hours == right.m_hours) 
+            {  
+                return left.m_minutes > right.m_minutes;
             }
             else return false;
         }
 
-        const tm* getTime();
-        std::string getString(bool displayDate, bool displayTime, bool displayWeekday);
-        const bool* getSelectedWeekdays();
+        int getHours();
+        int getMinutes();
+        std::string getString();
         
-        void setTime(const tm& time);
-        void setClockTime(unsigned int hour, unsigned int minute);
-        void setMonthDay(unsigned int day);
-        void setMonth(int month);
-        void setYear(int year, bool convert);
-        void setWeekdaySelected(unsigned int weekday, bool selected);
-
-        static int convertToValidYear(int year, bool hasBeenSubtracted = false, bool subtractTmBaseYear = true);
+        void setTime(unsigned int hour, unsigned int minute);
 };

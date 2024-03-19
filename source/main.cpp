@@ -2,9 +2,6 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-// TEMP
-#include <schedule.h>
-#include <time_container.h>
 #ifdef NDEBUG
 #include <Windows.h>
 #endif
