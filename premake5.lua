@@ -33,14 +33,16 @@ project "schetool"
 	includedirs 
 	{ 
 		"include/", 
+		"include/blf/include",
+		"include/blf/include/blf",
 		"include/glad/include", 
 		"include/glad/include/glad",
+		"include/glew",
 		"include/glfw/include", 
 		"include/glm",
 		"include/imgui",
-		"include/glew",
-		-- "include/libconfig/lib",
-		"include/rectpack2D/include"
+		"include/rectpack2D/include",
+		"include/zlib"
 	}
 	
 	defines
@@ -50,14 +52,12 @@ project "schetool"
 	
 	links
 	{
+		"blf",
 		"glad",
 		"glfw",
 		"imgui",
-		--"libconfig++"
+		"zlib"
 	}
-
-	--filter "system:windows"
-		--links {"libconfig++"}
 
 	filter "system:linux"
 		targetextension "_bin"
@@ -68,6 +68,41 @@ project "schetool"
 		}
 
 group "Dependencies"
+
+project("blf")
+	location "include/blf"
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
+
+	files
+	{
+		"%{prj.location}/src/blf/**.cpp"
+	}
+
+	includedirs
+	{
+		"%{prj.location}/include",
+		"%{prj.location}/include/blf",
+		"%{prj.location}/../zlib"
+	}
+
+	links
+	{
+		"zlib"
+	}
+
+	targetdir "bin/%{cfg.buildcfg}"
+	objdir "obj/%{cfg.buildcfg}"
+
+	filter "configurations:Debug"
+		defines { "DEBUG" }
+		symbols "On"
+
+	filter "configurations:Release"
+		defines { "NDEBUG" }
+		optimize "On"
 
 project "glad"
 	location "include/glad"
@@ -227,24 +262,38 @@ project "imgui"
 		defines { "NDEBUG" }
 		optimize "On"
 		
---if _TARGET_OS == "windows" then
-	-- externalproject "libconfig++"
-		-- location "include/libconfig/lib"
-		-- kind "StaticLib"
-		-- language "C++"
-		-- cppdialect "C++17"
-		-- staticruntime "on"
-		
-		-- targetdir "bin/%{cfg.buildcfg}"
-		-- objdir "obj/%{cfg.buildcfg}"
-		
-		-- files 
-		-- { 
-			-- "%{prj.location}/*.cpp"
-		-- }
-			
-		-- includedirs
-		-- { 
-			-- "%{prj.location}"
-		-- }
---end
+project "zlib"
+	location "include/zlib"
+	kind "StaticLib"
+	language "C"
+	staticruntime "on"
+
+	targetdir "bin/%{cfg.buildcfg}"
+	objdir "obj/%{cfg.buildcfg}"
+
+	files
+	{
+		"%{prj.location}/adler32.c",
+		"%{prj.location}/compress.c",
+		"%{prj.location}/crc32.c",
+		"%{prj.location}/deflate.c",
+		"%{prj.location}/gzclose.c",
+		"%{prj.location}/gzlib.c",
+		"%{prj.location}/gzread.c",
+		"%{prj.location}/gzwrite.c",
+		"%{prj.location}/inflate.c",
+		"%{prj.location}/infback.c",
+		"%{prj.location}/inftrees.c",
+		"%{prj.location}/inffast.c",
+		"%{prj.location}/trees.c",
+		"%{prj.location}/uncompr.c",
+		"%{prj.location}/zutil.c"
+	}
+
+	filter "configurations:Debug"
+		defines { "DEBUG" }
+		symbols "On"
+
+	filter "configurations:Release"
+		defines { "NDEBUG" }
+		optimize "On"
