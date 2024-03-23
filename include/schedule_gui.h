@@ -20,7 +20,6 @@ class ScheduleGui : public Gui
         unsigned int m_editorViewedMonth = 0;
         Time m_editorTime;
         Date m_editorDate;
-        Weekday m_editorWeekday;
         Select m_editorSelect;
         ImRect m_editorAvoidRect;
 

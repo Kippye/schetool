@@ -6,6 +6,7 @@
 #include <select_container.h>
 #include <iostream>
 #include <vector>
+#include <util.h>
 
 void SelectOptionChange::replace(SELECT_MODIFICATION type, size_t firstIndex, size_t secondIndex)
 {
@@ -35,6 +36,16 @@ const SelectOptionChange& SelectOptions::getLastChange() const
     return m_lastModification;
 }
 
+void SelectOptions::setIsMutable(bool isMutable)
+{
+    m_mutable = isMutable;
+}
+
+bool SelectOptions::getIsMutable() const
+{
+    return m_mutable;
+}
+
 void SelectOptions::addOption(const std::string& option)
 {
     m_options.push_back(option);
@@ -54,12 +65,17 @@ void SelectOptions::removeOption(const std::string& option)
 
 void SelectOptions::removeOption(size_t option)
 {
-    std::cout << "Removing option " << option << std::endl;
     m_lastModification.replace(SELECT_MODIFICATION_REMOVE, option, option);
     m_options.erase(m_options.begin() + option);
 }
 
-void SelectOptions::clear()
+void SelectOptions::moveOption(size_t firstIndex, size_t secondIndex)
+{
+    m_lastModification.replace(SELECT_MODIFICATION_MOVE, firstIndex, secondIndex);
+    containers::move(m_options, firstIndex, secondIndex);
+}
+
+void SelectOptions::clearOptions()
 {
     m_lastModification.replace(SELECT_MODIFICATION_CLEAR, 0, 0);
     m_options.clear();
@@ -152,7 +168,7 @@ void Select::update()
             // If firstIndex > secondIndex, add 1 to every index between firstIndex (excluded) and secondIndex (included).
             if (lastChange.firstIndex > lastChange.secondIndex)
             {
-                for (size_t i = lastChange.firstIndex - 1; i >= lastChange.secondIndex; i--)
+                for (size_t i = lastChange.secondIndex; i < lastChange.firstIndex; i++)
                 {
                     if (m_selection.find(i) != m_selection.end())
                     {
@@ -164,7 +180,7 @@ void Select::update()
             // If firstIndex < secondIndex, subtract 1 from every index between firstIndex (excluded) and lastIndex (included).
             else if (lastChange.firstIndex < lastChange.secondIndex)
             {
-                for (size_t i = lastChange.firstIndex + 1; i <= lastChange.secondIndex; i++)
+                for (size_t i = lastChange.secondIndex; i > lastChange.firstIndex; i--)
                 {
                     if (m_selection.find(i) != m_selection.end())
                     {

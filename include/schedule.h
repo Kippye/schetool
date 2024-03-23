@@ -1,8 +1,7 @@
 #pragma once
-#include "select_container.h"
+#include <select_container.h>
 #include <time_container.h>
 #include <date_container.h>
-#include <weekday_container.h>
 #include <algorithm>
 #include <vector>
 #include <any>
@@ -101,10 +100,6 @@ struct ColumnSortComparison
             {
                 return sortDirection == COLUMN_SORT_DESCENDING ? std::any_cast<Date>(left) > std::any_cast<Date>(right) : std::any_cast<Date>(left) < std::any_cast<Date>(right);
             }
-            case(SCH_WEEKDAY):
-            {
-                return sortDirection == COLUMN_SORT_DESCENDING ? std::any_cast<Weekday>(left) > std::any_cast<Weekday>(right) : std::any_cast<Weekday>(left) < std::any_cast<Weekday>(right);
-            }
         }
     }
 
@@ -132,9 +127,9 @@ class Schedule
             {SCH_DOUBLE, "Decimal"},
             {SCH_TEXT, "Text"},
             {SCH_SELECT, "Select"},
+            {SCH_WEEKDAY, "Select Weekday"},
             {SCH_TIME, "Time"},
             {SCH_DATE, "Date"},
-            {SCH_WEEKDAY, "Weekday"},
         };
         // TEMP
         void test_setup();

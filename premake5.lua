@@ -39,7 +39,7 @@ project "schetool"
 		"include/glm",
 		"include/imgui",
 		"include/glew",
-		"include/libconfig/lib",
+		-- "include/libconfig/lib",
 		"include/rectpack2D/include"
 	}
 	
@@ -53,10 +53,11 @@ project "schetool"
 		"glad",
 		"glfw",
 		"imgui",
+		--"libconfig++"
 	}
 
-	filter "system:windows"
-		links {"libconfig++"}
+	--filter "system:windows"
+		--links {"libconfig++"}
 
 	filter "system:linux"
 		targetextension "_bin"
@@ -96,17 +97,6 @@ project "glad"
 	filter "configurations:Release"
 		defines { "NDEBUG" }
 		optimize "On"
-		
-
---[[externalproject("glfw")
-	location "include/glfw"
-	kind "StaticLib"
-	language "C++"
-	cppdialect "C++17"
-	staticruntime "on"
-	
-	targetdir "bin/%{cfg.buildcfg}"
-	objdir "obj/%{cfg.buildcfg}"]]
 
 project "glfw"
 	location "include/glfw"
@@ -237,14 +227,24 @@ project "imgui"
 		defines { "NDEBUG" }
 		optimize "On"
 		
-if _TARGET_OS == "windows" then
-	externalproject("libconfig++")
-		location "include/libconfig/lib"
-		kind "StaticLib"
-		language "C++"
-		cppdialect "C++17"
-		staticruntime "on"
+--if _TARGET_OS == "windows" then
+	-- externalproject "libconfig++"
+		-- location "include/libconfig/lib"
+		-- kind "StaticLib"
+		-- language "C++"
+		-- cppdialect "C++17"
+		-- staticruntime "on"
 		
-		targetdir "bin/%{cfg.buildcfg}"
-		objdir "obj/%{cfg.buildcfg}"
-end
+		-- targetdir "bin/%{cfg.buildcfg}"
+		-- objdir "obj/%{cfg.buildcfg}"
+		
+		-- files 
+		-- { 
+			-- "%{prj.location}/*.cpp"
+		-- }
+			
+		-- includedirs
+		-- { 
+			-- "%{prj.location}"
+		-- }
+--end

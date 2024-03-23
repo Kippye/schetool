@@ -20,7 +20,7 @@ const tm* Date::getTime()
 {
     return &m_stored_time;
 }
-// Returns the string representation of the stored time, depending on the displayDate, displayTime and displayWeekday values.
+// Returns the string representation of the stored date
 std::string Date::getString()
 {
     try

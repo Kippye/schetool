@@ -1,4 +1,4 @@
-#include "select_container.h"
+#include <select_container.h>
 #include <cstdlib>
 #include <schedule.h>
 #include <string.h>
@@ -61,7 +61,29 @@ SelectOptions& Schedule::getColumnSelectOptions(unsigned int column)
 
 void Schedule::setColumnType(unsigned int column, SCHEDULE_TYPE type)
 {
-    if (type == m_schedule[column].type) { return; }
+    //if (type == m_schedule[column].type) { return; }
+
+    if (type == SCH_SELECT)
+    {
+        m_schedule[column].selectOptions.setIsMutable(true);
+    }
+    // setup for weekday type
+    else if (type == SCH_WEEKDAY)
+    {
+        m_schedule[column].selectOptions.clearOptions();
+        m_schedule[column].selectOptions.addOption(std::string("Monday"));
+        m_schedule[column].selectOptions.addOption(std::string("Tuesday"));
+        m_schedule[column].selectOptions.addOption(std::string("Wednesday"));
+        m_schedule[column].selectOptions.addOption(std::string("Thursday"));
+        m_schedule[column].selectOptions.addOption(std::string("Friday"));
+        m_schedule[column].selectOptions.addOption(std::string("Saturday"));
+        m_schedule[column].selectOptions.addOption(std::string("Sunday"));
+        // TODO: set up colours as well
+        m_schedule[column].selectOptions.setIsMutable(false);
+        // IMPORTANT!
+        type = SCH_SELECT;
+    }
+
     m_schedule[column].type = type;
     // TODO: try to convert types..? i guess there's no point in doing that. only really numbers could be turned into text.
     // reset values to defaults
@@ -125,7 +147,10 @@ void Schedule::resetColumn(unsigned int column)
         {
             for (unsigned int row = 0; row < rowCount; row++)
             {
-                m_schedule[column].selectOptions.clear();
+                if (m_schedule[column].selectOptions.getIsMutable() == true)
+                {
+                    m_schedule[column].selectOptions.clearOptions();
+                }
                 setElement<Select>(column, row, Select(m_schedule[column].selectOptions), false);
             }     
             break;
@@ -148,14 +173,6 @@ void Schedule::resetColumn(unsigned int column)
             }
             break;
         }   
-        case(SCH_WEEKDAY):
-        {
-            for (unsigned int row = 0; row < rowCount; row++)
-            {
-                setElement<Weekday>(column, row, Weekday(), false);
-            }
-            break;
-        }     
     }
 }
 
@@ -261,11 +278,6 @@ void Schedule::addRow(unsigned int index)
                 { 
                     time_t now = time(0);
                     columnValues.push_back(Date(*localtime(&now)));      
-                    break;
-                }
-                case(SCH_WEEKDAY):
-                { 
-                    columnValues.push_back(Weekday());      
                     break;
                 }
             }

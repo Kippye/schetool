@@ -1,5 +1,4 @@
-#include "select_container.h"
-#include "weekday_container.h"
+#include <select_container.h>
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -255,7 +254,7 @@ void ScheduleGui::draw(Window& window)
 								{
 									Time value = m_schedule->getElement<Time>(column, row);
 
-									// Button displaying the date, time or selected weekdays of the current Time element
+									// Button displaying the Time of the current Time element
 									if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
 									{
 										m_editorColumn = column;
@@ -311,80 +310,6 @@ void ScheduleGui::draw(Window& window)
 									std::cerr << e.what() << '\n';
 								}
 								
-								break;
-							}
-							case(SCH_WEEKDAY):
-							{
-								try 
-								{
-									auto value = m_schedule->getElement<Weekday>(column, row);
-									const bool* selectedWeekdays = value.getSelectedWeekdays();
-									unsigned int selectedWeekdayCount = 0;
-									
-									for (int i = 0; i < 7; i++)
-									{
-										if (selectedWeekdays[i] == true) { selectedWeekdayCount += 1; }
-									}
-
-									std::vector<std::string> displayedWeekdayNames = containers::split(value.getString(), ' ');
-									unsigned int weekdayNameIndex = 0;
-
-									for (int i = 0; i < 7; i++)
-									{
-										if (selectedWeekdays[i] == true)
-										{
-											if (weekdayNameIndex % 3 != 0)
-											{
-												ImGui::SameLine();
-											}
-											ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
-											if (ImGui::ButtonEx(displayedWeekdayNames[weekdayNameIndex].append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
-											{
-												// left clicking opens the time editor like the user would expect
-												if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-												{
-													m_editorColumn = column;
-													m_editorRow = row;
-													m_editorWeekday = value;
-													m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-													ImGui::OpenPopup("Editor");
-												}
-												// right clicking erases the day - bonus feature
-												else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
-												{
-													value.setWeekdaySelected(i, !selectedWeekdays[i]);
-													m_schedule->setElement<Weekday>(column, row, value);
-												}
-											}
-											ImGui::PopStyleColor(1);
-											weekdayNameIndex++;
-										}
-									}
-									// TEMP ? if there are no weekdays selected, just show an "Edit" button to prevent kind of a softlock
-									if (selectedWeekdayCount == 0)
-									{
-										if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
-										{
-											m_editorColumn = column;
-											m_editorRow = row;
-											m_editorWeekday = value;
-											m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-											ImGui::OpenPopup("Editor");
-										}
-									}
-									if (column == m_editorColumn && row == m_editorRow)
-									{
-										displayEditor(SCH_WEEKDAY);
-										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
-										{
-											m_schedule->setElement(column, row, m_editorWeekday);
-										}
-									}
-								}
-								catch(const std::exception& e)
-								{
-									std::cerr << e.what() << '\n';
-								}
 								break;
 							}
 						}
@@ -545,6 +470,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 			}
 			case(SCH_DATE):
 			{
+				ImGui::Text("%s", m_editorDate.getString().c_str());
 				// DATE / CALENDAR
 				if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
 				{
@@ -589,37 +515,9 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				
 				break;
 			}
-			case(SCH_WEEKDAY):
-			{
-				// WEEKDAY
-				bool selections[7];
-				const bool* previousSelections = m_editorWeekday.getSelectedWeekdays();
-				std::copy(previousSelections, previousSelections + 7, std::begin(selections));
-
-				for (int i = 0; i < 7; i++)
-				{
-					formatTime.tm_wday = i == 0 ? 1 : (i == 6 ? 0 : i + 1);
-					char dayName[100];
-					std::strftime(dayName, sizeof(dayName), "%a", &formatTime);
-
-					if (ImGui::Selectable(dayName, &selections[i], ImGuiSelectableFlags_DontClosePopups, ImVec2(24, 0)))
-					{
-						m_editorWeekday.setWeekdaySelected(i, selections[i]);
-						valueEdited = true;
-					}
-					if (i != 6)
-					{
-						ImGui::SameLine();
-					}
-				}
-
-				break;
-			}
 			case(SCH_SELECT):
 			{
 				auto selection = m_editorSelect.getSelection();
-				// TEMP
-				m_editorSelect.printSelection();
 				size_t selectedCount = selection.size();
 				const std::vector<std::string>& optionNames = m_schedule->getColumnSelectOptions(m_editorColumn).getOptions();
 
@@ -645,18 +543,21 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				}
 
 				// add new options
-				std::string str;
-				str.reserve(SELECT_OPTION_NAME_MAX_LENGTH);
-				char* buf = str.data();
-				//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
-				if (ImGui::InputText("##EditorOptionInput", buf, SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable())
 				{
-					if (std::string(buf).empty() == false)
+					std::string str;
+					str.reserve(SELECT_OPTION_NAME_MAX_LENGTH);
+					char* buf = str.data();
+					//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
+					if (ImGui::InputText("##EditorOptionInput", buf, SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
 					{
-						m_schedule->getColumnSelectOptions(m_editorColumn).addOption(std::string(buf));
-						m_editorSelect.setSelected(m_schedule->getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
-						// NOTE: break here because otherwise the start and end of the function kind of go out of sync
-						break;
+						if (std::string(buf).empty() == false)
+						{
+							m_schedule->getColumnSelectOptions(m_editorColumn).addOption(std::string(buf));
+							m_editorSelect.setSelected(m_schedule->getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
+							// NOTE: break here because otherwise the start and end of the function kind of go out of sync
+							break;
+						}
 					}
 				}
 
@@ -664,19 +565,42 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				{
 					bool selected = selection.find(i) != selection.end();
 
-					if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
+					if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable())
 					{
-						m_schedule->getColumnSelectOptions(m_editorColumn).removeOption(i);
-						m_editorSelect.update(); // update the m_editorSelect separately!
-						m_schedule->updateColumnSelects(m_editorColumn);
-						// break because the whole thing must be restarted now
-						break;
+						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
+						{
+							m_schedule->getColumnSelectOptions(m_editorColumn).removeOption(i);
+							m_editorSelect.update(); // update the m_editorSelect separately!
+							m_schedule->updateColumnSelects(m_editorColumn);
+							// break because the whole thing must be restarted now
+							break;
+						}
+						ImGui::SameLine();
 					}
-					ImGui::SameLine();
-					if (ImGui::Selectable(std::string(optionNames[i]).append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
+
+					std::string optionName = std::string(optionNames[i]);
+
+					if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
 					{
 						m_editorSelect.setSelected(i, selected);
 						valueEdited = true;
+					}
+
+					// drag to reorder options
+					if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable())
+					{
+						if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
+						{
+							size_t i_next = i + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+							if (i_next >= 0 && i_next < optionNames.size())
+							{
+								m_schedule->getColumnSelectOptions(m_editorColumn).moveOption(i, i_next);
+								m_editorSelect.update();
+								m_schedule->updateColumnSelects(m_editorColumn);
+								ImGui::ResetMouseDragDelta();
+								break;
+							}
+						}
 					}
 				}
 

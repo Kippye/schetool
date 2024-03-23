@@ -3,7 +3,6 @@
 #include <ctime>
 #include <set>
 #include <string>
-#include <tuple>
 #include <vector>
 
 #include <iostream>
@@ -31,8 +30,7 @@ struct SelectOptions
     private:
         std::vector<std::string> m_options = {};
         SelectOptionChange m_lastModification;
-    // TODO: i still need to loop through every row to update them if the options are updated..
-
+        bool m_mutable;
     public:
         SelectOptions();
         SelectOptions(const std::vector<std::string>& options);
@@ -42,9 +40,11 @@ struct SelectOptions
         void addOption(const std::string& option);
         void removeOption(const std::string& option);
         void removeOption(size_t option);
-        void clear();
+        void moveOption(size_t firstIndex, size_t secondIndex);
+        void clearOptions();
+        void setIsMutable(bool to);
+        bool getIsMutable() const;
         // void renameOption(size_t option, const char* name);
-        //void moveOption(size_t option);
         void modificationApplied();
 };
 
@@ -59,14 +59,53 @@ class Select
         
         friend bool operator<(const Select& left, const Select& right)
         {
-            return true; // TODO
+            if (right.m_selection.size() == 0) { return true; }
+            if (left.m_selection.size() == 0) { return false; }
+
+            size_t leftForemostOption = 1000;
+            size_t rightForemostOption = 1000;
+
+            for (size_t i = 0; i < left.m_options->getOptions().size(); i++)
+            {
+                // has this option selected
+                if (leftForemostOption == 1000 && left.m_selection.find(i) != left.m_selection.end())
+                {
+                    leftForemostOption = i;
+                }
+                if (rightForemostOption == 1000 && right.m_selection.find(i) != right.m_selection.end())
+                {
+                    rightForemostOption = i;
+                }
+            }
+
+            return left.m_options->getOptions()[leftForemostOption] < right.m_options->getOptions()[rightForemostOption];
         }
 
         friend bool operator>(const Select& left, const Select& right)
         {
-            return true; // TODO
+            if (right.m_selection.size() == 0) { return false; }
+            if (left.m_selection.size() == 0) { return true; }
+
+            size_t leftForemostOption = 1000;
+            size_t rightForemostOption = 1000;
+
+            for (size_t i = 0; i < left.m_options->getOptions().size(); i++)
+            {
+                // has this option selected
+                if (leftForemostOption == 1000 && left.m_selection.find(i) != left.m_selection.end())
+                {
+                    leftForemostOption = i;
+                }
+                if (rightForemostOption == 1000 && right.m_selection.find(i) != right.m_selection.end())
+                {
+                    rightForemostOption = i;
+                }
+            }
+
+            return left.m_options->getOptions()[leftForemostOption] > right.m_options->getOptions()[rightForemostOption];
         }
 
+        // TEMP
         void printSelection()
         {
             for (auto s: m_selection)

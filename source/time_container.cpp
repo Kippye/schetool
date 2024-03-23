@@ -27,7 +27,7 @@ int Time::getMinutes()
     return m_minutes;
 }
 
-// Returns the string representation of the stored time, depending on the displayDate, displayTime and displayWeekday values.
+// Returns the string representation of the stored Time
 std::string Time::getString()
 {
     try
