@@ -3,26 +3,33 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#include <element.h>
 
 #include <iostream>
 
-class Date
+class Date : public Element
 {
     private:
-        tm m_stored_time;
+        DateContainer m_date;
     public:
         Date();
         explicit Date(const tm& time);
+        Date(const DateContainer& m_date);
+        Date(SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) {}
+        Date(const tm& time, SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) 
+        {
+            setTime(time);
+        }
 
         friend bool operator<(const Date& left, const Date& right)
         {
-            if (left.m_stored_time.tm_year < right.m_stored_time.tm_year) { return true; }
-            else if (left.m_stored_time.tm_year == right.m_stored_time.tm_year)
+            if (left.m_date.time.tm_year < right.m_date.time.tm_year) { return true; }
+            else if (left.m_date.time.tm_year == right.m_date.time.tm_year)
             {
-                if (left.m_stored_time.tm_mon < right.m_stored_time.tm_mon) { return true; }
-                else if (left.m_stored_time.tm_mon == right.m_stored_time.tm_mon)
+                if (left.m_date.time.tm_mon < right.m_date.time.tm_mon) { return true; }
+                else if (left.m_date.time.tm_mon == right.m_date.time.tm_mon)
                 {
-                    return left.m_stored_time.tm_mday < right.m_stored_time.tm_mday;
+                    return left.m_date.time.tm_mday < right.m_date.time.tm_mday;
                 }
                 else return false;
             }
@@ -31,13 +38,13 @@ class Date
 
         friend bool operator>(const Date& left, const Date& right)
         {
-            if (left.m_stored_time.tm_year > right.m_stored_time.tm_year) { return true; }
-            else if (left.m_stored_time.tm_year == right.m_stored_time.tm_year)
+            if (left.m_date.time.tm_year > right.m_date.time.tm_year) { return true; }
+            else if (left.m_date.time.tm_year == right.m_date.time.tm_year)
             {
-                if (left.m_stored_time.tm_mon > right.m_stored_time.tm_mon) { return true; }
-                else if (left.m_stored_time.tm_mon == right.m_stored_time.tm_mon)
+                if (left.m_date.time.tm_mon > right.m_date.time.tm_mon) { return true; }
+                else if (left.m_date.time.tm_mon == right.m_date.time.tm_mon)
                 {
-                    return left.m_stored_time.tm_mday > right.m_stored_time.tm_mday;
+                    return left.m_date.time.tm_mday > right.m_date.time.tm_mday;
                 }
                 else return false;
             }

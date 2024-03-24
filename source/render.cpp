@@ -31,7 +31,7 @@ void Render::init(Window* windowManager, Camera* camera, Interface* interface)
 void Render::render()
 {
 	// render loop
-	float currentFrame = glfwGetTime();
+	double currentFrame = glfwGetTime();
 	/// TIME AND TIMERS ///
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;

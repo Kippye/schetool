@@ -18,7 +18,7 @@ class Render
 		float timeCounter = 0.0f;
 		double timeSinceStart = 0.0;
 	public:
-		float deltaTime = 0.0f, lastFrame = 0.0f, FPS = 0.0f;
+		double deltaTime = 0.0, lastFrame = 0.0, FPS = 0.0;
 
 		glm::mat4 projection = glm::mat4(1.0f);
 

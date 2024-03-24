@@ -13,23 +13,24 @@ Date::Date()
 
 Date::Date(const tm& time)
 {
-    m_stored_time = tm(time);
+    setTime(time);
+}
+
+Date::Date(const DateContainer& date)
+{
+    m_date = date;
 }
 
 const tm* Date::getTime()
 {
-    return &m_stored_time;
+    return &m_date.time;
 }
 // Returns the string representation of the stored date
 std::string Date::getString()
 {
     try
     {
-        char output[1024];
-
-        std::strftime(output, sizeof(output), "%d/%m/%y", &m_stored_time);
-
-        return std::string(output);
+        return m_date.getString();
     }
     catch (const std::exception& e)
     {
@@ -41,24 +42,24 @@ std::string Date::getString()
 
 void Date::setTime(const tm& time)
 {
-    m_stored_time = tm(time);
+    m_date.time = tm(time);
 }
 
 void Date::setMonthDay(unsigned int day)
 {
-    m_stored_time.tm_mday = day;
+    m_date.time.tm_mday = day;
 }
 // NOTE: If the given month is < 0, it will be set to 11. If it's > 11, it will be set to 0
 void Date::setMonth(int month)
 {
-    m_stored_time.tm_mon = month < 0 ? 11 : (month > 11 ? 0 : month);
+    m_date.time.tm_mon = month < 0 ? 11 : (month > 11 ? 0 : month);
 }
 // NOTE: hasBeenSubtracted is used to determine which range the year should be limited to (if 1900 has already been subtracted from the year)
 // subtractTmBaseYear - if this is true, then 1900 will be subtracted from the year before doing other validation
 void Date::setYear(int year, bool convert)
 {
     year = convertToValidYear(year, !convert, convert);
-    m_stored_time.tm_year = year;
+    m_date.time.tm_year = year;
 }
 
 // Helper function that converts any unsigned integer to a year usable in the tm struct

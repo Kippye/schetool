@@ -61,12 +61,12 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 	if (action == GLFW_PRESS)
 	{
 		if (m_interface->guiWantKeyboard) { return; }
-		switch (key)
-		{
-			/// program manipulators
+		// switch (key)
+		// {
+		// 	/// program manipulators
 
-			// shortcuts
-		}
+		// 	// shortcuts
+		// }
 	}
 	else if (action == GLFW_RELEASE)
 	{
@@ -116,10 +116,10 @@ void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos)
 {
 	if (m_windowManager->hasFocus)
 	{
-		mouseMovement.x = xPos - mousePos.x;
-		mouseMovement.y = yPos - mousePos.y;
-		mousePos.x = xPos;
-		mousePos.y = yPos;
+		mouseMovement.x = (float)xPos - mousePos.x;
+		mouseMovement.y = (float)yPos - mousePos.y;
+		mousePos.x = (float)xPos;
+		mousePos.y = (float)yPos;
 	}
 }
 

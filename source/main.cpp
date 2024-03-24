@@ -40,7 +40,7 @@ void Program::loop()
 		// update the camera view direction (not really needed but eh)
 		camera.updateView();
 		//std::cout << "Updated camera view" << std::endl;
-		if (glfwWindowShouldClose(windowManager.window))
+		if (schedule.tempStop || glfwWindowShouldClose(windowManager.window))
 		{
 			programWillClose = quitProgram = true;
 		}
