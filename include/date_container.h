@@ -51,8 +51,8 @@ class Date : public Element
             else return false;
         }
 
-        const tm* getTime();
-        std::string getString();
+        const tm* getTime() const;
+        std::string getString() const;
         
         void setTime(const tm& time);
         void setMonthDay(unsigned int day);

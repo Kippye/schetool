@@ -153,12 +153,12 @@ class Schedule
         void removeColumn(size_t column);
 
         // TODO: make this return a (const?) pointer instead. too much copying!
-        template <typename T>
+        template <typename T, typename = std::enable_if<std::is_base_of<Element, T>::value>>
         T getElement(size_t column, size_t row)
         {
             return *getMutableColumn(column)->getElement<T>(row);
         }
-        template <typename T>
+        template <typename T, typename = std::enable_if<std::is_base_of<Element, T>::value>>
         void setElement(size_t column, size_t row, T* value, bool resort = true)
         {
             // IF the value being assigned fits the column's type, set the Element's value directly

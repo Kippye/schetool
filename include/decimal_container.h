@@ -29,6 +29,6 @@ class Decimal : public Element
             return left.m_value > right.m_value;
         }
 
-        double getValue() { return m_value; }
+        double getValue() const { return m_value; };
         void setValue(double to) { m_value = to; }
 };

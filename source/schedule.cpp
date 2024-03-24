@@ -207,7 +207,7 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement<Text>(index, row, new Text(type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement<Text>(index, row, new Text("", type, DateContainer(creationTime), TimeContainer(creationTime)), false);
             }     
             break;
         }
@@ -275,7 +275,7 @@ void Schedule::addRow(size_t index)
                 }
                 case(SCH_TEXT):
                 {
-                    columnValues.push_back(new Text(column.type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.push_back(new Text("", column.type, DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_SELECT):
@@ -335,7 +335,7 @@ void Schedule::addDefaultColumn(size_t index)
 
         for (size_t i = 0; i < getRowCount(); i++)
         {
-            addedElements.push_back((Element*)new Text(SCH_TEXT, DateContainer(creationTime), TimeContainer(creationTime)));
+            addedElements.push_back((Element*)new Text(std::string(""), SCH_TEXT, DateContainer(creationTime), TimeContainer(creationTime)));
         }
         m_schedule.push_back(Column{addedElements, SCH_TEXT, std::string("Text"), false});
     }

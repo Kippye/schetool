@@ -29,6 +29,6 @@ class Bool : public Element
             return left.m_value > right.m_value;
         }
 
-        bool getValue() { return m_value; }
+        bool getValue() const { return m_value; };
         void setValue(bool to) { m_value = to; }
 };

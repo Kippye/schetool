@@ -29,6 +29,6 @@ class Number : public Element
             return left.m_value > right.m_value;
         }
 
-        int getValue() { return m_value; }
+        int getValue() const { return m_value; }
         void setValue(int to) { m_value = to; }
 };

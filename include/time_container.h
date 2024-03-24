@@ -73,9 +73,9 @@ class Time : public Element
             else return false;
         }
 
-        int getHours();
-        int getMinutes();
-        std::string getString();
+        int getHours() const;
+        int getMinutes() const;
+        std::string getString() const;
         
         void setTime(unsigned int hour, unsigned int minute);
 };

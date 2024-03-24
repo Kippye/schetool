@@ -15,7 +15,10 @@ class Text : public Element
         {
             m_value = value;
         }
-        Text(SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) {}
+        Text(const std::string& value, SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) 
+        {
+            m_value = value;
+        }
 
         friend bool operator<(const Text& left, const Text& right)
         {
@@ -27,6 +30,6 @@ class Text : public Element
             return left.m_value > right.m_value;
         }
 
-        const std::string& getValue() { return m_value; }
+        const std::string& getValue() const { return m_value; }
         void setValue(const std::string& to) { m_value = to; }
 };

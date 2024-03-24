@@ -1,6 +1,10 @@
+#include "datatable.hpp"
+#include "element.h"
 #include <main.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+// TEMP
+#include <data_converter.h>
 
 #ifdef NDEBUG
 #include <Windows.h>
@@ -23,6 +27,19 @@ Program::Program()
 	render.init(&windowManager, &camera, &interface);
 	interface.init(&windowManager, &schedule);
 	#endif
+
+    time_t t = std::time(nullptr);
+    tm creationTime = *std::localtime(&t);
+	Text* d = new Text("BLF 1.1 never dies ""zmateusz""", SCH_TEXT, DateContainer(creationTime), TimeContainer(creationTime));
+
+	DataConverter converter;
+	converter.setupObjectTable();
+	converter.write("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf", d);
+	Text* e = (Text*)converter.read("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
+	std::cout << e->getValue() << std::endl;
+	std::cout << e->getType() << std::endl;
+	std::cout << e->getCreationDate().getString() << std::endl;
+	std::cout << e->getCreationTime().getString() << std::endl;
 
 	// TODO: load textures
 	//file_system.loadGUITextures();

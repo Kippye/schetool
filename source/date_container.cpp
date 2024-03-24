@@ -21,12 +21,12 @@ Date::Date(const DateContainer& date)
     m_date = date;
 }
 
-const tm* Date::getTime()
+const tm* Date::getTime() const
 {
     return &m_date.time;
 }
 // Returns the string representation of the stored date
-std::string Date::getString()
+std::string Date::getString() const
 {
     try
     {

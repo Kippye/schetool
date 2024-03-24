@@ -21,18 +21,18 @@ Time::Time(const TimeContainer& time)
     m_time = time;
 }
 
-int Time::getHours()
+int Time::getHours() const
 {
     return m_time.hours;
 }
 
-int Time::getMinutes()
+int Time::getMinutes() const
 {
     return m_time.minutes;
 }
 
 // Returns the string representation of the stored Time
-std::string Time::getString()
+std::string Time::getString() const
 {
     try
     {
