@@ -95,16 +95,13 @@ void ScheduleGui::draw(Window& window)
 						SCHEDULE_TYPE columnType = m_schedule->getColumn(column)->type;
 						// TODO: i could probably reduce the code repetition here
 						ImGui::SetNextItemWidth(-FLT_MIN);
-
-						std::cout << "display" << std::endl;
-
+ 
 						switch(columnType)
 						{
 							case(SCH_BOOL):
 							{
 								try
 								{
-									std::cout << "boolindeed" << std::endl;
 									Bool container = m_schedule->getElement<Bool>(column, row);
 									bool newValue = container.getValue();
 									if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
@@ -187,9 +184,7 @@ void ScheduleGui::draw(Window& window)
 							{
 								try 
 								{
-									std::cout << "select" << std::endl;
 									Select value = m_schedule->getElement<Select>(column, row);
-									std::cout << "select1" << std::endl;
 									auto selection = value.getSelection();
 									size_t selectedCount = selection.size();
 									const std::vector<std::string>& optionNames = m_schedule->getColumn(column)->selectOptions.getOptions();
@@ -200,7 +195,6 @@ void ScheduleGui::draw(Window& window)
 									{
 										selectionIndices.push_back(s);
 									}
-									std::cout << "select2" << std::endl;
 
 									// sort indices so that the same options are always displayed in the same order
 									std::sort(std::begin(selectionIndices), std::end(selectionIndices));
@@ -238,7 +232,6 @@ void ScheduleGui::draw(Window& window)
 										}
 										// ImGui::PopStyleColor(1);
 									}
-									std::cout << "select3" << std::endl;
 
 									// TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
 									if (selectedCount == 0)

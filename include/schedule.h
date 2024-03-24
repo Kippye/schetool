@@ -131,7 +131,6 @@ class Schedule
         };
         // TEMP
         void test_setup();
-        bool tempStop = false;
 
         const Column* getColumn(size_t column);
         SelectOptions& getColumnSelectOptions(size_t column);
@@ -157,13 +156,6 @@ class Schedule
         template <typename T>
         T getElement(size_t column, size_t row)
         {
-            std::cout << ((Element*)getMutableColumn(column)->getElement<T>(row))->getType() << std::endl; // prints the massive number
-            if (scheduleTypeNames.find(((Element*)getMutableColumn(column)->getElement<T>(row))->getType()) == scheduleTypeNames.end())
-            {
-                // not nullptr
-                tempStop = true;
-            }
-            std::cout << scheduleTypeNames.at(((Element*)getMutableColumn(column)->getElement<T>(row))->getType()) << std::endl;
             return *getMutableColumn(column)->getElement<T>(row);
         }
         template <typename T>
