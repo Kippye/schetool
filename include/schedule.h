@@ -156,6 +156,9 @@ class Schedule
         void addDefaultColumn(size_t index);
         void addColumn(size_t index, const Column& column);
         void removeColumn(size_t column);
+        // Replaces the m_schedule vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
+        void replaceSchedule(std::vector<Column> columns);
+
 
         // TODO: make this return a (const?) pointer instead. too much copying!
         template <typename T, typename = std::enable_if<std::is_base_of<Element, T>::value>>
@@ -169,13 +172,11 @@ class Schedule
             // IF the value being assigned fits the column's type, set the Element's value directly
             if (getColumn(column)->type == ((Element*)value)->getType())
             {
-                std::cout << "assigned " << scheduleTypeNames.at(((Element*)value)->getType()) << std::endl;
                 *getMutableColumn(column)->getElement<T>(row) = *value;
             }
             // IF the value being assigned is of a different type than the column's (i.e. the column's type was just changed and is being reset), REPLACE the pointer. Otherwise, the program will crash.
             else
             {
-                std::cout << "replaced with " << scheduleTypeNames.at(((Element*)value)->getType()) << std::endl;
                 getMutableColumn(column)->rows[row] = (Element*)value;
                 std::cout << scheduleTypeNames.at(getMutableColumn(column)->getElement<Element>(row)->getType()) << std::endl;
             }

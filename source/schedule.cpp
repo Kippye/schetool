@@ -393,3 +393,16 @@ void Schedule::removeColumn(size_t column)
         m_schedule.erase(m_schedule.begin() + column);
     }
 }
+
+void Schedule::replaceSchedule(std::vector<Column> columns)
+{
+    for (Column& column: m_schedule)
+    {
+        for (Element* element: column.rows)
+        {
+            delete element;
+        }
+    }
+
+    m_schedule = columns;
+}

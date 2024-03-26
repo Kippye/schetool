@@ -93,6 +93,8 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
     }
 
     writeFile("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf", m_objects, data);
+
+    // TODO: clean data?
     return 0;
 }
 
@@ -102,7 +104,8 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     BLFFile file = readFile(path, m_objects);
 
     // create a copy Schedule for now, because if something fails, we don't want to replace the provided Schedule with a broken mess
-    std::vector<Column> loadedSchedule = {};
+    // std::vector<Column> loadedSchedule = {};
+    schedule.clear();
 
     // load and create Columns first
     DataGroup<BLF_Column> columns = file.data.get<BLF_Column>();
@@ -112,8 +115,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     // loop through the sorted BLF_Columns and add them to the schedule as Columns
     for (size_t c = 0; c < columns.getSize(); c++)
     {
-        std::cout << c << "; " << columns[c]->index << std::endl;
-        loadedSchedule.push_back(
+        schedule.push_back(
             Column {
                 std::vector<Element*>{}, 
                 (SCHEDULE_TYPE)columns[c]->type, 
@@ -138,7 +140,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 for (BLF_Bool* element: file.data.get<BLF_Bool>())
                 {
                     tm creationTime = getElementCreationTime(element);
-                    loadedSchedule[element->columnIndex].rows.push_back(new Bool(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    schedule[element->columnIndex].rows.push_back(new Bool(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
                 }
                 break;
             }
@@ -147,7 +149,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 for (BLF_Number* element: file.data.get<BLF_Number>())
                 {
                     tm creationTime = getElementCreationTime(element);
-                    loadedSchedule[element->columnIndex].rows.push_back(new Number(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    schedule[element->columnIndex].rows.push_back(new Number(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
                 }                
                 break;
             }
@@ -156,7 +158,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 for (BLF_Decimal* element: file.data.get<BLF_Decimal>())
                 {
                     tm creationTime = getElementCreationTime(element);
-                    loadedSchedule[element->columnIndex].rows.push_back(new Decimal(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    schedule[element->columnIndex].rows.push_back(new Decimal(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
                 }        
                 break;
             }
@@ -165,7 +167,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 for (BLF_Text* element: file.data.get<BLF_Text>())
                 {
                     tm creationTime = getElementCreationTime(element);
-                    loadedSchedule[element->columnIndex].rows.push_back(new Text(element->value.getBuffer(), type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    schedule[element->columnIndex].rows.push_back(new Text(element->value.getBuffer(), type, DateContainer(creationTime), TimeContainer(creationTime)));
                 }                      
                 break;
             }
@@ -183,7 +185,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 for (BLF_Time* element: file.data.get<BLF_Time>())
                 {
                     tm creationTime = getElementCreationTime(element);
-                    loadedSchedule[element->columnIndex].rows.push_back(new Time(element->hours, element->minutes, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    schedule[element->columnIndex].rows.push_back(new Time(element->hours, element->minutes, type, DateContainer(creationTime), TimeContainer(creationTime)));
                 }                      
                 break;
             }
@@ -196,13 +198,14 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                     dateTime.tm_year = element->year;
                     dateTime.tm_mon = element->month;
                     dateTime.tm_mday = element->mday;
-                    loadedSchedule[element->columnIndex].rows.push_back(new Date(dateTime, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    schedule[element->columnIndex].rows.push_back(new Date(dateTime, type, DateContainer(creationTime), TimeContainer(creationTime)));
                 }                      
                 break;
             }
         }
     }
-    schedule = loadedSchedule;
+
+    //schedule = schedule;
     return 0;
 }
 
