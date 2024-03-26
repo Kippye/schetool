@@ -132,7 +132,12 @@ class Schedule
         // TEMP
         void test_setup();
 
+        // Get a constant pointer to the Column at the index. TODO: Return const ref instead
         const Column* getColumn(size_t column);
+        // Get a constant reference to every Column in the Schedule (m_schedule)
+        const std::vector<Column>& getColumns();
+        // DO NOT USE UNLESS MEANING TO OVERWRITE THE ENTIRE SCHEDULE!
+        std::vector<Column>& getMutableColumns();
         SelectOptions& getColumnSelectOptions(size_t column);
         void setColumnType(size_t column, SCHEDULE_TYPE type);
         void setColumnName(size_t column, const char* name);

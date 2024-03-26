@@ -3,6 +3,8 @@
 #include "enums.hpp"
 #include "objectattribute.hpp"
 #include "string.hpp"
+#include "templateobject.hpp"
+#include <schedule.h>
 #include <element.h>
 #include <bool_container.h>
 #include <number_container.h>
@@ -14,12 +16,58 @@
 #include <blf.hpp>
 using namespace blf;
 
+class BLF_Column : public TemplateObject
+{
+    protected:
+        const char* objectName = "BLF_Column";
+        std::vector<ObjectAttribute> attributeMap = 
+        {
+            {"Index", &index, TYPE_INT},
+            {"Type", &type, TYPE_INT},
+            {"Name", &name, TYPE_STRING},
+            {"Permanent", &permanent, TYPE_BOOL},
+            {"Flags", &flags, TYPE_INT},
+            {"Sort", &sort, TYPE_INT},
+        };
+    public:
+        int index;
+        int type;
+        blf::String name;
+        bool permanent;
+        // TODO: select options
+        int flags;
+        int sort;
+
+    BLF_Column() {}
+
+    BLF_Column(const Column* column, size_t index)
+    {
+        this->index = (int)index;
+        this->type = (int)column->type;
+        this->name = column->name;
+        this->permanent = column->permanent;
+        this->flags = column->flags;
+        this->sort = (int)column->sort;
+    }
+
+    const char* getObjectName() const override
+    {
+        return objectName;
+    }
+
+    std::vector<ObjectAttribute> getAttributeMap() override
+    {
+        return attributeMap;
+    }
+};
+
 class BLF_Element : public TemplateObject
 {
     protected:
         const char* objectName = "BLF_Element";
         std::vector<ObjectAttribute> attributeMap = 
         {
+            {"ColumnIndex", &columnIndex, TYPE_INT},
             {"Type", &type, TYPE_INT},
             {"CreationYear", &creationYear, TYPE_INT},
             {"CreationMonth", &creationMonth, TYPE_INT},
@@ -28,6 +76,7 @@ class BLF_Element : public TemplateObject
             {"CreationMinutes", &creationMinutes, TYPE_INT},
         };
     public:
+        int columnIndex;
         int type;
         int creationYear;
         int creationMonth;
@@ -37,8 +86,9 @@ class BLF_Element : public TemplateObject
 
     BLF_Element() {}
 
-    BLF_Element(const Element* element)
+    BLF_Element(const Element* element, size_t columnIndex = 0)
     {
+        this->columnIndex = columnIndex;
         this->type = element->getType();
         this->creationYear = element->getCreationDate().time.tm_year;
         this->creationMonth = element->getCreationDate().time.tm_mon;
@@ -67,7 +117,7 @@ class BLF_Bool : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
             objectName = "BLF_Bool";
         }
-        BLF_Bool(const Bool* element) : BLF_Element(element)
+        BLF_Bool(const Bool* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
@@ -84,7 +134,7 @@ class BLF_Number : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_INT});
             objectName = "BLF_Number";
         }
-        BLF_Number(const Number* element) : BLF_Element(element)
+        BLF_Number(const Number* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_INT});
@@ -101,7 +151,7 @@ class BLF_Decimal : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
             objectName = "BLF_Decimal";
         }
-        BLF_Decimal(const Decimal* element) : BLF_Element(element)
+        BLF_Decimal(const Decimal* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
@@ -118,7 +168,7 @@ class BLF_Text : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_STRING});
             objectName = "BLF_Text";
         }
-        BLF_Text(const Text* element) : BLF_Element(element)
+        BLF_Text(const Text* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             value = blf::String(element->getValue());
             attributeMap.push_back({"Value", &value, TYPE_STRING});
@@ -136,7 +186,7 @@ class BLF_Select : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_INT});
             objectName = "BLF_Select";
         }
-        BLF_Select(const Select* element) : BLF_Element(element)
+        BLF_Select(const Select* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             // TODO value = element->();
             attributeMap.push_back({"Value", &value, TYPE_INT});
@@ -155,7 +205,7 @@ class BLF_Time : public BLF_Element
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
             objectName = "BLF_Time";
         }
-        BLF_Time(const Time* element) : BLF_Element(element)
+        BLF_Time(const Time* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             hours = element->getHours();
             minutes = element->getMinutes();
@@ -178,7 +228,7 @@ class BLF_Date : public BLF_Element
             attributeMap.push_back({"Mday", &mday, TYPE_INT});
             objectName = "BLF_Date";
         }
-        BLF_Date(const Date* element) : BLF_Element(element)
+        BLF_Date(const Date* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             const tm* dateTime = element->getTime();
             std::cout << dateTime->tm_mday << std::endl;
@@ -199,6 +249,10 @@ class DataConverter
         tm getElementCreationTime(BLF_Element* element);
     public:
         void setupObjectTable();
+
+        int writeSchedule(const char* path, const std::vector<Column>&);
+        int readSchedule(const char* path, std::vector<Column>&);
+        
         void write(const char* path, const Element* element);
         Element* read(const char* path);
 };

@@ -62,6 +62,16 @@ const Column* Schedule::getColumn(size_t column)
     return (const Column*)getMutableColumn(column);
 }
 
+const std::vector<Column>& Schedule::getColumns()
+{
+    return m_schedule;
+}
+
+std::vector<Column>& Schedule::getMutableColumns()
+{
+    return m_schedule;
+}
+
 SelectOptions& Schedule::getColumnSelectOptions(size_t column)
 {
     return m_schedule[column].selectOptions;

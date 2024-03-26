@@ -18,6 +18,7 @@ Program::Program()
 
 	windowManager.init(&textureLoader);
 	camera.init(&windowManager);
+	ioHandler.init(&schedule);
 	#ifdef NDEBUG
 	input.init(&windowManager, &camera, intie);
 	render.init(&windowManager, &camera, intie);
@@ -25,27 +26,27 @@ Program::Program()
 	#else
 	input.init(&windowManager, &camera, &interface);
 	render.init(&windowManager, &camera, &interface);
-	interface.init(&windowManager, &schedule);
+	interface.init(&windowManager, &schedule, &ioHandler);
 	#endif
 
-    time_t t = std::time(nullptr);
-    tm creationTime = *std::localtime(&t);
-	Text* d = new Text("BLF 1.1 never dies ""zmateusz""", SCH_TEXT, DateContainer(creationTime), TimeContainer(creationTime));
+    // time_t t = std::time(nullptr);
+    // tm creationTime = *std::localtime(&t);
+	// Text* d = new Text("BLF 1.1 never dies ""zmateusz""", SCH_TEXT, DateContainer(creationTime), TimeContainer(creationTime));
 
-	DataConverter converter;
-	converter.setupObjectTable();
-	converter.write("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf", d);
-	Text* e = (Text*)converter.read("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
-	std::cout << e->getValue() << std::endl;
-	std::cout << e->getType() << std::endl;
-	std::cout << e->getCreationDate().getString() << std::endl;
-	std::cout << e->getCreationTime().getString() << std::endl;
+	// DataConverter converter;
+	// converter.setupObjectTable();
+	// Text* e = (Text*)converter.read("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
+	// std::cout << e->getValue() << std::endl;
+	// std::cout << e->getType() << std::endl;
+	// std::cout << e->getCreationDate().getString() << std::endl;
+	// std::cout << e->getCreationTime().getString() << std::endl;
 
 	// TODO: load textures
 	//file_system.loadGUITextures();
 	//file_system.updateTextures();
 
 	schedule.test_setup();
+	//ioHandler.writeSchedule("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
 }
 
 void Program::loop()

@@ -1,13 +1,15 @@
+#include "imgui.h"
 #include <iostream>
 #include <interface.h>
 #include <window.h>
 #include <gui.h>
 #include <schedule_gui.h>
 
-void Interface::init(Window* windowManager, Schedule* schedule)
+void Interface::init(Window* windowManager, Schedule* schedule, IO_Handler* ioHandler)
 {
 	m_windowManager = windowManager;
 	m_schedule = schedule;
+	m_ioHandler = ioHandler;
 
     IMGUI_CHECKVERSION();
 	// imgui setup
@@ -33,6 +35,18 @@ void Interface::draw()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	// TEMP
+	ImGui::Begin("IOButtonWindow", NULL);
+		if (ImGui::Button("Save"))
+		{
+			m_ioHandler->writeSchedule("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
+		}
+		if (ImGui::Button("Load"))
+		{
+			m_ioHandler->readSchedule("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
+		}
+	ImGui::End();
 
     for (auto &id_gui : m_guis)
     {
