@@ -44,8 +44,6 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
 
     DataTable data;
 
-    //std::vector<TemplateObject*> objects = {};
-
     for (size_t c = 0; c < schedule.size(); c++)
     {
         data.addObject(new BLF_Column(&schedule[c], c));
@@ -128,85 +126,83 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
         );
     }
-    
+
+    for (size_t t = 0; t <= (size_t)SCH_LAST; t++)
+    {
+        SCHEDULE_TYPE type = (SCHEDULE_TYPE)t;
+
+        switch(type)
+        {
+            case(SCH_BOOL):
+            {
+                for (BLF_Bool* element: file.data.get<BLF_Bool>())
+                {
+                    tm creationTime = getElementCreationTime(element);
+                    loadedSchedule[element->columnIndex].rows.push_back(new Bool(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                }
+                break;
+            }
+            case(SCH_NUMBER):
+            {
+                for (BLF_Number* element: file.data.get<BLF_Number>())
+                {
+                    tm creationTime = getElementCreationTime(element);
+                    loadedSchedule[element->columnIndex].rows.push_back(new Number(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                }                
+                break;
+            }
+            case(SCH_DECIMAL):
+            {
+                for (BLF_Decimal* element: file.data.get<BLF_Decimal>())
+                {
+                    tm creationTime = getElementCreationTime(element);
+                    loadedSchedule[element->columnIndex].rows.push_back(new Decimal(element->value, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                }        
+                break;
+            }
+            case(SCH_TEXT):
+            {
+                for (BLF_Text* element: file.data.get<BLF_Text>())
+                {
+                    tm creationTime = getElementCreationTime(element);
+                    loadedSchedule[element->columnIndex].rows.push_back(new Text(element->value.getBuffer(), type, DateContainer(creationTime), TimeContainer(creationTime)));
+                }                      
+                break;
+            }
+            case(SCH_SELECT):
+            { 
+                for (BLF_Select* element: file.data.get<BLF_Select>())
+                {
+                    tm creationTime = getElementCreationTime(element);
+                    // TODO! //new Select(element->value, type, DateContainer(creationTime), TimeContainer(creationTime));
+                }        
+                break;
+            }
+            case(SCH_TIME):
+            { 
+                for (BLF_Time* element: file.data.get<BLF_Time>())
+                {
+                    tm creationTime = getElementCreationTime(element);
+                    loadedSchedule[element->columnIndex].rows.push_back(new Time(element->hours, element->minutes, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                }                      
+                break;
+            }
+            case(SCH_DATE):
+            { 
+                for (BLF_Date* element: file.data.get<BLF_Date>())
+                {
+                    tm creationTime = getElementCreationTime(element);
+                    tm dateTime;
+                    dateTime.tm_year = element->year;
+                    dateTime.tm_mon = element->month;
+                    dateTime.tm_mday = element->mday;
+                    loadedSchedule[element->columnIndex].rows.push_back(new Date(dateTime, type, DateContainer(creationTime), TimeContainer(creationTime)));
+                }                      
+                break;
+            }
+        }
+    }
     schedule = loadedSchedule;
-    return 0;
-
-    // for (size_t t = 0; t <= (size_t)SCH_LAST; t++)
-    // {
-    //     SCHEDULE_TYPE type = (SCHEDULE_TYPE)t;
-
-    //     switch(type)
-    //     {
-    //         case(SCH_BOOL):
-    //         {
-    //             for (BLF_Bool* element: file.data.get<BLF_Bool>())
-    //             {
-    //                 tm creationTime = getElementCreationTime(element);
-    //                 return new Bool(element->value, type, DateContainer(creationTime), TimeContainer(creationTime));
-    //             }
-    //             break;
-    //         }
-    //         case(SCH_NUMBER):
-    //         {
-    //             for (BLF_Number* element: file.data.get<BLF_Number>())
-    //             {
-    //                 tm creationTime = getElementCreationTime(element);
-    //                 return new Number(element->value, type, DateContainer(creationTime), TimeContainer(creationTime));
-    //             }                
-    //             break;
-    //         }
-    //         case(SCH_DECIMAL):
-    //         {
-    //             for (BLF_Decimal* element: file.data.get<BLF_Decimal>())
-    //             {
-    //                 tm creationTime = getElementCreationTime(element);
-    //                 return new Decimal(element->value, type, DateContainer(creationTime), TimeContainer(creationTime));
-    //             }        
-    //             break;
-    //         }
-    //         case(SCH_TEXT):
-    //         {
-    //             for (BLF_Text* element: file.data.get<BLF_Text>())
-    //             {
-    //                 tm creationTime = getElementCreationTime(element);
-    //                 return new Text(element->value.getBuffer(), type, DateContainer(creationTime), TimeContainer(creationTime));
-    //             }                      
-    //             break;
-    //         }
-    //         case(SCH_SELECT):
-    //         { 
-    //             for (BLF_Select* element: file.data.get<BLF_Select>())
-    //             {
-    //                 tm creationTime = getElementCreationTime(element);
-    //                 return nullptr; // TODO! //new Select(element->value, type, DateContainer(creationTime), TimeContainer(creationTime));
-    //             }        
-    //             break;
-    //         }
-    //         case(SCH_TIME):
-    //         { 
-    //             for (BLF_Time* element: file.data.get<BLF_Time>())
-    //             {
-    //                 tm creationTime = getElementCreationTime(element);
-    //                 return new Time(element->hours, element->minutes, type, DateContainer(creationTime), TimeContainer(creationTime));
-    //             }                      
-    //             break;
-    //         }
-    //         case(SCH_DATE):
-    //         { 
-    //             for (BLF_Date* element: file.data.get<BLF_Date>())
-    //             {
-    //                 tm creationTime = getElementCreationTime(element);
-    //                 tm dateTime;
-    //                 dateTime.tm_year = element->year;
-    //                 dateTime.tm_mon = element->month;
-    //                 dateTime.tm_mday = element->mday;
-    //                 return new Date(dateTime, type, DateContainer(creationTime), TimeContainer(creationTime));
-    //             }                      
-    //             break;
-    //         }
-    //     }
-    // }
     return 0;
 }
 
