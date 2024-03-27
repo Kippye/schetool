@@ -4,6 +4,7 @@
 #include "objectattribute.hpp"
 #include "string.hpp"
 #include "templateobject.hpp"
+#include <iterator>
 #include <schedule.h>
 #include <element.h>
 #include <bool_container.h>
@@ -18,6 +19,8 @@ using namespace blf;
 
 class BLF_Column : public TemplateObject
 {
+    private:
+
     protected:
         const char* objectName = "BLF_Column";
         std::vector<ObjectAttribute> attributeMap = 
@@ -28,17 +31,85 @@ class BLF_Column : public TemplateObject
             {"Permanent", &permanent, TYPE_BOOL},
             {"Flags", &flags, TYPE_INT},
             {"Sort", &sort, TYPE_INT},
+            {"Option0", &option_0, TYPE_STRING},
+            {"Option1", &option_1, TYPE_STRING},
+            {"Option2", &option_2, TYPE_STRING},
+            {"Option3", &option_3, TYPE_STRING},
+            {"Option4", &option_4, TYPE_STRING},
+            {"Option5", &option_5, TYPE_STRING},
+            {"Option6", &option_6, TYPE_STRING},
+            {"Option7", &option_7, TYPE_STRING},
+            {"Option8", &option_8, TYPE_STRING},
+            {"Option9", &option_9, TYPE_STRING},
+            {"Option10", &option_10, TYPE_STRING},
+            {"Option11", &option_11, TYPE_STRING},
+            {"Option12", &option_12, TYPE_STRING},
+            {"Option13", &option_13, TYPE_STRING},
+            {"Option14", &option_14, TYPE_STRING},
+            {"Option15", &option_15, TYPE_STRING},
+            {"Option16", &option_16, TYPE_STRING},
+            {"Option17", &option_17, TYPE_STRING},
+            {"Option18", &option_18, TYPE_STRING},
+            {"Option19", &option_19, TYPE_STRING},
         };
     public:
         int index;
         int type;
         blf::String name;
         bool permanent;
-        // TODO: select options
         int flags;
         int sort;
+        blf::String option_0;
+        blf::String option_1;
+        blf::String option_2;
+        blf::String option_3;
+        blf::String option_4;
+        blf::String option_5;
+        blf::String option_6;
+        blf::String option_7;
+        blf::String option_8;
+        blf::String option_9;
+        blf::String option_10;
+        blf::String option_11;
+        blf::String option_12;
+        blf::String option_13;
+        blf::String option_14;
+        blf::String option_15;
+        blf::String option_16;
+        blf::String option_17;
+        blf::String option_18;
+        blf::String option_19;
 
-    BLF_Column() {}
+    private:
+        std::vector<blf::String*> m_optionPointers = {};
+
+    public:
+    BLF_Column() 
+    {
+        m_optionPointers =
+        {
+            &option_0,
+            &option_1,
+            &option_2,
+            &option_3,
+            &option_4,
+            &option_5,
+            &option_6,
+            &option_7,
+            &option_8,
+            &option_9,
+            &option_10,
+            &option_11,
+            &option_12,
+            &option_13,
+            &option_14,
+            &option_15,
+            &option_16,
+            &option_17,
+            &option_18,
+            &option_19,
+        };
+    }
 
     BLF_Column(const Column* column, size_t index)
     {
@@ -48,6 +119,63 @@ class BLF_Column : public TemplateObject
         this->permanent = column->permanent;
         this->flags = column->flags;
         this->sort = (int)column->sort;
+
+        const std::vector<std::string>& selectOptions = column->selectOptions.getOptions();
+
+        m_optionPointers =
+        {
+            &option_0,
+            &option_1,
+            &option_2,
+            &option_3,
+            &option_4,
+            &option_5,
+            &option_6,
+            &option_7,
+            &option_8,
+            &option_9,
+            &option_10,
+            &option_11,
+            &option_12,
+            &option_13,
+            &option_14,
+            &option_15,
+            &option_16,
+            &option_17,
+            &option_18,
+            &option_19,
+        };
+        
+        for (size_t i = 0; i < selectOptions.size(); i++)
+        {
+            *this->m_optionPointers[i] = blf::String(selectOptions[i]);
+        }
+    }
+
+    std::vector<std::string> getSelectOptions()
+    {
+        std::vector<std::string> options = {};
+
+        for (size_t i = 0; i < std::size(m_optionPointers); i++)
+        {
+            std::cout << i << std::endl;
+            std::cout << option_0 << std::endl;
+            std::cout << *m_optionPointers[i] << std::endl;
+            std::cout << "..hi?" << std::endl;
+            std::cout << m_optionPointers[i]->getLength() << std::endl;
+            std::cout << "..hi?" << std::endl;
+            if (m_optionPointers[i]->getLength() > 0)
+            {
+                options.push_back(std::string(m_optionPointers[i]->getBuffer()));
+            }
+            else
+            {
+                std::cout << "broke (in a good way)" << std::endl;
+                break;
+            }
+        }
+
+        return options;
     }
 
     const char* getObjectName() const override

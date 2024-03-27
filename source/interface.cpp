@@ -56,7 +56,7 @@ void Interface::draw()
 	guiHovered = imGuiIO->WantCaptureMouse;
 	guiFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 	ImGui::Render();
 	
 	// check for right / middle click defocus

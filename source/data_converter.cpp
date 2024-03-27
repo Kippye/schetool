@@ -4,6 +4,7 @@
 #include "element.h"
 #include "objectdefinition.hpp"
 #include "schedule.h"
+#include "select_container.h"
 #include "templateobject.hpp"
 #include <data_converter.h>
 
@@ -108,23 +109,23 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     schedule.clear();
 
     // load and create Columns first
-    DataGroup<BLF_Column> columns = file.data.get<BLF_Column>();
+    DataGroup<BLF_Column> loadedColumns = file.data.get<BLF_Column>();
     // sort in ASCENDING order 
     //std::sort(columns.begin(), columns.end(), [](BLF_Column* a, BLF_Column* b) {return a->index > b->index; });
 
     // loop through the sorted BLF_Columns and add them to the schedule as Columns
-    for (size_t c = 0; c < columns.getSize(); c++)
+    for (size_t c = 0; c < loadedColumns.getSize(); c++)
     {
         schedule.push_back(
             Column {
                 std::vector<Element*>{}, 
-                (SCHEDULE_TYPE)columns[c]->type, 
-                std::string(columns[c]->name.getBuffer()),
-                columns[c]->permanent,
-                (ScheduleElementFlags)columns[c]->flags,
-                (COLUMN_SORT)columns[c]->sort,
+                (SCHEDULE_TYPE)loadedColumns[c]->type, 
+                std::string(loadedColumns[c]->name.getBuffer()),
+                loadedColumns[c]->permanent,
+                (ScheduleElementFlags)loadedColumns[c]->flags,
+                (COLUMN_SORT)loadedColumns[c]->sort,
                 false,
-                // TODO: selectOptions
+                SelectOptions(loadedColumns[c]->getSelectOptions())
             }
         );
     }
