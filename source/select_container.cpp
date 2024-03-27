@@ -1,3 +1,4 @@
+#include "schedule.h"
 #include <algorithm>
 #include <cctype>
 #include <ctime>
@@ -48,6 +49,8 @@ bool SelectOptions::getIsMutable() const
 
 void SelectOptions::addOption(const std::string& option)
 {
+    if (m_options.size() == SELECT_OPTION_COUNT_MAX) { return; }
+    
     m_options.push_back(option);
 }
 
@@ -98,7 +101,7 @@ Select::Select(SelectOptions& s)
     m_options = &s;
 }
 
-const std::set<size_t>& Select::getSelection()
+const std::set<size_t>& Select::getSelection() const
 {
     return m_selection;
 }
@@ -128,6 +131,11 @@ void Select::setSelected(size_t index, bool select)
             m_selection.insert(index);
         }
     }
+}
+
+void Select::replaceSelection(const std::set<size_t>& selection)
+{
+    m_selection = selection;
 }
 
 // Update the Select to recorrect its indices after a modification to the attached SelectOptions

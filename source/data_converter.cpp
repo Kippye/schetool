@@ -116,18 +116,20 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     // loop through the sorted BLF_Columns and add them to the schedule as Columns
     for (size_t c = 0; c < loadedColumns.getSize(); c++)
     {
-        schedule.push_back(
-            Column {
-                std::vector<Element*>{}, 
-                (SCHEDULE_TYPE)loadedColumns[c]->type, 
-                std::string(loadedColumns[c]->name.getBuffer()),
-                loadedColumns[c]->permanent,
-                (ScheduleElementFlags)loadedColumns[c]->flags,
-                (COLUMN_SORT)loadedColumns[c]->sort,
-                false,
-                SelectOptions(loadedColumns[c]->getSelectOptions())
-            }
-        );
+        Column column = Column {
+            std::vector<Element*>{}, 
+            (SCHEDULE_TYPE)loadedColumns[c]->type, 
+            std::string(loadedColumns[c]->name.getBuffer()),
+            loadedColumns[c]->permanent,
+            (ScheduleElementFlags)loadedColumns[c]->flags,
+            (COLUMN_SORT)loadedColumns[c]->sort,
+            false,
+            SelectOptions(loadedColumns[c]->getSelectOptions())
+        };
+
+        column.selectOptions.setIsMutable(loadedColumns[c]->selectOptionsMutable);
+
+        schedule.push_back(column);
     }
 
     for (size_t t = 0; t <= (size_t)SCH_LAST; t++)
@@ -177,7 +179,9 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 for (BLF_Select* element: file.data.get<BLF_Select>())
                 {
                     tm creationTime = getElementCreationTime(element);
-                    // TODO! //new Select(element->value, type, DateContainer(creationTime), TimeContainer(creationTime));
+                    Select* select = new Select(schedule[element->columnIndex].selectOptions, type, DateContainer(creationTime), TimeContainer(creationTime));
+                    select->replaceSelection(element->getSelection());
+                    schedule[element->columnIndex].rows.push_back(select);
                 }        
                 break;
             }

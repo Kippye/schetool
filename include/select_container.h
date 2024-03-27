@@ -110,15 +110,8 @@ class Select : public Element
             return left.m_options->getOptions()[leftForemostOption] > right.m_options->getOptions()[rightForemostOption];
         }
 
-        // TEMP
-        void printSelection()
-        {
-            for (auto s: m_selection)
-            {
-                std::cout << s << ": " << m_options->getOptions()[s] << std::endl;
-            }
-        }
-        const std::set<size_t>& getSelection();
+        const std::set<size_t>& getSelection() const;
+        void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
         void update();
 };

@@ -10,6 +10,7 @@
 #include <bool_container.h>
 #include <number_container.h>
 #include <decimal_container.h>
+#include <string>
 #include <text_container.h>
 #include <select_container.h>
 #include <time_container.h>
@@ -31,6 +32,7 @@ class BLF_Column : public TemplateObject
             {"Permanent", &permanent, TYPE_BOOL},
             {"Flags", &flags, TYPE_INT},
             {"Sort", &sort, TYPE_INT},
+            {"SelectOptionsMutable", &selectOptionsMutable, TYPE_BOOL},
             {"Option0", &option_0, TYPE_STRING},
             {"Option1", &option_1, TYPE_STRING},
             {"Option2", &option_2, TYPE_STRING},
@@ -59,6 +61,7 @@ class BLF_Column : public TemplateObject
         bool permanent;
         int flags;
         int sort;
+        bool selectOptionsMutable;
         blf::String option_0;
         blf::String option_1;
         blf::String option_2;
@@ -81,12 +84,7 @@ class BLF_Column : public TemplateObject
         blf::String option_19;
 
     private:
-        std::vector<blf::String*> m_optionPointers = {};
-
-    public:
-    BLF_Column() 
-    {
-        m_optionPointers =
+        std::vector<blf::String*> m_optionPointers = 
         {
             &option_0,
             &option_1,
@@ -109,7 +107,9 @@ class BLF_Column : public TemplateObject
             &option_18,
             &option_19,
         };
-    }
+
+    public:
+    BLF_Column() {}
 
     BLF_Column(const Column* column, size_t index)
     {
@@ -119,32 +119,9 @@ class BLF_Column : public TemplateObject
         this->permanent = column->permanent;
         this->flags = column->flags;
         this->sort = (int)column->sort;
+        this->selectOptionsMutable = column->selectOptions.getIsMutable();
 
         const std::vector<std::string>& selectOptions = column->selectOptions.getOptions();
-
-        m_optionPointers =
-        {
-            &option_0,
-            &option_1,
-            &option_2,
-            &option_3,
-            &option_4,
-            &option_5,
-            &option_6,
-            &option_7,
-            &option_8,
-            &option_9,
-            &option_10,
-            &option_11,
-            &option_12,
-            &option_13,
-            &option_14,
-            &option_15,
-            &option_16,
-            &option_17,
-            &option_18,
-            &option_19,
-        };
         
         for (size_t i = 0; i < selectOptions.size(); i++)
         {
@@ -158,19 +135,12 @@ class BLF_Column : public TemplateObject
 
         for (size_t i = 0; i < std::size(m_optionPointers); i++)
         {
-            std::cout << i << std::endl;
-            std::cout << option_0 << std::endl;
-            std::cout << *m_optionPointers[i] << std::endl;
-            std::cout << "..hi?" << std::endl;
-            std::cout << m_optionPointers[i]->getLength() << std::endl;
-            std::cout << "..hi?" << std::endl;
             if (m_optionPointers[i]->getLength() > 0)
             {
                 options.push_back(std::string(m_optionPointers[i]->getBuffer()));
             }
             else
             {
-                std::cout << "broke (in a good way)" << std::endl;
                 break;
             }
         }
@@ -306,19 +276,97 @@ class BLF_Text : public BLF_Element
 
 class BLF_Select : public BLF_Element
 {
+    private:
+        std::vector<int*> m_selectionPointers = 
+        {
+            &selection_0,
+            &selection_1,
+            &selection_2,
+            &selection_3,
+            &selection_4,
+            &selection_5,
+            &selection_6,
+            &selection_7,
+            &selection_8,
+            &selection_9,
+            &selection_10,
+            &selection_11,
+            &selection_12,
+            &selection_13,
+            &selection_14,
+            &selection_15,
+            &selection_16,
+            &selection_17,
+            &selection_18,
+            &selection_19,
+        };
     public:
-        // TODO: finger out
-        int value;
+        int selection_0 = -1;
+        int selection_1 = -1;
+        int selection_2 = -1;
+        int selection_3 = -1;
+        int selection_4 = -1;
+        int selection_5 = -1;
+        int selection_6 = -1;
+        int selection_7 = -1;
+        int selection_8 = -1;
+        int selection_9 = -1;
+        int selection_10 = -1;
+        int selection_11 = -1;
+        int selection_12 = -1;
+        int selection_13 = -1;
+        int selection_14 = -1;
+        int selection_15 = -1;
+        int selection_16 = -1;
+        int selection_17 = -1;
+        int selection_18 = -1;
+        int selection_19 = -1;
+
         BLF_Select() 
         {
-            attributeMap.push_back({"Value", &value, TYPE_INT});
+            for (size_t i = 0; i < m_selectionPointers.size(); i++)
+            {
+                attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
+            }
+
             objectName = "BLF_Select";
         }
         BLF_Select(const Select* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
-            // TODO value = element->();
-            attributeMap.push_back({"Value", &value, TYPE_INT});
+            const std::set<size_t>& selection = element->getSelection();
+        
+            size_t i = 0;
+            for (size_t s: selection)
+            {
+                *this->m_selectionPointers[i] = (int)s;
+                i++;
+            }
+
+            for (i = 0; i < m_selectionPointers.size(); i++)
+            {
+                attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
+            }
+
             objectName = "BLF_Select";
+        }
+          
+        std::set<size_t> getSelection()
+        {
+            std::set<size_t> selection = {};
+
+            for (size_t i = 0; i < std::size(m_selectionPointers); i++)
+            {
+                if (*m_selectionPointers[i] != -1)
+                {
+                    selection.insert(*m_selectionPointers[i]);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return selection;
         }
 };
 
@@ -359,7 +407,6 @@ class BLF_Date : public BLF_Element
         BLF_Date(const Date* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             const tm* dateTime = element->getTime();
-            std::cout << dateTime->tm_mday << std::endl;
             year = dateTime->tm_year;
             month = dateTime->tm_mon;
             mday = dateTime->tm_mday;

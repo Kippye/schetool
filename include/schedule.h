@@ -19,7 +19,8 @@
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
-const size_t SELECT_OPTION_NAME_MAX_LENGTH = 16;
+const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
+const size_t SELECT_OPTION_COUNT_MAX = 20;
 
 typedef int ScheduleElementFlags;
 
@@ -178,7 +179,6 @@ class Schedule
             else
             {
                 getMutableColumn(column)->rows[row] = (Element*)value;
-                std::cout << scheduleTypeNames.at(getMutableColumn(column)->getElement<Element>(row)->getType()) << std::endl;
             }
             ScheduleElementFlags columnFlags = getColumn(column)->flags;
             if (columnFlags & ScheduleElementFlags_Start)

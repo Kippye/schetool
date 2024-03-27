@@ -330,7 +330,6 @@ void ScheduleGui::draw(Window& window)
 						if (ImGui::IsItemHovered())
 						{
 							ImGui::BeginTooltip();
-							std::cout << m_schedule->getElement<Element>(column, row).getCreationDate().time.tm_mday << std::endl;
 							ImGui::Text("Created: %s %s", m_schedule->getElement<Element>(column, row).getCreationDate().getString().c_str(), m_schedule->getElement<Element>(column, row).getCreationTime().getString().c_str());
 							ImGui::EndTooltip();
 						}
@@ -563,8 +562,11 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					// ImGui::PopStyleColor(1);
 				}
 
+				std::cout << optionNames.size() << std::endl;
+				std::cout << m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable() << std::endl;
+
 				// add new options
-				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable())
+				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
 				{
 					std::string str;
 					str.reserve(SELECT_OPTION_NAME_MAX_LENGTH);
