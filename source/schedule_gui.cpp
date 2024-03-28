@@ -562,9 +562,6 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					// ImGui::PopStyleColor(1);
 				}
 
-				std::cout << optionNames.size() << std::endl;
-				std::cout << m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable() << std::endl;
-
 				// add new options
 				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
 				{

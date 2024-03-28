@@ -114,6 +114,7 @@ class Schedule
     private:
         std::vector<Column> m_schedule = {};
         ColumnSortComparison m_columnSortComparison;
+        bool m_editedSinceWrite = false;
         Column* getColumnWithFlags(ScheduleElementFlags flags);
         Column* getMutableColumn(size_t column);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
@@ -146,6 +147,9 @@ class Schedule
 
         size_t getColumnCount();
         size_t getRowCount();
+
+        bool getEditedSinceWrite();
+        void setEditedSinceWrite(bool to);
 
         void sortColumns();
         void updateColumnSelects(size_t index);
@@ -199,5 +203,7 @@ class Schedule
             {
                 sortColumns();
             }
+
+            setEditedSinceWrite(true);
         }
 };

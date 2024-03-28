@@ -107,11 +107,14 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type)
     resetColumn(column, type);
     // read resetColumn description for why this is run after
     m_schedule[column].type = type;
+    
+    setEditedSinceWrite(true);
 }
 
 void Schedule::setColumnName(size_t column, const char* name)
 {
     m_schedule[column].name = std::string(name);
+    setEditedSinceWrite(true);
 }
 
 void Schedule::setColumnSort(size_t column, COLUMN_SORT sortDirection)
@@ -122,6 +125,8 @@ void Schedule::setColumnSort(size_t column, COLUMN_SORT sortDirection)
         m_schedule[column].sorted = false;
         sortColumns();
     }
+
+    setEditedSinceWrite(true);
 }
 
 size_t Schedule::getColumnCount()
@@ -133,6 +138,16 @@ size_t Schedule::getColumnCount()
 size_t Schedule::getRowCount()
 {
     return (m_schedule.size() > 0 ? m_schedule[0].rows.size() : 0);
+}
+
+bool Schedule::getEditedSinceWrite()
+{
+    return m_editedSinceWrite;
+}
+
+void Schedule::setEditedSinceWrite(bool to)
+{
+    m_editedSinceWrite = to;
 }
 
 // Sorts every column's rows based on "sorter" columns
@@ -263,8 +278,6 @@ void Schedule::addRow(size_t index)
             std::vector<Element*>& columnValues = column.rows;
             time_t t = std::time(nullptr);
             tm creationTime = *std::localtime(&t);
-            std::cout << creationTime.tm_hour << std::endl;
-            std::cout << creationTime.tm_min << std::endl;
 
             switch(column.type)
             {
@@ -312,6 +325,8 @@ void Schedule::addRow(size_t index)
         
     }
 
+    setEditedSinceWrite(true);
+
     sortColumns();
 }
 
@@ -331,6 +346,8 @@ void Schedule::removeRow(size_t index)
             columnValues.erase(columnValues.begin() + index);
         }
     }
+
+    setEditedSinceWrite(true);
 } 
 
 void Schedule::addDefaultColumn(size_t index)
@@ -353,6 +370,8 @@ void Schedule::addDefaultColumn(size_t index)
     {
         // TODO: add in middle
     }
+
+    setEditedSinceWrite(true);
 }
 
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
@@ -370,6 +389,8 @@ void Schedule::addColumn(size_t index, const Column& column)
     {
         // TODO: add in middle
     }
+
+    setEditedSinceWrite(true);
 }
 
 void Schedule::removeColumn(size_t column)
@@ -392,6 +413,8 @@ void Schedule::removeColumn(size_t column)
     {
         m_schedule.erase(m_schedule.begin() + column);
     }
+
+    setEditedSinceWrite(true);
 }
 
 void Schedule::replaceSchedule(std::vector<Column> columns)
