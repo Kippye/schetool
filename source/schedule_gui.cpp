@@ -18,23 +18,22 @@
 
 #include <iostream>
 
-ScheduleGui::ScheduleGui(const char* ID, Schedule* schedule)
+ScheduleGui::ScheduleGui(const char* ID, Schedule* schedule) : Gui(ID)
 {
-	m_ID = ID;
 	m_schedule = schedule;
 } 
 
 void ScheduleGui::draw(Window& window)
 {
-    ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
-	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
-	ImGui::SetNextWindowPos(ImVec2(0.0, 0.0));
+    //ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
+	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT - 20.0f));
+	ImGui::SetNextWindowPos(ImVec2(0.0, 20.0f));
 
 	ImGui::Begin(m_ID.c_str(), NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus);
 		// TODO: For the schedule table, combine
 		// Reorderable, hideable, with headers & ImGuiTableFlags_ScrollY and background colours and context menus in body and custom headers
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-		ImGui::BeginChild("SchedulePanel", ImVec2((float)(window.SCREEN_WIDTH - 58), (float)(window.SCREEN_HEIGHT - 52)), true);
+		ImGui::BeginChild("SchedulePanel", ImVec2((float)(window.SCREEN_WIDTH - 58), (float)(window.SCREEN_HEIGHT - 52 - 20)), true);
 			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableRowFlags_Headers | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
 			ImGui::BeginTable("ScheduleTable", m_schedule->getColumnCount(), tableFlags);
 				for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
@@ -338,7 +337,7 @@ void ScheduleGui::draw(Window& window)
 			ImGui::EndTable();
 		ImGui::EndChild();
 		ImGui::SameLine();
-		if (ImGui::Button("+", ImVec2(32, (float)(window.SCREEN_HEIGHT - 52))))
+		if (ImGui::Button("+", ImVec2(32, (float)(window.SCREEN_HEIGHT - 52 - 20))))
 		{
 			m_schedule->addDefaultColumn(m_schedule->getColumnCount());
 		}

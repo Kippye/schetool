@@ -119,7 +119,6 @@ void Window::setCursor(CURSOR_TYPE cursor)
 
 void Window::setTitle(const char* _title)
 {
-	std::cout << _title << std::endl;
 	title = std::string(_title);
 	glfwSetWindowTitle(window, title.c_str());
 }

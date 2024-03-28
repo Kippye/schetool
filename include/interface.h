@@ -117,13 +117,6 @@ class Interface
 		{
 			// { std::string("Select by texture"), new GuiTween() }
 		};
-		// std::map<GUI_POPUP, bool> popupToggles =
-		// {
-		// 	{ ABOUT, false },
-		// 	{ IGNORE_LIST, false },
-		// 	{ SAVE_CONTEXT, false },
-		// 	{ CONTENT_LACK_WARNING, false }
-		// };
 
 		ImGuiIO* imGuiIO;
 		ImGuiContext* imGui;

@@ -1,4 +1,5 @@
 #include "imgui.h"
+#include <main_menu_bar_gui.h>
 #include <iostream>
 #include <interface.h>
 #include <window.h>
@@ -20,6 +21,8 @@ void Interface::init(Window* windowManager, Schedule* schedule, IO_Handler* ioHa
 	ImGui_ImplOpenGL3_Init("#version 430");
 	imGuiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
+	// ADD GUIS
+    addGUI(*(new MainMenuBarGui("MainMenuBarGUI", m_ioHandler)));
     addGUI(*(new ScheduleGui("ScheduleGUI", m_schedule)));
 }
 
@@ -35,18 +38,6 @@ void Interface::draw()
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-
-	// TEMP
-	ImGui::Begin("IOButtonWindow", NULL);
-		if (ImGui::Button("Save"))
-		{
-			m_ioHandler->writeSchedule("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
-		}
-		if (ImGui::Button("Load"))
-		{
-			m_ioHandler->readSchedule("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
-		}
-	ImGui::End();
 
     for (auto &id_gui : m_guis)
     {
