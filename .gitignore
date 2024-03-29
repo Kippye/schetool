@@ -9,8 +9,8 @@ Release/
 resources/
 compile_commands/
 
-# schedule files
-schedules/*.blf
+# program directories
+schedules/
 
 # luarocks build files
 *.src.rock

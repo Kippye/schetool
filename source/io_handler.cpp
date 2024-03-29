@@ -21,6 +21,13 @@ void IO_Handler::init(Schedule* schedule)
 
 void IO_Handler::writeSchedule(const char* name)
 {
+    fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
+    if (fs::exists(schedulesPath) == false)
+    {
+        std::cout << "Tried to write Schedule but the schedules directory did not exist. Created a schedules directory." << std::endl;
+        fs::create_directory(schedulesPath);
+    }
+
     std::string relativePath = makeRelativePathFromName(name);
 
     if (m_converter.writeSchedule(relativePath.c_str(), m_schedule->getColumns()) == 0)
@@ -32,8 +39,15 @@ void IO_Handler::writeSchedule(const char* name)
 
 // Reads a schedule from file and applies / opens it
 void IO_Handler::readSchedule(const char* name)
-{
+{    
     std::string relativePath = makeRelativePathFromName(name);
+    
+    if (fs::exists(fs::path(relativePath.c_str())) == false)
+    {
+        std::cout << "Tried to read Schedule at path to non-existant file:" << relativePath << std::endl;
+        return;
+    }
+
     std::vector<Column> columnsCopy = m_schedule->getColumns();
 
     if (m_converter.readSchedule(relativePath.c_str(), columnsCopy) == 0)
@@ -53,6 +67,11 @@ std::vector<std::string> IO_Handler::getScheduleStemNames()
 {
     std::vector<std::string> filenames = {};
     fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
+    if (fs::exists(schedulesPath) == false)
+    {
+        std::cout << "Tried to get Schedule stem names but the schedules directory did not exist." << std::endl;
+        return filenames;
+    }
 
     for (const auto& entry: fs::directory_iterator(schedulesPath))
     {
@@ -63,16 +82,22 @@ std::vector<std::string> IO_Handler::getScheduleStemNames()
 
 std::string IO_Handler::getLastEditedScheduleStemName()
 {
+    fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
+    if (fs::exists(schedulesPath) == false)
+    {
+        std::cout << "Tried to get the latest edited Schedule, but the schedules directory did not exist." << std::endl;
+        return std::string("");
+    }
+
     long long latestEditTime = std::numeric_limits<long long>::min();
     fs::path latestEditedPath;
-    fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
     fs::directory_iterator dirIterator = fs::directory_iterator(schedulesPath);
 
     for (const auto& entry: dirIterator)
     {
         fs::file_time_type editTime = fs::last_write_time(entry);
 
-        else if (latestEditTime == std::numeric_limits<long long>::min() || editTime.time_since_epoch().count() > latestEditTime)
+        if (latestEditTime == std::numeric_limits<long long>::min() || editTime.time_since_epoch().count() > latestEditTime)
         {
             latestEditedPath = entry;
             latestEditTime = editTime.time_since_epoch().count();
