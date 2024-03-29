@@ -34,6 +34,12 @@ Program::Program()
 	//file_system.updateTextures();
 
 	schedule.test_setup();
+
+	if (ioHandler.getScheduleStemNames().size() > 0)
+	{
+		// std::cout << "reading.." << ioHandler.getLastEditedScheduleStemName() << std::endl;
+		ioHandler.readSchedule(ioHandler.getLastEditedScheduleStemName().c_str());
+	}
 }
 
 void Program::loop()

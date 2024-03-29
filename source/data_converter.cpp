@@ -93,7 +93,7 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
         }
     }
 
-    writeFile("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf", m_objects, data);
+    writeFile(path, m_objects, data);
 
     // TODO: clean data?
     return 0;
@@ -104,8 +104,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     // TODO: check if path is valid
     BLFFile file = readFile(path, m_objects);
 
-    // create a copy Schedule for now, because if something fails, we don't want to replace the provided Schedule with a broken mess
-    // std::vector<Column> loadedSchedule = {};
+    // clear the provided copy just in case
     schedule.clear();
 
     // load and create Columns first
@@ -210,7 +209,6 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
         }
     }
 
-    //schedule = schedule;
     return 0;
 }
 

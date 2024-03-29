@@ -1,3 +1,4 @@
+#include "imgui.h"
 #include "io_handler.h"
 #include <main_menu_bar_gui.h>
 
@@ -13,13 +14,22 @@ void MainMenuBarGui::draw(Window& window)
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("New", "CTRL+N")) {}
-			if (ImGui::MenuItem("Open", "CTRL+O"))
+			if (ImGui::BeginMenu("Open", "CTRL+O"))
 			{
-				m_ioHandler->readSchedule("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
+				std::vector<std::string> scheduleFilenames = m_ioHandler->getScheduleStemNames();
+
+				for (size_t i = 0; i < scheduleFilenames.size(); i++)
+				{
+					if (ImGui::MenuItem(scheduleFilenames[i].c_str()))
+					{
+						m_ioHandler->readSchedule(scheduleFilenames[i].c_str());
+					}
+				}
+				ImGui::EndMenu();
 			}
 			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
-				m_ioHandler->writeSchedule("C:\\Users\\Remoa\\Documents\\Devil\\schetool\\test.blf");
+				m_ioHandler->writeSchedule("test");
 			}
 			ImGui::EndMenu();
 		}
