@@ -14,8 +14,9 @@ class IO_Handler
         const char* SCHEDULES_SUBDIR_PATH = ".\\schedules\\";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
         void init(Schedule* schedule);
-        void writeSchedule(const char* name);
-        void readSchedule(const char* name);
+        bool writeSchedule(const char* name);
+        bool readSchedule(const char* name);
+        bool createNewSchedule(const char* name);
         const char* getOpenScheduleFilename();
         std::vector<std::string> getScheduleStemNames();
         std::string getLastEditedScheduleStemName();

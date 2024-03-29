@@ -1,5 +1,3 @@
-#include "datatable.hpp"
-#include "element.h"
 #include <main.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -35,10 +33,16 @@ Program::Program()
 
 	schedule.test_setup();
 
+	// There are pre-existing Schedules. Open the most recently edited one.
 	if (ioHandler.getScheduleStemNames().size() > 0)
 	{
 		// std::cout << "reading.." << ioHandler.getLastEditedScheduleStemName() << std::endl;
 		ioHandler.readSchedule(ioHandler.getLastEditedScheduleStemName().c_str());
+	}
+	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
+	else 
+	{
+		interface.openMainMenuBarScheduleNameModal();
 	}
 }
 

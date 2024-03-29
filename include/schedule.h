@@ -21,6 +21,7 @@ const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
 const size_t SELECT_OPTION_COUNT_MAX = 20;
+const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
 typedef int ScheduleElementFlags;
 

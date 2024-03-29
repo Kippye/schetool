@@ -19,7 +19,7 @@ void IO_Handler::init(Schedule* schedule)
     m_converter.setupObjectTable();
 }
 
-void IO_Handler::writeSchedule(const char* name)
+bool IO_Handler::writeSchedule(const char* name)
 {
     fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
     if (fs::exists(schedulesPath) == false)
@@ -35,17 +35,18 @@ void IO_Handler::writeSchedule(const char* name)
         std::cout << "Successfully wrote Schedule to file: " << relativePath << std::endl;
     }
     m_schedule->setEditedSinceWrite(false);
+    return true;
 }
 
 // Reads a schedule from file and applies / opens it
-void IO_Handler::readSchedule(const char* name)
+bool IO_Handler::readSchedule(const char* name)
 {    
     std::string relativePath = makeRelativePathFromName(name);
     
     if (fs::exists(fs::path(relativePath.c_str())) == false)
     {
         std::cout << "Tried to read Schedule at path to non-existant file:" << relativePath << std::endl;
-        return;
+        return false;
     }
 
     std::vector<Column> columnsCopy = m_schedule->getColumns();
@@ -56,6 +57,13 @@ void IO_Handler::readSchedule(const char* name)
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
     }
     m_schedule->setEditedSinceWrite(false);
+    return true;
+}
+
+bool IO_Handler::createNewSchedule(const char* name)
+{
+    // TODO: create a default Schedule
+    return writeSchedule(name);
 }
 
 const char* IO_Handler::getOpenScheduleFilename()

@@ -124,8 +124,7 @@ class Interface
 	public:
 		void init(Window*, Schedule*, IO_Handler*);
 		void addGUI(Gui& gui);
+		Gui* getGuiByID(const std::string& ID);
 		void draw();
-		void openFileDialog(GUI_PROMPT type);
-	private:
- 		void checkFileDialog();
+		void openMainMenuBarScheduleNameModal();
 };

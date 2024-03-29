@@ -22,13 +22,27 @@ void Interface::init(Window* windowManager, Schedule* schedule, IO_Handler* ioHa
 	imGuiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// ADD GUIS
-    addGUI(*(new MainMenuBarGui("MainMenuBarGUI", m_ioHandler)));
-    addGUI(*(new ScheduleGui("ScheduleGUI", m_schedule)));
+    addGUI(*(new MainMenuBarGui("MainMenuBarGui", m_ioHandler)));
+    addGUI(*(new ScheduleGui("ScheduleGui", m_schedule)));
 }
 
 void Interface::addGUI(Gui& gui)
 {
     m_guis.insert({gui.getID(), &gui});
+}
+
+// NOTE: Returns nullptr if the Gui was not found
+Gui* Interface::getGuiByID(const std::string& ID)
+{
+	// No Gui with that ID
+	if (m_guis.find(ID) == m_guis.end())
+	{
+		return nullptr;
+	}
+	else
+	{
+		return m_guis.at(ID);
+	}
 }
 
 void Interface::draw()
@@ -76,13 +90,12 @@ void Interface::draw()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-// TODO: can't this just be its own Gui too?
-void Interface::openFileDialog(GUI_PROMPT type)
+void Interface::openMainMenuBarScheduleNameModal()
 {
-    return;
-}
+	Gui* gui = getGuiByID("MainMenuBarGui");
 
-void Interface::checkFileDialog()
-{
-    return;
+	if (gui != nullptr)
+	{
+		((MainMenuBarGui*)gui)->openNewScheduleNameModal(NAME_PROMPT_NEW);
+	}
 }
