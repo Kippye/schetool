@@ -64,7 +64,6 @@ project "schetool"
 		links
 		{
 			"X11",
-			"config++"
 		}
 
 group "Dependencies"

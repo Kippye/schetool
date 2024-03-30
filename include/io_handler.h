@@ -14,7 +14,7 @@ class IO_Handler
         std::string makeRelativePathFromName(const char* name);
         double m_timeSinceAutosave = 0.0;
     public:
-        const char* SCHEDULES_SUBDIR_PATH = ".\\schedules\\";
+        const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
         void init(Schedule* schedule);
         bool writeSchedule(const char* name);
