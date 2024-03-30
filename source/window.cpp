@@ -24,7 +24,8 @@ void Window::init(TextureLoader* textureLoader)
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
 	//glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); //might be needed for bigger monitors?
 
-	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "schetool", NULL, NULL);
+	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, titleBase, NULL, NULL);
+	setTitle(titleBase);
 
 	if (window == NULL)
 	{
@@ -118,13 +119,8 @@ void Window::setCursor(CURSOR_TYPE cursor)
 
 void Window::setTitle(const char* _title)
 {
-	title = _title;
-
-	// no file is opened, just show "blue"
-	if (title == "")
-	{
-		glfwSetWindowTitle(window, titleBase);
-	}
+	title = std::string(_title);
+	glfwSetWindowTitle(window, title.c_str());
 }
 
 void Window::terminate()

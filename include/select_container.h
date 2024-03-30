@@ -1,4 +1,5 @@
 #pragma once
+#include <element.h>
 #include <cstdlib>
 #include <ctime>
 #include <set>
@@ -48,7 +49,7 @@ struct SelectOptions
         void modificationApplied();
 };
 
-class Select
+class Select : public Element
 {
     private:
         std::set<size_t> m_selection;
@@ -56,6 +57,10 @@ class Select
     public:
         Select();
         Select(SelectOptions& options);
+        Select(SelectOptions& options, SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) 
+        {
+            m_options = &options;
+        }
         
         friend bool operator<(const Select& left, const Select& right)
         {
@@ -105,15 +110,8 @@ class Select
             return left.m_options->getOptions()[leftForemostOption] > right.m_options->getOptions()[rightForemostOption];
         }
 
-        // TEMP
-        void printSelection()
-        {
-            for (auto s: m_selection)
-            {
-                std::cout << s << ": " << m_options->getOptions()[s] << std::endl;
-            }
-        }
-        const std::set<size_t>& getSelection();
+        const std::set<size_t>& getSelection() const;
+        void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
         void update();
 };

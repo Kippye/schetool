@@ -1,3 +1,5 @@
+#include "decimal_container.h"
+#include "element.h"
 #include <select_container.h>
 #include <algorithm>
 #include <array>
@@ -16,32 +18,31 @@
 
 #include <iostream>
 
-ScheduleGui::ScheduleGui(const char* ID, Schedule* schedule)
+ScheduleGui::ScheduleGui(const char* ID, Schedule* schedule) : Gui(ID)
 {
-	m_ID = ID;
 	m_schedule = schedule;
 } 
 
 void ScheduleGui::draw(Window& window)
 {
-    ImGui::SetNextWindowSizeConstraints(ImVec2(window.SCREEN_WIDTH, window.SCREEN_HEIGHT), ImVec2(window.SCREEN_WIDTH, window.SCREEN_HEIGHT));
-	ImGui::SetNextWindowSize(ImVec2(window.SCREEN_WIDTH, window.SCREEN_HEIGHT));
-	ImGui::SetNextWindowPos(ImVec2(0.0, 0.0));
+    //ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
+	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT - 20.0f));
+	ImGui::SetNextWindowPos(ImVec2(0.0, 20.0f));
 
 	ImGui::Begin(m_ID.c_str(), NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus);
 		// TODO: For the schedule table, combine
 		// Reorderable, hideable, with headers & ImGuiTableFlags_ScrollY and background colours and context menus in body and custom headers
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-		ImGui::BeginChild("SchedulePanel", ImVec2(window.SCREEN_WIDTH - 58, window.SCREEN_HEIGHT - 52), true);
+		ImGui::BeginChild("SchedulePanel", ImVec2((float)(window.SCREEN_WIDTH - 58), (float)(window.SCREEN_HEIGHT - 52 - 20)), true);
 			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableRowFlags_Headers | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
 			ImGui::BeginTable("ScheduleTable", m_schedule->getColumnCount(), tableFlags);
-				for (int column = 0; column < m_schedule->getColumnCount(); column++)
+				for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
 				{
 					ImGui::TableSetupColumn(m_schedule->getColumn(column)->name.c_str());
 				}
 				// custom header row
 				ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
-				for (int column = 0; column < m_schedule->getColumnCount(); column++)
+				for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
 				{
 					ImGui::TableSetColumnIndex(column);
 					const char* columnName = ImGui::TableGetColumnName(column); // get name passed to TableSetupColumn()
@@ -72,10 +73,10 @@ void ScheduleGui::draw(Window& window)
 					ImGui::PopID();
 				}
 
-				for (int row = 0; row < m_schedule->getRowCount(); row++)
+				for (size_t row = 0; row < m_schedule->getRowCount(); row++)
 				{
 					ImGui::TableNextRow();
-					for (int column = 0; column < m_schedule->getColumnCount(); column++)
+					for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
 					{
 						ImGui::TableSetColumnIndex(column);
 						// the buttons for removing rows are displayed in the first displayed column
@@ -93,15 +94,20 @@ void ScheduleGui::draw(Window& window)
 						SCHEDULE_TYPE columnType = m_schedule->getColumn(column)->type;
 						// TODO: i could probably reduce the code repetition here
 						ImGui::SetNextItemWidth(-FLT_MIN);
+ 
 						switch(columnType)
 						{
 							case(SCH_BOOL):
 							{
 								try
 								{
-									bool boolValue = bool(m_schedule->getElement<std::byte>(column, row));
-									ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &boolValue);
-									m_schedule->setElement<std::byte>(column, row, std::byte(boolValue));
+									Bool container = m_schedule->getElement<Bool>(column, row);
+									bool newValue = container.getValue();
+									if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
+									{
+										container.setValue(newValue);
+										m_schedule->setElement<Bool>(column, row, new Bool(container));
+									}
 								}
 								catch(const std::exception& e)
 								{
@@ -109,13 +115,15 @@ void ScheduleGui::draw(Window& window)
 								}
 								break;
 							}
-							case(SCH_INT):
+							case(SCH_NUMBER):
 							{
 								try
 								{
-									auto value = m_schedule->getElement<int>(column, row);
-									ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &value, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue);
-									m_schedule->setElement<int>(column, row, value);
+									Number container = m_schedule->getElement<Number>(column, row);
+									int newValue = container.getValue();
+									ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue);
+									container.setValue(newValue);
+									m_schedule->setElement<Number>(column, row, new Number(container));
 								}
 								catch(const std::exception& e)
 								{
@@ -123,13 +131,15 @@ void ScheduleGui::draw(Window& window)
 								}
 								break;
 							}
-							case(SCH_DOUBLE):
+							case(SCH_DECIMAL):
 							{
 								try
 								{
-									auto value = m_schedule->getElement<double>(column, row);
-									ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &value, 0.0, 0.0, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue);
-									m_schedule->setElement<double>(column, row, value);
+									Decimal container = m_schedule->getElement<Decimal>(column, row);
+									double newValue = container.getValue();
+									ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue);
+									container.setValue(newValue);
+									m_schedule->setElement<Decimal>(column, row, new Decimal(container));
 								}
 								catch(const std::exception& e)
 								{
@@ -142,13 +152,15 @@ void ScheduleGui::draw(Window& window)
 							{
 								try
 								{
-									std::string value = m_schedule->getElement<std::string>(column, row);
+									Text container = m_schedule->getElement<Text>(column, row);
+									std::string value = container.getValue();
 									value.reserve(ELEMENT_TEXT_MAX_LENGTH);
 									char* buf = value.data();
 									//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
 									if (ImGui::InputTextMultiline(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
 									{
-										m_schedule->setElement<std::string>(column, row, std::string(buf));
+										container.setValue(std::string(buf));
+										m_schedule->setElement<Text>(column, row, new Text(container));
 									}
 									// ImVec2 textSize = ImGui::CalcTextSize(buf);
 									// if (textSize.x == 106 && textSize.y == 16)
@@ -178,7 +190,7 @@ void ScheduleGui::draw(Window& window)
 
 									std::vector<int> selectionIndices = {};
 
-									for (int s: selection)
+									for (size_t s: selection)
 									{
 										selectionIndices.push_back(s);
 									}
@@ -190,7 +202,7 @@ void ScheduleGui::draw(Window& window)
 									float pixelsPerCharacter = 12.0f;
 									float columnWidth = ImGui::GetColumnWidth(column);
 
-									for (int i = 0; i < selectedCount; i++)
+									for (size_t i = 0; i < selectedCount; i++)
 									{
 										// TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
 										if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
@@ -208,7 +220,7 @@ void ScheduleGui::draw(Window& window)
 											else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
 											{
 												value.setSelected(selectionIndices[i], false);
-												m_schedule->setElement<Select>(column, row, value);
+												m_schedule->setElement<Select>(column, row, new Select(value));
 											}
 										}
 
@@ -237,7 +249,7 @@ void ScheduleGui::draw(Window& window)
 										displayEditor(SCH_SELECT);
 										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
 										{
-											m_schedule->setElement(column, row, m_editorSelect);
+											m_schedule->setElement<Select>(column, row, new Select(m_editorSelect));
 										}
 									}
 								}
@@ -268,7 +280,7 @@ void ScheduleGui::draw(Window& window)
 										displayEditor(SCH_TIME);
 										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
 										{
-											m_schedule->setElement<Time>(column, row, m_editorTime);
+											m_schedule->setElement<Time>(column, row, new Time(m_editorTime));
 										}
 									}
 								}
@@ -301,7 +313,7 @@ void ScheduleGui::draw(Window& window)
 										displayEditor(SCH_DATE);
 										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
 										{
-											m_schedule->setElement<Date>(column, row, m_editorDate);
+											m_schedule->setElement<Date>(column, row, new Date(m_editorDate));
 										}
 									}
 								}
@@ -313,16 +325,23 @@ void ScheduleGui::draw(Window& window)
 								break;
 							}
 						}
+
+						if (ImGui::IsItemHovered())
+						{
+							ImGui::BeginTooltip();
+							ImGui::Text("Created: %s %s", m_schedule->getElement<Element>(column, row).getCreationDate().getString().c_str(), m_schedule->getElement<Element>(column, row).getCreationTime().getString().c_str());
+							ImGui::EndTooltip();
+						}
 					}
 				}
 			ImGui::EndTable();
 		ImGui::EndChild();
 		ImGui::SameLine();
-		if (ImGui::Button("+", ImVec2(32, window.SCREEN_HEIGHT - 52)))
+		if (ImGui::Button("+", ImVec2(32, (float)(window.SCREEN_HEIGHT - 52 - 20))))
 		{
 			m_schedule->addDefaultColumn(m_schedule->getColumnCount());
 		}
-		if (ImGui::Button("Add row", ImVec2(window.SCREEN_WIDTH - 58, 32)))
+		if (ImGui::Button("Add row", ImVec2((float)(window.SCREEN_WIDTH - 58), 32)))
 		{
 			m_schedule->addRow(m_schedule->getRowCount());
 		}
@@ -521,9 +540,9 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				size_t selectedCount = selection.size();
 				const std::vector<std::string>& optionNames = m_schedule->getColumnSelectOptions(m_editorColumn).getOptions();
 
-				std::vector<int> selectionIndices = {};
+				std::vector<size_t> selectionIndices = {};
 
-				for (int s: selection)
+				for (size_t s: selection)
 				{
 					selectionIndices.push_back(s);
 				}
@@ -531,7 +550,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				// sort indices so that the same options are always displayed in the same order
 				std::sort(std::begin(selectionIndices), std::end(selectionIndices));
 				
-				for (int i = 0; i < selectedCount; i++)
+				for (size_t i = 0; i < selectedCount; i++)
 				{
 					// TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
 					if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##EditorSelectedOption").append(std::to_string(i)).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
@@ -543,7 +562,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				}
 
 				// add new options
-				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable())
+				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
 				{
 					std::string str;
 					str.reserve(SELECT_OPTION_NAME_MAX_LENGTH);
@@ -561,7 +580,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					}
 				}
 
-				for (int i = 0; i < optionNames.size(); i++)
+				for (size_t i = 0; i < optionNames.size(); i++)
 				{
 					bool selected = selection.find(i) != selection.end();
 

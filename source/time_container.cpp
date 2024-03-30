@@ -13,33 +13,30 @@ Time::Time()
 
 Time::Time(int hours, int minutes)
 {
-    m_hours = hours;
-    m_minutes = minutes;
+    setTime(hours, minutes);
 }
 
-int Time::getHours()
+Time::Time(const TimeContainer& time)
 {
-    return m_hours;
+    m_time = time;
 }
 
-int Time::getMinutes()
+int Time::getHours() const
 {
-    return m_minutes;
+    return m_time.hours;
+}
+
+int Time::getMinutes() const
+{
+    return m_time.minutes;
 }
 
 // Returns the string representation of the stored Time
-std::string Time::getString()
+std::string Time::getString() const
 {
     try
     {
-        char output[1024];
-
-        tm outputTime;
-        outputTime.tm_hour = m_hours;
-        outputTime.tm_min = m_minutes;
-        std::strftime(output, sizeof(output), "%H:%M", &outputTime);
-
-        return std::string(output);
+        return m_time.getString();
     }
     catch (const std::exception& e)
     {
@@ -52,6 +49,6 @@ std::string Time::getString()
 // NOTE: Values are automatically clamped below 23 for hours and below 59 for minutes
 void Time::setTime(unsigned int hour, unsigned int minute)
 {
-    m_hours = std::min(hour, 23U);
-    m_minutes = std::min(minute, 59U);
+    m_time.hours = std::min(hour, 23U);
+    m_time.minutes = std::min(minute, 59U);
 }

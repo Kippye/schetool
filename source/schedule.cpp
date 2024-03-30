@@ -1,4 +1,4 @@
-#include <select_container.h>
+#include <cstdio>
 #include <cstdlib>
 #include <schedule.h>
 #include <string.h>
@@ -11,16 +11,54 @@
 // TEMP
 #include <iostream>
 
-void Schedule::test_setup()
+void Schedule::createDefaultSchedule()
 {
-    addColumn(getColumnCount(), Column{std::vector<std::any>{std::string("Zmitiusz"), std::string("Kip Kipperson")}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name});
-    addColumn(getColumnCount(), Column{std::vector<std::any>{std::byte(0), std::byte(0)}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished});
-    time_t now = time(0);
-    tm defaultTime = *localtime(&now);
-    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(0, 0), Time(0, 0)}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start});
-    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(0, 0), Time(0, 0)}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration});
-    addColumn(getColumnCount(), Column{std::vector<std::any>{Time(0, 0), Time(0, 0)}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End});
-    addColumn(getColumnCount(), Column{std::vector<std::any>{Date(defaultTime), Date(defaultTime)}, SCH_DATE, std::string("Date"), false});
+    clearSchedule();
+
+    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name});
+    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished});
+    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start});
+    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration});
+    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End});
+}
+
+void Schedule::setScheduleName(const std::string& name)
+{
+    m_scheduleName = name;
+}
+
+std::string Schedule::getScheduleName()
+{
+    return m_scheduleName;
+}
+
+bool Schedule::getEditedSinceWrite()
+{
+    return m_editedSinceWrite;
+}
+
+void Schedule::setEditedSinceWrite(bool to)
+{
+    m_editedSinceWrite = to;
+}
+
+void Schedule::clearSchedule()
+{
+    for (Column& column: m_schedule)
+    {
+        for (Element* element: column.rows)
+        {
+            delete element;
+        }
+    }
+    m_schedule.clear();
+}
+
+void Schedule::replaceSchedule(std::vector<Column> columns)
+{
+    clearSchedule();
+
+    m_schedule = columns;
 }
 
 // Private function, because it returns a mutable column pointer. NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
@@ -36,30 +74,50 @@ Column* Schedule::getColumnWithFlags(ScheduleElementFlags flags)
     return nullptr;
 }
 
+Column* Schedule::getMutableColumn(size_t column)
+{
+    if (column > getColumnCount())
+    {
+        std::cout << "Schedule::getModifiableColumn: index out of range. Returning last column" << std::endl;
+        return &m_schedule[getColumnCount() - 1];
+    }
+    return &m_schedule[column];
+}
+
 // Sorts a copy of the column's rows. Then compares each element of the two rows vectors and returns a vector that contains which index of the OLD rows vector corresponds to that position in the NEW SORTED rows
-std::vector<size_t> Schedule::getColumnSortedNewIndices(unsigned int index)
+std::vector<size_t> Schedule::getColumnSortedNewIndices(size_t index)
 {
     Column& column = m_schedule[index];
-    std::vector<std::any> rows = column.rows;
+    std::vector<Element*> rows = column.rows;
     std::vector<size_t> newIndices(rows.size());
     std::iota(newIndices.begin(), newIndices.end(), 0);
-
+   
     m_columnSortComparison.setup(column.type, column.sort);
     std::sort(newIndices.begin(), newIndices.end(), [&](size_t i, size_t j){ return m_columnSortComparison(rows[i], rows[j]); });
     return newIndices;
 }
 
-const Column* Schedule::getColumn(unsigned int column)
+const Column* Schedule::getColumn(size_t column)
 {
-    return &m_schedule[column];
+    return (const Column*)getMutableColumn(column);
 }
 
-SelectOptions& Schedule::getColumnSelectOptions(unsigned int column)
+const std::vector<Column>& Schedule::getColumns()
+{
+    return m_schedule;
+}
+
+std::vector<Column>& Schedule::getMutableColumns()
+{
+    return m_schedule;
+}
+
+SelectOptions& Schedule::getColumnSelectOptions(size_t column)
 {
     return m_schedule[column].selectOptions;
 }
 
-void Schedule::setColumnType(unsigned int column, SCHEDULE_TYPE type)
+void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type)
 {
     //if (type == m_schedule[column].type) { return; }
 
@@ -84,18 +142,22 @@ void Schedule::setColumnType(unsigned int column, SCHEDULE_TYPE type)
         type = SCH_SELECT;
     }
 
-    m_schedule[column].type = type;
     // TODO: try to convert types..? i guess there's no point in doing that. only really numbers could be turned into text.
-    // reset values to defaults
-    resetColumn(column);
+    // reset values to defaults of the (new?) type
+    resetColumn(column, type);
+    // read resetColumn description for why this is run after
+    m_schedule[column].type = type;
+    
+    setEditedSinceWrite(true);
 }
 
-void Schedule::setColumnName(unsigned int column, const char* name)
+void Schedule::setColumnName(size_t column, const char* name)
 {
     m_schedule[column].name = std::string(name);
+    setEditedSinceWrite(true);
 }
 
-void Schedule::setColumnSort(unsigned int column, COLUMN_SORT sortDirection)
+void Schedule::setColumnSort(size_t column, COLUMN_SORT sortDirection)
 {
     m_schedule[column].sort = sortDirection;
     if (sortDirection != COLUMN_SORT_NONE)
@@ -103,86 +165,17 @@ void Schedule::setColumnSort(unsigned int column, COLUMN_SORT sortDirection)
         m_schedule[column].sorted = false;
         sortColumns();
     }
+
+    setEditedSinceWrite(true);
 }
 
-void Schedule::resetColumn(unsigned int column)
-{
-    unsigned int rowCount = m_schedule[column].rows.size();
-
-    switch (m_schedule[column].type) 
-    {
-        case(SCH_BOOL):
-        {
-            for (unsigned int row = 0; row < rowCount; row++)
-            {
-                setElement<std::byte>(column, row, std::byte(0), false);
-            }
-            break;
-        }
-        case(SCH_INT):
-        {
-            for (unsigned int row = 0; row < rowCount; row++)
-            {
-                setElement<int>(column, row, 0, false);
-            }
-            break;
-        }
-        case(SCH_DOUBLE):
-        {
-            for (unsigned int row = 0; row < rowCount; row++)
-            {
-                setElement<double>(column, row, 0, false);
-            }  
-            break;
-        }
-        case(SCH_TEXT):
-        {
-            for (unsigned int row = 0; row < rowCount; row++)
-            {
-                setElement<std::string>(column, row, std::string(""), false);
-            }     
-            break;
-        }
-        case(SCH_SELECT):
-        {
-            for (unsigned int row = 0; row < rowCount; row++)
-            {
-                if (m_schedule[column].selectOptions.getIsMutable() == true)
-                {
-                    m_schedule[column].selectOptions.clearOptions();
-                }
-                setElement<Select>(column, row, Select(m_schedule[column].selectOptions), false);
-            }     
-            break;
-        }
-        case(SCH_TIME):
-        {
-            for (unsigned int row = 0; row < rowCount; row++)
-            {
-                time_t now = time(0);
-                setElement<Time>(column, row, Time(0, 0), false);
-            }
-            break;
-        }   
-        case(SCH_DATE):
-        {
-            for (unsigned int row = 0; row < rowCount; row++)
-            {
-                time_t now = time(0);
-                setElement<Date>(column, row, Date(*gmtime(&now)), false);
-            }
-            break;
-        }   
-    }
-}
-
-unsigned int Schedule::getColumnCount()
+size_t Schedule::getColumnCount()
 {
     return m_schedule.size();
 }
 
 // Return the number of rows in the schedule or 0 if there are no columns (which probably won't happen?) 
-unsigned int Schedule::getRowCount()
+size_t Schedule::getRowCount()
 {
     return (m_schedule.size() > 0 ? m_schedule[0].rows.size() : 0);
 }
@@ -190,21 +183,21 @@ unsigned int Schedule::getRowCount()
 // Sorts every column's rows based on "sorter" columns
 void Schedule::sortColumns()
 {
-    for (int sorterColumn = 0; sorterColumn < getColumnCount(); sorterColumn++)
+    for (size_t sorterColumn = 0; sorterColumn < getColumnCount(); sorterColumn++)
     {
         if (m_schedule[sorterColumn].sort != COLUMN_SORT_NONE)
         {
             std::vector<size_t> newRowIndices = getColumnSortedNewIndices(sorterColumn);
 
             // actually sort the rows vector in every column
-            for (int affectedColumn = 0; affectedColumn < getColumnCount(); affectedColumn++)
+            for (size_t affectedColumn = 0; affectedColumn < getColumnCount(); affectedColumn++)
             {
                 // vector that will replace the old rows vector
-                std::vector<std::any> sortedRows = {};
-                std::vector<std::any>& unsortedRows = m_schedule[affectedColumn].rows;
+                std::vector<Element*> sortedRows = {};
+                std::vector<Element*>& unsortedRows = m_schedule[affectedColumn].rows;
                 sortedRows.reserve(unsortedRows.size());
 
-                for (int rowIndex = 0; rowIndex < newRowIndices.size(); rowIndex++)
+                for (size_t rowIndex = 0; rowIndex < newRowIndices.size(); rowIndex++)
                 {
                     sortedRows.push_back(unsortedRows[newRowIndices[rowIndex]]);
                 }
@@ -219,65 +212,138 @@ void Schedule::sortColumns()
 }
 
 // Updates all Select type elements in the Column, if the Column is the right type
-void Schedule::updateColumnSelects(unsigned int index)
+void Schedule::updateColumnSelects(size_t index)
 {
-    // TODO: some way to check if it's any type of Select rather than just one by one YESS i can use flags maybe?!!
     if (m_schedule[index].type == SCH_SELECT)
     {
-        for (int i = 0; i < m_schedule[index].rows.size(); i++)
+        for (size_t i = 0; i < m_schedule[index].rows.size(); i++)
         {
-            Select sel = getElement<Select>(index, i);
-            sel.update();
-            setElement<Select>(index, i, sel);
+            getMutableColumn(index)->getElement<Select>(i)->update();
         }
     }
     m_schedule[index].selectOptions.modificationApplied();
 }
 
-void Schedule::addRow(unsigned int index)
+void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
+{
+    Column& column = *getMutableColumn(index);
+    size_t rowCount = column.rows.size();
+
+    time_t t = std::time(nullptr);
+    tm creationTime = *std::localtime(&t);
+
+    switch (type) 
+    {
+        case(SCH_BOOL):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
+                setElement<Bool>(index, row, new Bool(false, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+            }
+            break;
+        }
+        case(SCH_NUMBER):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
+                setElement<Number>(index, row, new Number(0, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+            }
+            break;
+        }
+        case(SCH_DECIMAL):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
+                setElement<Decimal>(index, row, new Decimal(0, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+            }  
+            break;
+        }
+        case(SCH_TEXT):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
+                setElement<Text>(index, row, new Text("", type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+            }     
+            break;
+        }
+        case(SCH_SELECT):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
+                if (column.selectOptions.getIsMutable() == true)
+                {
+                    column.selectOptions.clearOptions();
+                }
+                std::cout << "Replacing with select" << std::endl;
+                setElement<Select>(index, row, new Select(column.selectOptions, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+            }     
+            break;
+        }
+        case(SCH_TIME):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
+                setElement<Time>(index, row, new Time(0, 0, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+            }
+            break;
+        }   
+        case(SCH_DATE):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
+                setElement<Date>(index, row, new Date(creationTime, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+            }
+            break;
+        }   
+    }
+}
+
+void Schedule::addRow(size_t index)
 {
     // the last index = just add to the end
     if (index == getRowCount())
     {
         for (Column& column : m_schedule)
         {
-            std::vector<std::any>& columnValues = column.rows;
+            std::vector<Element*>& columnValues = column.rows;
+            time_t t = std::time(nullptr);
+            tm creationTime = *std::localtime(&t);
+
             switch(column.type)
             {
                 case(SCH_BOOL):
                 {
-                    columnValues.push_back(std::byte(0));
+                    columnValues.push_back(new Bool(false, column.type, DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
-                case(SCH_INT):
+                case(SCH_NUMBER):
                 {
-                    columnValues.push_back(0);
+                    columnValues.push_back(new Number(0, column.type, DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
-                case(SCH_DOUBLE):
+                case(SCH_DECIMAL):
                 {
-                    columnValues.push_back(0.0);
+                    columnValues.push_back(new Decimal(0, column.type, DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_TEXT):
                 {
-                    columnValues.push_back(std::string(""));
+                    columnValues.push_back(new Text("", column.type, DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_SELECT):
                 { 
-                    columnValues.push_back(Select(m_schedule[index].selectOptions));      
+                    columnValues.push_back(new Select(column.selectOptions, column.type, DateContainer(creationTime), TimeContainer(creationTime)));      
                     break;
                 }
                 case(SCH_TIME):
                 { 
-                    columnValues.push_back(Time(0, 0));      
+                    columnValues.push_back(new Time(0, 0, column.type, DateContainer(creationTime), TimeContainer(creationTime)));      
                     break;
                 }
                 case(SCH_DATE):
                 { 
-                    time_t now = time(0);
-                    columnValues.push_back(Date(*localtime(&now)));      
+                    columnValues.push_back(new Date(creationTime, column.type, DateContainer(creationTime), TimeContainer(creationTime)));      
                     break;
                 }
             }
@@ -289,42 +355,60 @@ void Schedule::addRow(unsigned int index)
         
     }
 
+    setEditedSinceWrite(true);
+
     sortColumns();
 }
 
-void Schedule::removeRow(unsigned int index)
+void Schedule::removeRow(size_t index)
 {
     for (Column& column : m_schedule)
     {
-        std::vector<std::any>& columnValues = column.rows;
+        std::vector<Element*>& columnValues = column.rows;
         if (index == columnValues.size() - 1)
         {
+            delete columnValues[index];
             columnValues.pop_back();
         }
         else
         {
+            delete columnValues[index];
             columnValues.erase(columnValues.begin() + index);
         }
     }
+
+    setEditedSinceWrite(true);
 } 
 
-void Schedule::addDefaultColumn(unsigned int index)
+void Schedule::addDefaultColumn(size_t index)
 {
+    time_t t = std::time(nullptr);
+    tm creationTime = *std::localtime(&t);
+
     // the last index = just add to the end
     if (index == getColumnCount())
     {
-        m_schedule.push_back(Column{std::vector<std::any>(getRowCount(), std::string("")), SCH_TEXT, std::string("Text"), false});
+        std::vector<Element*> addedElements = {};
+
+        for (size_t i = 0; i < getRowCount(); i++)
+        {
+            addedElements.push_back((Element*)new Text(std::string(""), SCH_TEXT, DateContainer(creationTime), TimeContainer(creationTime)));
+        }
+        m_schedule.push_back(Column{addedElements, SCH_TEXT, std::string("Text"), false});
     }
     else
     {
         // TODO: add in middle
     }
+
+    setEditedSinceWrite(true);
 }
 
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
-void Schedule::addColumn(unsigned int index, Column& column)
+void Schedule::addColumn(size_t index, const Column& column)
 {
     // TODO: make sure that EVERY column has the same amount of rows!!!
+    // TODO: give the new column correct creation date & time
 
     // the last index = just add to the end
     if (index == getColumnCount())
@@ -335,12 +419,20 @@ void Schedule::addColumn(unsigned int index, Column& column)
     {
         // TODO: add in middle
     }
+
+    setEditedSinceWrite(true);
 }
 
-void Schedule::removeColumn(unsigned int column)
+void Schedule::removeColumn(size_t column)
 {
     // a permanent column can't be removed
     if (m_schedule[column].permanent == true) { return; }
+
+    Column* mutableColumn = getMutableColumn(column);
+    for (size_t i = 0; i < mutableColumn->rows.size(); i++)
+    {
+        delete mutableColumn->rows[i];
+    }
 
     // the last index = pop from end
     if (column == getColumnCount() - 1)
@@ -351,4 +443,6 @@ void Schedule::removeColumn(unsigned int column)
     {
         m_schedule.erase(m_schedule.begin() + column);
     }
+
+    setEditedSinceWrite(true);
 }

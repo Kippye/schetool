@@ -1,5 +1,6 @@
 #pragma once
 
+#include <io_handler.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_impl_glfw.h>
@@ -19,6 +20,7 @@
 class Window;
 class Gui;
 class Schedule;
+class IO_Handler;
 
 enum GUI_STYLE
 {
@@ -103,6 +105,8 @@ class Interface
 	private:
 		Window* m_windowManager;
 		Schedule* m_schedule;
+		// TEMP?
+		IO_Handler* m_ioHandler;
 		std::map<std::string, Gui*> m_guis = {};
 	public:
 		GuiData gd;
@@ -113,22 +117,14 @@ class Interface
 		{
 			// { std::string("Select by texture"), new GuiTween() }
 		};
-		// std::map<GUI_POPUP, bool> popupToggles =
-		// {
-		// 	{ ABOUT, false },
-		// 	{ IGNORE_LIST, false },
-		// 	{ SAVE_CONTEXT, false },
-		// 	{ CONTENT_LACK_WARNING, false }
-		// };
 
 		ImGuiIO* imGuiIO;
 		ImGuiContext* imGui;
 
 	public:
-		void init(Window*, Schedule*);
+		void init(Window*, Schedule*, IO_Handler*);
 		void addGUI(Gui& gui);
+		Gui* getGuiByID(const std::string& ID);
 		void draw();
-		void openFileDialog(GUI_PROMPT type);
-	private:
- 		void checkFileDialog();
+		void openMainMenuBarScheduleNameModal();
 };

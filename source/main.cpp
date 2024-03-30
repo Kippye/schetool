@@ -1,6 +1,8 @@
 #include <main.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+// TEMP
+#include <data_converter.h>
 
 #ifdef NDEBUG
 #include <Windows.h>
@@ -14,6 +16,7 @@ Program::Program()
 
 	windowManager.init(&textureLoader);
 	camera.init(&windowManager);
+	ioHandler.init(&schedule);
 	#ifdef NDEBUG
 	input.init(&windowManager, &camera, intie);
 	render.init(&windowManager, &camera, intie);
@@ -21,14 +24,26 @@ Program::Program()
 	#else
 	input.init(&windowManager, &camera, &interface);
 	render.init(&windowManager, &camera, &interface);
-	interface.init(&windowManager, &schedule);
+	interface.init(&windowManager, &schedule, &ioHandler);
 	#endif
 
 	// TODO: load textures
 	//file_system.loadGUITextures();
 	//file_system.updateTextures();
 
-	schedule.test_setup();
+	schedule.createDefaultSchedule();
+
+	// There are pre-existing Schedules. Open the most recently edited one.
+	if (ioHandler.getScheduleStemNames().size() > 0)
+	{
+		// std::cout << "reading.." << ioHandler.getLastEditedScheduleStemName() << std::endl;
+		ioHandler.readSchedule(ioHandler.getLastEditedScheduleStemName().c_str());
+	}
+	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
+	else 
+	{
+		interface.openMainMenuBarScheduleNameModal();
+	}
 }
 
 void Program::loop()
@@ -45,6 +60,7 @@ void Program::loop()
 			programWillClose = quitProgram = true;
 		}
 		render.render();
+		ioHandler.addToAutosaveTimer(render.deltaTime);
 		//std::cout << "Rendered" << std::endl;
 		glfwPollEvents();
 		//std::cout << "Polled GLFW events" << std::endl;

@@ -9,6 +9,9 @@ Release/
 resources/
 compile_commands/
 
+# program directories
+schedules/
+
 # luarocks build files
 *.src.rock
 *.zip

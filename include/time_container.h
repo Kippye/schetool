@@ -3,35 +3,40 @@
 #include <cstdlib>
 #include <ctime>
 #include <string>
-
+#include <element.h>
 #include <iostream>
 
-class Time
+class Time : public Element
 {
     private:
-        int m_hours;
-        int m_minutes;
+        TimeContainer m_time;
     public:
         Time();
         Time(int hours, int minutes);
+        Time(const TimeContainer& time);
+        Time(int hours, int minutes, SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) 
+        {
+            setTime(hours, minutes);
+        }
+        Time(SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) {}
 
         Time& operator+=(const Time& rhs) // compound assignment (does not need to be a member,
         {                           // but often is, to modify the private members)
-            this->m_minutes += rhs.m_minutes;
-            this->m_hours += this->m_minutes / 60;
-            this->m_minutes -= this->m_minutes / 60 * 60;
-            this->m_hours += rhs.m_hours;
-            this->m_hours = this->m_hours > 23 ? this->m_hours - this->m_hours / 24 * 24 : this->m_hours;
+            this->m_time.minutes += rhs.m_time.minutes;
+            this->m_time.hours += this->m_time.minutes / 60;
+            this->m_time.minutes -= this->m_time.minutes / 60 * 60;
+            this->m_time.hours += rhs.m_time.hours;
+            this->m_time.hours = this->m_time.hours > 23 ? this->m_time.hours - this->m_time.hours / 24 * 24 : this->m_time.hours;
             return *this; // return the result by reference
         }
 
         Time& operator-=(const Time& rhs) // compound assignment (does not need to be a member,
         {                           // but often is, to modify the private members)
-            this->m_minutes -= rhs.m_minutes;
-            this->m_hours = this->m_minutes < 0 ? this->m_hours - 1 : this->m_hours;
-            this->m_minutes = this->m_minutes < 0 ? 60 + this->m_minutes : this->m_minutes;
-            this->m_hours -= rhs.m_hours;
-            this->m_hours = this->m_hours < 0 ? 24 + this->m_hours : this->m_hours;
+            this->m_time.minutes -= rhs.m_time.minutes;
+            this->m_time.hours = this->m_time.minutes < 0 ? this->m_time.hours - 1 : this->m_time.hours;
+            this->m_time.minutes = this->m_time.minutes < 0 ? 60 + this->m_time.minutes : this->m_time.minutes;
+            this->m_time.hours -= rhs.m_time.hours;
+            this->m_time.hours = this->m_time.hours < 0 ? 24 + this->m_time.hours : this->m_time.hours;
             return *this; // return the result by reference
         }
         
@@ -50,27 +55,27 @@ class Time
 
         friend bool operator<(const Time& left, const Time& right)
         {
-            if (left.m_hours < right.m_hours) { return true; }
-            else if (left.m_hours == right.m_hours) 
+            if (left.m_time.hours < right.m_time.hours) { return true; }
+            else if (left.m_time.hours == right.m_time.hours) 
             {  
-                return left.m_minutes < right.m_minutes;
+                return left.m_time.minutes < right.m_time.minutes;
             }
             else return false;
         }
 
         friend bool operator>(const Time& left, const Time& right)
         {
-            if (left.m_hours > right.m_hours) { return true; }
-            else if (left.m_hours == right.m_hours) 
+            if (left.m_time.hours > right.m_time.hours) { return true; }
+            else if (left.m_time.hours == right.m_time.hours) 
             {  
-                return left.m_minutes > right.m_minutes;
+                return left.m_time.minutes > right.m_time.minutes;
             }
             else return false;
         }
 
-        int getHours();
-        int getMinutes();
-        std::string getString();
+        int getHours() const;
+        int getMinutes() const;
+        std::string getString() const;
         
         void setTime(unsigned int hour, unsigned int minute);
 };
