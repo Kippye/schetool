@@ -5,6 +5,12 @@
 #include <data_converter.h>
 
 #ifdef NDEBUG
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <Windows.h>
 #endif
 
@@ -12,24 +18,12 @@ Program::Program()
 {
 	// setup and initialize components
 	// TODO: load user preferences here!
-	// TODO: load last opened schedule file here!
 
 	windowManager.init(&textureLoader);
-	camera.init(&windowManager);
 	ioHandler.init(&schedule);
-	#ifdef NDEBUG
-	input.init(&windowManager, &camera, intie);
-	render.init(&windowManager, &camera, intie);
-	intie->init(&windowManager, &schedule);
-	#else
-	input.init(&windowManager, &camera, &interface);
-	render.init(&windowManager, &camera, &interface);
+	input.init(&windowManager, &interface);
+	render.init(&windowManager, &interface);
 	interface.init(&windowManager, &schedule, &ioHandler);
-	#endif
-
-	// TODO: load textures
-	//file_system.loadGUITextures();
-	//file_system.updateTextures();
 
 	schedule.createDefaultSchedule();
 
@@ -51,25 +45,19 @@ void Program::loop()
 	while (quitProgram == false)
 	{
 		input.processInput(windowManager.window);
-		//std::cout << "Processed input" << std::endl;
-		// update the camera view direction (not really needed but eh)
-		camera.updateView();
-		//std::cout << "Updated camera view" << std::endl;
+
 		if (glfwWindowShouldClose(windowManager.window))
 		{
 			programWillClose = quitProgram = true;
 		}
 		render.render();
 		ioHandler.addToAutosaveTimer(render.deltaTime);
-		//std::cout << "Rendered" << std::endl;
+
 		glfwPollEvents();
-		//std::cout << "Polled GLFW events" << std::endl;
 	}
 	
 	std::cout << "Terminating program..." << std::endl;
-	render.terminate();
 	windowManager.terminate();
-	// file_system.trySaveConfigs();
 }
 
 #ifdef NDEBUG

@@ -3,10 +3,9 @@
 #include <iostream>
 #include <glm/gtx/norm.hpp>
 
-void Input::init(Window* windowManager, Camera* camera, Interface* interface)
+void Input::init(Window* windowManager, Interface* interface)
 { 
 	m_windowManager = windowManager;
-	m_camera = camera;
 	m_interface = interface;
 
 	m_windowManager->key_callback = [=](auto self, int key, int scancode, int action, int mods)
@@ -44,13 +43,6 @@ void Input::processInput(GLFWwindow* window)
 
 	/// check any situations in which we would not want to control the camera or send inputs to other listeners
 	if (m_interface->guiWantKeyboard) { return; }
-
-	glm::vec3 cameraPosBefore = m_camera->cameraPos;
-
-	if (cameraPosBefore == m_camera->cameraPos)
-	{
-		m_camera->lastMovement = glm::vec3(0.0f);
-	}
 
 	// reset mouse movement as it only updates when the mouse is ACTUALLY moved
 	mouseMovement = glm::vec2(0.0f);

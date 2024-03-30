@@ -7,30 +7,17 @@
 #include <render.h>
 #include <chrono>
 
-void Render::init(Window* windowManager, Camera* camera, Interface* interface)
+void Render::init(Window* windowManager, Interface* interface)
 {
 	m_windowManager = windowManager;
-	m_camera = camera;
 	m_interface = interface;
-	// [debug] glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-	//~ // general settings
-	glEnable(GL_DEPTH_TEST);
-	// add blending for transparency
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	// every shader and render call will now use this shader program
-	shader = Shader("shaders/tile.vert", "shaders/tile.geom", "shaders/tile.frag");
-
-	shader.use();
-	shader.setInt("texture1", 0);
 }
 
 void Render::render()
 {
-	// render loop
 	double currentFrame = glfwGetTime();
 	/// TIME AND TIMERS ///
 	deltaTime = currentFrame - lastFrame;
@@ -45,25 +32,11 @@ void Render::render()
 	}
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	//glClearColor(program->editor.backgroundColor.r, program->editor.backgroundColor.g, program->editor.backgroundColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// use the general purpose shader
-	// shader.use();
-
-	// set uniforms
-	shader.setMat4("view", m_camera->view);
-	shader.setMat4("projection", m_camera->projection);
-	shader.setFloat("time", timeSinceStart);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	m_interface->draw();
 
 	glfwSwapBuffers(m_windowManager->window);
-}
-
-void Render::terminate()
-{
-	// dead
 }
