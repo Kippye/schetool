@@ -79,7 +79,7 @@ std::string IO_Handler::getOpenScheduleFilename()
     return m_openScheduleFilename;
 }
 
-void IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFile)
+bool IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFile)
 {
     if (renameFile)
     {
@@ -95,8 +95,13 @@ void IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFil
             fs::create_directory(schedulesPath);
             schedulesDirWasCreated = true;
         }
+        //  A Schedule file with this name already exists, don't overwrite it. Just stop.
+        if (fs::exists(pathToRenamedFile))
+        {
+            return false;
+        }
         // If the file to rename doesn't exist, just write the Schedule to the file with the provided new name
-        if (schedulesDirWasCreated ||fs::exists(pathToOpenFile) == false)
+        if (schedulesDirWasCreated || fs::exists(pathToOpenFile) == false)
         {
             std::cout << "Tried to change the name of the Schedule file, but the file was not found at its previous path:" << pathToOpenFile.string() << std::endl;
             writeSchedule(name.c_str());
@@ -110,6 +115,7 @@ void IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFil
 
     m_openScheduleFilename = name;
     m_schedule->setScheduleName(name);
+    return true;
 }
 
 std::vector<std::string> IO_Handler::getScheduleStemNames()

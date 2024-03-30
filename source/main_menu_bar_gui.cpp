@@ -75,8 +75,11 @@ void MainMenuBarGui::draw(Window& window)
 				}
 				else if (m_currentNamePromptReason == NAME_PROMPT_RENAME)
 				{
-					m_ioHandler->setOpenScheduleFilename(buf, true);
-					ImGui::CloseCurrentPopup();
+					// Hide the modal if the open file was successfully renamed
+					if (m_ioHandler->setOpenScheduleFilename(buf, true))
+					{
+						ImGui::CloseCurrentPopup();
+					}
 				}
 			}	
 		}

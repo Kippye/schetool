@@ -18,7 +18,11 @@ class IO_Handler
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);
         std::string getOpenScheduleFilename();
-        void setOpenScheduleFilename(const std::string& name, bool renameFile = false);
+        // Rename the currently open file to the provided name.
+        // Cancelled if a file with that name already exists.
+        // If the open file doesn't exist, write a file with the new name.
+        // If the open file exists, rename it to the new name.
+        bool setOpenScheduleFilename(const std::string& name, bool renameFile = false);
         std::vector<std::string> getScheduleStemNames();
         std::vector<std::string> getScheduleStemNamesSortedByEditTime();
         std::string getLastEditedScheduleStemName();
