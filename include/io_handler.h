@@ -3,6 +3,8 @@
 #include <data_converter.h>
 #include <schedule.h>
 
+const unsigned int AUTOSAVE_DELAY_SECONDS = 2 * 60;
+
 class IO_Handler
 {
     private:
@@ -10,6 +12,7 @@ class IO_Handler
         DataConverter m_converter;
         std::string m_openScheduleFilename;
         std::string makeRelativePathFromName(const char* name);
+        double m_timeSinceAutosave = 0.0;
     public:
         const char* SCHEDULES_SUBDIR_PATH = ".\\schedules\\";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
@@ -17,6 +20,7 @@ class IO_Handler
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);
+        void addToAutosaveTimer(double delta);
         std::string getOpenScheduleFilename();
         // Rename the currently open file to the provided name.
         // Cancelled if a file with that name already exists.

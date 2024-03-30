@@ -31,6 +31,8 @@ Program::Program()
 	//file_system.loadGUITextures();
 	//file_system.updateTextures();
 
+	schedule.createDefaultSchedule();
+
 	// There are pre-existing Schedules. Open the most recently edited one.
 	if (ioHandler.getScheduleStemNames().size() > 0)
 	{
@@ -58,6 +60,7 @@ void Program::loop()
 			programWillClose = quitProgram = true;
 		}
 		render.render();
+		ioHandler.addToAutosaveTimer(render.deltaTime);
 		//std::cout << "Rendered" << std::endl;
 		glfwPollEvents();
 		//std::cout << "Polled GLFW events" << std::endl;

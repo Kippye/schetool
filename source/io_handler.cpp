@@ -74,6 +74,20 @@ bool IO_Handler::createNewSchedule(const char* name)
     return false;
 }
 
+void IO_Handler::addToAutosaveTimer(double delta)
+{
+    m_timeSinceAutosave += delta;
+
+    if (m_timeSinceAutosave > (double)AUTOSAVE_DELAY_SECONDS)
+    {
+        if (m_schedule->getEditedSinceWrite() == true)
+        {
+            writeSchedule(m_openScheduleFilename.c_str());
+        }
+        m_timeSinceAutosave = 0;
+    }
+}
+
 std::string IO_Handler::getOpenScheduleFilename()
 {
     return m_openScheduleFilename;

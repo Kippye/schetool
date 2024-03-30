@@ -429,7 +429,4 @@ class DataConverter
         int writeSchedule(const char* path, const std::vector<Column>&);
         // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The provided vector will be modified. Provide a copy.
         int readSchedule(const char* path, std::vector<Column>&);
-        
-        void write(const char* path, const Element* element);
-        Element* read(const char* path);
 };
