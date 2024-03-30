@@ -11,21 +11,19 @@ Schetool was created to have every feature that a scheduling tool needs and is d
 ### It knows nothing more
 Schetool contains everything that's needed and nothing more. Some alternatives have file sizes and memory usages in the hundreds of megabytes. Schetool can run in the background all day and you will only notice it when you are supposed to.
 
-## How do I use it?
-
-### Pre-built releases
+## Pre-built releases
 
 The latest stable release is available under Releases. Just download it, extract and run.
 
-### Building schetool
+## Building schetool
 
 Building hasn't been tested extensively, so the exact functionability with different platforms and compilers isn't known.
 
-#### Windows
+### Windows
 
 **Prerequisites**
 
-* Schetool uses [premake5](https://premake.github.io/download) for project file generation.
+* [premake5](https://premake.github.io/download) for project file generation.
 * TODO: Windows compilation prerequisites
 
 **Building**
@@ -41,7 +39,17 @@ del /Q schetool.pdb
 del /Q %~dp0\include\blf\blf.vcxproj  
 del /Q %~dp0\include\zlib\zlib.vcxproj
 ```
-#### Linux  
+### Linux
+
+**Prerequisites - Fedora**  
+
+* [premake5](https://premake.github.io/download) for project file generation.
+* X11 packages need to be installed in order to compile:
+```
+sudo dnf install libX11 libXcursor-devel libXrandr-devel libXinerama-devel libXi-devel mesa-libGL-devel xorg-x11-server-devel
+```
+
+**Building**
 
 ```
 premake5 gmake2  
