@@ -23,7 +23,7 @@ void MainMenuBarGui::draw(Window& window)
 			}
 			if (ImGui::BeginMenu("Open", "CTRL+O"))
 			{
-				std::vector<std::string> scheduleFilenames = m_ioHandler->getScheduleStemNames();
+				std::vector<std::string> scheduleFilenames = m_ioHandler->getScheduleStemNamesSortedByEditTime();
 
 				for (size_t i = 0; i < scheduleFilenames.size(); i++)
 				{

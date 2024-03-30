@@ -1,5 +1,6 @@
 #include "data_converter.h"
 #include "schedule.h"
+#include <algorithm>
 #include <chrono>
 #include <io_handler.h>
 #include <filesystem>
@@ -125,6 +126,28 @@ std::vector<std::string> IO_Handler::getScheduleStemNames()
     {
         filenames.push_back(entry.path().stem().string());
     }
+    return filenames;
+}
+
+std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime()
+{
+    std::vector<std::string> filenames = {};
+    std::map<std::string, long long> filenamesEditTimes = {};
+
+    fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
+    if (fs::exists(schedulesPath) == false)
+    {
+        std::cout << "Tried to get sorted Schedule stem names but the schedules directory did not exist." << std::endl;
+        return filenames;
+    }
+
+    for (const auto& entry: fs::directory_iterator(schedulesPath))
+    {
+        filenames.push_back(entry.path().stem().string());
+        filenamesEditTimes.insert({entry.path().stem().string(), fs::last_write_time(entry).time_since_epoch().count()}); 
+    }
+
+    std::sort(filenames.begin(), filenames.end(), [&](std::string fs1, std::string fs2){ return filenamesEditTimes.at(fs1) > filenamesEditTimes.at(fs2); });
     return filenames;
 }
 

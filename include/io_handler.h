@@ -20,5 +20,6 @@ class IO_Handler
         std::string getOpenScheduleFilename();
         void setOpenScheduleFilename(const std::string& name, bool renameFile = false);
         std::vector<std::string> getScheduleStemNames();
+        std::vector<std::string> getScheduleStemNamesSortedByEditTime();
         std::string getLastEditedScheduleStemName();
 };
