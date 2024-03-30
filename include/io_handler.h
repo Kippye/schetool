@@ -20,6 +20,7 @@ class IO_Handler
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);
+        bool deleteSchedule(const char* name);
         void addToAutosaveTimer(double delta);
         std::string getOpenScheduleFilename();
         // Rename the currently open file to the provided name.

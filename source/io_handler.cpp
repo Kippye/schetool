@@ -73,6 +73,22 @@ bool IO_Handler::createNewSchedule(const char* name)
     }
     return false;
 }
+ 
+// Deletes the Schedule with the name and returns true if it exists or returns false.
+// NOTE: This can delete the currently open file. Is this the correct behaviour?
+bool IO_Handler::deleteSchedule(const char* name)
+{
+    std::string relativePath = makeRelativePathFromName(name);
+
+    if (fs::exists(relativePath) == false)
+    {
+        std::cout << "Tried to delete non-existant Schedule:" << name << std::endl;
+        return false;
+    }
+
+    fs::remove(relativePath);
+    return true;
+}
 
 void IO_Handler::addToAutosaveTimer(double delta)
 {

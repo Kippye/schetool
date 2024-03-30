@@ -27,9 +27,16 @@ void MainMenuBarGui::draw(Window& window)
 
 				for (size_t i = 0; i < scheduleFilenames.size(); i++)
 				{
+					ImGui::SetNextItemAllowOverlap();
 					if (ImGui::MenuItem(scheduleFilenames[i].c_str()))
 					{
 						m_ioHandler->readSchedule(scheduleFilenames[i].c_str());
+					}
+					ImGui::SameLine();
+					if (ImGui::SmallButton(std::string("X##DeleteSchedule").append(std::to_string(i)).c_str()))
+					{
+						m_deleteConfirmationScheduleName = scheduleFilenames[i];
+						m_openDeleteConfirmationModal = true;
 					}
 				}
 				ImGui::EndMenu();
@@ -43,6 +50,23 @@ void MainMenuBarGui::draw(Window& window)
 	}
 	ImGui::EndMainMenuBar();
 
+	displayScheduleNameModal();
+	displayDeleteConfirmationModal();
+
+	if (m_openScheduleNameModal)
+	{
+		ImGui::OpenPopup("Enter Schedule name");
+		m_openScheduleNameModal = false;
+	}
+	if (m_openDeleteConfirmationModal)
+	{
+		ImGui::OpenPopup("Confirm Schedule deletion");
+		m_openDeleteConfirmationModal = false;
+	}
+}
+
+void MainMenuBarGui::displayScheduleNameModal()
+{
 	float nameInputWidth = ImGui::CalcTextSize(std::string(48, 'a').c_str()).x;
 
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -85,11 +109,43 @@ void MainMenuBarGui::draw(Window& window)
 		}
 		ImGui::EndPopup();
 	}
+}
 
-	if (m_openScheduleNameModal)
+void MainMenuBarGui::displayDeleteConfirmationModal()
+{
+	ImGui::SetNextWindowSize(ImVec2(386.0f, 100.0f));
+	if (ImGui::BeginPopupModal("Confirm Schedule deletion", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 	{
-		ImGui::OpenPopup("Enter Schedule name");
-		m_openScheduleNameModal = false;
+		ImGuiStyle& style = ImGui::GetStyle();
+		ImGui::Text("%s %s?", "Delete", m_deleteConfirmationScheduleName.c_str());
+		ImGui::NewLine();
+		float size = 120.0f + style.FramePadding.x * 2.0f;
+		float avail = ImGui::GetContentRegionAvail().x;
+		float off = (avail - size) * 0.23f;
+		if (off > 0.0f)
+		{
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+		}
+		if (ImGui::Button("Delete##DeleteSchedule", ImVec2(120, 0)))
+		{
+			if (m_ioHandler->deleteSchedule(m_deleteConfirmationScheduleName.c_str()))
+			{
+			}
+			// close it anyway i guess
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		// janky offset but it works so i don't much care
+		off = (avail - size) * 0.04f;
+		if (off > 0.0f)
+		{
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+		}
+		if (ImGui::Button("Cancel##CancelScheduleDeletion", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
 	}
 }
 
