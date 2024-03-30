@@ -36,7 +36,7 @@ void MainMenuBarGui::draw(Window& window)
 			}
 			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
-				m_ioHandler->writeSchedule("test");
+				m_ioHandler->writeSchedule(m_ioHandler->getOpenScheduleFilename().c_str());
 			}
 			ImGui::EndMenu();
 		}
@@ -75,11 +75,8 @@ void MainMenuBarGui::draw(Window& window)
 				}
 				else if (m_currentNamePromptReason == NAME_PROMPT_RENAME)
 				{
-					// TODO: rename the file and change the name stored in the Schedule (if it is stored there idk)
-					// if (m_ioHandler->createNewSchedule(buf))
-					// {
+					m_ioHandler->setOpenScheduleFilename(buf, true);
 					ImGui::CloseCurrentPopup();
-					// }
 				}
 			}	
 		}

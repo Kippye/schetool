@@ -31,8 +31,6 @@ Program::Program()
 	//file_system.loadGUITextures();
 	//file_system.updateTextures();
 
-	schedule.test_setup();
-
 	// There are pre-existing Schedules. Open the most recently edited one.
 	if (ioHandler.getScheduleStemNames().size() > 0)
 	{

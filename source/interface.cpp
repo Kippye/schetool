@@ -73,18 +73,11 @@ void Interface::draw()
 	// TEMP here? change the Window's title
 	if (m_schedule->getEditedSinceWrite())
 	{
-		// has to be changed to add *
-		if (m_windowManager->title == std::string(m_windowManager->titleBase))
-		{
-			m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(std::string(" *")).c_str());
-		}
+		m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(" - ").append(m_schedule->getScheduleName()).append(std::string(" *")).c_str());
 	}
 	else
 	{
-		if (m_windowManager->title.c_str() != m_windowManager->titleBase)
-		{
-			m_windowManager->setTitle(m_windowManager->titleBase);
-		}
+		m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(" - ").append(m_schedule->getScheduleName()).c_str());
 	}
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

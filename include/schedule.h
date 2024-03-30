@@ -116,6 +116,7 @@ class Schedule
         std::vector<Column> m_schedule = {};
         ColumnSortComparison m_columnSortComparison;
         bool m_editedSinceWrite = false;
+        std::string m_scheduleName;
         Column* getColumnWithFlags(ScheduleElementFlags flags);
         Column* getMutableColumn(size_t column);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
@@ -132,8 +133,22 @@ class Schedule
             {SCH_TIME, "Time"},
             {SCH_DATE, "Date"},
         };
-        // TEMP
-        void test_setup();
+
+        // WHOLE-SCHEDULE FUNCTIONS
+
+        // Clear the current Schedule and replace it with an empty Schedule with default Columns.
+        void createDefaultSchedule();
+        // Set the schedule's name to the provided name. NOTE: Does not affect filename. Only called by IO_Manager and MainMenuBarGui through IO_Manager.
+        void setScheduleName(const std::string& name);
+        std::string getScheduleName();
+
+        bool getEditedSinceWrite();
+        void setEditedSinceWrite(bool to);
+
+        // Clears the Schedule and deletes all the Columns.
+        void clearSchedule();
+        // Replaces the m_schedule vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
+        void replaceSchedule(std::vector<Column> columns);
 
         // Get a constant pointer to the Column at the index. TODO: Return const ref instead
         const Column* getColumn(size_t column);
@@ -149,9 +164,6 @@ class Schedule
         size_t getColumnCount();
         size_t getRowCount();
 
-        bool getEditedSinceWrite();
-        void setEditedSinceWrite(bool to);
-
         void sortColumns();
         void updateColumnSelects(size_t index);
 
@@ -162,9 +174,6 @@ class Schedule
         void addDefaultColumn(size_t index);
         void addColumn(size_t index, const Column& column);
         void removeColumn(size_t column);
-        // Replaces the m_schedule vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
-        void replaceSchedule(std::vector<Column> columns);
-
 
         // TODO: make this return a (const?) pointer instead. too much copying!
         template <typename T, typename = std::enable_if<std::is_base_of<Element, T>::value>>

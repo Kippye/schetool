@@ -56,19 +56,59 @@ bool IO_Handler::readSchedule(const char* name)
         m_schedule->replaceSchedule(columnsCopy);
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
     }
+    setOpenScheduleFilename(std::string(name));
     m_schedule->setEditedSinceWrite(false);
     return true;
 }
 
 bool IO_Handler::createNewSchedule(const char* name)
 {
-    // TODO: create a default Schedule
-    return writeSchedule(name);
+    m_schedule->createDefaultSchedule();
+
+    if (writeSchedule(name))
+    {
+        setOpenScheduleFilename(std::string(name));
+        return true;
+    }
+    return false;
 }
 
-const char* IO_Handler::getOpenScheduleFilename()
+std::string IO_Handler::getOpenScheduleFilename()
 {
     return m_openScheduleFilename;
+}
+
+void IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFile)
+{
+    if (renameFile)
+    {
+        fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
+        fs::path pathToOpenFile = fs::path(makeRelativePathFromName(m_openScheduleFilename.c_str()));
+        fs::path pathToRenamedFile = fs::path(makeRelativePathFromName(name.c_str()));
+        bool schedulesDirWasCreated = false;
+
+        // Write-operation: Create schedules directory if it doesn't exist.
+        if (fs::exists(schedulesPath) == false)
+        {
+            std::cout << "Tried to rename a Schedule but the schedules directory did not exist. Created a schedules directory." << std::endl;
+            fs::create_directory(schedulesPath);
+            schedulesDirWasCreated = true;
+        }
+        // If the file to rename doesn't exist, just write the Schedule to the file with the provided new name
+        if (schedulesDirWasCreated ||fs::exists(pathToOpenFile) == false)
+        {
+            std::cout << "Tried to change the name of the Schedule file, but the file was not found at its previous path:" << pathToOpenFile.string() << std::endl;
+            writeSchedule(name.c_str());
+            std::cout << "Wrote current file to renamed path:" << pathToRenamedFile.string() << std::endl;
+        }
+        else // All is fine, rename the file
+        {
+            fs::rename(pathToOpenFile, pathToRenamedFile);
+        }
+    }
+
+    m_openScheduleFilename = name;
+    m_schedule->setScheduleName(name);
 }
 
 std::vector<std::string> IO_Handler::getScheduleStemNames()

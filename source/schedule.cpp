@@ -11,14 +11,54 @@
 // TEMP
 #include <iostream>
 
-void Schedule::test_setup()
+void Schedule::createDefaultSchedule()
 {
+    clearSchedule();
+
     addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name});
     addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished});
     addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start});
     addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration});
     addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End});
-    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_DATE, std::string("Date"), false});
+}
+
+void Schedule::setScheduleName(const std::string& name)
+{
+    m_scheduleName = name;
+}
+
+std::string Schedule::getScheduleName()
+{
+    return m_scheduleName;
+}
+
+bool Schedule::getEditedSinceWrite()
+{
+    return m_editedSinceWrite;
+}
+
+void Schedule::setEditedSinceWrite(bool to)
+{
+    m_editedSinceWrite = to;
+}
+
+void Schedule::clearSchedule()
+{
+    for (Column& column: m_schedule)
+    {
+        for (Element* element: column.rows)
+        {
+            delete element;
+        }
+    }
+    m_schedule.clear();
+}
+
+void Schedule::replaceSchedule(std::vector<Column> columns)
+{
+    clearSchedule();
+
+    m_schedule = columns;
 }
 
 // Private function, because it returns a mutable column pointer. NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
@@ -138,16 +178,6 @@ size_t Schedule::getColumnCount()
 size_t Schedule::getRowCount()
 {
     return (m_schedule.size() > 0 ? m_schedule[0].rows.size() : 0);
-}
-
-bool Schedule::getEditedSinceWrite()
-{
-    return m_editedSinceWrite;
-}
-
-void Schedule::setEditedSinceWrite(bool to)
-{
-    m_editedSinceWrite = to;
 }
 
 // Sorts every column's rows based on "sorter" columns
@@ -415,17 +445,4 @@ void Schedule::removeColumn(size_t column)
     }
 
     setEditedSinceWrite(true);
-}
-
-void Schedule::replaceSchedule(std::vector<Column> columns)
-{
-    for (Column& column: m_schedule)
-    {
-        for (Element* element: column.rows)
-        {
-            delete element;
-        }
-    }
-
-    m_schedule = columns;
 }
