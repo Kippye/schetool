@@ -32,6 +32,8 @@ class Window
 		GLFWcursor* cursors[2] = {};
 		int SCREEN_WIDTH = 800;
 		int SCREEN_HEIGHT = 600;
+		int WINDOW_MIN_WIDTH = 220;
+		int WINDOW_MIN_HEIGHT = 160;
 		bool firstMouseMovement = true;
 		bool hasFocus = true;
 		bool shouldClose = false;

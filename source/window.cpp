@@ -37,7 +37,7 @@ void Window::init(TextureLoader* textureLoader)
 	// make the window current and maximize 8)
 	glfwMakeContextCurrent(window);
 	glfwMaximizeWindow(window);
-	glfwSetWindowSizeLimits(window, 0, 0, GLFW_DONT_CARE, GLFW_DONT_CARE);
+	glfwSetWindowSizeLimits(window, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
 	glfwSetWindowUserPointer(window, this);
 	// load address of OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))

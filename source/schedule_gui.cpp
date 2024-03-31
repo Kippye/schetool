@@ -34,8 +34,9 @@ void ScheduleGui::draw(Window& window)
 		// Reorderable, hideable, with headers & ImGuiTableFlags_ScrollY and background colours and context menus in body and custom headers
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 		ImGui::BeginChild("SchedulePanel", ImVec2((float)(window.SCREEN_WIDTH - 58), (float)(window.SCREEN_HEIGHT - 52 - 20)), true);
-			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableRowFlags_Headers | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
-			ImGui::BeginTable("ScheduleTable", m_schedule->getColumnCount(), tableFlags);
+			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableRowFlags_Headers | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
+			if (ImGui::BeginTable("ScheduleTable", m_schedule->getColumnCount(), tableFlags))
+			{ 
 				for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
 				{
 					ImGui::TableSetupColumn(m_schedule->getColumn(column)->name.c_str());
@@ -121,9 +122,11 @@ void ScheduleGui::draw(Window& window)
 								{
 									Number container = m_schedule->getElement<Number>(column, row);
 									int newValue = container.getValue();
-									ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue);
-									container.setValue(newValue);
-									m_schedule->setElement<Number>(column, row, new Number(container));
+									if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+									{
+										container.setValue(newValue);
+										m_schedule->setElement<Number>(column, row, new Number(container));
+									}
 								}
 								catch(const std::exception& e)
 								{
@@ -137,9 +140,11 @@ void ScheduleGui::draw(Window& window)
 								{
 									Decimal container = m_schedule->getElement<Decimal>(column, row);
 									double newValue = container.getValue();
-									ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.6f", ImGuiInputTextFlags_EnterReturnsTrue);
-									container.setValue(newValue);
-									m_schedule->setElement<Decimal>(column, row, new Decimal(container));
+									if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
+									{
+										container.setValue(newValue);
+										m_schedule->setElement<Decimal>(column, row, new Decimal(container));
+									}
 								}
 								catch(const std::exception& e)
 								{
@@ -334,7 +339,8 @@ void ScheduleGui::draw(Window& window)
 						}
 					}
 				}
-			ImGui::EndTable();
+				ImGui::EndTable();
+			}
 		ImGui::EndChild();
 		ImGui::SameLine();
 		if (ImGui::Button("+", ImVec2(32, (float)(window.SCREEN_HEIGHT - 52 - 20))))
