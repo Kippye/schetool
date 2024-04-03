@@ -8,47 +8,6 @@
 
 #include <iostream>
 
-enum SELECT_MODIFICATION
-{
-    SELECT_MODIFICATION_REMOVE,
-    SELECT_MODIFICATION_MOVE,
-    SELECT_MODIFICATION_CLEAR
-};
-
-struct SelectOptionChange
-{
-    SELECT_MODIFICATION type;
-    size_t firstIndex;
-    size_t secondIndex;
-    bool applied;
-
-    public:
-        void replace(SELECT_MODIFICATION type, size_t firstIndex, size_t secondIndex);
-};
-
-struct SelectOptions
-{
-    private:
-        std::vector<std::string> m_options = {};
-        SelectOptionChange m_lastModification;
-        bool m_mutable;
-    public:
-        SelectOptions();
-        SelectOptions(const std::vector<std::string>& options);
-
-        const std::vector<std::string>& getOptions() const;
-        const SelectOptionChange& getLastChange() const;
-        void addOption(const std::string& option);
-        void removeOption(const std::string& option);
-        void removeOption(size_t option);
-        void moveOption(size_t firstIndex, size_t secondIndex);
-        void clearOptions();
-        void setIsMutable(bool to);
-        bool getIsMutable() const;
-        // void renameOption(size_t option, const char* name);
-        void modificationApplied();
-};
-
 class Select : public Element
 {
     private:
