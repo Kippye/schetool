@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ctime>
 #include <element_base.h>
 #include <string>
 #include <type_traits>

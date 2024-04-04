@@ -4,6 +4,9 @@
 #include "objectattribute.hpp"
 #include "string.hpp"
 #include "templateobject.hpp"
+#include <time_container.h>
+#include <date_container.h>
+#include <select_container.h>
 #include <iterator>
 #include <schedule.h>
 #include <element.h>
