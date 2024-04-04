@@ -268,6 +268,31 @@ class Schedule
                 // TODO: clean previous pointer since it's gone now?
                 getMutableColumn(column)->rows[row] = other;
             }
+
+            m_schedule[column].sorted = false;
+            if (resort)
+            {
+                sortColumns();
+            }
+
+            setEditedSinceWrite(true);
+        }
+
+        // Shortcut for getting the value of an Element at column; row
+        template <typename T>
+        T getElementValue(size_t column, size_t row)
+        {
+            return getValue<T>(getColumn(column)->rows[row]);
+        }
+
+        // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
+        template <typename T>
+        void setElementValue(size_t column, size_t row, const T& value, bool resort = true)
+        {
+            ElementBase* element = getElement(column, row);
+
+            ((Element<T>*)element)->setValue(value);
+
             ScheduleElementFlags columnFlags = getColumn(column)->flags;
             if (columnFlags & ScheduleElementFlags_Start)
             {
@@ -295,22 +320,6 @@ class Schedule
             }
 
             setEditedSinceWrite(true);
-        }
-
-        // Shortcut for getting the value of an Element at column; row
-        template <typename T>
-        T getElementValue(size_t column, size_t row)
-        {
-            return getValue<T>(getColumn(column)->rows[row]);
-        }
-
-        // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
-        template <typename T>
-        void setElementValue(size_t column, size_t row, const T& value)
-        {
-            ElementBase* element = getElement(column, row);
-
-            ((Element<T>*)element)->setValue(value);
 
         //     switch(element->getType())
         //     {

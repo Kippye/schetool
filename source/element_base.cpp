@@ -194,7 +194,7 @@ SelectContainer::SelectContainer()
 
 }
 
-const std::set<size_t>& SelectContainer::getSelection() const
+const std::set<size_t> SelectContainer::getSelection() const
 {
     return m_selection;
 }

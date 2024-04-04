@@ -12,7 +12,7 @@ class Element : public ElementBase
         T m_value;
     public:
         Element(){}
-        Element(SCHEDULE_TYPE type, T value, const DateContainer& creationDate, const TimeContainer& creationTime)
+        Element(SCHEDULE_TYPE type, T value, const DateContainer& creationDate, const TimeContainer& creationTime) : ElementBase(type, creationDate, creationTime)
         {
             m_value = value;
         }
@@ -42,6 +42,11 @@ class Element : public ElementBase
         }
 
         T getValue() const
+        {
+            return m_value;
+        }
+        // Returns a mutable reference to the Element's value. Only needs to be used for Select types when reading a Schedule. Otherwise, avoid.
+        T& getValueReference()
         {
             return m_value;
         }

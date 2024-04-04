@@ -230,7 +230,7 @@ struct SelectContainer
             return left.m_options->getOptions()[leftForemostOption] > right.m_options->getOptions()[rightForemostOption];
         }
 
-        const std::set<size_t>& getSelection() const;
+        const std::set<size_t> getSelection() const;
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
         void update();
