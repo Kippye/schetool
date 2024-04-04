@@ -60,40 +60,37 @@ struct ColumnSortComparison
 
     bool operator () (const ElementBase* const left, const ElementBase* const right)
     {
-        // TODO!
-        return true;
-
-        // switch(type)
-        // {
-        //     case(SCH_BOOL):
-        //     {
-        //         return sortDirection == COLUMN_SORT_DESCENDING ? *(const Bool*)left > *(const Bool*)right : *(const Bool*)left < *(const Bool*)right;
-        //     }
-        //     case(SCH_NUMBER):
-        //     {
-        //         return sortDirection == COLUMN_SORT_DESCENDING ? *(const Number*)left > *(const Number*)right : *(const Number*)left < *(const Number*)right;
-        //     }
-        //     case(SCH_DECIMAL):
-        //     {
-        //         return sortDirection == COLUMN_SORT_DESCENDING ? *(const Decimal*)left > *(const Decimal*)right : *(const Decimal*)left < *(const Decimal*)right;
-        //     }
-        //     case(SCH_TEXT):
-        //     {
-        //         return sortDirection == COLUMN_SORT_DESCENDING ? *(const Text*)left > *(const Text*)right : *(const Text*)left < *(const Text*)right;
-        //     }
-        //     case(SCH_SELECT):
-        //     {
-        //         return sortDirection == COLUMN_SORT_DESCENDING ? *(const Select*)left > *(const Select*)right : *(const Select*)left < *(const Select*)right;
-        //     }
-        //     case(SCH_TIME):
-        //     {
-        //         return sortDirection == COLUMN_SORT_DESCENDING ? *(const Time*)left > *(const Time*)right : *(const Time*)left < *(const Time*)right;
-        //     }
-        //     case(SCH_DATE):
-        //     {
-        //         return sortDirection == COLUMN_SORT_DESCENDING ? *(const Date*)left > *(const Date*)right : *(const Date*)left < *(const Date*)right;
-        //     }
-        // }
+        switch(type)
+        {
+            case(SCH_BOOL):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<bool>*)left)->getValue() > ((const Element<bool>*)right)->getValue() : ((const Element<bool>*)left)->getValue() < ((const Element<bool>*)right)->getValue();
+            }
+            case(SCH_NUMBER):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<int>*)left)->getValue() > ((const Element<int>*)right)->getValue() : ((const Element<int>*)left)->getValue() < ((const Element<int>*)right)->getValue();
+            }
+            case(SCH_DECIMAL):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<double>*)left)->getValue() > ((const Element<double>*)right)->getValue() : ((const Element<double>*)left)->getValue() < ((const Element<double>*)right)->getValue();
+            }
+            case(SCH_TEXT):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<std::string>*)left)->getValue() > ((const Element<std::string>*)right)->getValue() : ((const Element<std::string>*)left)->getValue() < ((const Element<std::string>*)right)->getValue();
+            }
+            case(SCH_SELECT):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getValue() > ((const Element<SelectContainer>*)right)->getValue() : ((const Element<SelectContainer>*)left)->getValue() < ((const Element<SelectContainer>*)right)->getValue();
+            }
+            case(SCH_TIME):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<TimeContainer>*)left)->getValue() > ((const Element<TimeContainer>*)right)->getValue() : ((const Element<TimeContainer>*)left)->getValue() < ((const Element<TimeContainer>*)right)->getValue();
+            }
+            case(SCH_DATE):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<DateContainer>*)left)->getValue() > ((const Element<DateContainer>*)right)->getValue() : ((const Element<DateContainer>*)left)->getValue() < ((const Element<DateContainer>*)right)->getValue();
+            }
+        }
     }
 
     // Setup the sort comparison information before using it
@@ -175,38 +172,6 @@ class Schedule
         T getValue(ElementBase* element)
         {
             return (T)((Element<T>*)element)->getValue();
-
-            // switch(element->getType())
-            // {
-            //     case(SCH_BOOL):
-            //     {
-            //         return (T)((Element<bool>*)element)->getValue();
-            //     }
-            //     case(SCH_NUMBER):
-            //     {
-            //         return (T)((Element<int>*)element)->getValue();
-            //     }
-            //     case(SCH_DECIMAL):
-            //     {
-            //         return (T)((Element<double>*)element)->getValue();
-            //     }
-            //     case(SCH_TEXT):
-            //     {
-            //         return (T)((Element<std::string>*)element)->getValue();
-            //     }
-            //     case(SCH_SELECT):
-            //     {
-            //         return (T)((Element<SelectContainer>*)element)->getValue();
-            //     }
-            //     case(SCH_TIME):
-            //     {
-            //         return (T)((Element<TimeContainer>*)element)->getValue();
-            //     }
-            //     case(SCH_DATE):
-            //     {
-            //         return (T)((Element<DateContainer>*)element)->getValue();
-            //     }
-            // }
         }
 
         // Get a pointer to the ElementBase at column; row
@@ -320,37 +285,5 @@ class Schedule
             }
 
             setEditedSinceWrite(true);
-
-        //     switch(element->getType())
-        //     {
-        //         case(SCH_BOOL):
-        //         {
-        //             ((Element<bool>*)element)->setValue((const bool&)value);
-        //         }
-        //         case(SCH_NUMBER):
-        //         {
-        //             ((Element<int>*)element)->setValue((int)value);
-        //         }
-        //         case(SCH_DECIMAL):
-        //         {
-        //             ((Element<double>*)element)->setValue((double)value);
-        //         }
-        //         case(SCH_TEXT):
-        //         {
-        //             ((Element<std::string>*)element)->setValue((std::string)value);
-        //         }
-        //         case(SCH_SELECT):
-        //         {
-        //             ((Element<SelectContainer>*)element)->setValue((SelectContainer)value);
-        //         }
-        //         case(SCH_TIME):
-        //         {
-        //             ((Element<TimeContainer>*)element)->setValue((TimeContainer)value);
-        //         }
-        //         case(SCH_DATE):
-        //         {
-        //             ((Element<DateContainer>*)element)->setValue((DateContainer)value);
-        //         }
-        //     }
         }
 };
