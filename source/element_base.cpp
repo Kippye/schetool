@@ -1,4 +1,6 @@
 #include <element_base.h>
+#include <iostream>
+#include <util.h>
 
 DateContainer::DateContainer() {}
 DateContainer::DateContainer(const tm& t)
@@ -324,3 +326,8 @@ const DateContainer& ElementBase::getCreationDate() const { return m_creationDat
 const TimeContainer& ElementBase::getCreationTime() const { return m_creationTime; }
 const DateContainer& ElementBase::getEditDate() const { return m_editDate; }
 const TimeContainer& ElementBase::getEditTime() const { return m_editTime; }
+
+std::string ElementBase::getString() const
+{
+    return "This a base :/";
+}

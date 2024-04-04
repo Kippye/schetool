@@ -1,6 +1,9 @@
 #pragma once
 
+#include <ctime>
 #include <element_base.h>
+#include <string>
+#include <type_traits>
 
 template <typename T>
 class Element : public ElementBase
@@ -8,9 +11,42 @@ class Element : public ElementBase
     private:
         T m_value;
     public:
-        Element();
-        Element(SCHEDULE_TYPE type, T value, const DateContainer& creationDate, const TimeContainer& creationTime);
-        std::string getString() const override;
-        T getValue();
-        void setValue(T);
+        Element(){}
+        Element(SCHEDULE_TYPE type, T value, const DateContainer& creationDate, const TimeContainer& creationTime)
+        {
+            m_value = value;
+        }
+
+        std::string getString() const override
+        {
+            if constexpr(std::is_same_v<T, TimeContainer> || std::is_same_v<T, DateContainer>)
+            {
+                return m_value.getString();
+            }
+            else if constexpr(std::is_same_v<T, SelectContainer>)
+            {
+                return "";
+            }
+            else if constexpr(std::is_same_v<T, bool>)
+            {
+                return m_value == true ? "True" : "False";
+            }
+            else if constexpr(std::is_same_v<T, std::string>)
+            {
+                return m_value;
+            }
+            else
+            {
+                return std::to_string(m_value);
+            }
+        }
+
+        T getValue() const
+        {
+            return m_value;
+        }
+        void setValue(const T value)
+        {
+            m_value = value;
+        }
 };

@@ -505,7 +505,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				int yearInput = m_editorViewedYear + 1900;
 				if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
 				{
-					m_editorViewedYear = Date::convertToValidYear(yearInput);
+					m_editorViewedYear = DateContainer::convertToValidYear(yearInput);
 				}
 
 				unsigned int daysInMonth = mytime::get_month_day_count(m_editorViewedYear, m_editorViewedMonth);

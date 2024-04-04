@@ -4,6 +4,8 @@
 #include <set>
 #include <vector>
 
+const size_t SELECT_OPTION_COUNT_MAX = 20;
+
 enum SCHEDULE_TYPE
 {
     SCH_BOOL,

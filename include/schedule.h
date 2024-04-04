@@ -13,7 +13,6 @@
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
-const size_t SELECT_OPTION_COUNT_MAX = 20;
 const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
 typedef int ScheduleElementFlags;
@@ -171,40 +170,43 @@ class Schedule
         void addColumn(size_t index, const Column& column);
         void removeColumn(size_t column);
 
+        // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
         template <typename T>
         T getValue(ElementBase* element)
         {
-            switch(element->getType())
-            {
-                case(SCH_BOOL):
-                {
-                    return (T)((Element<bool>*)element)->getValue();
-                }
-                case(SCH_NUMBER):
-                {
-                    return (T)((Element<int>*)element)->getValue();
-                }
-                case(SCH_DECIMAL):
-                {
-                    return (T)((Element<double>*)element)->getValue();
-                }
-                case(SCH_TEXT):
-                {
-                    return (T)((Element<std::string>*)element)->getValue();
-                }
-                case(SCH_SELECT):
-                {
-                    return (T)((Element<SelectContainer>*)element)->getValue();
-                }
-                case(SCH_TIME):
-                {
-                    return (T)((Element<TimeContainer>*)element)->getValue();
-                }
-                case(SCH_DATE):
-                {
-                    return (T)((Element<DateContainer>*)element)->getValue();
-                }
-            }
+            return (T)((Element<T>*)element)->getValue();
+
+            // switch(element->getType())
+            // {
+            //     case(SCH_BOOL):
+            //     {
+            //         return (T)((Element<bool>*)element)->getValue();
+            //     }
+            //     case(SCH_NUMBER):
+            //     {
+            //         return (T)((Element<int>*)element)->getValue();
+            //     }
+            //     case(SCH_DECIMAL):
+            //     {
+            //         return (T)((Element<double>*)element)->getValue();
+            //     }
+            //     case(SCH_TEXT):
+            //     {
+            //         return (T)((Element<std::string>*)element)->getValue();
+            //     }
+            //     case(SCH_SELECT):
+            //     {
+            //         return (T)((Element<SelectContainer>*)element)->getValue();
+            //     }
+            //     case(SCH_TIME):
+            //     {
+            //         return (T)((Element<TimeContainer>*)element)->getValue();
+            //     }
+            //     case(SCH_DATE):
+            //     {
+            //         return (T)((Element<DateContainer>*)element)->getValue();
+            //     }
+            // }
         }
 
         // Get a pointer to the ElementBase at column; row
@@ -223,7 +225,7 @@ class Schedule
         // Use this function to completely replace the element at column; row with the ElementBase in value
         // NOTE: If the types match, a copy is performed
         // If the types do not match, the target element pointer is replaced by the value pointer!
-        void setElement(size_t column, size_t row, const ElementBase* other, bool resort = true)
+        void setElement(size_t column, size_t row, ElementBase* other, bool resort = true)
         {            
             // IF the provided Element fits the column's type, set the target Element's value directly
             if (getColumn(column)->type == other->getType())
@@ -308,36 +310,38 @@ class Schedule
         {
             ElementBase* element = getElement(column, row);
 
-            switch(element->getType())
-            {
-                case(SCH_BOOL):
-                {
-                    ((Element<bool>*)element)->setValue(value);
-                }
-                case(SCH_NUMBER):
-                {
-                    ((Element<int>*)element)->setValue(value);
-                }
-                case(SCH_DECIMAL):
-                {
-                    ((Element<double>*)element)->setValue(value);
-                }
-                case(SCH_TEXT):
-                {
-                    ((Element<std::string>*)element)->setValue(value);
-                }
-                case(SCH_SELECT):
-                {
-                    ((Element<SelectContainer>*)element)->setValue(value);
-                }
-                case(SCH_TIME):
-                {
-                    ((Element<TimeContainer>*)element)->setValue(value);
-                }
-                case(SCH_DATE):
-                {
-                    ((Element<DateContainer>*)element)->setValue(value);
-                }
-            }
+            ((Element<T>*)element)->setValue(value);
+
+        //     switch(element->getType())
+        //     {
+        //         case(SCH_BOOL):
+        //         {
+        //             ((Element<bool>*)element)->setValue((const bool&)value);
+        //         }
+        //         case(SCH_NUMBER):
+        //         {
+        //             ((Element<int>*)element)->setValue((int)value);
+        //         }
+        //         case(SCH_DECIMAL):
+        //         {
+        //             ((Element<double>*)element)->setValue((double)value);
+        //         }
+        //         case(SCH_TEXT):
+        //         {
+        //             ((Element<std::string>*)element)->setValue((std::string)value);
+        //         }
+        //         case(SCH_SELECT):
+        //         {
+        //             ((Element<SelectContainer>*)element)->setValue((SelectContainer)value);
+        //         }
+        //         case(SCH_TIME):
+        //         {
+        //             ((Element<TimeContainer>*)element)->setValue((TimeContainer)value);
+        //         }
+        //         case(SCH_DATE):
+        //         {
+        //             ((Element<DateContainer>*)element)->setValue((DateContainer)value);
+        //         }
+        //     }
         }
 };
