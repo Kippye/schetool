@@ -1,54 +1,41 @@
-#include <algorithm>
-#include <cctype>
-#include <ctime>
-#include <iterator>
-#include <string.h>
 #include <time_container.h>
-#include <iostream>
 
-Time::Time()
+TimeContainer::TimeContainer() {}
+TimeContainer::TimeContainer(int h, int m)
 {
-
+    hours = h;
+    minutes = m;
+}
+TimeContainer::TimeContainer(const tm& t)
+{
+    hours = t.tm_hour;
+    minutes = t.tm_min; 
 }
 
-Time::Time(int hours, int minutes)
+std::string TimeContainer::getString() const
 {
-    setTime(hours, minutes);
+    char output[1024];
+
+    tm outputTime;
+    outputTime.tm_hour = hours;
+    outputTime.tm_min = minutes;
+    std::strftime(output, sizeof(output), "%H:%M", &outputTime);
+
+    return std::string(output);
 }
 
-Time::Time(const TimeContainer& time)
+int TimeContainer::getHours() const 
 {
-    m_time = time;
+    return hours;
 }
 
-int Time::getHours() const
+int TimeContainer::getMinutes() const
 {
-    return m_time.hours;
+    return minutes;
 }
 
-int Time::getMinutes() const
+void TimeContainer::setTime(int hours, int minutes)
 {
-    return m_time.minutes;
-}
-
-// Returns the string representation of the stored Time
-std::string Time::getString() const
-{
-    try
-    {
-        return m_time.getString();
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << e.what() << "\n";
-        std::cout << "std::string Time::getString(): Failed to convert current time to a string. Invalid time?" << std::endl;
-        return std::string("");
-    }
-}  
-
-// NOTE: Values are automatically clamped below 23 for hours and below 59 for minutes
-void Time::setTime(unsigned int hour, unsigned int minute)
-{
-    m_time.hours = std::min(hour, 23U);
-    m_time.minutes = std::min(minute, 59U);
+    this->hours = hours;
+    this->minutes = minutes;
 }

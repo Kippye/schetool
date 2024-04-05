@@ -1,10 +1,11 @@
+#include "element.h"
+#include "element_base.h"
 #include <cstdio>
 #include <cstdlib>
 #include <schedule.h>
 #include <string.h>
 #include <time.h>
 #include <vector>
-#include <any>
 #include <ctime>
 #include <numeric>
 
@@ -15,11 +16,11 @@ void Schedule::createDefaultSchedule()
 {
     clearSchedule();
 
-    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name});
-    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished});
-    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start});
-    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration});
-    addColumn(getColumnCount(), Column{std::vector<Element*>{}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End});
+    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name});
+    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished});
+    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start});
+    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration});
+    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End});
 }
 
 void Schedule::setScheduleName(const std::string& name)
@@ -46,7 +47,7 @@ void Schedule::clearSchedule()
 {
     for (Column& column: m_schedule)
     {
-        for (Element* element: column.rows)
+        for (ElementBase* element: column.rows)
         {
             delete element;
         }
@@ -61,17 +62,23 @@ void Schedule::replaceSchedule(std::vector<Column> columns)
     m_schedule = columns;
 }
 
+// NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
+size_t Schedule::getFlaggedColumnIndex(ScheduleElementFlags flags)
+{
+    for (size_t i = 0; i < m_schedule.size(); i++)
+    {
+        if (m_schedule[i].flags & flags)
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
 // Private function, because it returns a mutable column pointer. NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
 Column* Schedule::getColumnWithFlags(ScheduleElementFlags flags)
 {
-    for (Column& column: m_schedule)
-    {
-        if (column.flags & flags)
-        {
-            return &column;
-        }
-    }
-    return nullptr;
+    return &m_schedule[getFlaggedColumnIndex(flags)];
 }
 
 Column* Schedule::getMutableColumn(size_t column)
@@ -88,7 +95,7 @@ Column* Schedule::getMutableColumn(size_t column)
 std::vector<size_t> Schedule::getColumnSortedNewIndices(size_t index)
 {
     Column& column = m_schedule[index];
-    std::vector<Element*> rows = column.rows;
+    std::vector<ElementBase*> rows = column.rows;
     std::vector<size_t> newIndices(rows.size());
     std::iota(newIndices.begin(), newIndices.end(), 0);
    
@@ -193,8 +200,8 @@ void Schedule::sortColumns()
             for (size_t affectedColumn = 0; affectedColumn < getColumnCount(); affectedColumn++)
             {
                 // vector that will replace the old rows vector
-                std::vector<Element*> sortedRows = {};
-                std::vector<Element*>& unsortedRows = m_schedule[affectedColumn].rows;
+                std::vector<ElementBase*> sortedRows = {};
+                std::vector<ElementBase*>& unsortedRows = m_schedule[affectedColumn].rows;
                 sortedRows.reserve(unsortedRows.size());
 
                 for (size_t rowIndex = 0; rowIndex < newRowIndices.size(); rowIndex++)
@@ -218,7 +225,7 @@ void Schedule::updateColumnSelects(size_t index)
     {
         for (size_t i = 0; i < m_schedule[index].rows.size(); i++)
         {
-            getMutableColumn(index)->getElement<Select>(i)->update();
+            getElementAsSpecial<SelectContainer>(index, i)->getValue().update();
         }
     }
     m_schedule[index].selectOptions.modificationApplied();
@@ -238,7 +245,7 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement<Bool>(index, row, new Bool(false, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<bool>(type, false, DateContainer(creationTime), TimeContainer(creationTime)), false);
             }
             break;
         }
@@ -246,7 +253,7 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement<Number>(index, row, new Number(0, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<int>(type, 0, DateContainer(creationTime), TimeContainer(creationTime)), false);
             }
             break;
         }
@@ -254,7 +261,7 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement<Decimal>(index, row, new Decimal(0, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<double>(type, 0, DateContainer(creationTime), TimeContainer(creationTime)), false);
             }  
             break;
         }
@@ -262,7 +269,7 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement<Text>(index, row, new Text("", type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<std::string>(type, "", DateContainer(creationTime), TimeContainer(creationTime)), false);
             }     
             break;
         }
@@ -274,8 +281,7 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
                 {
                     column.selectOptions.clearOptions();
                 }
-                std::cout << "Replacing with select" << std::endl;
-                setElement<Select>(index, row, new Select(column.selectOptions, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<SelectContainer>(type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime)), false);
             }     
             break;
         }
@@ -283,7 +289,7 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement<Time>(index, row, new Time(0, 0, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<TimeContainer>(type, TimeContainer(0, 0), DateContainer(creationTime), TimeContainer(creationTime)), false);
             }
             break;
         }   
@@ -291,10 +297,15 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement<Date>(index, row, new Date(creationTime, type, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<DateContainer>(type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)), false);
             }
             break;
-        }   
+        }
+        default:
+        {
+            std::cout << "Resetting a column to type: " << type << " has not been implemented!" << std::endl;
+            break;
+        }
     }
 }
 
@@ -305,7 +316,7 @@ void Schedule::addRow(size_t index)
     {
         for (Column& column : m_schedule)
         {
-            std::vector<Element*>& columnValues = column.rows;
+            std::vector<ElementBase*>& columnValues = column.rows;
             time_t t = std::time(nullptr);
             tm creationTime = *std::localtime(&t);
 
@@ -313,37 +324,42 @@ void Schedule::addRow(size_t index)
             {
                 case(SCH_BOOL):
                 {
-                    columnValues.push_back(new Bool(false, column.type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.push_back(new Element<bool>(column.type, false, DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_NUMBER):
                 {
-                    columnValues.push_back(new Number(0, column.type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.push_back(new Element<int>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_DECIMAL):
                 {
-                    columnValues.push_back(new Decimal(0, column.type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.push_back(new Element<double>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_TEXT):
                 {
-                    columnValues.push_back(new Text("", column.type, DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.push_back(new Element<std::string>(column.type, "", DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_SELECT):
                 { 
-                    columnValues.push_back(new Select(column.selectOptions, column.type, DateContainer(creationTime), TimeContainer(creationTime)));      
+                    columnValues.push_back(new Element<SelectContainer>(column.type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime)));      
                     break;
                 }
                 case(SCH_TIME):
                 { 
-                    columnValues.push_back(new Time(0, 0, column.type, DateContainer(creationTime), TimeContainer(creationTime)));      
+                    columnValues.push_back(new Element<TimeContainer>(column.type, TimeContainer(0, 0), DateContainer(creationTime), TimeContainer(creationTime)));      
                     break;
                 }
                 case(SCH_DATE):
                 { 
-                    columnValues.push_back(new Date(creationTime, column.type, DateContainer(creationTime), TimeContainer(creationTime)));      
+                    columnValues.push_back(new Element<DateContainer>(column.type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)));      
+                    break;
+                }
+                default:
+                {
+                    std::cout << "Adding rows of type: " << column.type << " has not been implemented!" << std::endl;
                     break;
                 }
             }
@@ -364,7 +380,7 @@ void Schedule::removeRow(size_t index)
 {
     for (Column& column : m_schedule)
     {
-        std::vector<Element*>& columnValues = column.rows;
+        std::vector<ElementBase*>& columnValues = column.rows;
         if (index == columnValues.size() - 1)
         {
             delete columnValues[index];
@@ -388,11 +404,11 @@ void Schedule::addDefaultColumn(size_t index)
     // the last index = just add to the end
     if (index == getColumnCount())
     {
-        std::vector<Element*> addedElements = {};
+        std::vector<ElementBase*> addedElements = {};
 
         for (size_t i = 0; i < getRowCount(); i++)
         {
-            addedElements.push_back((Element*)new Text(std::string(""), SCH_TEXT, DateContainer(creationTime), TimeContainer(creationTime)));
+            addedElements.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
         }
         m_schedule.push_back(Column{addedElements, SCH_TEXT, std::string("Text"), false});
     }

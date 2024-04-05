@@ -1,9 +1,9 @@
 #pragma once
+#include "element_base.h"
 #include "imgui.h"
 #include <gui.h>
 #include <window.h>
 #include <schedule.h>
-#include <time_container.h>
 
 class Schedule;
 
@@ -18,9 +18,9 @@ class ScheduleGui : public Gui
         int m_editorRow = -1;
         unsigned int m_editorViewedYear = 0;
         unsigned int m_editorViewedMonth = 0;
-        Time m_editorTime;
-        Date m_editorDate;
-        Select m_editorSelect;
+        TimeContainer m_editorTime;
+        DateContainer m_editorDate;
+        SelectContainer m_editorSelect;
         ImRect m_editorAvoidRect;
 
         ImVec4 m_dayColours[7] =

@@ -1,12 +1,10 @@
 #pragma once
-#include <element.h>
-#include <cstdlib>
-#include <ctime>
-#include <set>
+
 #include <string>
+#include <set>
 #include <vector>
 
-#include <iostream>
+const size_t SELECT_OPTION_COUNT_MAX = 20;
 
 enum SELECT_MODIFICATION
 {
@@ -49,23 +47,26 @@ struct SelectOptions
         void modificationApplied();
 };
 
-class Select : public Element
+struct SelectContainer
 {
     private:
         std::set<size_t> m_selection;
         SelectOptions* m_options;
     public:
-        Select();
-        Select(SelectOptions& options);
-        Select(SelectOptions& options, SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) 
+        SelectContainer();
+        SelectContainer(SelectOptions& options) { m_options = &options; }
+
+        friend bool operator<(const SelectContainer& left, const SelectContainer& right)
         {
-            m_options = &options;
-        }
-        
-        friend bool operator<(const Select& left, const Select& right)
-        {
-            if (right.m_selection.size() == 0) { return true; }
-            if (left.m_selection.size() == 0) { return false; }
+            if (left.m_selection.size() == 0)
+            {
+                if (right.m_selection.size() > 0) { return true; }
+                else { return false; }
+            }
+            if (right.m_selection.size() == 0)
+            {
+                return false;
+            }
 
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
@@ -86,10 +87,17 @@ class Select : public Element
             return left.m_options->getOptions()[leftForemostOption] < right.m_options->getOptions()[rightForemostOption];
         }
 
-        friend bool operator>(const Select& left, const Select& right)
+        friend bool operator>(const SelectContainer& left, const SelectContainer& right)
         {
-            if (right.m_selection.size() == 0) { return false; }
-            if (left.m_selection.size() == 0) { return true; }
+            if (right.m_selection.size() == 0)
+            {
+                if (left.m_selection.size() > 0) { return true; }
+                else { return false; }
+            }
+            if (left.m_selection.size() == 0)
+            {
+                return false;
+            }
 
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
@@ -110,7 +118,7 @@ class Select : public Element
             return left.m_options->getOptions()[leftForemostOption] > right.m_options->getOptions()[rightForemostOption];
         }
 
-        const std::set<size_t>& getSelection() const;
+        const std::set<size_t> getSelection() const;
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
         void update();

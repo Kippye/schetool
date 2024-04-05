@@ -50,11 +50,9 @@ bool IO_Handler::readSchedule(const char* name)
         return false;
     }
 
-    std::vector<Column> columnsCopy = m_schedule->getColumns();
-
-    if (m_converter.readSchedule(relativePath.c_str(), columnsCopy) == 0)
+    if (m_converter.readSchedule(relativePath.c_str(), m_schedule->getMutableColumns()) == 0)
     {
-        m_schedule->replaceSchedule(columnsCopy);
+        ///m_schedule->replaceSchedule(columnsCopy);
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
     }
     setOpenScheduleFilename(std::string(name));

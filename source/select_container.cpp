@@ -1,12 +1,4 @@
-#include "schedule.h"
-#include <algorithm>
-#include <cctype>
-#include <ctime>
-#include <iterator>
-#include <string.h>
 #include <select_container.h>
-#include <iostream>
-#include <vector>
 #include <util.h>
 
 void SelectOptionChange::replace(SELECT_MODIFICATION type, size_t firstIndex, size_t secondIndex)
@@ -91,22 +83,17 @@ void SelectOptions::modificationApplied()
 }
 
 
-Select::Select()
+SelectContainer::SelectContainer()
 {
 
 }
 
-Select::Select(SelectOptions& s)
-{
-    m_options = &s;
-}
-
-const std::set<size_t>& Select::getSelection() const
+const std::set<size_t> SelectContainer::getSelection() const
 {
     return m_selection;
 }
 
-void Select::setSelected(size_t index, bool select)
+void SelectContainer::setSelected(size_t index, bool select)
 {
     if (index > m_options->getOptions().size() - 1)
     {
@@ -133,13 +120,13 @@ void Select::setSelected(size_t index, bool select)
     }
 }
 
-void Select::replaceSelection(const std::set<size_t>& selection)
+void SelectContainer::replaceSelection(const std::set<size_t>& selection)
 {
     m_selection = selection;
 }
 
-// Update the Select to recorrect its indices after a modification to the attached SelectOptions
-void Select::update()
+// Update the SelectContainer to recorrect its indices after a modification to the attached SelectOptions
+void SelectContainer::update()
 {
     const SelectOptionChange& lastChange = m_options->getLastChange();
 

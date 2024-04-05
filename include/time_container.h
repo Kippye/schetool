@@ -1,81 +1,71 @@
 #pragma once
-#include <cmath>
-#include <cstdlib>
-#include <ctime>
+
 #include <string>
-#include <element.h>
-#include <iostream>
+#include <ctime>
 
-class Time : public Element
+struct TimeContainer
 {
-    private:
-        TimeContainer m_time;
-    public:
-        Time();
-        Time(int hours, int minutes);
-        Time(const TimeContainer& time);
-        Time(int hours, int minutes, SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) 
-        {
-            setTime(hours, minutes);
-        }
-        Time(SCHEDULE_TYPE type, const DateContainer& creationDate, const TimeContainer& creationTime) : Element(type, creationDate, creationTime) {}
+    int hours;
+    int minutes;
 
-        Time& operator+=(const Time& rhs) // compound assignment (does not need to be a member,
-        {                           // but often is, to modify the private members)
-            this->m_time.minutes += rhs.m_time.minutes;
-            this->m_time.hours += this->m_time.minutes / 60;
-            this->m_time.minutes -= this->m_time.minutes / 60 * 60;
-            this->m_time.hours += rhs.m_time.hours;
-            this->m_time.hours = this->m_time.hours > 23 ? this->m_time.hours - this->m_time.hours / 24 * 24 : this->m_time.hours;
-            return *this; // return the result by reference
-        }
+    TimeContainer();
+    TimeContainer(int h, int m);
+    TimeContainer(const tm& t);
+    std::string getString() const;
+    int getHours() const;
+    int getMinutes() const;
+    void setTime(int hours, int minutes);
 
-        Time& operator-=(const Time& rhs) // compound assignment (does not need to be a member,
-        {                           // but often is, to modify the private members)
-            this->m_time.minutes -= rhs.m_time.minutes;
-            this->m_time.hours = this->m_time.minutes < 0 ? this->m_time.hours - 1 : this->m_time.hours;
-            this->m_time.minutes = this->m_time.minutes < 0 ? 60 + this->m_time.minutes : this->m_time.minutes;
-            this->m_time.hours -= rhs.m_time.hours;
-            this->m_time.hours = this->m_time.hours < 0 ? 24 + this->m_time.hours : this->m_time.hours;
-            return *this; // return the result by reference
-        }
-        
-        // friends defined inside class body are inline and are hidden from non-ADL lookup
-        friend Time operator+(Time lhs, const Time& rhs)
-        {
-            lhs += rhs; // reuse compound assignment
-            return lhs; // return the result by value (uses move constructor)
-        }
+    TimeContainer& operator+=(const TimeContainer& rhs) // compound assignment (does not need to be a member,
+    {                           // but often is, to modify the private members)
+        this->minutes += rhs.minutes;
+        this->hours += this->minutes / 60;
+        this->minutes -= this->minutes / 60 * 60;
+        this->hours += rhs.hours;
+        this->hours = this->hours > 23 ? this->hours - this->hours / 24 * 24 : this->hours;
+        return *this; // return the result by reference
+    }
 
-        friend Time operator-(Time lhs, const Time& rhs)
-        {
-            lhs -= rhs; // reuse compound assignment
-            return lhs; // return the result by value (uses move constructor)
-        }
+    TimeContainer& operator-=(const TimeContainer& rhs) // compound assignment (does not need to be a member,
+    {                           // but often is, to modify the private members)
+        this->minutes -= rhs.minutes;
+        this->hours = this->minutes < 0 ? this->hours - 1 : this->hours;
+        this->minutes = this->minutes < 0 ? 60 + this->minutes : this->minutes;
+        this->hours -= rhs.hours;
+        this->hours = this->hours < 0 ? 24 + this->hours : this->hours;
+        return *this; // return the result by reference
+    }
+    
+    // friends defined inside class body are inline and are hidden from non-ADL lookup
+    friend TimeContainer operator+(TimeContainer lhs, const TimeContainer& rhs)
+    {
+        lhs += rhs; // reuse compound assignment
+        return lhs; // return the result by value (uses move constructor)
+    }
 
-        friend bool operator<(const Time& left, const Time& right)
-        {
-            if (left.m_time.hours < right.m_time.hours) { return true; }
-            else if (left.m_time.hours == right.m_time.hours) 
-            {  
-                return left.m_time.minutes < right.m_time.minutes;
-            }
-            else return false;
-        }
+    friend TimeContainer operator-(TimeContainer lhs, const TimeContainer& rhs)
+    {
+        lhs -= rhs; // reuse compound assignment
+        return lhs; // return the result by value (uses move constructor)
+    }
 
-        friend bool operator>(const Time& left, const Time& right)
-        {
-            if (left.m_time.hours > right.m_time.hours) { return true; }
-            else if (left.m_time.hours == right.m_time.hours) 
-            {  
-                return left.m_time.minutes > right.m_time.minutes;
-            }
-            else return false;
+    friend bool operator<(const TimeContainer& left, const TimeContainer& right)
+    {
+        if (left.hours < right.hours) { return true; }
+        else if (left.hours == right.hours) 
+        {  
+            return left.minutes < right.minutes;
         }
+        else return false;
+    }
 
-        int getHours() const;
-        int getMinutes() const;
-        std::string getString() const;
-        
-        void setTime(unsigned int hour, unsigned int minute);
+    friend bool operator>(const TimeContainer& left, const TimeContainer& right)
+    {
+        if (left.hours > right.hours) { return true; }
+        else if (left.hours == right.hours) 
+        {  
+            return left.minutes > right.minutes;
+        }
+        else return false;
+    }
 };

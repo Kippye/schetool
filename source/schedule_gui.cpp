@@ -1,6 +1,5 @@
-#include "decimal_container.h"
 #include "element.h"
-#include <select_container.h>
+#include "element_base.h"
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -102,12 +101,10 @@ void ScheduleGui::draw(Window& window)
 							{
 								try
 								{
-									Bool container = m_schedule->getElement<Bool>(column, row);
-									bool newValue = container.getValue();
+									bool newValue = m_schedule->getElementValue<bool>(column, row);
 									if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
 									{
-										container.setValue(newValue);
-										m_schedule->setElement<Bool>(column, row, new Bool(container));
+										m_schedule->setElementValue<bool>(column, row, newValue);
 									}
 								}
 								catch(const std::exception& e)
@@ -120,12 +117,10 @@ void ScheduleGui::draw(Window& window)
 							{
 								try
 								{
-									Number container = m_schedule->getElement<Number>(column, row);
-									int newValue = container.getValue();
+									int newValue = m_schedule->getElementValue<int>(column, row);
 									if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
 									{
-										container.setValue(newValue);
-										m_schedule->setElement<Number>(column, row, new Number(container));
+										m_schedule->setElementValue<int>(column, row, newValue);
 									}
 								}
 								catch(const std::exception& e)
@@ -138,12 +133,10 @@ void ScheduleGui::draw(Window& window)
 							{
 								try
 								{
-									Decimal container = m_schedule->getElement<Decimal>(column, row);
-									double newValue = container.getValue();
+									double newValue = m_schedule->getElementValue<double>(column, row);
 									if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
 									{
-										container.setValue(newValue);
-										m_schedule->setElement<Decimal>(column, row, new Decimal(container));
+										m_schedule->setElementValue<double>(column, row, newValue);
 									}
 								}
 								catch(const std::exception& e)
@@ -157,15 +150,13 @@ void ScheduleGui::draw(Window& window)
 							{
 								try
 								{
-									Text container = m_schedule->getElement<Text>(column, row);
-									std::string value = container.getValue();
+									std::string value = m_schedule->getElementValue<std::string>(column, row);
 									value.reserve(ELEMENT_TEXT_MAX_LENGTH);
 									char* buf = value.data();
 									//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
 									if (ImGui::InputTextMultiline(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
 									{
-										container.setValue(std::string(buf));
-										m_schedule->setElement<Text>(column, row, new Text(container));
+										m_schedule->setElementValue<std::string>(column, row, std::string(buf));
 									}
 									// ImVec2 textSize = ImGui::CalcTextSize(buf);
 									// if (textSize.x == 106 && textSize.y == 16)
@@ -188,7 +179,7 @@ void ScheduleGui::draw(Window& window)
 							{
 								try 
 								{
-									Select value = m_schedule->getElement<Select>(column, row);
+									SelectContainer value = m_schedule->getElementValue<SelectContainer>(column, row);
 									auto selection = value.getSelection();
 									size_t selectedCount = selection.size();
 									const std::vector<std::string>& optionNames = m_schedule->getColumn(column)->selectOptions.getOptions();
@@ -225,7 +216,7 @@ void ScheduleGui::draw(Window& window)
 											else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
 											{
 												value.setSelected(selectionIndices[i], false);
-												m_schedule->setElement<Select>(column, row, new Select(value));
+												m_schedule->setElementValue<SelectContainer>(column, row, value); 
 											}
 
 										}
@@ -262,7 +253,7 @@ void ScheduleGui::draw(Window& window)
 										displayEditor(SCH_SELECT);
 										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
 										{
-											m_schedule->setElement<Select>(column, row, new Select(m_editorSelect));
+											m_schedule->setElementValue<SelectContainer>(column, row, m_editorSelect);
 										}
 									}
 								}
@@ -277,7 +268,7 @@ void ScheduleGui::draw(Window& window)
 							{
 								try
 								{
-									Time value = m_schedule->getElement<Time>(column, row);
+									TimeContainer value = m_schedule->getElementValue<TimeContainer>(column, row);
 
 									// Button displaying the Time of the current Time element
 									if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
@@ -293,7 +284,7 @@ void ScheduleGui::draw(Window& window)
 										displayEditor(SCH_TIME);
 										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
 										{
-											m_schedule->setElement<Time>(column, row, new Time(m_editorTime));
+											m_schedule->setElementValue<TimeContainer>(column, row, m_editorTime);
 										}
 									}
 								}
@@ -308,7 +299,7 @@ void ScheduleGui::draw(Window& window)
 							{
 								try
 								{
-									auto value = m_schedule->getElement<Date>(column, row);
+									auto value = m_schedule->getElementValue<DateContainer>(column, row);
 								
 									// Button displaying the date of the current Date element
 									if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
@@ -326,7 +317,7 @@ void ScheduleGui::draw(Window& window)
 										displayEditor(SCH_DATE);
 										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
 										{
-											m_schedule->setElement<Date>(column, row, new Date(m_editorDate));
+											m_schedule->setElementValue<DateContainer>(column, row, m_editorDate);
 										}
 									}
 								}
@@ -342,7 +333,7 @@ void ScheduleGui::draw(Window& window)
 						if (ImGui::IsItemHovered())
 						{
 							ImGui::BeginTooltip();
-							ImGui::Text("Created: %s %s", m_schedule->getElement<Element>(column, row).getCreationDate().getString().c_str(), m_schedule->getElement<Element>(column, row).getCreationTime().getString().c_str());
+							ImGui::Text("Created: %s %s", m_schedule->getElement(column, row)->getCreationDate().getString().c_str(), m_schedule->getElement(column, row)->getCreationTime().getString().c_str());
 							ImGui::EndTooltip();
 						}
 					}
@@ -522,7 +513,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				int yearInput = m_editorViewedYear + 1900;
 				if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
 				{
-					m_editorViewedYear = Date::convertToValidYear(yearInput);
+					m_editorViewedYear = DateContainer::convertToValidYear(yearInput);
 				}
 
 				unsigned int daysInMonth = mytime::get_month_day_count(m_editorViewedYear, m_editorViewedMonth);

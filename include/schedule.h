@@ -1,18 +1,11 @@
 #pragma once
+#include "element_base.h"
 #include <algorithm>
 #include <vector>
-#include <any>
 #include <map>
 #include <cstddef>
 #include <string>
 #include <element.h>
-#include <bool_container.h>
-#include <number_container.h>
-#include <decimal_container.h>
-#include <text_container.h>
-#include <select_container.h>
-#include <time_container.h>
-#include <date_container.h>
 
 // TEMP
 #include <iostream>
@@ -20,7 +13,6 @@
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
-const size_t SELECT_OPTION_COUNT_MAX = 20;
 const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
 typedef int ScheduleElementFlags;
@@ -46,7 +38,7 @@ enum COLUMN_SORT_
 
 struct Column
 {
-    std::vector<Element*> rows;
+    std::vector<ElementBase*> rows;
     SCHEDULE_TYPE type;
     std::string name;
     bool permanent;
@@ -55,10 +47,9 @@ struct Column
     bool sorted;
     SelectOptions selectOptions;
 
-    template<typename T>
-    T* getElement(size_t index)
+    ElementBase* getElement(size_t index)
     {
-        return (T*)rows[index];
+        return rows[index];
     }
 };
 
@@ -67,37 +58,37 @@ struct ColumnSortComparison
     SCHEDULE_TYPE type;
     COLUMN_SORT sortDirection;
 
-    bool operator () (const Element* const left, const Element* const right)
+    bool operator () (const ElementBase* const left, const ElementBase* const right)
     {
         switch(type)
         {
             case(SCH_BOOL):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? *(const Bool*)left > *(const Bool*)right : *(const Bool*)left < *(const Bool*)right;
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<bool>*)left)->getValue() > ((const Element<bool>*)right)->getValue() : ((const Element<bool>*)left)->getValue() < ((const Element<bool>*)right)->getValue();
             }
             case(SCH_NUMBER):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? *(const Number*)left > *(const Number*)right : *(const Number*)left < *(const Number*)right;
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<int>*)left)->getValue() > ((const Element<int>*)right)->getValue() : ((const Element<int>*)left)->getValue() < ((const Element<int>*)right)->getValue();
             }
             case(SCH_DECIMAL):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? *(const Decimal*)left > *(const Decimal*)right : *(const Decimal*)left < *(const Decimal*)right;
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<double>*)left)->getValue() > ((const Element<double>*)right)->getValue() : ((const Element<double>*)left)->getValue() < ((const Element<double>*)right)->getValue();
             }
             case(SCH_TEXT):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? *(const Text*)left > *(const Text*)right : *(const Text*)left < *(const Text*)right;
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<std::string>*)left)->getValue() > ((const Element<std::string>*)right)->getValue() : ((const Element<std::string>*)left)->getValue() < ((const Element<std::string>*)right)->getValue();
             }
             case(SCH_SELECT):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? *(const Select*)left > *(const Select*)right : *(const Select*)left < *(const Select*)right;
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getValue() > ((const Element<SelectContainer>*)right)->getValue() : ((const Element<SelectContainer>*)left)->getValue() < ((const Element<SelectContainer>*)right)->getValue();
             }
             case(SCH_TIME):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? *(const Time*)left > *(const Time*)right : *(const Time*)left < *(const Time*)right;
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<TimeContainer>*)left)->getValue() > ((const Element<TimeContainer>*)right)->getValue() : ((const Element<TimeContainer>*)left)->getValue() < ((const Element<TimeContainer>*)right)->getValue();
             }
             case(SCH_DATE):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? *(const Date*)left > *(const Date*)right : *(const Date*)left < *(const Date*)right;
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<DateContainer>*)left)->getValue() > ((const Element<DateContainer>*)right)->getValue() : ((const Element<DateContainer>*)left)->getValue() < ((const Element<DateContainer>*)right)->getValue();
             }
         }
     }
@@ -117,6 +108,7 @@ class Schedule
         ColumnSortComparison m_columnSortComparison;
         bool m_editedSinceWrite = false;
         std::string m_scheduleName;
+        size_t getFlaggedColumnIndex(ScheduleElementFlags flags);
         Column* getColumnWithFlags(ScheduleElementFlags flags);
         Column* getMutableColumn(size_t column);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
@@ -175,37 +167,115 @@ class Schedule
         void addColumn(size_t index, const Column& column);
         void removeColumn(size_t column);
 
-        // TODO: make this return a (const?) pointer instead. too much copying!
-        template <typename T, typename = std::enable_if<std::is_base_of<Element, T>::value>>
-        T getElement(size_t column, size_t row)
+        // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
+        template <typename T>
+        T getValue(ElementBase* element)
         {
-            return *getMutableColumn(column)->getElement<T>(row);
+            return (T)((Element<T>*)element)->getValue();
         }
-        template <typename T, typename = std::enable_if<std::is_base_of<Element, T>::value>>
-        void setElement(size_t column, size_t row, T* value, bool resort = true)
+
+        // Get a pointer to the ElementBase at column; row
+        ElementBase* getElement(size_t column, size_t row)
         {
-            // IF the value being assigned fits the column's type, set the Element's value directly
-            if (getColumn(column)->type == ((Element*)value)->getType())
+            return getMutableColumn(column)->getElement(row);
+        }
+
+        // Simple function that gets an ElementBase* at column; row and casts it to Element<T>*. In the future, this might check that the returned type is actually correct.
+        template <typename T>
+        Element<T>* getElementAsSpecial(size_t column, size_t row)
+        {
+            return (Element<T>*)getElement(column, row);
+        }
+
+        // Use this function to completely replace the element at column; row with the ElementBase in value
+        // NOTE: If the types match, a copy is performed
+        // If the types do not match, the target element pointer is replaced by the value pointer!
+        void setElement(size_t column, size_t row, ElementBase* other, bool resort = true)
+        {            
+            // IF the provided Element fits the column's type, set the target Element's value directly
+            if (getColumn(column)->type == other->getType())
             {
-                *getMutableColumn(column)->getElement<T>(row) = *value;
+                switch(other->getType())
+                {
+                    case(SCH_BOOL):
+                    {
+                        getElementAsSpecial<bool>(column, row)->setValue(((Element<bool>*)other)->getValue());
+                    }
+                    case(SCH_NUMBER):
+                    {
+                        getElementAsSpecial<int>(column, row)->setValue(((Element<int>*)other)->getValue());
+                    }
+                    case(SCH_DECIMAL):
+                    {
+                        getElementAsSpecial<double>(column, row)->setValue(((Element<double>*)other)->getValue());
+                    }
+                    case(SCH_TEXT):
+                    {
+                        getElementAsSpecial<std::string>(column, row)->setValue(((Element<std::string>*)other)->getValue());
+                    }
+                    case(SCH_SELECT):
+                    {
+                        getElementAsSpecial<SelectContainer>(column, row)->setValue(((Element<SelectContainer>*)other)->getValue());
+                    }
+                    case(SCH_TIME):
+                    {
+                        getElementAsSpecial<TimeContainer>(column, row)->setValue(((Element<TimeContainer>*)other)->getValue());
+                    }
+                    case(SCH_DATE):
+                    {
+                        getElementAsSpecial<DateContainer>(column, row)->setValue(((Element<DateContainer>*)other)->getValue());
+                    }
+                }
             }
             // IF the value being assigned is of a different type than the column's (i.e. the column's type was just changed and is being reset), REPLACE the pointer. Otherwise, the program will crash.
             else
             {
-                getMutableColumn(column)->rows[row] = (Element*)value;
+                // TODO: clean previous pointer since it's gone now?
+                getMutableColumn(column)->rows[row] = other;
             }
+
+            m_schedule[column].sorted = false;
+            if (resort)
+            {
+                sortColumns();
+            }
+
+            setEditedSinceWrite(true);
+        }
+
+        // Shortcut for getting the value of an Element at column; row
+        template <typename T>
+        T getElementValue(size_t column, size_t row)
+        {
+            return getValue<T>(getColumn(column)->rows[row]);
+        }
+
+        // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
+        template <typename T>
+        void setElementValue(size_t column, size_t row, const T& value, bool resort = true)
+        {
+            ElementBase* element = getElement(column, row);
+
+            ((Element<T>*)element)->setValue(value);
+
             ScheduleElementFlags columnFlags = getColumn(column)->flags;
             if (columnFlags & ScheduleElementFlags_Start)
             {
-                *getColumnWithFlags(ScheduleElementFlags_End)->getElement<Time>(row) = (*getMutableColumn(column)->getElement<Time>(row) + *getColumnWithFlags(ScheduleElementFlags_Duration)->getElement<Time>(row));
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_End), row)->setValue(
+                    getElementAsSpecial<TimeContainer>(column, row)->getValue() 
+                    + getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Duration), row)->getValue());
             }
             else if (columnFlags & ScheduleElementFlags_Duration)
             {
-                *getColumnWithFlags(ScheduleElementFlags_End)->getElement<Time>(row) = (*getColumnWithFlags(ScheduleElementFlags_Start)->getElement<Time>(row) + *getMutableColumn(column)->getElement<Time>(row));
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_End), row)->setValue(
+                    getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Start), row)->getValue() 
+                    + getElementAsSpecial<TimeContainer>(column, row)->getValue());
             }
             else if (columnFlags & ScheduleElementFlags_End)
             {
-                *getColumnWithFlags(ScheduleElementFlags_Duration)->getElement<Time>(row) = (*getMutableColumn(column)->getElement<Time>(row) - *getColumnWithFlags(ScheduleElementFlags_Start)->getElement<Time>(row));
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Duration), row)->setValue(
+                    getElementAsSpecial<TimeContainer>(column, row)->getValue()
+                    - getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Start), row)->getValue());
             }
 
             m_schedule[column].sorted = false;

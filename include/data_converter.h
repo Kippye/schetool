@@ -1,20 +1,15 @@
 #pragma once
-#include "datatable.hpp"
+#include "element_base.h"
 #include "enums.hpp"
 #include "objectattribute.hpp"
 #include "string.hpp"
 #include "templateobject.hpp"
+#include <time_container.h>
+#include <date_container.h>
+#include <select_container.h>
 #include <iterator>
 #include <schedule.h>
 #include <element.h>
-#include <bool_container.h>
-#include <number_container.h>
-#include <decimal_container.h>
-#include <string>
-#include <text_container.h>
-#include <select_container.h>
-#include <time_container.h>
-#include <date_container.h>
 #include <blf.hpp>
 using namespace blf;
 
@@ -184,7 +179,7 @@ class BLF_Element : public TemplateObject
 
     BLF_Element() {}
 
-    BLF_Element(const Element* element, size_t columnIndex = 0)
+    BLF_Element(const ElementBase* element, size_t columnIndex = 0)
     {
         this->columnIndex = columnIndex;
         this->type = element->getType();
@@ -215,7 +210,7 @@ class BLF_Bool : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
             objectName = "BLF_Bool";
         }
-        BLF_Bool(const Bool* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Bool(const Element<bool>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
@@ -232,7 +227,7 @@ class BLF_Number : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_INT});
             objectName = "BLF_Number";
         }
-        BLF_Number(const Number* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Number(const Element<int>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_INT});
@@ -249,7 +244,7 @@ class BLF_Decimal : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
             objectName = "BLF_Decimal";
         }
-        BLF_Decimal(const Decimal* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Decimal(const Element<double>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
@@ -266,7 +261,7 @@ class BLF_Text : public BLF_Element
             attributeMap.push_back({"Value", &value, TYPE_STRING});
             objectName = "BLF_Text";
         }
-        BLF_Text(const Text* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Text(const Element<std::string>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
             value = blf::String(element->getValue());
             attributeMap.push_back({"Value", &value, TYPE_STRING});
@@ -331,9 +326,9 @@ class BLF_Select : public BLF_Element
 
             objectName = "BLF_Select";
         }
-        BLF_Select(const Select* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Select(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
-            const std::set<size_t>& selection = element->getSelection();
+            const std::set<size_t>& selection = element->getValue().getSelection();
         
             size_t i = 0;
             for (size_t s: selection)
@@ -381,10 +376,10 @@ class BLF_Time : public BLF_Element
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
             objectName = "BLF_Time";
         }
-        BLF_Time(const Time* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Time(const Element<TimeContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
-            hours = element->getHours();
-            minutes = element->getMinutes();
+            hours = element->getValue().getHours();
+            minutes = element->getValue().getMinutes();
             attributeMap.push_back({"Hours", &hours, TYPE_INT});
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
             objectName = "BLF_Time";
@@ -404,9 +399,9 @@ class BLF_Date : public BLF_Element
             attributeMap.push_back({"Mday", &mday, TYPE_INT});
             objectName = "BLF_Date";
         }
-        BLF_Date(const Date* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Date(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
-            const tm* dateTime = element->getTime();
+            const tm* dateTime = element->getValue().getTime();
             year = dateTime->tm_year;
             month = dateTime->tm_mon;
             mday = dateTime->tm_mday;
@@ -427,6 +422,6 @@ class DataConverter
 
         // Write the Columns of a Schedule to a file at the given path.
         int writeSchedule(const char* path, const std::vector<Column>&);
-        // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The provided vector will be modified. Provide a copy.
+        // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The function creates a copy of the provided vector, but modifies the argument directly. If the function fails at any point, it will be reset to the copy created at the start.
         int readSchedule(const char* path, std::vector<Column>&);
 };
