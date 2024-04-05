@@ -3,10 +3,9 @@
 #include <iostream>
 #include <glm/gtx/norm.hpp>
 
-void Input::init(Window* windowManager, Interface* interface)
+void Input::init(Window* windowManager)
 { 
 	m_windowManager = windowManager;
-	m_interface = interface;
 	
 	for (size_t i = 0; i <= INPUT_CALLBACK_SC_REDO; i++)
 	{
@@ -55,7 +54,7 @@ void Input::processInput(GLFWwindow* window)
 	buttonStates.rmbDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 
 	/// check any situations in which we would not want to control the camera or send inputs to other listeners
-	if (m_interface->guiWantKeyboard) { return; }
+	if (m_guiWantKeyboard) { return; }
 
 	// reset mouse movement as it only updates when the mouse is ACTUALLY moved
 	mouseMovement = glm::vec2(0.0f);
@@ -82,11 +81,16 @@ bool Input::getCallbackInvokedLastFrame(INPUT_CALLBACK callback)
 	return m_callbackLastFrameStates.at(callback);
 }
 
+void Input::setGuiWantKeyboard(bool to)
+{
+	m_guiWantKeyboard = to;
+}
+
 void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS)
 	{
-		if (m_interface->guiWantKeyboard) { return; }
+		if (m_guiWantKeyboard) { return; }
 		for (const InputShortcut& shortcut: m_shortcuts)
 		{
 			if (key == shortcut.key && shortcut.hasRequiredMods(buttonStates.ctrlDown, buttonStates.altDown, buttonStates.shiftDown))

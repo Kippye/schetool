@@ -1,5 +1,6 @@
 #include "element.h"
 #include "element_base.h"
+#include "input.h"
 #include "schedule_edit.h"
 #include <cstdio>
 #include <cstdlib>
@@ -12,6 +13,12 @@
 
 // TEMP
 #include <iostream>
+
+void Schedule::init(Input& input)
+{
+    input.addCallbackListener(INPUT_CALLBACK_SC_UNDO, undoCallback);
+    input.addCallbackListener(INPUT_CALLBACK_SC_REDO, redoCallback);
+}
 
 void Schedule::createDefaultSchedule()
 {

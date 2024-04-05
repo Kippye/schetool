@@ -1,5 +1,3 @@
-#include "data_converter.h"
-#include "schedule.h"
 #include <algorithm>
 #include <chrono>
 #include <io_handler.h>
@@ -13,9 +11,10 @@ std::string IO_Handler::makeRelativePathFromName(const char* name)
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
 }
 
-void IO_Handler::init(Schedule* schedule)
+void IO_Handler::init(Schedule* schedule, Input& input)
 {
     m_schedule = schedule;
+    input.addCallbackListener(INPUT_CALLBACK_SC_SAVE, saveCallback);
     m_converter = DataConverter();
     m_converter.setupObjectTable();
 }

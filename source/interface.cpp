@@ -48,11 +48,11 @@ Gui* Interface::getGuiByID(const std::string& ID)
 
 void Interface::draw()
 {
-	guiWantKeyboard = false;
-
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	m_input->setGuiWantKeyboard(imGuiIO->WantCaptureKeyboard);
 
     for (auto &id_gui : m_guis)
     {

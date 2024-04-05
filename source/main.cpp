@@ -1,8 +1,6 @@
 #include <main.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-// TEMP
-#include <data_converter.h>
 
 #ifdef NDEBUG
 #ifndef WIN32_LEAN_AND_MEAN
@@ -16,14 +14,15 @@
 
 Program::Program()
 {
-	// setup and initialize components
 	// TODO: load user preferences here!
 
+	// setup and initialize components
 	windowManager.init(&textureLoader);
-	ioHandler.init(&schedule);
-	input.init(&windowManager, &interface);
+	input.init(&windowManager);
+	ioHandler.init(&schedule, input);
 	render.init(&windowManager, &interface);
 	interface.init(&windowManager, &input, &schedule, &ioHandler);
+	schedule.init(input);
 
 	schedule.createDefaultSchedule();
 

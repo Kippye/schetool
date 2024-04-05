@@ -1,4 +1,3 @@
-#include "imgui.h"
 #include "input.h"
 #include "io_handler.h"
 #include <main_menu_bar_gui.h>
@@ -29,7 +28,7 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 			}
 			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
-				saveSchedule();
+				input.invokeCallback(INPUT_CALLBACK_SC_SAVE);
 			}
 			ImGui::EndMenu();
 		}
@@ -37,11 +36,11 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 		{
 			if (ImGui::MenuItem("Undo", "CTRL+Z"))
 			{
-				undo();
+				input.invokeCallback(INPUT_CALLBACK_SC_UNDO);
 			}
 			if (ImGui::MenuItem("Redo", "CTRL+Y")) 
 			{
-				redo();
+				input.invokeCallback(INPUT_CALLBACK_SC_REDO);
 			}
 			ImGui::EndMenu();
 		}
@@ -51,9 +50,6 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 	// check shortcuts (dunno if this is the best place for this? TODO )
 	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_RENAME)) { renameSchedule(); }
 	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_NEW)) { newSchedule(); }
-	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_SAVE)) { saveSchedule(); }
-	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_UNDO)) { undo(); }
-	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_REDO)) { redo(); }
 
 	displayScheduleNameModal();
 	displayDeleteConfirmationModal();
@@ -201,16 +197,4 @@ void MainMenuBarGui::openSchedule()
 		}
 	}
 	ImGui::EndMenu();
-}
-void MainMenuBarGui::saveSchedule()
-{
-	m_ioHandler->writeSchedule(m_ioHandler->getOpenScheduleFilename().c_str());
-}
-void MainMenuBarGui::undo()
-{
-	m_schedule->undo();
-}
-void MainMenuBarGui::redo()
-{
-	m_schedule->redo();
 }

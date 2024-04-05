@@ -2,7 +2,6 @@
 
 #include <glm/glm.hpp>
 #include <window.h>
-#include <interface.h>
 #include <map>
 
 enum INPUT_CALLBACK
@@ -44,8 +43,8 @@ class Input
 {
 	private:
 		Window* m_windowManager;
-		Interface* m_interface;
-		bool firstMouseMovement = true;
+		bool m_guiWantKeyboard;
+		bool m_firstMouseMovement = true;
 		std::vector<InputShortcut> m_shortcuts =
 		{
 			InputShortcut{INPUT_CALLBACK_SC_RENAME, GLFW_KEY_F2, true},
@@ -64,11 +63,13 @@ class Input
 		ButtonStates buttonStates;
 		const float mouseRepeatDelay = 0.05f;
 
-		void init(Window*, Interface*);
+		void init(Window*);
 		void processInput(GLFWwindow* window);
 		void addCallbackListener(INPUT_CALLBACK callback, std::function<void()>& listener);
 		void invokeCallback(INPUT_CALLBACK callback);
 		bool getCallbackInvokedLastFrame(INPUT_CALLBACK callback);
+
+		void setGuiWantKeyboard(bool to);
 
 		void key_event(GLFWwindow* window, int key, int scancode, int action, int mods);
 		void mouse_button_event(GLFWwindow* window, int button, int action, int mods);

@@ -2,12 +2,14 @@
 #include "element_base.h"
 #include <algorithm>
 #include <deque>
+#include <functional>
 #include <vector>
 #include <map>
 #include <cstddef>
 #include <string>
 #include <element.h>
 #include <schedule_edit.h>
+#include <input.h>
 
 // TEMP
 #include <iostream>
@@ -119,6 +121,16 @@ class Schedule
         Column* getMutableColumn(size_t column);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
 
+        // input listeners
+        std::function<void()> undoCallback = std::function<void()>([&]()
+        {
+            undo();
+        });
+        std::function<void()> redoCallback = std::function<void()>([&]()
+        {
+            redo();
+        });
+
     public:
         const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
         {
@@ -133,6 +145,7 @@ class Schedule
         };
 
         // WHOLE-SCHEDULE FUNCTIONS
+        void init(Input& input);
 
         // Clear the current Schedule and replace it with an empty Schedule with default Columns.
         void createDefaultSchedule();

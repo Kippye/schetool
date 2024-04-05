@@ -28,10 +28,7 @@ class MainMenuBarGui : public Gui
         void displayDeleteConfirmationModal();
         void renameSchedule();
         void newSchedule();
-        void saveSchedule();
-        void openSchedule();
-        void undo();
-        void redo(); 
+        void openSchedule(); 
     public:
         MainMenuBarGui(const char* ID) : Gui(ID) {}
         MainMenuBarGui(const char* ID, IO_Handler* ioHandler, Schedule* schedule);
