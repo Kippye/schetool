@@ -227,6 +227,14 @@ void ScheduleGui::draw(Window& window)
 												value.setSelected(selectionIndices[i], false);
 												m_schedule->setElement<Select>(column, row, new Select(value));
 											}
+
+										}
+										// HACK to make this show when any of the options is hovered
+										if (i != selectedCount - 1 && ImGui::IsItemHovered())
+										{
+											ImGui::BeginTooltip();
+											ImGui::Text("Created: %s %s", m_schedule->getElement(column, row)->getCreationDate().getString().c_str(), m_schedule->getElement(column, row)->getCreationTime().getString().c_str());
+											ImGui::EndTooltip();
 										}
 
 										displayedChars += optionNames[selectionIndices[i]].length();
