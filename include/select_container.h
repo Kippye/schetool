@@ -54,12 +54,19 @@ struct SelectContainer
         SelectOptions* m_options;
     public:
         SelectContainer();
-        SelectContainer(SelectOptions& options) : m_options(&options){}
+        SelectContainer(SelectOptions& options) { m_options = &options; }
 
         friend bool operator<(const SelectContainer& left, const SelectContainer& right)
         {
-            if (right.m_selection.size() == 0) { return true; }
-            if (left.m_selection.size() == 0) { return false; }
+            if (left.m_selection.size() == 0)
+            {
+                if (right.m_selection.size() > 0) { return true; }
+                else { return false; }
+            }
+            if (right.m_selection.size() == 0)
+            {
+                return false;
+            }
 
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
@@ -82,8 +89,15 @@ struct SelectContainer
 
         friend bool operator>(const SelectContainer& left, const SelectContainer& right)
         {
-            if (right.m_selection.size() == 0) { return false; }
-            if (left.m_selection.size() == 0) { return true; }
+            if (right.m_selection.size() == 0)
+            {
+                if (left.m_selection.size() > 0) { return true; }
+                else { return false; }
+            }
+            if (left.m_selection.size() == 0)
+            {
+                return false;
+            }
 
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;

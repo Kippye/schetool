@@ -112,6 +112,8 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
 
 int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 {
+    std::vector<Column> scheduleCopy = schedule;
+
     // TODO: check if path is valid
     BLFFile file = readFile(path, m_objects);
 

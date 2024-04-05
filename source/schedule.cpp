@@ -21,8 +21,6 @@ void Schedule::createDefaultSchedule()
     addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start});
     addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration});
     addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End});
-
-    
 }
 
 void Schedule::setScheduleName(const std::string& name)
@@ -302,7 +300,12 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
                 setElement(index, row, (ElementBase*)new Element<DateContainer>(type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)), false);
             }
             break;
-        }   
+        }
+        default:
+        {
+            std::cout << "Resetting a column to type: " << type << " has not been implemented!" << std::endl;
+            break;
+        }
     }
 }
 
@@ -352,6 +355,11 @@ void Schedule::addRow(size_t index)
                 case(SCH_DATE):
                 { 
                     columnValues.push_back(new Element<DateContainer>(column.type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)));      
+                    break;
+                }
+                default:
+                {
+                    std::cout << "Adding rows of type: " << column.type << " has not been implemented!" << std::endl;
                     break;
                 }
             }
