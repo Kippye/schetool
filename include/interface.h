@@ -10,6 +10,7 @@
 
 #include <textures.h>
 #include <window.h>
+#include <input.h>
 #include <gui.h>
 #include <schedule.h>
 
@@ -17,8 +18,9 @@
 #include <string>
 #include <map>
 
-class Window;
 class Gui;
+class Window;
+class Input;
 class Schedule;
 class IO_Handler;
 
@@ -105,7 +107,7 @@ class Interface
 	private:
 		Window* m_windowManager;
 		Schedule* m_schedule;
-		// TEMP?
+		Input* m_input;
 		IO_Handler* m_ioHandler;
 		std::map<std::string, Gui*> m_guis = {};
 	public:
@@ -122,7 +124,7 @@ class Interface
 		ImGuiContext* imGui;
 
 	public:
-		void init(Window*, Schedule*, IO_Handler*);
+		void init(Window*, Input*, Schedule*, IO_Handler*);
 		void addGUI(Gui& gui);
 		Gui* getGuiByID(const std::string& ID);
 		void draw();

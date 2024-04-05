@@ -22,7 +22,7 @@ ScheduleGui::ScheduleGui(const char* ID, Schedule* schedule) : Gui(ID)
 	m_schedule = schedule;
 } 
 
-void ScheduleGui::draw(Window& window)
+void ScheduleGui::draw(Window& window, Input& input)
 {
     //ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
 	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT - 20.0f));

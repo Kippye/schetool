@@ -23,7 +23,7 @@ Program::Program()
 	ioHandler.init(&schedule);
 	input.init(&windowManager, &interface);
 	render.init(&windowManager, &interface);
-	interface.init(&windowManager, &schedule, &ioHandler);
+	interface.init(&windowManager, &input, &schedule, &ioHandler);
 
 	schedule.createDefaultSchedule();
 

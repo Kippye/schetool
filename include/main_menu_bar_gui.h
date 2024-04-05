@@ -4,6 +4,7 @@
 #include <window.h>
 #include <io_handler.h>
 #include <schedule.h>
+#include <input.h>
 
 enum NAME_PROMPT_REASON
 {
@@ -25,10 +26,16 @@ class MainMenuBarGui : public Gui
 
         void displayScheduleNameModal();
         void displayDeleteConfirmationModal();
+        void renameSchedule();
+        void newSchedule();
+        void saveSchedule();
+        void openSchedule();
+        void undo();
+        void redo(); 
     public:
         MainMenuBarGui(const char* ID) : Gui(ID) {}
         MainMenuBarGui(const char* ID, IO_Handler* ioHandler, Schedule* schedule);
-        void draw(Window& window) override;
+        void draw(Window& window, Input& input) override;
         void openNewScheduleNameModal(NAME_PROMPT_REASON reason);
         static int filterAlphanumerics(ImGuiInputTextCallbackData* data);
 };

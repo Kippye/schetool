@@ -2,8 +2,10 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <window.h>
+#include <input.h>
 
 class Window;
+class Input;
 
 class Gui
 {
@@ -19,5 +21,5 @@ class Gui
         float opacity;
 
         std::string getID();
-        virtual void draw(Window& window);
+        virtual void draw(Window& window, Input& input);
 };
