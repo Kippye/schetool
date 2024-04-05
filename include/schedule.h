@@ -1,14 +1,20 @@
 #pragma once
 #include "element_base.h"
 #include <algorithm>
+#include <deque>
+#include <functional>
 #include <vector>
 #include <map>
 #include <cstddef>
 #include <string>
 #include <element.h>
+#include <schedule_edit.h>
+#include <input.h>
 
 // TEMP
 #include <iostream>
+
+class ScheduleEdit;
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
@@ -105,6 +111,8 @@ class Schedule
 {
     private:
         std::vector<Column> m_schedule = {};
+        std::deque<ScheduleEdit*> m_editHistory = {};
+        size_t m_editHistoryIndex = 0;
         ColumnSortComparison m_columnSortComparison;
         bool m_editedSinceWrite = false;
         std::string m_scheduleName;
@@ -112,6 +120,16 @@ class Schedule
         Column* getColumnWithFlags(ScheduleElementFlags flags);
         Column* getMutableColumn(size_t column);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
+
+        // input listeners
+        std::function<void()> undoCallback = std::function<void()>([&]()
+        {
+            undo();
+        });
+        std::function<void()> redoCallback = std::function<void()>([&]()
+        {
+            redo();
+        });
 
     public:
         const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
@@ -127,6 +145,7 @@ class Schedule
         };
 
         // WHOLE-SCHEDULE FUNCTIONS
+        void init(Input& input);
 
         // Clear the current Schedule and replace it with an empty Schedule with default Columns.
         void createDefaultSchedule();
@@ -166,6 +185,11 @@ class Schedule
         void addDefaultColumn(size_t index);
         void addColumn(size_t index, const Column& column);
         void removeColumn(size_t column);
+
+        void addScheduleEdit(ScheduleEdit* edit);
+        void removeFollowingEditHistory();
+        void undo();
+        void redo();
 
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
         template <typename T>
@@ -252,9 +276,15 @@ class Schedule
 
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
         template <typename T>
-        void setElementValue(size_t column, size_t row, const T& value, bool resort = true)
+        void setElementValue(size_t column, size_t row, const T& value, bool resort = true, bool addToHistory = true)
         {
             ElementBase* element = getElement(column, row);
+
+            // add the edit to history
+            if (addToHistory)
+            {
+                addScheduleEdit(new ElementEdit<T>(this, column, row, element->getType(), ((Element<T>*)element)->getValue(), value)); 
+            }
 
             ((Element<T>*)element)->setValue(value);
 

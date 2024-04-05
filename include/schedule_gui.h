@@ -38,6 +38,6 @@ class ScheduleGui : public Gui
     public:
         ScheduleGui(const char* ID) : Gui(ID) { }
         ScheduleGui(const char* ID, Schedule*);
-        void draw(Window& window) override;
+        void draw(Window& window, Input& input) override;
         static int filterNumbers(ImGuiInputTextCallbackData* data);
 };

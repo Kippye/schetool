@@ -1,5 +1,7 @@
 #include "element.h"
 #include "element_base.h"
+#include "input.h"
+#include "schedule_edit.h"
 #include <cstdio>
 #include <cstdlib>
 #include <schedule.h>
@@ -11,6 +13,12 @@
 
 // TEMP
 #include <iostream>
+
+void Schedule::init(Input& input)
+{
+    input.addCallbackListener(INPUT_CALLBACK_SC_UNDO, undoCallback);
+    input.addCallbackListener(INPUT_CALLBACK_SC_REDO, redoCallback);
+}
 
 void Schedule::createDefaultSchedule()
 {
@@ -461,4 +469,41 @@ void Schedule::removeColumn(size_t column)
     }
 
     setEditedSinceWrite(true);
+}
+
+void Schedule::addScheduleEdit(ScheduleEdit* edit)
+{
+    removeFollowingEditHistory();
+    m_editHistory.push_back(edit);
+    m_editHistoryIndex = m_editHistory.size() - 1;
+}
+
+void Schedule::removeFollowingEditHistory()
+{
+    if (m_editHistory.size() == 0) { return; }
+
+    printf("Deleting edit history from [%zu; %zu)\n", m_editHistory.size() - 1, m_editHistoryIndex);
+    for (int i = m_editHistory.size() - 1; i > m_editHistoryIndex; i--)
+    {
+        //delete m_editHistory[i];
+        m_editHistory.pop_back();
+    }
+}
+
+void Schedule::undo()
+{
+    if (m_editHistory.size() == 0) { return; }
+
+    ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
+    edit->revert(); 
+    if (m_editHistoryIndex > 0) { m_editHistoryIndex--; }
+}
+
+void Schedule::redo()
+{
+    if (m_editHistory.size() == 0) { return; }
+
+    if ((m_editHistoryIndex > 0 || m_editHistory[0]->getIsReverted() == false) && m_editHistoryIndex < m_editHistory.size() - 1) { m_editHistoryIndex++; }
+    ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
+    edit->apply();
 }

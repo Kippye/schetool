@@ -6,9 +6,10 @@
 #include <gui.h>
 #include <schedule_gui.h>
 
-void Interface::init(Window* windowManager, Schedule* schedule, IO_Handler* ioHandler)
+void Interface::init(Window* windowManager, Input* input, Schedule* schedule, IO_Handler* ioHandler)
 {
 	m_windowManager = windowManager;
+	m_input = input;
 	m_schedule = schedule;
 	m_ioHandler = ioHandler;
 
@@ -22,7 +23,7 @@ void Interface::init(Window* windowManager, Schedule* schedule, IO_Handler* ioHa
 	imGuiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// ADD GUIS
-    addGUI(*(new MainMenuBarGui("MainMenuBarGui", m_ioHandler)));
+    addGUI(*(new MainMenuBarGui("MainMenuBarGui", m_ioHandler, m_schedule)));
     addGUI(*(new ScheduleGui("ScheduleGui", m_schedule)));
 }
 
@@ -47,15 +48,15 @@ Gui* Interface::getGuiByID(const std::string& ID)
 
 void Interface::draw()
 {
-	guiWantKeyboard = false;
-
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	m_input->setGuiWantKeyboard(imGuiIO->WantCaptureKeyboard);
+
     for (auto &id_gui : m_guis)
     {
-        id_gui.second->draw(*m_windowManager);
+        id_gui.second->draw(*m_windowManager, *m_input);
     }
 
 	guiHovered = imGuiIO->WantCaptureMouse;

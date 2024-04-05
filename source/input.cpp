@@ -3,10 +3,16 @@
 #include <iostream>
 #include <glm/gtx/norm.hpp>
 
-void Input::init(Window* windowManager, Interface* interface)
+void Input::init(Window* windowManager)
 { 
 	m_windowManager = windowManager;
-	m_interface = interface;
+	
+	for (size_t i = 0; i <= INPUT_CALLBACK_SC_REDO; i++)
+	{
+		m_callbacks.insert({(INPUT_CALLBACK)i, std::vector<std::function<void()>>{}});
+		m_callbackStates.insert({(INPUT_CALLBACK)i, false});
+		m_callbackLastFrameStates.insert({(INPUT_CALLBACK)i, false});
+	}
 
 	m_windowManager->key_callback = [=](auto self, int key, int scancode, int action, int mods)
 	{
@@ -31,47 +37,80 @@ void Input::init(Window* windowManager, Interface* interface)
 
 void Input::processInput(GLFWwindow* window)
 {
-	// modifiers
-	shift_down = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
-	ctrl_down = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
-	alt_down = (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS);
+	for (auto callback: m_callbackLastFrameStates)
+	{
+		m_callbackLastFrameStates.at(callback.first) = m_callbackStates.at(callback.first);
+		m_callbackStates.at(callback.first) = false;
+	}
 
-	lmb_down_last = lmb_down;
-	lmb_down = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-	rmb_down_last = rmb_down;
-	rmb_down = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+	// modifiers
+	buttonStates.shiftDown = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
+	buttonStates.ctrlDown = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
+	buttonStates.altDown = (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS);
+
+	buttonStates.lmbDownLast = buttonStates.lmbDown;
+	buttonStates.lmbDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+	buttonStates.rmbDownLast = buttonStates.rmbDown;
+	buttonStates.rmbDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 
 	/// check any situations in which we would not want to control the camera or send inputs to other listeners
-	if (m_interface->guiWantKeyboard) { return; }
+	if (m_guiWantKeyboard) { return; }
 
 	// reset mouse movement as it only updates when the mouse is ACTUALLY moved
 	mouseMovement = glm::vec2(0.0f);
+}
+
+void Input::addCallbackListener(INPUT_CALLBACK callback, std::function<void()>& listener)
+{
+	m_callbacks.at(callback).push_back(listener);
+}
+
+void Input::invokeCallback(INPUT_CALLBACK callback)
+{
+	auto& listeners = m_callbacks.at(callback);
+
+	for (auto& listener : listeners)
+	{
+		listener();
+	}
+	m_callbackStates.at(callback) = true;
+}
+
+bool Input::getCallbackInvokedLastFrame(INPUT_CALLBACK callback)
+{
+	return m_callbackLastFrameStates.at(callback);
+}
+
+void Input::setGuiWantKeyboard(bool to)
+{
+	m_guiWantKeyboard = to;
 }
 
 void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS)
 	{
-		if (m_interface->guiWantKeyboard) { return; }
-		// switch (key)
-		// {
-		// 	/// program manipulators
-
-		// 	// shortcuts
-		// }
+		if (m_guiWantKeyboard) { return; }
+		for (const InputShortcut& shortcut: m_shortcuts)
+		{
+			if (key == shortcut.key && shortcut.hasRequiredMods(buttonStates.ctrlDown, buttonStates.altDown, buttonStates.shiftDown))
+			{
+				invokeCallback(shortcut.callback);
+			}
+		}
 	}
 	else if (action == GLFW_RELEASE)
 	{
 		switch (key)
 		{
 			case (GLFW_KEY_LEFT_SHIFT):
-			shift_down = false;
+			buttonStates.shiftDown = false;
 			break;
 			case (GLFW_KEY_LEFT_CONTROL):
-			ctrl_down = false;
+			buttonStates.ctrlDown = false;
 			break;
 			case (GLFW_KEY_LEFT_ALT):
-			alt_down = false;
+			buttonStates.altDown = false;
 			break;
 		}
 	}
@@ -95,10 +134,10 @@ void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods
 		switch (key)
 		{
 			case (GLFW_MOUSE_BUTTON_LEFT):
-			lmb_down = false;
+			buttonStates.lmbDown = false;
 			break;
 			case (GLFW_MOUSE_BUTTON_RIGHT):
-			rmb_down = false;
+			buttonStates.rmbDown = false;
 			break;
 		}
 	}

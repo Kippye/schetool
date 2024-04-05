@@ -16,6 +16,6 @@ std::string Gui::getID()
     return m_ID;
 }
 
-void Gui::draw(Window& window)
+void Gui::draw(Window& window, Input& input)
 {
 }

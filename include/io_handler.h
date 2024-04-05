@@ -2,6 +2,7 @@
 
 #include <data_converter.h>
 #include <schedule.h>
+#include <input.h>
 
 const unsigned int AUTOSAVE_DELAY_SECONDS = 2 * 60;
 
@@ -13,10 +14,16 @@ class IO_Handler
         std::string m_openScheduleFilename;
         std::string makeRelativePathFromName(const char* name);
         double m_timeSinceAutosave = 0.0;
+
+        // input listeners
+        std::function<void()> saveCallback = std::function<void()>([&]()
+        {
+            writeSchedule(m_openScheduleFilename.c_str());
+        });
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
-        void init(Schedule* schedule);
+        void init(Schedule* schedule, Input& input);
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);
