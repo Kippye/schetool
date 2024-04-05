@@ -12,6 +12,8 @@
 // TEMP
 #include <iostream>
 
+class ScheduleEdit;
+
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
@@ -108,6 +110,7 @@ class Schedule
     private:
         std::vector<Column> m_schedule = {};
         std::deque<ScheduleEdit*> m_editHistory = {};
+        size_t m_editHistoryIndex = 0;
         ColumnSortComparison m_columnSortComparison;
         bool m_editedSinceWrite = false;
         std::string m_scheduleName;
@@ -170,6 +173,8 @@ class Schedule
         void addColumn(size_t index, const Column& column);
         void removeColumn(size_t column);
 
+        void addScheduleEdit(ScheduleEdit* edit);
+        void removeFollowingEditHistory();
         void undo();
         void redo();
 
@@ -258,9 +263,15 @@ class Schedule
 
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
         template <typename T>
-        void setElementValue(size_t column, size_t row, const T& value, bool resort = true)
+        void setElementValue(size_t column, size_t row, const T& value, bool resort = true, bool addToHistory = true)
         {
             ElementBase* element = getElement(column, row);
+
+            // add the edit to history
+            if (addToHistory)
+            {
+                addScheduleEdit(new ElementEdit<T>(this, column, row, element->getType(), ((Element<T>*)element)->getValue(), value)); 
+            }
 
             ((Element<T>*)element)->setValue(value);
 

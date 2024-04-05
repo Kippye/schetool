@@ -22,7 +22,7 @@ void Interface::init(Window* windowManager, Schedule* schedule, IO_Handler* ioHa
 	imGuiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// ADD GUIS
-    addGUI(*(new MainMenuBarGui("MainMenuBarGui", m_ioHandler)));
+    addGUI(*(new MainMenuBarGui("MainMenuBarGui", m_ioHandler, m_schedule)));
     addGUI(*(new ScheduleGui("ScheduleGui", m_schedule)));
 }
 

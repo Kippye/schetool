@@ -2,9 +2,10 @@
 #include "io_handler.h"
 #include <main_menu_bar_gui.h>
 
-MainMenuBarGui::MainMenuBarGui(const char* ID, IO_Handler* ioHandler) : Gui(ID)
+MainMenuBarGui::MainMenuBarGui(const char* ID, IO_Handler* ioHandler, Schedule* schedule) : Gui(ID)
 {
 	m_ioHandler = ioHandler;
+	m_schedule = schedule;
 } 
 
 void MainMenuBarGui::draw(Window& window)
@@ -44,6 +45,18 @@ void MainMenuBarGui::draw(Window& window)
 			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
 				m_ioHandler->writeSchedule(m_ioHandler->getOpenScheduleFilename().c_str());
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Edit"))
+		{
+			if (ImGui::MenuItem("Undo", "CTRL+Z"))
+			{
+				m_schedule->undo();
+			}
+			if (ImGui::MenuItem("Redo", "CTRL+Y")) 
+			{
+				m_schedule->redo();
 			}
 			ImGui::EndMenu();
 		}
