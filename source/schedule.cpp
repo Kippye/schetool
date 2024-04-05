@@ -462,3 +462,13 @@ void Schedule::removeColumn(size_t column)
 
     setEditedSinceWrite(true);
 }
+
+void Schedule::undo()
+{
+
+}
+
+void Schedule::redo()
+{
+    
+}

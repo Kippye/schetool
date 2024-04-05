@@ -1,11 +1,13 @@
 #pragma once
 #include "element_base.h"
 #include <algorithm>
+#include <deque>
 #include <vector>
 #include <map>
 #include <cstddef>
 #include <string>
 #include <element.h>
+#include <schedule_edit.h>
 
 // TEMP
 #include <iostream>
@@ -105,6 +107,7 @@ class Schedule
 {
     private:
         std::vector<Column> m_schedule = {};
+        std::deque<ScheduleEdit*> m_editHistory = {};
         ColumnSortComparison m_columnSortComparison;
         bool m_editedSinceWrite = false;
         std::string m_scheduleName;
@@ -166,6 +169,9 @@ class Schedule
         void addDefaultColumn(size_t index);
         void addColumn(size_t index, const Column& column);
         void removeColumn(size_t column);
+
+        void undo();
+        void redo();
 
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
         template <typename T>
