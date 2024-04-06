@@ -24,11 +24,11 @@ void Schedule::createDefaultSchedule()
 {
     clearSchedule();
 
-    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name});
-    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished});
-    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start});
-    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration});
-    addColumn(getColumnCount(), Column{std::vector<ElementBase*>{}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End});
+    addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name), false);
+    addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished), false);
+    addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("Start"), true, ScheduleElementFlags_Start), false);
+    addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("Duration"), true, ScheduleElementFlags_Duration), false);
+    addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("End"), true, ScheduleElementFlags_End), false);
 }
 
 void Schedule::setScheduleName(const std::string& name)
@@ -55,15 +55,12 @@ void Schedule::clearSchedule()
 {
     for (Column& column: m_schedule)
     {
-        for (ElementBase* element: column.rows)
-        {
-            delete element;
-        }
+        delete &column;
     }
     m_schedule.clear();
 }
 
-void Schedule::replaceSchedule(std::vector<Column> columns)
+void Schedule::replaceSchedule(std::vector<Column>& columns)
 {
     clearSchedule();
 
@@ -381,7 +378,6 @@ void Schedule::addRow(size_t index, bool addToHistory)
             }
         }
     }
-    // TODO: add row in the middle
     else
     {
         for (Column& column : m_schedule)
@@ -520,20 +516,29 @@ void Schedule::addDefaultColumn(size_t index, bool addToHistory)
     time_t t = std::time(nullptr);
     tm creationTime = *std::localtime(&t);
 
+    Column addedColumn = Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Text"), false);
+
     // the last index = just add to the end
     if (index == getColumnCount())
     {
-        std::vector<ElementBase*> addedElements = {};
-
         for (size_t i = 0; i < getRowCount(); i++)
         {
-            addedElements.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
         }
-        m_schedule.push_back(Column{addedElements, SCH_TEXT, std::string("Text"), false});
+        m_schedule.push_back(addedColumn);
     }
     else
     {
-        // TODO: add in middle
+        for (size_t i = 0; i < getRowCount(); i++)
+        {
+            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+        }
+        m_schedule.insert(m_schedule.begin() + index, addedColumn);
+    }
+
+    if (addToHistory)
+    {
+        addScheduleEdit(new ColumnEdit(this, false, index, addedColumn));
     }
 
     setEditedSinceWrite(true);
@@ -542,7 +547,12 @@ void Schedule::addDefaultColumn(size_t index, bool addToHistory)
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
 void Schedule::addColumn(size_t index, const Column& column, bool addToHistory)
 {
-    // TODO: add to history
+    std::cout << "Adding column: " << column.name << std::endl;
+
+    if (addToHistory)
+    {
+        addScheduleEdit(new ColumnEdit(this, false, index, column));
+    }
 
     // TODO: make sure that EVERY column has the same amount of rows!!!
     // TODO: give the new column correct creation date & time
@@ -554,23 +564,26 @@ void Schedule::addColumn(size_t index, const Column& column, bool addToHistory)
     }
     else
     {
-        // TODO: add in middle
+        m_schedule.insert(m_schedule.begin() + index, column);
     }
 
     setEditedSinceWrite(true);
 }
 
-void Schedule::removeColumn(size_t column)
+void Schedule::removeColumn(size_t column, bool addToHistory)
 {
     // a permanent column can't be removed
     if (m_schedule[column].permanent == true) { return; }
 
     Column* mutableColumn = getMutableColumn(column);
-    for (size_t i = 0; i < mutableColumn->rows.size(); i++)
+
+    // oh cheese.
+    if (addToHistory)
     {
-        delete mutableColumn->rows[i];
+        addScheduleEdit(new ColumnEdit(this, true, column, *mutableColumn));
     }
 
+    // NOTE: removing from the vector destroys the Column, making mutableColumn invalid
     // the last index = pop from end
     if (column == getColumnCount() - 1)
     {
@@ -579,13 +592,14 @@ void Schedule::removeColumn(size_t column)
     else
     {
         m_schedule.erase(m_schedule.begin() + column);
-    }
+    }  
 
     setEditedSinceWrite(true);
 }
 
 void Schedule::addScheduleEdit(ScheduleEdit* edit)
 {
+    std::cout << "Added Schedule Edit of type: " << edit->type << std::endl;
     removeFollowingEditHistory();
     m_editHistory.push_back(edit);
     m_editHistoryIndex = m_editHistory.size() - 1;
@@ -595,7 +609,6 @@ void Schedule::removeFollowingEditHistory()
 {
     if (m_editHistory.size() == 0) { return; }
 
-    printf("Deleting edit history from [%zu; %zu)\n", m_editHistory.size() - 1, m_editHistoryIndex);
     for (int i = m_editHistory.size() - 1; i > m_editHistoryIndex; i--)
     {
         //delete m_editHistory[i];

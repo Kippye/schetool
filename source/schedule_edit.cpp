@@ -49,9 +49,47 @@ void RowEdit::apply()
     else
     {
         m_schedule->addRow(m_row, false);
-        std::cout << "added" << std::endl;
         m_schedule->setRow(m_row, m_elementData);
-        std::cout << "set" << std::endl;
+    }
+
+    m_isReverted = false;
+}
+
+// ColumnEdit
+ColumnEdit::ColumnEdit(Schedule* schedule, bool isRemove, size_t column, const Column& columnData) : ScheduleEdit(schedule, SCHEDULE_EDIT_COLUMN) 
+{
+    m_isRemove = isRemove;
+    m_column = column;
+    m_columnData = new Column(columnData);
+}
+
+void ColumnEdit::revert()
+{
+    // reverting a removal means adding the column
+    if (m_isRemove)
+    {
+        m_schedule->addColumn(m_column, *m_columnData, false);
+    }
+    // reverting an addition means removing the column
+    else
+    {
+        m_schedule->removeColumn(m_column, false);
+    }
+
+    m_isReverted = true;
+} 
+
+void ColumnEdit::apply()
+{
+    // applying a removal means removing the column
+    if (m_isRemove)
+    {
+        m_schedule->removeColumn(m_column, false);
+    }
+    // applying an addition means adding the column
+    else
+    {
+        m_schedule->addColumn(m_column, *m_columnData, false);
     }
 
     m_isReverted = false;

@@ -127,10 +127,11 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 
     std::vector<TemplateObject*> dataPointers = {};
 
-    // loop through the sorted BLF_Columns and add them to the schedule as Columns
+    // loop through the BLF_Columns and add them to the schedule as Columns
     for (size_t c = 0; c < loadedColumns.getSize(); c++)
     {
-        Column column = Column {
+        // LEAK ?
+        Column column = Column(
             std::vector<ElementBase*>{}, 
             (SCHEDULE_TYPE)loadedColumns[c]->type, 
             std::string(loadedColumns[c]->name.getBuffer()),
@@ -139,7 +140,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             (COLUMN_SORT)loadedColumns[c]->sort,
             false,
             SelectOptions(loadedColumns[c]->getSelectOptions())
-        };
+        );
 
         column.selectOptions.setIsMutable(loadedColumns[c]->selectOptionsMutable);
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "element_base.h"
+#include "select_container.h"
 #include <algorithm>
 #include <deque>
 #include <functional>
@@ -52,6 +53,57 @@ struct Column
     COLUMN_SORT sort;
     bool sorted;
     SelectOptions selectOptions;
+
+    Column()
+    {
+        type = SCH_TEXT;
+        name = "Text";
+    }
+    Column(const std::vector<ElementBase*>& rows, 
+        SCHEDULE_TYPE type, 
+        const std::string& name,
+        bool permanent = false,
+        ScheduleElementFlags flags = ScheduleElementFlags_None,
+        COLUMN_SORT sort = COLUMN_SORT_NONE,
+        bool sorted = false,
+        const SelectOptions& selectOptions = SelectOptions())
+    {
+        this->rows = rows;
+        this->type = type;
+        this->name = name;
+        this->permanent = permanent;
+        this->flags = flags;
+        this->sort = sort;
+        this->sorted = sorted;
+        this->selectOptions = selectOptions;
+    }
+
+    Column(const Column& other)
+    {
+        type = other.type;
+        name = other.name;
+        permanent = other.permanent;
+        flags = other.flags;
+        sort = other.sort;
+        sorted = other.sorted;
+        selectOptions = other.selectOptions;
+
+        for (size_t i = 0; i < other.rows.size(); i++)
+        {
+            rows.push_back(other.rows[i]->getCopy());
+        }
+
+        std::cout << "Copied: " << name << " with " << rows.size() << " elements" << std::endl;
+    }
+
+    ~Column()
+    {
+        std::cout << "Destroying Column " << this->name << " at " << this << std::endl;
+        for (size_t i = 0; i < rows.size(); i++)
+        {
+            delete rows[i];
+        }
+    }
 
     ElementBase* getElement(size_t index)
     {
@@ -159,7 +211,8 @@ class Schedule
         // Clears the Schedule and deletes all the Columns.
         void clearSchedule();
         // Replaces the m_schedule vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
-        void replaceSchedule(std::vector<Column> columns);
+        // LEAK ?
+        void replaceSchedule(std::vector<Column>& columns);
 
         // Get a constant pointer to the Column at the index. TODO: Return const ref instead
         const Column* getColumn(size_t column);
@@ -188,7 +241,7 @@ class Schedule
         std::vector<ElementBase*> getRow(size_t index);
         void addDefaultColumn(size_t index, bool addToHistory = true);
         void addColumn(size_t index, const Column& column, bool addToHistory = true);
-        void removeColumn(size_t column);
+        void removeColumn(size_t column, bool addToHistory = true);
 
         void addScheduleEdit(ScheduleEdit* edit);
         void removeFollowingEditHistory();
