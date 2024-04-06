@@ -317,8 +317,10 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
     }
 }
 
-void Schedule::addRow(size_t index)
+void Schedule::addRow(size_t index, bool addToHistory)
 {
+    std::vector<ElementBase*> elementCopies = {};
+
     // the last index = just add to the end
     if (index == getRowCount())
     {
@@ -371,12 +373,78 @@ void Schedule::addRow(size_t index)
                     break;
                 }
             }
+
+            // add a copy for edit history
+            if (addToHistory)
+            {
+                elementCopies.push_back(columnValues.back()->getCopy());
+            }
         }
     }
     // TODO: add row in the middle
     else
     {
-        
+        for (Column& column : m_schedule)
+        {
+            std::vector<ElementBase*>& columnValues = column.rows;
+            time_t t = std::time(nullptr);
+            tm creationTime = *std::localtime(&t);
+
+            switch(column.type)
+            {
+                case(SCH_BOOL):
+                {
+                    columnValues.insert(columnValues.begin() + index, new Element<bool>(column.type, false, DateContainer(creationTime), TimeContainer(creationTime)));
+                    break;
+                }
+                case(SCH_NUMBER):
+                {
+                    columnValues.insert(columnValues.begin() + index, new Element<int>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
+                    break;
+                }
+                case(SCH_DECIMAL):
+                {
+                    columnValues.insert(columnValues.begin() + index, new Element<double>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
+                    break;
+                }
+                case(SCH_TEXT):
+                {
+                    columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, "", DateContainer(creationTime), TimeContainer(creationTime)));
+                    break;
+                }
+                case(SCH_SELECT):
+                { 
+                    columnValues.insert(columnValues.begin() + index, new Element<SelectContainer>(column.type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime)));      
+                    break;
+                }
+                case(SCH_TIME):
+                { 
+                    columnValues.insert(columnValues.begin() + index, new Element<TimeContainer>(column.type, TimeContainer(0, 0), DateContainer(creationTime), TimeContainer(creationTime)));      
+                    break;
+                }
+                case(SCH_DATE):
+                { 
+                    columnValues.insert(columnValues.begin() + index, new Element<DateContainer>(column.type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)));      
+                    break;
+                }
+                default:
+                {
+                    std::cout << "Adding rows of type: " << column.type << " has not been implemented!" << std::endl;
+                    break;
+                }
+            }
+
+            // add a copy for edit history
+            if (addToHistory)
+            {
+                elementCopies.push_back(columnValues.at(index)->getCopy());
+            }
+        }
+    }
+
+    if (addToHistory)
+    {
+        addScheduleEdit(new RowEdit(this, false, index, elementCopies));
     }
 
     setEditedSinceWrite(true);
@@ -384,11 +452,21 @@ void Schedule::addRow(size_t index)
     sortColumns();
 }
 
-void Schedule::removeRow(size_t index)
+void Schedule::removeRow(size_t index, bool addToHistory)
 {
+    if (getColumn(0)->rows.size() - 1 < index) { std::cout << "Schedule::removeRow: No row found at index: " << index << std::endl; return; }
+
+    std::vector<ElementBase*> elementCopies = {};
+
     for (Column& column : m_schedule)
     {
         std::vector<ElementBase*>& columnValues = column.rows;
+
+        if (addToHistory)
+        {
+            elementCopies.push_back(columnValues[index]->getCopy());
+        }
+
         if (index == columnValues.size() - 1)
         {
             delete columnValues[index];
@@ -401,11 +479,44 @@ void Schedule::removeRow(size_t index)
         }
     }
 
-    setEditedSinceWrite(true);
-} 
+    // add a remove RowEdit to the edit history with copies of the removed Elements
+    if (addToHistory)
+    {
+        addScheduleEdit(new RowEdit(this, true, index, elementCopies));
+    }
 
-void Schedule::addDefaultColumn(size_t index)
+    setEditedSinceWrite(true);
+}
+
+void Schedule::setRow(size_t index, std::vector<ElementBase*> elementData)
 {
+    if (getColumn(0)->rows.size() - 1 < index) { std::cout << "Schedule::setRow: No row found at index: " << index << std::endl; return; }
+
+    for (size_t col = 0; col < getColumnCount(); col++)
+    {
+        //std::cout << col << ": " << elementData[col]->getString() << std::endl;
+        setElement(col, index, elementData[col]);
+    } 
+}
+
+std::vector<ElementBase*> Schedule::getRow(size_t index)
+{
+    std::vector<ElementBase*> elementData = {};
+
+    if (getColumn(0)->rows.size() - 1 < index) { std::cout << "Schedule::getRow: No row found at index: " << index << std::endl; return elementData; }
+
+    for (size_t col = 0; col < getColumnCount(); col++)
+    {
+        elementData.push_back(getElement(col, index));
+    }
+
+    return elementData;
+}
+
+void Schedule::addDefaultColumn(size_t index, bool addToHistory)
+{
+    // TODO: add to history
+
     time_t t = std::time(nullptr);
     tm creationTime = *std::localtime(&t);
 
@@ -429,8 +540,10 @@ void Schedule::addDefaultColumn(size_t index)
 }
 
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
-void Schedule::addColumn(size_t index, const Column& column)
+void Schedule::addColumn(size_t index, const Column& column, bool addToHistory)
 {
+    // TODO: add to history
+
     // TODO: make sure that EVERY column has the same amount of rows!!!
     // TODO: give the new column correct creation date & time
 
@@ -492,7 +605,7 @@ void Schedule::removeFollowingEditHistory()
 
 void Schedule::undo()
 {
-    if (m_editHistory.size() == 0) { return; }
+    if (m_editHistory.size() == 0 || m_editHistoryIndex == 0 && m_editHistory[m_editHistoryIndex]->getIsReverted()) { return; }
 
     ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
     edit->revert(); 
@@ -501,7 +614,7 @@ void Schedule::undo()
 
 void Schedule::redo()
 {
-    if (m_editHistory.size() == 0) { return; }
+    if (m_editHistory.size() == 0 || m_editHistoryIndex == m_editHistory.size() - 1 && m_editHistory[m_editHistoryIndex]->getIsReverted() == false) { return; }
 
     if ((m_editHistoryIndex > 0 || m_editHistory[0]->getIsReverted() == false) && m_editHistoryIndex < m_editHistory.size() - 1) { m_editHistoryIndex++; }
     ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];

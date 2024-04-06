@@ -34,4 +34,5 @@ class ElementBase
         const TimeContainer& getEditTime() const;
 
         virtual std::string getString() const;
+        virtual ElementBase* getCopy() const;
 };

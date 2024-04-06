@@ -180,10 +180,14 @@ class Schedule
 
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
-        void addRow(size_t index);
-        void removeRow(size_t index);
-        void addDefaultColumn(size_t index);
-        void addColumn(size_t index, const Column& column);
+        void addRow(size_t index, bool addToHistory = true);
+        void removeRow(size_t index, bool addToHistory = true);
+        // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
+        void setRow(size_t index, std::vector<ElementBase*> elementData);
+        // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
+        std::vector<ElementBase*> getRow(size_t index);
+        void addDefaultColumn(size_t index, bool addToHistory = true);
+        void addColumn(size_t index, const Column& column, bool addToHistory = true);
         void removeColumn(size_t column);
 
         void addScheduleEdit(ScheduleEdit* edit);
@@ -211,9 +215,10 @@ class Schedule
             return (Element<T>*)getElement(column, row);
         }
 
-        // Use this function to completely replace the element at column; row with the ElementBase in value
-        // NOTE: If the types match, a copy is performed
+        // Use this function to completely replace the element at column; row with the ElementBase in value.
+        // NOTE: If the types match, a copy is performed.
         // If the types do not match, the target element pointer is replaced by the value pointer!
+        // NOTE: Currently, does not add to the edit history
         void setElement(size_t column, size_t row, ElementBase* other, bool resort = true)
         {            
             // IF the provided Element fits the column's type, set the target Element's value directly
@@ -224,30 +229,37 @@ class Schedule
                     case(SCH_BOOL):
                     {
                         getElementAsSpecial<bool>(column, row)->setValue(((Element<bool>*)other)->getValue());
+                        break;
                     }
                     case(SCH_NUMBER):
                     {
                         getElementAsSpecial<int>(column, row)->setValue(((Element<int>*)other)->getValue());
+                        break;
                     }
                     case(SCH_DECIMAL):
                     {
                         getElementAsSpecial<double>(column, row)->setValue(((Element<double>*)other)->getValue());
+                        break;
                     }
                     case(SCH_TEXT):
                     {
                         getElementAsSpecial<std::string>(column, row)->setValue(((Element<std::string>*)other)->getValue());
+                        break;
                     }
                     case(SCH_SELECT):
                     {
                         getElementAsSpecial<SelectContainer>(column, row)->setValue(((Element<SelectContainer>*)other)->getValue());
+                        break;
                     }
                     case(SCH_TIME):
                     {
                         getElementAsSpecial<TimeContainer>(column, row)->setValue(((Element<TimeContainer>*)other)->getValue());
+                        break;
                     }
                     case(SCH_DATE):
                     {
                         getElementAsSpecial<DateContainer>(column, row)->setValue(((Element<DateContainer>*)other)->getValue());
+                        break;
                     }
                 }
             }

@@ -40,6 +40,11 @@ class Element : public ElementBase
             }
         }
 
+        ElementBase* getCopy() const override
+        {
+            return new Element<T>(*this);
+        }
+
         T getValue() const
         {
             return m_value;
