@@ -23,6 +23,7 @@ void Schedule::init(Input& input)
 void Schedule::createDefaultSchedule()
 {
     clearSchedule();
+    clearEditHistory();
 
     addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Name"), true, ScheduleElementFlags_Name), false);
     addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleElementFlags_Finished), false);
@@ -51,6 +52,18 @@ size_t Schedule::getEditHistoryIndex()
     return m_editHistoryIndex;
 }
 
+void Schedule::clearEditHistory()
+{
+    if (m_editHistory.size() == 0) { return; }
+
+    for (int i = m_editHistory.size() - 1; i > m_editHistoryIndex; i--)
+    {
+        delete m_editHistory[i];
+    }
+
+    m_editHistory.clear();
+}
+
 bool Schedule::getEditedSinceWrite()
 {
     return m_editedSinceWrite;
@@ -73,6 +86,7 @@ void Schedule::clearSchedule()
 void Schedule::replaceSchedule(std::vector<Column>& columns)
 {
     clearSchedule();
+    clearEditHistory();
 
     m_schedule = columns;
 }
@@ -622,7 +636,7 @@ void Schedule::removeFollowingEditHistory()
 
     for (int i = m_editHistory.size() - 1; i > m_editHistoryIndex; i--)
     {
-        //delete m_editHistory[i];
+        delete m_editHistory[i];
         m_editHistory.pop_back();
     }
 }

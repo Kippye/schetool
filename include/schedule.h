@@ -119,8 +119,7 @@ struct Column
 
     ~Column()
     {
-        std::cout << "Destroying Column " << name << " at " << this << std::endl;
-        std::cout << (type) << std::endl;
+        std::cout << "Destroying Column " << name << "@" << this << std::endl;
         for (size_t i = 0; i < rows.size(); i++)
         {
             delete rows[i];
@@ -229,6 +228,8 @@ class Schedule
 
         const std::deque<ScheduleEdit*>& getEditHistory();
         size_t getEditHistoryIndex();
+        // Clear the edit history. Call it when, for example, reading a Schedule from file.
+        void clearEditHistory();
         bool getEditedSinceWrite();
         void setEditedSinceWrite(bool to);
 
