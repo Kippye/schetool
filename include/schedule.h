@@ -93,12 +93,34 @@ struct Column
             rows.push_back(other.rows[i]->getCopy());
         }
 
-        std::cout << "Copied: " << name << " with " << rows.size() << " elements" << std::endl;
+        std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
+    }
+
+    Column& operator=(Column& other)
+    {
+        type = other.type;
+        name = other.name;
+        permanent = other.permanent;
+        flags = other.flags;
+        sort = other.sort;
+        sorted = other.sorted;
+        selectOptions = other.selectOptions;
+
+        rows.clear();
+
+        for (size_t i = 0; i < other.rows.size(); i++)
+        {
+            rows.push_back(other.rows[i]->getCopy());
+        }
+
+        std::cout << "Assigned column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
+        return *this;
     }
 
     ~Column()
     {
-        std::cout << "Destroying Column " << this->name << " at " << this << std::endl;
+        std::cout << "Destroying Column " << name << " at " << this << std::endl;
+        std::cout << (type) << std::endl;
         for (size_t i = 0; i < rows.size(); i++)
         {
             delete rows[i];
@@ -205,6 +227,8 @@ class Schedule
         void setScheduleName(const std::string& name);
         std::string getScheduleName();
 
+        const std::deque<ScheduleEdit*>& getEditHistory();
+        size_t getEditHistoryIndex();
         bool getEditedSinceWrite();
         void setEditedSinceWrite(bool to);
 
@@ -323,7 +347,7 @@ class Schedule
                 getMutableColumn(column)->rows[row] = other;
             }
 
-            m_schedule[column].sorted = false;
+            m_schedule.at(column).sorted = false;
             if (resort)
             {
                 sortColumns();
@@ -373,7 +397,7 @@ class Schedule
                     - getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Start), row)->getValue());
             }
 
-            m_schedule[column].sorted = false;
+            m_schedule.at(column).sorted = false;
             if (resort)
             {
                 sortColumns();

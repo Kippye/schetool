@@ -19,16 +19,17 @@ class ScheduleEdit
     protected:
         Schedule* m_schedule;
         bool m_isReverted = false;
+        SCHEDULE_EDIT_TYPE m_type;
     public:
-        SCHEDULE_EDIT_TYPE type;
         ScheduleEdit(Schedule* schedule, SCHEDULE_EDIT_TYPE type) 
         { 
             m_schedule = schedule;
-            this->type = type;
+            m_type = type;
         }
         virtual void revert();
         virtual void apply();
         bool getIsReverted() const;
+        SCHEDULE_EDIT_TYPE getType() const;
 };
 
 class ElementEditBase : public ScheduleEdit
@@ -44,6 +45,7 @@ class ElementEditBase : public ScheduleEdit
             m_elementType = elementType;
         }
 
+        std::pair<size_t, size_t> getPosition() const;
         SCHEDULE_TYPE getElementType() const;
 };
 
@@ -92,22 +94,19 @@ class RowEdit : public ScheduleEdit
 
         void apply() override;
 
-        bool getIsRemove()
+        bool getIsRemove() const
         {
             return m_isRemove;
+        }
+
+        size_t getRow() const
+        {
+            return m_row;
         }
 };
 
 class ColumnEdit : public ScheduleEdit
 {
-    // here i will need..
-    // m_isRemove
-    // the column's index
-    // maybe i should just make a copy of the ENTIRE Column? i need its properties too.
-    // it would also be an easy (if incredibly wasteful) way of making Column property edits, too
-    // the entire column's data (easier than for row, just get Column.rows)
-    // this is gonna be easy.
-
     private:
         bool m_isRemove = false;
         size_t m_column;
@@ -123,5 +122,15 @@ class ColumnEdit : public ScheduleEdit
         bool getIsRemove()
         {
             return m_isRemove;
+        }
+
+        size_t getColumn() const
+        {
+            return m_column;
+        }
+
+        const Column* const getColumnData() const
+        {
+            return m_columnData;
         }
 };

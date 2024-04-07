@@ -41,6 +41,16 @@ std::string Schedule::getScheduleName()
     return m_scheduleName;
 }
 
+const std::deque<ScheduleEdit*>& Schedule::getEditHistory()
+{
+    return m_editHistory;
+}
+
+size_t Schedule::getEditHistoryIndex()
+{
+    return m_editHistoryIndex;
+}
+
 bool Schedule::getEditedSinceWrite()
 {
     return m_editedSinceWrite;
@@ -72,7 +82,7 @@ size_t Schedule::getFlaggedColumnIndex(ScheduleElementFlags flags)
 {
     for (size_t i = 0; i < m_schedule.size(); i++)
     {
-        if (m_schedule[i].flags & flags)
+        if (m_schedule.at(i).flags & flags)
         {
             return i;
         }
@@ -83,7 +93,7 @@ size_t Schedule::getFlaggedColumnIndex(ScheduleElementFlags flags)
 // Private function, because it returns a mutable column pointer. NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
 Column* Schedule::getColumnWithFlags(ScheduleElementFlags flags)
 {
-    return &m_schedule[getFlaggedColumnIndex(flags)];
+    return &m_schedule.at(getFlaggedColumnIndex(flags));
 }
 
 Column* Schedule::getMutableColumn(size_t column)
@@ -91,15 +101,15 @@ Column* Schedule::getMutableColumn(size_t column)
     if (column > getColumnCount())
     {
         std::cout << "Schedule::getModifiableColumn: index out of range. Returning last column" << std::endl;
-        return &m_schedule[getColumnCount() - 1];
+        return &m_schedule.at(getColumnCount() - 1);
     }
-    return &m_schedule[column];
+    return &m_schedule.at(column);
 }
 
 // Sorts a copy of the column's rows. Then compares each element of the two rows vectors and returns a vector that contains which index of the OLD rows vector corresponds to that position in the NEW SORTED rows
 std::vector<size_t> Schedule::getColumnSortedNewIndices(size_t index)
 {
-    Column& column = m_schedule[index];
+    Column& column = m_schedule.at(index);
     std::vector<ElementBase*> rows = column.rows;
     std::vector<size_t> newIndices(rows.size());
     std::iota(newIndices.begin(), newIndices.end(), 0);
@@ -126,7 +136,7 @@ std::vector<Column>& Schedule::getMutableColumns()
 
 SelectOptions& Schedule::getColumnSelectOptions(size_t column)
 {
-    return m_schedule[column].selectOptions;
+    return m_schedule.at(column).selectOptions;
 }
 
 void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type)
@@ -135,21 +145,21 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type)
 
     if (type == SCH_SELECT)
     {
-        m_schedule[column].selectOptions.setIsMutable(true);
+        m_schedule.at(column).selectOptions.setIsMutable(true);
     }
     // setup for weekday type
     else if (type == SCH_WEEKDAY)
     {
-        m_schedule[column].selectOptions.clearOptions();
-        m_schedule[column].selectOptions.addOption(std::string("Monday"));
-        m_schedule[column].selectOptions.addOption(std::string("Tuesday"));
-        m_schedule[column].selectOptions.addOption(std::string("Wednesday"));
-        m_schedule[column].selectOptions.addOption(std::string("Thursday"));
-        m_schedule[column].selectOptions.addOption(std::string("Friday"));
-        m_schedule[column].selectOptions.addOption(std::string("Saturday"));
-        m_schedule[column].selectOptions.addOption(std::string("Sunday"));
+        m_schedule.at(column).selectOptions.clearOptions();
+        m_schedule.at(column).selectOptions.addOption(std::string("Monday"));
+        m_schedule.at(column).selectOptions.addOption(std::string("Tuesday"));
+        m_schedule.at(column).selectOptions.addOption(std::string("Wednesday"));
+        m_schedule.at(column).selectOptions.addOption(std::string("Thursday"));
+        m_schedule.at(column).selectOptions.addOption(std::string("Friday"));
+        m_schedule.at(column).selectOptions.addOption(std::string("Saturday"));
+        m_schedule.at(column).selectOptions.addOption(std::string("Sunday"));
         // TODO: set up colours as well
-        m_schedule[column].selectOptions.setIsMutable(false);
+        m_schedule.at(column).selectOptions.setIsMutable(false);
         // IMPORTANT!
         type = SCH_SELECT;
     }
@@ -158,23 +168,23 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type)
     // reset values to defaults of the (new?) type
     resetColumn(column, type);
     // read resetColumn description for why this is run after
-    m_schedule[column].type = type;
+    m_schedule.at(column).type = type;
     
     setEditedSinceWrite(true);
 }
 
 void Schedule::setColumnName(size_t column, const char* name)
 {
-    m_schedule[column].name = std::string(name);
+    m_schedule.at(column).name = std::string(name);
     setEditedSinceWrite(true);
 }
 
 void Schedule::setColumnSort(size_t column, COLUMN_SORT sortDirection)
 {
-    m_schedule[column].sort = sortDirection;
+    m_schedule.at(column).sort = sortDirection;
     if (sortDirection != COLUMN_SORT_NONE)
     {
-        m_schedule[column].sorted = false;
+        m_schedule.at(column).sorted = false;
         sortColumns();
     }
 
@@ -189,7 +199,7 @@ size_t Schedule::getColumnCount()
 // Return the number of rows in the schedule or 0 if there are no columns (which probably won't happen?) 
 size_t Schedule::getRowCount()
 {
-    return (m_schedule.size() > 0 ? m_schedule[0].rows.size() : 0);
+    return (m_schedule.size() > 0 ? m_schedule.at(0).rows.size() : 0);
 }
 
 // Sorts every column's rows based on "sorter" columns
@@ -197,7 +207,7 @@ void Schedule::sortColumns()
 {
     for (size_t sorterColumn = 0; sorterColumn < getColumnCount(); sorterColumn++)
     {
-        if (m_schedule[sorterColumn].sort != COLUMN_SORT_NONE)
+        if (m_schedule.at(sorterColumn).sort != COLUMN_SORT_NONE)
         {
             std::vector<size_t> newRowIndices = getColumnSortedNewIndices(sorterColumn);
 
@@ -206,7 +216,7 @@ void Schedule::sortColumns()
             {
                 // vector that will replace the old rows vector
                 std::vector<ElementBase*> sortedRows = {};
-                std::vector<ElementBase*>& unsortedRows = m_schedule[affectedColumn].rows;
+                std::vector<ElementBase*>& unsortedRows = m_schedule.at(affectedColumn).rows;
                 sortedRows.reserve(unsortedRows.size());
 
                 for (size_t rowIndex = 0; rowIndex < newRowIndices.size(); rowIndex++)
@@ -214,8 +224,8 @@ void Schedule::sortColumns()
                     sortedRows.push_back(unsortedRows[newRowIndices[rowIndex]]);
                 }
 
-                m_schedule[affectedColumn].rows = sortedRows;
-                m_schedule[affectedColumn].sorted = true;
+                m_schedule.at(affectedColumn).rows = sortedRows;
+                m_schedule.at(affectedColumn).sorted = true;
             }
             // NOTE: for now, we only sort by one column
             break;
@@ -226,14 +236,14 @@ void Schedule::sortColumns()
 // Updates all Select type elements in the Column, if the Column is the right type
 void Schedule::updateColumnSelects(size_t index)
 {
-    if (m_schedule[index].type == SCH_SELECT)
+    if (m_schedule.at(index).type == SCH_SELECT)
     {
-        for (size_t i = 0; i < m_schedule[index].rows.size(); i++)
+        for (size_t i = 0; i < m_schedule.at(index).rows.size(); i++)
         {
             getElementAsSpecial<SelectContainer>(index, i)->getValue().update();
         }
     }
-    m_schedule[index].selectOptions.modificationApplied();
+    m_schedule.at(index).selectOptions.modificationApplied();
 }
 
 void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
@@ -573,7 +583,7 @@ void Schedule::addColumn(size_t index, const Column& column, bool addToHistory)
 void Schedule::removeColumn(size_t column, bool addToHistory)
 {
     // a permanent column can't be removed
-    if (m_schedule[column].permanent == true) { return; }
+    if (m_schedule.at(column).permanent == true) { return; }
 
     Column* mutableColumn = getMutableColumn(column);
 
@@ -591,7 +601,8 @@ void Schedule::removeColumn(size_t column, bool addToHistory)
     }
     else
     {
-        m_schedule.erase(m_schedule.begin() + column);
+        // BUG why does erasing this one DELETE the last one??
+        m_schedule.erase(m_schedule.begin() + column); // invalidates pointers to Columns past this one
     }  
 
     setEditedSinceWrite(true);
@@ -599,7 +610,7 @@ void Schedule::removeColumn(size_t column, bool addToHistory)
 
 void Schedule::addScheduleEdit(ScheduleEdit* edit)
 {
-    std::cout << "Added Schedule Edit of type: " << edit->type << std::endl;
+    std::cout << "Added Schedule Edit of type: " << edit->getType() << std::endl;
     removeFollowingEditHistory();
     m_editHistory.push_back(edit);
     m_editHistoryIndex = m_editHistory.size() - 1;

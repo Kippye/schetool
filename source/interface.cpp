@@ -1,10 +1,11 @@
 #include "imgui.h"
-#include <main_menu_bar_gui.h>
 #include <iostream>
 #include <interface.h>
 #include <window.h>
 #include <gui.h>
 #include <schedule_gui.h>
+#include <main_menu_bar_gui.h>
+#include <edit_history_gui.h>
 
 void Interface::init(Window* windowManager, Input* input, Schedule* schedule, IO_Handler* ioHandler)
 {
@@ -25,6 +26,9 @@ void Interface::init(Window* windowManager, Input* input, Schedule* schedule, IO
 	// ADD GUIS
     addGUI(*(new MainMenuBarGui("MainMenuBarGui", m_ioHandler, m_schedule)));
     addGUI(*(new ScheduleGui("ScheduleGui", m_schedule)));
+	#if DEBUG
+	addGUI(*(new EditHistoryGui("EditHistoryGui", m_schedule)));
+	#endif
 }
 
 void Interface::addGUI(Gui& gui)

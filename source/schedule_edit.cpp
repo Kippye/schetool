@@ -15,6 +15,17 @@ bool ScheduleEdit::getIsReverted() const
     return m_isReverted;
 }
 
+SCHEDULE_EDIT_TYPE ScheduleEdit::getType() const
+{
+    return m_type;
+}
+
+// ElementEditBase
+std::pair<size_t, size_t> ElementEditBase::getPosition() const
+{
+    return std::pair<size_t, size_t>(m_row, m_column);
+}
+
 SCHEDULE_TYPE ElementEditBase::getElementType() const
 {
     return m_elementType;
