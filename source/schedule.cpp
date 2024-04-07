@@ -56,7 +56,7 @@ void Schedule::clearEditHistory()
 {
     if (m_editHistory.size() == 0) { return; }
 
-    for (int i = m_editHistory.size() - 1; i > m_editHistoryIndex; i--)
+    for (int i = m_editHistory.size() - 1; i > 0; i--)
     {
         delete m_editHistory[i];
     }

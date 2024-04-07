@@ -1,5 +1,10 @@
 #include <schedule_edit.h>
 
+ScheduleEdit::~ScheduleEdit()
+{
+
+}
+
 void ScheduleEdit::revert()
 {
     m_isReverted = true;
@@ -32,6 +37,16 @@ SCHEDULE_TYPE ElementEditBase::getElementType() const
 }
 
 // RowEdit
+RowEdit::~RowEdit()
+{
+    if (m_elementData.size() == 0) { return; }
+
+    for (size_t i = m_elementData.size() - 1; i > 0; i--)
+    {
+        delete m_elementData[i];
+    }
+}
+
 void RowEdit::revert()
 {
     // reverting a removal means adding the row back
@@ -72,6 +87,11 @@ ColumnEdit::ColumnEdit(Schedule* schedule, bool isRemove, size_t column, const C
     m_isRemove = isRemove;
     m_column = column;
     m_columnData = new Column(columnData);
+}
+
+ColumnEdit::~ColumnEdit()
+{
+    delete m_columnData;
 }
 
 void ColumnEdit::revert()

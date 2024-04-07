@@ -26,6 +26,7 @@ class ScheduleEdit
             m_schedule = schedule;
             m_type = type;
         }
+        virtual ~ScheduleEdit();
         virtual void revert();
         virtual void apply();
         bool getIsReverted() const;
@@ -83,12 +84,14 @@ class RowEdit : public ScheduleEdit
         // TODO: clean copy pointers at some point LEAK
         std::vector<ElementBase*> m_elementData = {};
     public:
-        RowEdit(Schedule* schedule, bool isRemove, size_t row, const std::vector<ElementBase*>& elementData) : ScheduleEdit(schedule, SCHEDULE_EDIT_ROW) 
+        RowEdit(Schedule* schedule, bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataCopy) : ScheduleEdit(schedule, SCHEDULE_EDIT_ROW) 
         {
             m_isRemove = isRemove;
             m_row = row;
-            m_elementData = elementData;
+            m_elementData = elementDataCopy;
         }
+
+        ~RowEdit() override;
 
         void revert() override;
 
@@ -114,6 +117,8 @@ class ColumnEdit : public ScheduleEdit
         Column* m_columnData;
     public:
         ColumnEdit(Schedule* schedule, bool isRemove, size_t column, const Column& columnData);
+
+        ~ColumnEdit() override;
 
         void revert() override;
 
