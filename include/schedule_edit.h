@@ -12,6 +12,15 @@ enum SCHEDULE_EDIT_TYPE
     SCHEDULE_EDIT_ELEMENT,
     SCHEDULE_EDIT_ROW,
     SCHEDULE_EDIT_COLUMN,
+    SCHEDULE_EDIT_COLUMN_PROPERTY
+};
+
+enum COLUMN_PROPERTY
+{
+    COLUMN_PROPERTY_NAME,
+    COLUMN_PROPERTY_TYPE,
+    COLUMN_PROPERTY_SELECT_OPTIONS,
+    COLUMN_PROPERTY_SORT,
 };
 
 class ScheduleEdit
@@ -62,7 +71,11 @@ class ElementEdit : public ElementEditBase
         T m_previousValue;
         T m_newValue;
     public:
-        ElementEdit(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue);
+        ElementEdit<T>(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(schedule, column, row, elementType) 
+        {
+            m_previousValue = previousValue;
+            m_newValue = newValue;
+        }
 
         void revert() override
         {
@@ -132,4 +145,34 @@ class ColumnEdit : public ScheduleEdit
         {
             return m_columnData;
         }
+};
+
+class ColumnPropertyEdit : public ScheduleEdit
+{
+    private:
+        size_t m_column;
+        Column* m_columnData;
+        Column* m_previousColumnData;
+        COLUMN_PROPERTY m_editedProperty;
+    public:
+        ColumnPropertyEdit(Schedule* schedule, size_t column, COLUMN_PROPERTY editedProperty, const Column& previousData, const Column& newData);
+
+        ~ColumnPropertyEdit() override;
+
+        void revert() override;
+
+        void apply() override;
+
+        size_t getColumn() const
+        {
+            return m_column;
+        }
+
+        COLUMN_PROPERTY getEditedProperty() const
+        {
+            return m_editedProperty;
+        }
+
+        // Returns the Column name from the previous data
+        std::string getColumnName() const;
 };

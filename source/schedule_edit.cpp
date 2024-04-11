@@ -31,15 +31,6 @@ ElementEditBase::ElementEditBase(Schedule* schedule, size_t column, size_t row, 
 }
 
 
-// ElementEdit
-template <typename T>
-ElementEdit<T>::ElementEdit(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(schedule, column, row, elementType) 
-{
-    m_previousValue = previousValue;
-    m_newValue = newValue;
-}
-
-
 // RowEdit
 RowEdit::RowEdit(Schedule* schedule, bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataCopy) : ScheduleEdit(schedule, SCHEDULE_EDIT_ROW) 
 {
@@ -136,4 +127,111 @@ void ColumnEdit::apply()
     }
 
     m_isReverted = false;
+}
+
+
+// ColumnPropertyEdit
+ColumnPropertyEdit::ColumnPropertyEdit(Schedule* schedule, size_t column, COLUMN_PROPERTY editedProperty, const Column& previousData, const Column& newData) : ScheduleEdit(schedule, SCHEDULE_EDIT_COLUMN_PROPERTY) 
+{
+    m_column = column;
+    m_editedProperty = editedProperty;
+    m_columnData = new Column();
+    m_previousColumnData = new Column();
+
+    switch (editedProperty)
+    {
+        case(COLUMN_PROPERTY_NAME):
+        {
+            m_previousColumnData->name = previousData.name;
+            m_columnData->name = newData.name;
+            break;
+        }
+        case(COLUMN_PROPERTY_TYPE):
+        {
+            m_previousColumnData->type = previousData.type;
+            m_columnData->type = newData.type;
+            break;
+        }
+        case(COLUMN_PROPERTY_SELECT_OPTIONS):
+        {
+            m_previousColumnData->selectOptions = previousData.selectOptions;
+            m_columnData->selectOptions = newData.selectOptions;
+            break;
+        }
+        case(COLUMN_PROPERTY_SORT):
+        {
+            m_previousColumnData->sort = previousData.sort;
+            m_columnData->sort = newData.sort;
+            break;
+        }
+    }
+}
+
+ColumnPropertyEdit::~ColumnPropertyEdit()
+{
+    delete m_previousColumnData;
+    delete m_columnData;
+}
+
+void ColumnPropertyEdit::revert()
+{
+    switch(m_editedProperty)
+    {
+        case(COLUMN_PROPERTY_NAME):
+        {
+            m_schedule->setColumnName(m_column, m_previousColumnData->name.c_str(), false);
+            break;
+        }
+        case(COLUMN_PROPERTY_TYPE):
+        {
+            m_schedule->setColumnType(m_column, m_previousColumnData->type, false); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
+            break;
+        }
+        case(COLUMN_PROPERTY_SELECT_OPTIONS): // NOTE: TODO: a select option update has to be run!
+        {
+            m_schedule->getColumnSelectOptions(m_column) = m_previousColumnData->selectOptions;
+            break;
+        }
+        case(COLUMN_PROPERTY_SORT):
+        {
+            m_schedule->setColumnSort(m_column, m_previousColumnData->sort, false);
+            break;
+        }
+    }
+
+    m_isReverted = true;
+} 
+
+void ColumnPropertyEdit::apply()
+{
+    switch(m_editedProperty)
+    {
+        case(COLUMN_PROPERTY_NAME):
+        {
+            m_schedule->setColumnName(m_column, m_columnData->name.c_str(), false);
+            break;
+        }
+        case(COLUMN_PROPERTY_TYPE):
+        {
+            m_schedule->setColumnType(m_column, m_columnData->type, false); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
+            break;
+        }
+        case(COLUMN_PROPERTY_SELECT_OPTIONS): // NOTE: TODO: a select option update has to be run!
+        {
+            m_schedule->getColumnSelectOptions(m_column) = m_columnData->selectOptions;
+            break;
+        }
+        case(COLUMN_PROPERTY_SORT):
+        {
+            m_schedule->setColumnSort(m_column, m_columnData->sort, false);
+            break;
+        }
+    }
+
+    m_isReverted = false;
+}
+
+std::string ColumnPropertyEdit::getColumnName() const
+{
+    return m_previousColumnData->name;
 }

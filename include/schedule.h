@@ -245,9 +245,9 @@ class Schedule
         // DO NOT USE UNLESS MEANING TO OVERWRITE THE ENTIRE SCHEDULE!
         std::vector<Column>& getMutableColumns();
         SelectOptions& getColumnSelectOptions(size_t column);
-        void setColumnType(size_t column, SCHEDULE_TYPE type);
-        void setColumnName(size_t column, const char* name);
-        void setColumnSort(size_t column, COLUMN_SORT sortDirection);
+        void setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory = true);
+        void setColumnName(size_t column, const char* name, bool addToHistory = true);
+        void setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory = true);
 
         size_t getColumnCount();
         size_t getRowCount();

@@ -10,7 +10,8 @@ enum SELECT_MODIFICATION
 {
     SELECT_MODIFICATION_REMOVE,
     SELECT_MODIFICATION_MOVE,
-    SELECT_MODIFICATION_CLEAR
+    SELECT_MODIFICATION_REPLACE,
+    SELECT_MODIFICATION_CLEAR,
 };
 
 struct SelectOptionChange
@@ -40,6 +41,7 @@ struct SelectOptions
         void removeOption(const std::string& option);
         void removeOption(size_t option);
         void moveOption(size_t firstIndex, size_t secondIndex);
+        void replaceOptions(const std::vector<std::string>& options);
         void clearOptions();
         void setIsMutable(bool to);
         bool getIsMutable() const;

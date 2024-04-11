@@ -70,6 +70,12 @@ void SelectOptions::moveOption(size_t firstIndex, size_t secondIndex)
     containers::move(m_options, firstIndex, secondIndex);
 }
 
+void SelectOptions::replaceOptions(const std::vector<std::string>& options)
+{
+    m_lastModification.replace(SELECT_MODIFICATION_REPLACE, 0, 0);
+    m_options = options;
+}
+
 void SelectOptions::clearOptions()
 {
     m_lastModification.replace(SELECT_MODIFICATION_CLEAR, 0, 0);

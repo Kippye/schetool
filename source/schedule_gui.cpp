@@ -365,8 +365,10 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 	name.reserve(COLUMN_NAME_MAX_LENGTH);
 	char* buf = name.data();
 	
-	ImGui::InputText(std::string("##columnName").append(std::to_string(column)).c_str(), buf, name.capacity());
-	m_schedule->setColumnName(column, buf);
+	if (ImGui::InputText(std::string("##columnName").append(std::to_string(column)).c_str(), buf, name.capacity(), ImGuiInputTextFlags_EnterReturnsTrue))
+	{
+		m_schedule->setColumnName(column, buf);
+	}
 
 	// select type (for non-permanent columns)
 	if (m_schedule->getColumn(column)->permanent == false)

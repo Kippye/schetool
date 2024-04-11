@@ -49,6 +49,16 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         columnEdit->getColumn());
                     break;
                 }
+                case (SCHEDULE_EDIT_COLUMN_PROPERTY):
+                {
+                    ColumnPropertyEdit* columnPropertyEdit = (ColumnPropertyEdit*)editHistory[i];
+                    COLUMN_PROPERTY editedProperty = columnPropertyEdit->getEditedProperty();
+                    sprintf(buf, "Column %s property %s at %zu", 
+                        columnPropertyEdit->getColumnName().c_str(),
+                        editedProperty == COLUMN_PROPERTY_NAME ? "Name" : (editedProperty == COLUMN_PROPERTY_TYPE ? "Type" : (editedProperty == COLUMN_PROPERTY_SELECT_OPTIONS ? "Select options" : "Sort")),
+                        columnPropertyEdit->getColumn());
+                    break;
+                }
             }
 
             ImGui::Selectable(buf, m_schedule->getEditHistoryIndex() == i);

@@ -153,9 +153,12 @@ SelectOptions& Schedule::getColumnSelectOptions(size_t column)
     return m_schedule.at(column).selectOptions;
 }
 
-void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type)
+void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory)
 {
     //if (type == m_schedule[column].type) { return; }
+
+    // for adding to edit history
+    Column previousData = Column(m_schedule.at(column));
 
     if (type == SCH_SELECT)
     {
@@ -183,23 +186,43 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type)
     resetColumn(column, type);
     // read resetColumn description for why this is run after
     m_schedule.at(column).type = type;
+
+    if (addToHistory)
+    {
+        addScheduleEdit(new ColumnPropertyEdit(this, column, COLUMN_PROPERTY_TYPE, previousData, m_schedule.at(column)));
+    }
     
     setEditedSinceWrite(true);
 }
 
-void Schedule::setColumnName(size_t column, const char* name)
+void Schedule::setColumnName(size_t column, const char* name, bool addToHistory)
 {
+    Column previousData = Column(m_schedule.at(column));
+
     m_schedule.at(column).name = std::string(name);
+
+    if (addToHistory)
+    {
+        addScheduleEdit(new ColumnPropertyEdit(this, column, COLUMN_PROPERTY_NAME, previousData, m_schedule.at(column)));
+    }
+
     setEditedSinceWrite(true);
 }
 
-void Schedule::setColumnSort(size_t column, COLUMN_SORT sortDirection)
+void Schedule::setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory)
 {
+    Column previousData = Column(m_schedule.at(column));
+
     m_schedule.at(column).sort = sortDirection;
     if (sortDirection != COLUMN_SORT_NONE)
     {
         m_schedule.at(column).sorted = false;
         sortColumns();
+    }
+
+    if (addToHistory)
+    {
+        addScheduleEdit(new ColumnPropertyEdit(this, column, COLUMN_PROPERTY_SORT, previousData, m_schedule.at(column)));
     }
 
     setEditedSinceWrite(true);
