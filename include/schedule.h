@@ -236,7 +236,6 @@ class Schedule
         // Clears the Schedule and deletes all the Columns.
         void clearSchedule();
         // Replaces the m_schedule vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
-        // LEAK ?
         void replaceSchedule(std::vector<Column>& columns);
 
         // Get a constant pointer to the Column at the index. TODO: Return const ref instead

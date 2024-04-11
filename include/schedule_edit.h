@@ -21,16 +21,19 @@ class ScheduleEdit
         bool m_isReverted = false;
         SCHEDULE_EDIT_TYPE m_type;
     public:
-        ScheduleEdit(Schedule* schedule, SCHEDULE_EDIT_TYPE type) 
-        { 
-            m_schedule = schedule;
-            m_type = type;
-        }
+        ScheduleEdit(Schedule* schedule, SCHEDULE_EDIT_TYPE type);
         virtual ~ScheduleEdit();
         virtual void revert();
         virtual void apply();
-        bool getIsReverted() const;
-        SCHEDULE_EDIT_TYPE getType() const;
+        bool getIsReverted() const
+        {
+            return m_isReverted;
+        }
+
+        SCHEDULE_EDIT_TYPE getType() const
+        {
+            return m_type;
+        }
 };
 
 class ElementEditBase : public ScheduleEdit
@@ -39,15 +42,17 @@ class ElementEditBase : public ScheduleEdit
         SCHEDULE_TYPE m_elementType;
         size_t m_column, m_row;
     public:
-        ElementEditBase(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType) : ScheduleEdit(schedule, SCHEDULE_EDIT_ELEMENT) 
+        ElementEditBase(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType);
+
+        std::pair<size_t, size_t> getPosition() const
         {
-            m_column = column;
-            m_row = row;
-            m_elementType = elementType;
+            return std::pair<size_t, size_t>(m_row, m_column);
         }
 
-        std::pair<size_t, size_t> getPosition() const;
-        SCHEDULE_TYPE getElementType() const;
+        SCHEDULE_TYPE getElementType() const
+        {
+            return m_elementType;
+        }
 };
 
 template <typename T>
@@ -57,11 +62,7 @@ class ElementEdit : public ElementEditBase
         T m_previousValue;
         T m_newValue;
     public:
-        ElementEdit(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(schedule, column, row, elementType) 
-        {
-            m_previousValue = previousValue;
-            m_newValue = newValue;
-        }
+        ElementEdit(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue);
 
         void revert() override
         {
@@ -81,15 +82,9 @@ class RowEdit : public ScheduleEdit
     private:
         bool m_isRemove = false;
         size_t m_row;
-        // TODO: clean copy pointers at some point LEAK
         std::vector<ElementBase*> m_elementData = {};
     public:
-        RowEdit(Schedule* schedule, bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataCopy) : ScheduleEdit(schedule, SCHEDULE_EDIT_ROW) 
-        {
-            m_isRemove = isRemove;
-            m_row = row;
-            m_elementData = elementDataCopy;
-        }
+        RowEdit(Schedule* schedule, bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataCopy);
 
         ~RowEdit() override;
 
@@ -113,7 +108,6 @@ class ColumnEdit : public ScheduleEdit
     private:
         bool m_isRemove = false;
         size_t m_column;
-        // TODO: clean Element LEAK
         Column* m_columnData;
     public:
         ColumnEdit(Schedule* schedule, bool isRemove, size_t column, const Column& columnData);
@@ -124,7 +118,7 @@ class ColumnEdit : public ScheduleEdit
 
         void apply() override;
 
-        bool getIsRemove()
+        bool getIsRemove() const
         {
             return m_isRemove;
         }

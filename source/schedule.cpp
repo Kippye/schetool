@@ -535,8 +535,6 @@ std::vector<ElementBase*> Schedule::getRow(size_t index)
 
 void Schedule::addDefaultColumn(size_t index, bool addToHistory)
 {
-    // TODO: add to history
-
     time_t t = std::time(nullptr);
     tm creationTime = *std::localtime(&t);
 

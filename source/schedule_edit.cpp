@@ -1,5 +1,11 @@
 #include <schedule_edit.h>
 
+ScheduleEdit::ScheduleEdit(Schedule* schedule, SCHEDULE_EDIT_TYPE type) 
+{ 
+    m_schedule = schedule;
+    m_type = type;
+}
+
 ScheduleEdit::~ScheduleEdit()
 {
 
@@ -15,28 +21,33 @@ void ScheduleEdit::apply()
     m_isReverted = false;
 }
 
-bool ScheduleEdit::getIsReverted() const
-{
-    return m_isReverted;
-}
-
-SCHEDULE_EDIT_TYPE ScheduleEdit::getType() const
-{
-    return m_type;
-}
 
 // ElementEditBase
-std::pair<size_t, size_t> ElementEditBase::getPosition() const
+ElementEditBase::ElementEditBase(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType) : ScheduleEdit(schedule, SCHEDULE_EDIT_ELEMENT) 
 {
-    return std::pair<size_t, size_t>(m_row, m_column);
+    m_column = column;
+    m_row = row;
+    m_elementType = elementType;
 }
 
-SCHEDULE_TYPE ElementEditBase::getElementType() const
+
+// ElementEdit
+template <typename T>
+ElementEdit<T>::ElementEdit(Schedule* schedule, size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(schedule, column, row, elementType) 
 {
-    return m_elementType;
+    m_previousValue = previousValue;
+    m_newValue = newValue;
 }
+
 
 // RowEdit
+RowEdit::RowEdit(Schedule* schedule, bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataCopy) : ScheduleEdit(schedule, SCHEDULE_EDIT_ROW) 
+{
+    m_isRemove = isRemove;
+    m_row = row;
+    m_elementData = elementDataCopy;
+}
+
 RowEdit::~RowEdit()
 {
     if (m_elementData.size() == 0) { return; }
@@ -80,6 +91,7 @@ void RowEdit::apply()
 
     m_isReverted = false;
 }
+
 
 // ColumnEdit
 ColumnEdit::ColumnEdit(Schedule* schedule, bool isRemove, size_t column, const Column& columnData) : ScheduleEdit(schedule, SCHEDULE_EDIT_COLUMN) 

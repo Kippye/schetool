@@ -40,8 +40,6 @@ void DataConverter::setupObjectTable()
 
 int DataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule)
 {
-    // TODO: check if path is valid
-
     DataTable data;
 
     for (size_t c = 0; c < schedule.size(); c++)
@@ -114,7 +112,6 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 {
     std::vector<Column> scheduleCopy = schedule;
 
-    // TODO: check if path is valid
     BLFFile file = readFile(path, m_objects);
 
     // clear the provided copy just in case
@@ -130,7 +127,6 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     // loop through the BLF_Columns and add them to the schedule as Columns
     for (size_t c = 0; c < loadedColumns.getSize(); c++)
     {
-        // LEAK ?
         Column column = Column(
             std::vector<ElementBase*>{}, 
             (SCHEDULE_TYPE)loadedColumns[c]->type, 
