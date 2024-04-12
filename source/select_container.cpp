@@ -1,7 +1,7 @@
 #include <select_container.h>
 #include <util.h>
 
-void SelectOptionChange::replace(SELECT_MODIFICATION type, size_t firstIndex, size_t secondIndex)
+void SelectOptionChange::replace(OPTION_MODIFICATION type, size_t firstIndex, size_t secondIndex)
 {
     this->type = type;
     this->firstIndex = firstIndex;
@@ -52,7 +52,7 @@ void SelectOptions::removeOption(const std::string& option)
     {
         if (m_options[i] == option)
         {
-            m_lastModification.replace(SELECT_MODIFICATION_REMOVE, i, i);
+            m_lastModification.replace(OPTION_MODIFICATION_REMOVE, i, i);
             m_options.erase(m_options.begin() + i);
         }
     }
@@ -60,25 +60,25 @@ void SelectOptions::removeOption(const std::string& option)
 
 void SelectOptions::removeOption(size_t option)
 {
-    m_lastModification.replace(SELECT_MODIFICATION_REMOVE, option, option);
+    m_lastModification.replace(OPTION_MODIFICATION_REMOVE, option, option);
     m_options.erase(m_options.begin() + option);
 }
 
 void SelectOptions::moveOption(size_t firstIndex, size_t secondIndex)
 {
-    m_lastModification.replace(SELECT_MODIFICATION_MOVE, firstIndex, secondIndex);
+    m_lastModification.replace(OPTION_MODIFICATION_MOVE, firstIndex, secondIndex);
     containers::move(m_options, firstIndex, secondIndex);
 }
 
 void SelectOptions::replaceOptions(const std::vector<std::string>& options)
 {
-    m_lastModification.replace(SELECT_MODIFICATION_REPLACE, 0, 0);
+    m_lastModification.replace(OPTION_MODIFICATION_REPLACE, 0, 0);
     m_options = options;
 }
 
 void SelectOptions::clearOptions()
 {
-    m_lastModification.replace(SELECT_MODIFICATION_CLEAR, 0, 0);
+    m_lastModification.replace(OPTION_MODIFICATION_CLEAR, 0, 0);
     m_options.clear();
 }
 
@@ -138,25 +138,41 @@ void SelectContainer::update()
 
     if (lastChange.applied) { return; }
 
+    std::cout << "UPDATE " << lastChange.type << std::endl;
+
     switch(lastChange.type)
     {
-        // An option was removed. Reduce all indices after the removed by 1
-        case (SELECT_MODIFICATION_REMOVE):
+        case(OPTION_MODIFICATION_ADD):
         {
-            m_selection.erase(lastChange.firstIndex);
+            // Currently, options can only be "pushed back" so no selections are invalidated. We chillin.
+            break;
+        }
+        // An option was removed. Reduce all indices after the removed by 1
+        case (OPTION_MODIFICATION_REMOVE):
+        {
+            std::cout << "herase"  << std::endl;
+            if (m_selection.find(lastChange.firstIndex) != m_selection.end()) 
+            { 
+                m_selection.erase(lastChange.firstIndex); 
+            }
+            std::cout << "herase"  << std::endl;
 
             for (size_t i = lastChange.firstIndex + 1; i < m_options->getOptions().size() + 1; i++)
             {
+                std::cout << i << std::endl;
                 if (m_selection.find(i) != m_selection.end())
                 {
                     m_selection.erase(i);
+                    std::cout << "Erased " << i << " and ";
                     m_selection.insert(i - 1);
+                    std::cout << "inserted " << i - 1 << std::endl;
                 }
+                std::cout << lastChange.firstIndex + 1 << "; " << m_options->getOptions().size() << std::endl;
             }
             break;
         }
         // An option was moved from one index to another. 
-        case (SELECT_MODIFICATION_MOVE):
+        case (OPTION_MODIFICATION_MOVE):
         {
             bool addSecondIndex = false;
 
@@ -198,10 +214,15 @@ void SelectContainer::update()
             }
             break;
         }
-        case (SELECT_MODIFICATION_CLEAR):
+        case (OPTION_MODIFICATION_REPLACE):
+        {
+            // TODO HOW??
+        }
+        case (OPTION_MODIFICATION_CLEAR):
         {
             m_selection.clear();
             break;
         }
     }
+    std::cout << "Finished update" << std::endl;
 }

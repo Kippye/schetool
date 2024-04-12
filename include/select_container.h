@@ -6,23 +6,25 @@
 
 const size_t SELECT_OPTION_COUNT_MAX = 20;
 
-enum SELECT_MODIFICATION
+enum OPTION_MODIFICATION
 {
-    SELECT_MODIFICATION_REMOVE,
-    SELECT_MODIFICATION_MOVE,
-    SELECT_MODIFICATION_REPLACE,
-    SELECT_MODIFICATION_CLEAR,
+    /* NOTE: OPTION_MODIFICATION_ADD doesn't update the SelectOptionChange since Selects don't need to be updated. */
+    OPTION_MODIFICATION_ADD,
+    OPTION_MODIFICATION_REMOVE,
+    OPTION_MODIFICATION_MOVE,
+    OPTION_MODIFICATION_REPLACE,
+    OPTION_MODIFICATION_CLEAR,
 };
 
 struct SelectOptionChange
 {
-    SELECT_MODIFICATION type;
+    OPTION_MODIFICATION type;
     size_t firstIndex;
     size_t secondIndex;
     bool applied;
 
     public:
-        void replace(SELECT_MODIFICATION type, size_t firstIndex, size_t secondIndex);
+        void replace(OPTION_MODIFICATION type, size_t firstIndex, size_t secondIndex);
 };
 
 struct SelectOptions

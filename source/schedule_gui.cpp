@@ -245,13 +245,14 @@ void ScheduleGui::draw(Window& window, Input& input)
 											m_editorRow = row;
 											m_editorSelect = value;
 											m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+											m_editorHasMadeEdits = false;
 											ImGui::OpenPopup("Editor");
 										}
 									}
 									if (column == m_editorColumn && row == m_editorRow)
 									{
 										displayEditor(SCH_SELECT);
-										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
+										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false && m_editorHasMadeEdits)
 										{
 											m_schedule->setElementValue<SelectContainer>(column, row, m_editorSelect);
 										}
@@ -277,12 +278,13 @@ void ScheduleGui::draw(Window& window, Input& input)
 										m_editorRow = row;
 										m_editorTime = value;
 										m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+										m_editorHasMadeEdits = false;
 										ImGui::OpenPopup("Editor");
 									}
 									if (column == m_editorColumn && row == m_editorRow)
 									{
 										displayEditor(SCH_TIME);
-										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
+										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false && m_editorHasMadeEdits)
 										{
 											m_schedule->setElementValue<TimeContainer>(column, row, m_editorTime);
 										}
@@ -310,12 +312,13 @@ void ScheduleGui::draw(Window& window, Input& input)
 										m_editorViewedMonth = m_editorDate.getTime()->tm_mon;
 										m_editorViewedYear = m_editorDate.getTime()->tm_year;
 										m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+										m_editorHasMadeEdits = false;
 										ImGui::OpenPopup("Editor");
 									}
 									if (column == m_editorColumn && row == m_editorRow)
 									{
 										displayEditor(SCH_DATE);
-										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false)
+										if (m_editorOpenLastFrame == true && m_editorOpenThisFrame == false && m_editorHasMadeEdits)
 										{
 											m_schedule->setElementValue<DateContainer>(column, row, m_editorDate);
 										}
@@ -440,12 +443,12 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 // Display the time editor popup's contents. The returned bool indicates whether any of the elements were edited.
 bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 {
-	bool valueEdited = false;
 	// give old current open state to the last frame's state
 	m_editorOpenLastFrame = m_editorOpenThisFrame;
 
 	if (ImGui::BeginPopupEx(ImGui::GetID("Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
 	{
+		std::cout << "displayued" << std::endl;
 		// TODO clean up / make the positioning more precise!
 		ImGuiDir dir = ImGuiDir_Down;
 		ImGuiWindow* popup = ImGui::GetCurrentWindow();
@@ -474,7 +477,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 						hourValue = std::stoi(hourBuf);
 					}
 					m_editorTime.setTime(hourValue, m_editorTime.getMinutes());
-					valueEdited = true;
+					m_editorHasMadeEdits = true;
 				}
 				ImGui::SameLine();
 				formatTime.tm_min = m_editorTime.getMinutes();
@@ -489,7 +492,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 						minValue = std::stoi(minBuf);
 					}
 					m_editorTime.setTime(m_editorTime.getHours(), minValue);
-					valueEdited = true;
+					m_editorHasMadeEdits = true;
 				}
 
 				break;
@@ -527,7 +530,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 						m_editorDate.setYear(m_editorViewedYear, false);
 						m_editorDate.setMonth(m_editorViewedMonth);
 						m_editorDate.setMonthDay(day); 
-						valueEdited = true;
+						m_editorHasMadeEdits = true;
 					}
 					if (day == m_editorDate.getTime()->tm_mday)
 					{
@@ -545,6 +548,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 			{
 				auto selection = m_editorSelect.getSelection();
 				size_t selectedCount = selection.size();
+				std::cout << "gotsel" << std::endl;
 				const std::vector<std::string>& optionNames = m_schedule->getColumnSelectOptions(m_editorColumn).getOptions();
 
 				std::vector<size_t> selectionIndices = {};
@@ -553,6 +557,8 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				{
 					selectionIndices.push_back(s);
 				}
+
+				std::cout << "pushed pee" << std::endl;
 
 				// sort indices so that the same options are always displayed in the same order
 				std::sort(std::begin(selectionIndices), std::end(selectionIndices));
@@ -563,10 +569,13 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##EditorSelectedOption").append(std::to_string(i)).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
 					{
 						m_editorSelect.setSelected(selectionIndices[i], false);
+						m_editorHasMadeEdits = true;
 					}
 					ImGui::SameLine();
 					// ImGui::PopStyleColor(1);
 				}
+
+				std::cout << "firdstloop" << std::endl;
 
 				// add new options
 				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
@@ -579,14 +588,18 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					{
 						if (std::string(buf).empty() == false)
 						{
-							m_schedule->getColumnSelectOptions(m_editorColumn).addOption(std::string(buf));
+							m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_ADD, 0, 0, std::vector<std::string>{std::string(buf)});
 							m_editorSelect.setSelected(m_schedule->getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
+							m_editorHasMadeEdits = true;
 							// NOTE: break here because otherwise the start and end of the function kind of go out of sync
 							break;
 						}
 					}
 				}
 
+				std::cout << "secondloop" << std::endl;
+
+				// display existing options
 				for (size_t i = 0; i < optionNames.size(); i++)
 				{
 					bool selected = selection.find(i) != selection.end();
@@ -595,11 +608,12 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					{
 						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
 						{
-							m_schedule->getColumnSelectOptions(m_editorColumn).removeOption(i);
+							m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_REMOVE, i, i);
 							m_editorSelect.update(); // update the m_editorSelect separately!
 							m_schedule->updateColumnSelects(m_editorColumn);
+							m_editorHasMadeEdits = true;
 							// break because the whole thing must be restarted now
-							break;
+							goto break_select_case;
 						}
 						ImGui::SameLine();
 					}
@@ -609,7 +623,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
 					{
 						m_editorSelect.setSelected(i, selected);
-						valueEdited = true;
+						m_editorHasMadeEdits = true;
 					}
 
 					// drag to reorder options
@@ -620,9 +634,10 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 							size_t i_next = i + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
 							if (i_next >= 0 && i_next < optionNames.size())
 							{
-								m_schedule->getColumnSelectOptions(m_editorColumn).moveOption(i, i_next);
+								m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_MOVE, i, i_next);
 								m_editorSelect.update();
 								m_schedule->updateColumnSelects(m_editorColumn);
+								m_editorHasMadeEdits = true;
 								ImGui::ResetMouseDragDelta();
 								break;
 							}
@@ -634,6 +649,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 			}
 			default: return false;
 		}
+		break_select_case:
 
 		m_editorOpenThisFrame = true;
 		ImGui::EndPopup();
@@ -643,7 +659,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 		m_editorOpenThisFrame = false;
 	}
 
-	return valueEdited;
+	return m_editorHasMadeEdits;
 }
 
 int ScheduleGui::filterNumbers(ImGuiInputTextCallbackData* data)

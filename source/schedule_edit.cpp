@@ -187,9 +187,9 @@ void ColumnPropertyEdit::revert()
             m_schedule->setColumnType(m_column, m_previousColumnData->type, false); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
             break;
         }
-        case(COLUMN_PROPERTY_SELECT_OPTIONS): // NOTE: TODO: a select option update has to be run!
+        case(COLUMN_PROPERTY_SELECT_OPTIONS):
         {
-            m_schedule->getColumnSelectOptions(m_column) = m_previousColumnData->selectOptions;
+            m_schedule->modifyColumnSelectOptions(m_column, OPTION_MODIFICATION_REPLACE, 0, 0, m_previousColumnData->selectOptions.getOptions(), false);
             break;
         }
         case(COLUMN_PROPERTY_SORT):
@@ -216,9 +216,9 @@ void ColumnPropertyEdit::apply()
             m_schedule->setColumnType(m_column, m_columnData->type, false); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
             break;
         }
-        case(COLUMN_PROPERTY_SELECT_OPTIONS): // NOTE: TODO: a select option update has to be run!
+        case(COLUMN_PROPERTY_SELECT_OPTIONS):
         {
-            m_schedule->getColumnSelectOptions(m_column) = m_columnData->selectOptions;
+            m_schedule->modifyColumnSelectOptions(m_column, OPTION_MODIFICATION_REPLACE, 0, 0, m_columnData->selectOptions.getOptions(), false);
             break;
         }
         case(COLUMN_PROPERTY_SORT):

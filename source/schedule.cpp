@@ -148,9 +148,53 @@ std::vector<Column>& Schedule::getMutableColumns()
     return m_schedule;
 }
 
-SelectOptions& Schedule::getColumnSelectOptions(size_t column)
+const SelectOptions& Schedule::getColumnSelectOptions(size_t column)
 {
     return m_schedule.at(column).selectOptions;
+}
+
+void Schedule::modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex, size_t secondIndex, const std::vector<std::string>& optionNames, bool addToHistory)
+{
+    Column previousData = Column(m_schedule.at(column));
+
+    switch(selectModification)
+    {
+        case(OPTION_MODIFICATION_ADD):
+        { 
+            if (optionNames.size() == 0)
+            {
+                std::cout << "Schedule::modifyColumnSelectOptions: Failed to add Select option because no name was provided in the arguments" << std::endl;
+                return;
+            }
+            m_schedule.at(column).selectOptions.addOption(optionNames[0]);
+            break;
+        }
+        case(OPTION_MODIFICATION_REMOVE):
+        { 
+            m_schedule.at(column).selectOptions.removeOption(firstIndex);
+            break;
+        }
+        case(OPTION_MODIFICATION_MOVE):
+        { 
+            m_schedule.at(column).selectOptions.moveOption(firstIndex, secondIndex);
+            break;
+        }
+        case(OPTION_MODIFICATION_CLEAR):
+        { 
+            m_schedule.at(column).selectOptions.clearOptions();
+            break;
+        }
+        case(OPTION_MODIFICATION_REPLACE):
+        { 
+            m_schedule.at(column).selectOptions.replaceOptions(optionNames);
+            break;
+        }
+    }
+
+    if (addToHistory)
+    {
+        addScheduleEdit(new ColumnPropertyEdit(this, column, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, m_schedule.at(column)));
+    }
 }
 
 void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory)
@@ -271,16 +315,18 @@ void Schedule::sortColumns()
 }
 
 // Updates all Select type elements in the Column, if the Column is the right type
-void Schedule::updateColumnSelects(size_t index)
+void Schedule::updateColumnSelects(size_t column)
 {
-    if (m_schedule.at(index).type == SCH_SELECT)
+    if (m_schedule.at(column).type == SCH_SELECT)
     {
-        for (size_t i = 0; i < m_schedule.at(index).rows.size(); i++)
+        for (size_t i = 0; i < m_schedule.at(column).rows.size(); i++)
         {
-            getElementAsSpecial<SelectContainer>(index, i)->getValue().update();
+            std::cout << "Updating element " << i << std::endl;
+            getElementAsSpecial<SelectContainer>(column, i)->getValueReference().update();
         }
     }
-    m_schedule.at(index).selectOptions.modificationApplied();
+    m_schedule.at(column).selectOptions.modificationApplied();
+    std::cout << "done updating" << std::endl;
 }
 
 void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
@@ -291,7 +337,7 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
     time_t t = std::time(nullptr);
     tm creationTime = *std::localtime(&t);
 
-    switch (type) 
+    switch(type) 
     {
         case(SCH_BOOL):
         {
