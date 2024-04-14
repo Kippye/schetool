@@ -76,10 +76,6 @@ void Schedule::setEditedSinceWrite(bool to)
 
 void Schedule::clearSchedule()
 {
-    for (Column& column: m_schedule)
-    {
-        delete &column;
-    }
     m_schedule.clear();
 }
 
@@ -314,21 +310,6 @@ void Schedule::sortColumns()
     }
 }
 
-// Updates all Select type elements in the Column, if the Column is the right type
-void Schedule::updateColumnSelects(size_t column)
-{
-    if (m_schedule.at(column).type == SCH_SELECT)
-    {
-        for (size_t i = 0; i < m_schedule.at(column).rows.size(); i++)
-        {
-            std::cout << "Updating element " << i << std::endl;
-            getElementAsSpecial<SelectContainer>(column, i)->getValueReference().update();
-        }
-    }
-    m_schedule.at(column).selectOptions.modificationApplied();
-    std::cout << "done updating" << std::endl;
-}
-
 void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
 {
     Column& column = *getMutableColumn(index);
@@ -379,7 +360,9 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
                 {
                     column.selectOptions.clearOptions();
                 }
-                setElement(index, row, (ElementBase*)new Element<SelectContainer>(type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime)), false);
+                auto selectElement = new Element<SelectContainer>(type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime));
+                selectElement->getValueReference().listenToCallback();
+                setElement(index, row, (ElementBase*)selectElement, false);
             }     
             break;
         }
@@ -445,6 +428,7 @@ void Schedule::addRow(size_t index, bool addToHistory)
                 case(SCH_SELECT):
                 { 
                     columnValues.push_back(new Element<SelectContainer>(column.type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime)));      
+                    ((Element<SelectContainer>*)columnValues.back())->getValueReference().listenToCallback();
                     break;
                 }
                 case(SCH_TIME):
@@ -504,6 +488,7 @@ void Schedule::addRow(size_t index, bool addToHistory)
                 case(SCH_SELECT):
                 { 
                     columnValues.insert(columnValues.begin() + index, new Element<SelectContainer>(column.type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime)));      
+                    ((Element<SelectContainer>*)columnValues.at(index))->getValueReference().listenToCallback();
                     break;
                 }
                 case(SCH_TIME):
@@ -636,6 +621,7 @@ void Schedule::addDefaultColumn(size_t index, bool addToHistory)
 }
 
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
+// TODO: FIX SELECTS PROBABLY
 void Schedule::addColumn(size_t index, const Column& column, bool addToHistory)
 {
     std::cout << "Adding column: " << column.name << std::endl;

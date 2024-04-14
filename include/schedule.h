@@ -16,6 +16,8 @@
 #include <iostream>
 
 class ScheduleEdit;
+template<typename T>
+class ElementEdit;
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
@@ -96,7 +98,7 @@ struct Column
         std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
     }
 
-    Column& operator=(Column& other)
+    Column& operator=(const Column& other)
     {
         type = other.type;
         name = other.name;
@@ -255,7 +257,6 @@ class Schedule
         size_t getRowCount();
 
         void sortColumns();
-        void updateColumnSelects(size_t index);
 
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);

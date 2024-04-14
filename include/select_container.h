@@ -1,8 +1,11 @@
 #pragma once
 
+#include <functional>
 #include <string>
 #include <set>
 #include <vector>
+#include <map>
+#include <cstdint>
 
 const size_t SELECT_OPTION_COUNT_MAX = 20;
 
@@ -21,7 +24,6 @@ struct SelectOptionChange
     OPTION_MODIFICATION type;
     size_t firstIndex;
     size_t secondIndex;
-    bool applied;
 
     public:
         void replace(OPTION_MODIFICATION type, size_t firstIndex, size_t secondIndex);
@@ -32,13 +34,17 @@ struct SelectOptions
     private:
         std::vector<std::string> m_options = {};
         SelectOptionChange m_lastModification;
+        std::map<intptr_t, std::function<void(const SelectOptionChange&)>> m_callbacks = {};
         bool m_mutable;
+        void invokeCallback();
     public:
         SelectOptions();
         SelectOptions(const std::vector<std::string>& options);
 
         const std::vector<std::string>& getOptions() const;
         const SelectOptionChange& getLastChange() const;
+        void addCallbackListener(intptr_t listenerPointer, std::function<void(const SelectOptionChange&)>& listener);
+        void removeCallbackListener(intptr_t listenerPointer);
         void addOption(const std::string& option);
         void removeOption(const std::string& option);
         void removeOption(size_t option);
@@ -56,9 +62,16 @@ struct SelectContainer
     private:
         std::set<size_t> m_selection;
         SelectOptions* m_options;
+        std::function<void(const SelectOptionChange&)> updateCallback = std::function<void(const SelectOptionChange&)>([&](const SelectOptionChange& lastChange)
+        {
+            update(lastChange);
+        });
     public:
         SelectContainer();
-        SelectContainer(SelectOptions& options) { m_options = &options; }
+        SelectContainer(SelectOptions& options);
+        SelectContainer(const SelectContainer& other);
+        SelectContainer& operator=(const SelectContainer& other);
+        ~SelectContainer();
 
         friend bool operator<(const SelectContainer& left, const SelectContainer& right)
         {
@@ -125,5 +138,6 @@ struct SelectContainer
         const std::set<size_t> getSelection() const;
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
-        void update();
+        void listenToCallback();
+        void update(const SelectOptionChange& lastChange);
 };

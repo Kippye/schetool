@@ -54,7 +54,7 @@ class Element : public ElementBase
         {
             return m_value;
         }
-        void setValue(const T value)
+        void setValue(const T& value)
         {
             m_value = value;
         }
