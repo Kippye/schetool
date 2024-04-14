@@ -6,7 +6,6 @@ void SelectOptionChange::replace(OPTION_MODIFICATION type, size_t firstIndex, si
     this->type = type;
     this->firstIndex = firstIndex;
     this->secondIndex = secondIndex;
-    applied = false;
 }
 
 SelectOptions::SelectOptions()
@@ -19,6 +18,15 @@ SelectOptions::SelectOptions(const std::vector<std::string>& options)
     m_options = options;
 }
 
+void SelectOptions::invokeCallback()
+{
+    for (auto& listener: m_callbacks)
+    {
+        listener.second(m_lastModification);
+    }
+}
+
+
 const std::vector<std::string>& SelectOptions::getOptions() const
 {
     return m_options;
@@ -27,6 +35,20 @@ const std::vector<std::string>& SelectOptions::getOptions() const
 const SelectOptionChange& SelectOptions::getLastChange() const
 {
     return m_lastModification;
+}
+
+void SelectOptions::addCallbackListener(intptr_t listenerPointer, std::function<void(const SelectOptionChange&)>& listener)
+{
+    m_callbacks.insert({listenerPointer, listener});
+    std::cout << "Added callback listener @" << listenerPointer << std::endl;
+}
+
+void SelectOptions::removeCallbackListener(intptr_t listenerPointer)
+{
+    if (m_callbacks.find(listenerPointer) != m_callbacks.end())
+    {
+        m_callbacks.erase(listenerPointer);
+    }
 }
 
 void SelectOptions::setIsMutable(bool isMutable)
@@ -54,44 +76,69 @@ void SelectOptions::removeOption(const std::string& option)
         {
             m_lastModification.replace(OPTION_MODIFICATION_REMOVE, i, i);
             m_options.erase(m_options.begin() + i);
+            break;
         }
     }
+    invokeCallback();
 }
 
 void SelectOptions::removeOption(size_t option)
 {
     m_lastModification.replace(OPTION_MODIFICATION_REMOVE, option, option);
     m_options.erase(m_options.begin() + option);
+    invokeCallback();
 }
 
 void SelectOptions::moveOption(size_t firstIndex, size_t secondIndex)
 {
     m_lastModification.replace(OPTION_MODIFICATION_MOVE, firstIndex, secondIndex);
     containers::move(m_options, firstIndex, secondIndex);
+    invokeCallback();
 }
 
 void SelectOptions::replaceOptions(const std::vector<std::string>& options)
 {
     m_lastModification.replace(OPTION_MODIFICATION_REPLACE, 0, 0);
     m_options = options;
+    invokeCallback();
 }
 
 void SelectOptions::clearOptions()
 {
     m_lastModification.replace(OPTION_MODIFICATION_CLEAR, 0, 0);
     m_options.clear();
-}
-
-// TEMP? idk this seems real unnecessary
-void SelectOptions::modificationApplied()
-{
-    m_lastModification.applied = true;
+    invokeCallback();
 }
 
 
 SelectContainer::SelectContainer()
 {
 
+}
+
+SelectContainer::SelectContainer(SelectOptions& options) 
+{ 
+    m_options = &options;
+    m_options->addCallbackListener(intptr_t(this), updateCallback);
+}
+
+SelectContainer::SelectContainer(const SelectContainer& other) : SelectContainer(*other.m_options)
+{
+    m_selection = other.m_selection;
+}
+
+SelectContainer& SelectContainer::operator=(const SelectContainer& other)
+{
+    m_options = other.m_options;
+    m_options->addCallbackListener(intptr_t(this), updateCallback);
+    m_selection = other.m_selection;
+
+    return *this;
+}
+
+SelectContainer::~SelectContainer()
+{
+    m_options->removeCallbackListener(intptr_t(this));
 }
 
 const std::set<size_t> SelectContainer::getSelection() const
@@ -132,12 +179,8 @@ void SelectContainer::replaceSelection(const std::set<size_t>& selection)
 }
 
 // Update the SelectContainer to recorrect its indices after a modification to the attached SelectOptions
-void SelectContainer::update()
+void SelectContainer::update(const SelectOptionChange& lastChange)
 {
-    const SelectOptionChange& lastChange = m_options->getLastChange();
-
-    if (lastChange.applied) { return; }
-
     std::cout << "UPDATE " << lastChange.type << std::endl;
 
     switch(lastChange.type)
@@ -150,24 +193,18 @@ void SelectContainer::update()
         // An option was removed. Reduce all indices after the removed by 1
         case (OPTION_MODIFICATION_REMOVE):
         {
-            std::cout << "herase"  << std::endl;
             if (m_selection.find(lastChange.firstIndex) != m_selection.end()) 
             { 
                 m_selection.erase(lastChange.firstIndex); 
             }
-            std::cout << "herase"  << std::endl;
 
             for (size_t i = lastChange.firstIndex + 1; i < m_options->getOptions().size() + 1; i++)
             {
-                std::cout << i << std::endl;
                 if (m_selection.find(i) != m_selection.end())
                 {
                     m_selection.erase(i);
-                    std::cout << "Erased " << i << " and ";
                     m_selection.insert(i - 1);
-                    std::cout << "inserted " << i - 1 << std::endl;
                 }
-                std::cout << lastChange.firstIndex + 1 << "; " << m_options->getOptions().size() << std::endl;
             }
             break;
         }

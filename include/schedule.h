@@ -255,7 +255,6 @@ class Schedule
         size_t getRowCount();
 
         void sortColumns();
-        void updateColumnSelects(size_t index);
 
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);

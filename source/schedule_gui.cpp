@@ -209,6 +209,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 												m_editorColumn = column;
 												m_editorRow = row;
 												m_editorSelect = value;
+												std::cout << "What the helll are you doing" << std::endl;
 												m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 												ImGui::OpenPopup("Editor");
 											}
@@ -448,7 +449,6 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 
 	if (ImGui::BeginPopupEx(ImGui::GetID("Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		std::cout << "displayued" << std::endl;
 		// TODO clean up / make the positioning more precise!
 		ImGuiDir dir = ImGuiDir_Down;
 		ImGuiWindow* popup = ImGui::GetCurrentWindow();
@@ -548,7 +548,6 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 			{
 				auto selection = m_editorSelect.getSelection();
 				size_t selectedCount = selection.size();
-				std::cout << "gotsel" << std::endl;
 				const std::vector<std::string>& optionNames = m_schedule->getColumnSelectOptions(m_editorColumn).getOptions();
 
 				std::vector<size_t> selectionIndices = {};
@@ -557,8 +556,6 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 				{
 					selectionIndices.push_back(s);
 				}
-
-				std::cout << "pushed pee" << std::endl;
 
 				// sort indices so that the same options are always displayed in the same order
 				std::sort(std::begin(selectionIndices), std::end(selectionIndices));
@@ -574,8 +571,6 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					ImGui::SameLine();
 					// ImGui::PopStyleColor(1);
 				}
-
-				std::cout << "firdstloop" << std::endl;
 
 				// add new options
 				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
@@ -597,8 +592,6 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					}
 				}
 
-				std::cout << "secondloop" << std::endl;
-
 				// display existing options
 				for (size_t i = 0; i < optionNames.size(); i++)
 				{
@@ -609,8 +602,6 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
 						{
 							m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_REMOVE, i, i);
-							m_editorSelect.update(); // update the m_editorSelect separately!
-							m_schedule->updateColumnSelects(m_editorColumn);
 							m_editorHasMadeEdits = true;
 							// break because the whole thing must be restarted now
 							goto break_select_case;
@@ -635,8 +626,6 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 							if (i_next >= 0 && i_next < optionNames.size())
 							{
 								m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_MOVE, i, i_next);
-								m_editorSelect.update();
-								m_schedule->updateColumnSelects(m_editorColumn);
 								m_editorHasMadeEdits = true;
 								ImGui::ResetMouseDragDelta();
 								break;

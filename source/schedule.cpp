@@ -314,21 +314,6 @@ void Schedule::sortColumns()
     }
 }
 
-// Updates all Select type elements in the Column, if the Column is the right type
-void Schedule::updateColumnSelects(size_t column)
-{
-    if (m_schedule.at(column).type == SCH_SELECT)
-    {
-        for (size_t i = 0; i < m_schedule.at(column).rows.size(); i++)
-        {
-            std::cout << "Updating element " << i << std::endl;
-            getElementAsSpecial<SelectContainer>(column, i)->getValueReference().update();
-        }
-    }
-    m_schedule.at(column).selectOptions.modificationApplied();
-    std::cout << "done updating" << std::endl;
-}
-
 void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
 {
     Column& column = *getMutableColumn(index);
