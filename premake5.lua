@@ -90,8 +90,13 @@ project "schetool"
 		"glfw",
 		"imgui",
 		"zlib",
-		"gdi32"
 	}
+
+	filter "system:not linux"
+		links
+		{
+			"gdi32"
+		}
 
 	filter "system:linux"
 		targetextension "_bin"
