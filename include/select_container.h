@@ -139,5 +139,4 @@ struct SelectContainer
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
         void listenToCallback();
-        void update(const SelectOptionChange& lastChange);
 };

@@ -126,6 +126,7 @@ SelectContainer::SelectContainer()
 SelectContainer::SelectContainer(SelectOptions& options) 
 { 
     m_options = &options;
+    m_options->addCallbackListener(intptr_t(this), updateCallback);
 }
 
 SelectContainer::SelectContainer(const SelectContainer& other) : SelectContainer(*other.m_options)
@@ -136,6 +137,7 @@ SelectContainer::SelectContainer(const SelectContainer& other) : SelectContainer
 SelectContainer& SelectContainer::operator=(const SelectContainer& other)
 {
     m_options = other.m_options;
+    m_options->addCallbackListener(intptr_t(this), updateCallback);
     m_selection = other.m_selection;
 
     return *this;
