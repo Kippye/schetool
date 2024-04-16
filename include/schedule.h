@@ -1,8 +1,6 @@
 #pragma once
 #include "element_base.h"
 #include "select_container.h"
-#include <algorithm>
-#include <deque>
 #include <functional>
 #include <vector>
 #include <map>
@@ -10,193 +8,34 @@
 #include <string>
 #include <element.h>
 #include <schedule_edit.h>
+#include <schedule_edit_history.h>
 #include <input.h>
+#include <schedule_column.h>
 
 // TEMP
 #include <iostream>
 
-class ScheduleEdit;
-template<typename T>
-class ElementEdit;
+// class ScheduleEdit;
+// template<typename T>
+// class ElementEdit;
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
-const size_t COLUMN_NAME_MAX_LENGTH = 64;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
 const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
-
-typedef int ScheduleElementFlags;
-
-enum ScheduleElementFlags_
-{
-    ScheduleElementFlags_None     = 0,
-    ScheduleElementFlags_Name     = 1 << 0,
-    ScheduleElementFlags_Finished = 1 << 1,
-    ScheduleElementFlags_Start    = 1 << 2,
-    ScheduleElementFlags_Duration = 1 << 3,
-    ScheduleElementFlags_End      = 1 << 4,
-};
-
-typedef int COLUMN_SORT;
-
-enum COLUMN_SORT_
-{
-    COLUMN_SORT_NONE,
-    COLUMN_SORT_ASCENDING,
-    COLUMN_SORT_DESCENDING
-};
-
-struct Column
-{
-    std::vector<ElementBase*> rows;
-    SCHEDULE_TYPE type;
-    std::string name;
-    bool permanent;
-    ScheduleElementFlags flags;
-    COLUMN_SORT sort;
-    bool sorted;
-    SelectOptions selectOptions;
-
-    Column()
-    {
-        type = SCH_TEXT;
-        name = "Text";
-    }
-    Column(const std::vector<ElementBase*>& rows, 
-        SCHEDULE_TYPE type, 
-        const std::string& name,
-        bool permanent = false,
-        ScheduleElementFlags flags = ScheduleElementFlags_None,
-        COLUMN_SORT sort = COLUMN_SORT_NONE,
-        bool sorted = false,
-        const SelectOptions& selectOptions = SelectOptions())
-    {
-        this->rows = rows;
-        this->type = type;
-        this->name = name;
-        this->permanent = permanent;
-        this->flags = flags;
-        this->sort = sort;
-        this->sorted = sorted;
-        this->selectOptions = selectOptions;
-    }
-
-    Column(const Column& other)
-    {
-        type = other.type;
-        name = other.name;
-        permanent = other.permanent;
-        flags = other.flags;
-        sort = other.sort;
-        sorted = other.sorted;
-        selectOptions = other.selectOptions;
-
-        for (size_t i = 0; i < other.rows.size(); i++)
-        {
-            rows.push_back(other.rows[i]->getCopy());
-        }
-
-        std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
-    }
-
-    Column& operator=(const Column& other)
-    {
-        type = other.type;
-        name = other.name;
-        permanent = other.permanent;
-        flags = other.flags;
-        sort = other.sort;
-        sorted = other.sorted;
-        selectOptions = other.selectOptions;
-
-        rows.clear();
-
-        for (size_t i = 0; i < other.rows.size(); i++)
-        {
-            rows.push_back(other.rows[i]->getCopy());
-        }
-
-        std::cout << "Assigned column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
-        return *this;
-    }
-
-    ~Column()
-    {
-        std::cout << "Destroying Column " << name << "@" << this << std::endl;
-        for (size_t i = 0; i < rows.size(); i++)
-        {
-            delete rows[i];
-        }
-    }
-
-    ElementBase* getElement(size_t index)
-    {
-        return rows[index];
-    }
-};
-
-struct ColumnSortComparison 
-{
-    SCHEDULE_TYPE type;
-    COLUMN_SORT sortDirection;
-
-    bool operator () (const ElementBase* const left, const ElementBase* const right)
-    {
-        switch(type)
-        {
-            case(SCH_BOOL):
-            {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<bool>*)left)->getValue() > ((const Element<bool>*)right)->getValue() : ((const Element<bool>*)left)->getValue() < ((const Element<bool>*)right)->getValue();
-            }
-            case(SCH_NUMBER):
-            {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<int>*)left)->getValue() > ((const Element<int>*)right)->getValue() : ((const Element<int>*)left)->getValue() < ((const Element<int>*)right)->getValue();
-            }
-            case(SCH_DECIMAL):
-            {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<double>*)left)->getValue() > ((const Element<double>*)right)->getValue() : ((const Element<double>*)left)->getValue() < ((const Element<double>*)right)->getValue();
-            }
-            case(SCH_TEXT):
-            {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<std::string>*)left)->getValue() > ((const Element<std::string>*)right)->getValue() : ((const Element<std::string>*)left)->getValue() < ((const Element<std::string>*)right)->getValue();
-            }
-            case(SCH_SELECT):
-            {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getValue() > ((const Element<SelectContainer>*)right)->getValue() : ((const Element<SelectContainer>*)left)->getValue() < ((const Element<SelectContainer>*)right)->getValue();
-            }
-            case(SCH_TIME):
-            {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<TimeContainer>*)left)->getValue() > ((const Element<TimeContainer>*)right)->getValue() : ((const Element<TimeContainer>*)left)->getValue() < ((const Element<TimeContainer>*)right)->getValue();
-            }
-            case(SCH_DATE):
-            {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<DateContainer>*)left)->getValue() > ((const Element<DateContainer>*)right)->getValue() : ((const Element<DateContainer>*)left)->getValue() < ((const Element<DateContainer>*)right)->getValue();
-            }
-        }
-    }
-
-    // Setup the sort comparison information before using it
-    void setup(SCHEDULE_TYPE _type, COLUMN_SORT _sortDirection)
-    {
-        type = _type;
-        sortDirection = _sortDirection;
-    }
-};
 
 class Schedule
 {
     private:
         std::vector<Column> m_schedule = {};
-        std::deque<ScheduleEdit*> m_editHistory = {};
-        size_t m_editHistoryIndex = 0;
+        ScheduleEditHistory m_editHistory;
         ColumnSortComparison m_columnSortComparison;
-        bool m_editedSinceWrite = false;
         std::string m_scheduleName;
-        size_t getFlaggedColumnIndex(ScheduleElementFlags flags);
-        Column* getColumnWithFlags(ScheduleElementFlags flags);
+        size_t getFlaggedColumnIndex(ScheduleColumnFlags flags);
+        Column* getColumnWithFlags(ScheduleColumnFlags flags);
         Column* getMutableColumn(size_t column);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
 
-        // input listeners
+        // input listeners TODO: move to schedule_edit ?
         std::function<void()> undoCallback = std::function<void()>([&]()
         {
             undo();
@@ -227,13 +66,6 @@ class Schedule
         // Set the schedule's name to the provided name. NOTE: Does not affect filename. Only called by IO_Manager and MainMenuBarGui through IO_Manager.
         void setScheduleName(const std::string& name);
         std::string getScheduleName();
-
-        const std::deque<ScheduleEdit*>& getEditHistory();
-        size_t getEditHistoryIndex();
-        // Clear the edit history. Call it when, for example, reading a Schedule from file.
-        void clearEditHistory();
-        bool getEditedSinceWrite();
-        void setEditedSinceWrite(bool to);
 
         // Clears the Schedule and deletes all the Columns.
         void clearSchedule();
@@ -270,8 +102,6 @@ class Schedule
         void addColumn(size_t index, const Column& column, bool addToHistory = true);
         void removeColumn(size_t column, bool addToHistory = true);
 
-        void addScheduleEdit(ScheduleEdit* edit);
-        void removeFollowingEditHistory();
         void undo();
         void redo();
 
@@ -356,7 +186,7 @@ class Schedule
                 sortColumns();
             }
 
-            setEditedSinceWrite(true);
+            m_editHistory.setEditedSinceWrite(true);
         }
 
         // Shortcut for getting the value of an Element at column; row
@@ -380,24 +210,24 @@ class Schedule
 
             ((Element<T>*)element)->setValue(value);
 
-            ScheduleElementFlags columnFlags = getColumn(column)->flags;
-            if (columnFlags & ScheduleElementFlags_Start)
+            ScheduleColumnFlags columnFlags = getColumn(column)->flags;
+            if (columnFlags & ScheduleColumnFlags_Start)
             {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_End), row)->setValue(
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)->setValue(
                     getElementAsSpecial<TimeContainer>(column, row)->getValue() 
-                    + getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Duration), row)->getValue());
+                    + getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)->getValue());
             }
-            else if (columnFlags & ScheduleElementFlags_Duration)
+            else if (columnFlags & ScheduleColumnFlags_Duration)
             {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_End), row)->setValue(
-                    getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Start), row)->getValue() 
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)->setValue(
+                    getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue() 
                     + getElementAsSpecial<TimeContainer>(column, row)->getValue());
             }
-            else if (columnFlags & ScheduleElementFlags_End)
+            else if (columnFlags & ScheduleColumnFlags_End)
             {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Duration), row)->setValue(
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)->setValue(
                     getElementAsSpecial<TimeContainer>(column, row)->getValue()
-                    - getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleElementFlags_Start), row)->getValue());
+                    - getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue());
             }
 
             m_schedule.at(column).sorted = false;
