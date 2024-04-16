@@ -209,7 +209,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 												m_editorColumn = column;
 												m_editorRow = row;
 												m_editorSelect = value;
-												std::cout << "What the helll are you doing" << std::endl;
+												m_editorSelect.listenToCallback();
 												m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 												ImGui::OpenPopup("Editor");
 											}
@@ -245,6 +245,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 											m_editorColumn = column;
 											m_editorRow = row;
 											m_editorSelect = value;
+											m_editorSelect.listenToCallback();
 											m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 											m_editorHasMadeEdits = false;
 											ImGui::OpenPopup("Editor");

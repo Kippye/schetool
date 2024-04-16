@@ -16,6 +16,8 @@
 #include <iostream>
 
 class ScheduleEdit;
+template<typename T>
+class ElementEdit;
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
@@ -96,7 +98,7 @@ struct Column
         std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
     }
 
-    Column& operator=(Column& other)
+    Column& operator=(const Column& other)
     {
         type = other.type;
         name = other.name;

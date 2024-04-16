@@ -20,6 +20,7 @@ SelectOptions::SelectOptions(const std::vector<std::string>& options)
 
 void SelectOptions::invokeCallback()
 {
+    std::cout << "Invoking callback for " << m_callbacks.size() << " listeners" << std::endl;
     for (auto& listener: m_callbacks)
     {
         listener.second(m_lastModification);
@@ -39,8 +40,13 @@ const SelectOptionChange& SelectOptions::getLastChange() const
 
 void SelectOptions::addCallbackListener(intptr_t listenerPointer, std::function<void(const SelectOptionChange&)>& listener)
 {
+    if (m_callbacks.find(listenerPointer) != m_callbacks.end())
+    {
+        std::cout << "SelectOptions::addCallbackListener: A callback listener already exists with the given key. Replacing it is not supported behaviour" << std::endl;
+        return;
+    }
     m_callbacks.insert({listenerPointer, listener});
-    std::cout << "Added callback listener @" << listenerPointer << std::endl;
+    std::cout << "Added callback listener @" << listenerPointer << " count: " << m_callbacks.size() << std::endl;
 }
 
 void SelectOptions::removeCallbackListener(intptr_t listenerPointer)
@@ -48,6 +54,7 @@ void SelectOptions::removeCallbackListener(intptr_t listenerPointer)
     if (m_callbacks.find(listenerPointer) != m_callbacks.end())
     {
         m_callbacks.erase(listenerPointer);
+        std::cout << "Removed callback listener @" << listenerPointer << " count : " << m_callbacks.size() << std::endl;
     }
 }
 
@@ -176,6 +183,11 @@ void SelectContainer::setSelected(size_t index, bool select)
 void SelectContainer::replaceSelection(const std::set<size_t>& selection)
 {
     m_selection = selection;
+}
+
+void SelectContainer::listenToCallback()
+{
+    m_options->addCallbackListener(intptr_t(this), updateCallback);
 }
 
 // Update the SelectContainer to recorrect its indices after a modification to the attached SelectOptions

@@ -31,8 +31,8 @@ schedules/
 *.filters
 *.ilk
 *.pdb
-#*.sln easier to build when it's included
-#*.vcxproj
+#*.sln
+*.vcxproj
 
 # premake5 generated files when using the gmake2 configuration
 Makefile

@@ -5,6 +5,7 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <cstdint>
 
 const size_t SELECT_OPTION_COUNT_MAX = 20;
 
@@ -137,5 +138,5 @@ struct SelectContainer
         const std::set<size_t> getSelection() const;
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
-        void update(const SelectOptionChange& lastChange);
+        void listenToCallback();
 };

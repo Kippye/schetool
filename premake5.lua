@@ -1,7 +1,37 @@
+include("include/blf")
+
 workspace "schetool"
 	configurations { "Debug", "Release" }
 	startproject "schetool"
 	
+-- Clean Function --
+newaction {
+	trigger = "clean",
+	description = "clean build remnants",
+	execute = function ()
+		print("Cleaning build files and directories")
+		os.rmdir("./obj")
+		os.rmdir("./schetool")
+		os.rmdir("./Debug")
+		os.rmdir("./Release")
+		os.rmdir("./bin")
+		---- libraries
+		print("Cleaning libraries")
+		-- BlurLevelFormat
+		print("Cleaning BlurLevelFormat (blf)")
+		os.rmdir("./include/blf/bin")
+		os.rmdir("./include/blf/obj")
+		os.remove("./include/blf/Makefile")
+		os.remove("./include/blf/BlurLevelFormat.make")
+		os.remove("include/zlib/zlib.vcxproj")
+		os.remove("schetool.pdb")
+		-- zlib
+		print("Cleaning zlib")
+		os.remove("include/blf/blf.vcxproj")
+		--os.remove("./include/zlib/Makefile") TODO
+	end
+}
+
 project "schetool"
 	location "schetool"
 	
@@ -13,7 +43,6 @@ project "schetool"
 		kind "WindowedApp"
 		defines { "NDEBUG" }
 		optimize "On"
-		
 	filter {}
 		
 	language "C++"
@@ -23,6 +52,10 @@ project "schetool"
 	
 	targetdir "."
 	objdir "obj/%{cfg.buildcfg}"
+	
+	filter { "system:windows", "action:gmake2" }
+		linkoptions{ "-m64", "-static", "-mtune=native", "-lpthread", "-static-libstdc++", "-static-libgcc", "-lstdc++" }
+	filter {}
 	
 	files 
 	{ 
@@ -52,12 +85,18 @@ project "schetool"
 	
 	links
 	{
-		"blf",
+		"BlurLevelFormat",
 		"glad",
 		"glfw",
 		"imgui",
-		"zlib"
+		"zlib",
 	}
+
+	filter "system:not linux"
+		links
+		{
+			"gdi32"
+		}
 
 	filter "system:linux"
 		targetextension "_bin"
@@ -68,40 +107,10 @@ project "schetool"
 
 group "Dependencies"
 
-project("blf")
-	location "include/blf"
-	kind "StaticLib"
-	language "C++"
-	cppdialect "C++17"
-	staticruntime "on"
-
-	files
-	{
-		"%{prj.location}/src/blf/**.cpp"
-	}
-
-	includedirs
-	{
-		"%{prj.location}/include",
-		"%{prj.location}/include/blf",
-		"%{prj.location}/../zlib"
-	}
-
-	links
-	{
-		"zlib"
-	}
-
-	targetdir "bin/%{cfg.buildcfg}"
-	objdir "obj/%{cfg.buildcfg}"
-
-	filter "configurations:Debug"
-		defines { "DEBUG" }
-		symbols "On"
-
-	filter "configurations:Release"
-		defines { "NDEBUG" }
-		optimize "On"
+externalproject "BlurLevelFormat"
+   location "include/blf"
+   kind "StaticLib"
+   language "C++"
 
 project "glad"
 	location "include/glad"
@@ -111,7 +120,7 @@ project "glad"
 	
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"
-	
+
 	files 
 	{ 
 		"%{prj.location}/src/glad.c",
@@ -137,7 +146,7 @@ project "glfw"
 	kind "StaticLib"
 	language "C"
 	staticruntime "on"
-	
+
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"
 	
@@ -236,7 +245,7 @@ project "imgui"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "on"
-	
+
 	targetdir "bin/%{cfg.buildcfg}"
 	objdir "obj/%{cfg.buildcfg}"
 	
