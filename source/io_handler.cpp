@@ -34,7 +34,8 @@ bool IO_Handler::writeSchedule(const char* name)
     {
         std::cout << "Successfully wrote Schedule to file: " << relativePath << std::endl;
     }
-    m_schedule->setEditedSinceWrite(false);
+    // TODO: make some event that the Schedule can listen to?
+    m_schedule->getScheduleEditHistoryMut().setEditedSinceWrite(false);
     return true;
 }
 
@@ -49,13 +50,13 @@ bool IO_Handler::readSchedule(const char* name)
         return false;
     }
 
-    m_schedule->clearEditHistory();
+    m_schedule->getScheduleEditHistoryMut().clearEditHistory();
     if (m_converter.readSchedule(relativePath.c_str(), m_schedule->getMutableColumns()) == 0)
     {
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
     }
     setOpenScheduleFilename(std::string(name));
-    m_schedule->setEditedSinceWrite(false);
+    m_schedule->getScheduleEditHistoryMut().setEditedSinceWrite(false);
     return true;
 }
 
@@ -93,7 +94,7 @@ void IO_Handler::addToAutosaveTimer(double delta)
 
     if (m_timeSinceAutosave > (double)AUTOSAVE_DELAY_SECONDS)
     {
-        if (m_schedule->getEditedSinceWrite() == true)
+        if (m_schedule->getScheduleEditHistory().getEditedSinceWrite() == true)
         {
             writeSchedule(m_openScheduleFilename.c_str());
         }

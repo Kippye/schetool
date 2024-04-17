@@ -4,23 +4,24 @@
 #include <element_base.h>
 #include <schedule_edit.h>
 #include <schedule_column.h>
+#include <schedule_core.h>
 
 class ScheduleEditHistory
 {
     private:
         std::deque<ScheduleEdit*> m_editHistory = {};
-        ScheduleEditFunctions m_editFunctions;
+        ScheduleCore* m_core;
         size_t m_editHistoryIndex = 0;
         bool m_editedSinceWrite = false;
     public:
         ScheduleEditHistory();
-        ScheduleEditHistory(const ScheduleEditFunctions& editFunctions);
+        ScheduleEditHistory(ScheduleCore* scheduleCore);
 
-        const std::deque<ScheduleEdit*>& getEditHistory();
-        size_t getEditHistoryIndex();
+        const std::deque<ScheduleEdit*>& getEditHistory() const;
+        size_t getEditHistoryIndex() const;
         // Clear the edit history. Call it when, for example, reading a Schedule from file.
         void clearEditHistory();
-        bool getEditedSinceWrite();
+        bool getEditedSinceWrite() const;
         void setEditedSinceWrite(bool to);
 
         void addEdit(ScheduleEdit* edit);

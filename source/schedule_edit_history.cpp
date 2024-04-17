@@ -3,20 +3,20 @@
 
 ScheduleEditHistory::ScheduleEditHistory()
 {
-    std::cout << "Schedule edit history created with default constructor. Edit functions must be provided!" << std::endl;
+    std::cout << "Schedule edit history created with default constructor. A pointer to the Schedule core must be provided!" << std::endl;
 }
 
-ScheduleEditHistory::ScheduleEditHistory(const ScheduleEditFunctions& editFunctions)
+ScheduleEditHistory::ScheduleEditHistory(ScheduleCore* scheduleCore)
 {
-    m_editFunctions = editFunctions;
+    m_core = scheduleCore;
 }
 
-const std::deque<ScheduleEdit*>& ScheduleEditHistory::getEditHistory()
+const std::deque<ScheduleEdit*>& ScheduleEditHistory::getEditHistory() const
 {
     return m_editHistory;
 }
 
-size_t ScheduleEditHistory::getEditHistoryIndex()
+size_t ScheduleEditHistory::getEditHistoryIndex() const
 {
     return m_editHistoryIndex;
 }
@@ -33,7 +33,7 @@ void ScheduleEditHistory::clearEditHistory()
     m_editHistory.clear();
 }
 
-bool ScheduleEditHistory::getEditedSinceWrite()
+bool ScheduleEditHistory::getEditedSinceWrite() const
 {
     return m_editedSinceWrite;
 }
@@ -67,7 +67,7 @@ void ScheduleEditHistory::undo()
     if (m_editHistory.size() == 0 || m_editHistoryIndex == 0 && m_editHistory[m_editHistoryIndex]->getIsReverted()) { return; }
 
     ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
-    edit->revert(m_editFunctions); 
+    edit->revert(m_core); 
     if (m_editHistoryIndex > 0) { m_editHistoryIndex--; }
 }
 
@@ -77,5 +77,5 @@ void ScheduleEditHistory::redo()
 
     if ((m_editHistoryIndex > 0 || m_editHistory[0]->getIsReverted() == false) && m_editHistoryIndex < m_editHistory.size() - 1) { m_editHistoryIndex++; }
     ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
-    edit->apply(m_editFunctions);
+    edit->apply(m_core);
 }

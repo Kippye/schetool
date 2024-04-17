@@ -31,7 +31,7 @@ schedules/
 *.filters
 *.ilk
 *.pdb
-#*.sln
+*.sln
 *.vcxproj
 
 # premake5 generated files when using the gmake2 configuration

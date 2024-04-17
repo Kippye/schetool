@@ -3,6 +3,7 @@
 #include "element_base.h"
 #include <element.h>
 #include <schedule_column.h>
+#include <schedule_core.h>
 
 enum SCHEDULE_EDIT_TYPE
 {
@@ -20,23 +21,6 @@ enum COLUMN_PROPERTY
     COLUMN_PROPERTY_SORT,
 };
 
-// TODO: somehow check for these being nullptrs
-// A struct containing function pointers to functions in the Schedule. These should ALWAYS be non-null pointers.
-struct ScheduleEditFunctions
-{
-    void (*addRow)(size_t index, bool addToHistory);
-    void (*setRow)(size_t index, std::vector<ElementBase*> elementData);
-    void (*removeRow)(size_t index, bool addToHistory);
-
-    void (*addColumn)(size_t index, const Column& column, bool addToHistory);
-    void (*removeColumn)(size_t column, bool addToHistory);
-
-    void (*setColumnName)(size_t column, const char* name, bool addToHistory);
-    void (*setColumnType)(size_t column, SCHEDULE_TYPE type, bool addToHistory );
-    void (*modifyColumnSelectOptions)(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex, size_t secondIndex, const std::vector<std::string>& optionNames, bool addToHistory);
-    void (*setColumnSort)(size_t column, COLUMN_SORT sortDirection, bool addToHistory);
-};
-
 class ScheduleEdit
 {
     protected:
@@ -45,8 +29,8 @@ class ScheduleEdit
     public:
         ScheduleEdit(SCHEDULE_EDIT_TYPE type);
         virtual ~ScheduleEdit();
-        virtual void revert(const ScheduleEditFunctions& editFunctions);
-        virtual void apply(const ScheduleEditFunctions& editFunctions);
+        virtual void revert(ScheduleCore* const scheduleCore);
+        virtual void apply(ScheduleCore* const scheduleCore);
         bool getIsReverted() const
         {
             return m_isReverted;
@@ -84,21 +68,21 @@ class ElementEdit : public ElementEditBase
         T m_previousValue;
         T m_newValue;
     public:
-        ElementEdit<T>(size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(schedule, column, row, elementType) 
+        ElementEdit<T>(size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(column, row, elementType) 
         {
             m_previousValue = previousValue;
             m_newValue = newValue;
         }
 
-        void revert(const ScheduleEditFunctions& editFunctions) override
+        void revert(ScheduleCore* const scheduleCore) override
         {
-            // TODO: m_editFunctions.setElementValue(m_column, m_row, m_previousValue, true, false);
+            scheduleCore->setElementValue(m_column, m_row, m_previousValue, true);
             m_isReverted = true;
         }
 
-        void apply(const ScheduleEditFunctions& editFunctions) override
+        void apply(ScheduleCore* const scheduleCore) override
         {
-            // TODO: m_editFunctions.setElementValue(m_column, m_row, m_newValue, true, false);
+            scheduleCore->setElementValue(m_column, m_row, m_newValue, true);
             m_isReverted = false;
         }
 };
@@ -114,9 +98,9 @@ class RowEdit : public ScheduleEdit
 
         ~RowEdit() override;
 
-        void revert(const ScheduleEditFunctions& editFunctions) override;
+        void revert(ScheduleCore* const scheduleCore) override;
 
-        void apply(const ScheduleEditFunctions& editFunctions) override;
+        void apply(ScheduleCore* const scheduleCore) override;
 
         bool getIsRemove() const
         {
@@ -140,9 +124,9 @@ class ColumnEdit : public ScheduleEdit
 
         ~ColumnEdit() override;
 
-        void revert(const ScheduleEditFunctions& editFunctions) override;
+        void revert(ScheduleCore* const scheduleCore) override;
 
-        void apply(const ScheduleEditFunctions& editFunctions) override;
+        void apply(ScheduleCore* const scheduleCore) override;
 
         bool getIsRemove() const
         {
@@ -172,9 +156,9 @@ class ColumnPropertyEdit : public ScheduleEdit
 
         ~ColumnPropertyEdit() override;
 
-        void revert(const ScheduleEditFunctions& editFunctions) override;
+        void revert(ScheduleCore* const scheduleCore) override;
 
-        void apply(const ScheduleEditFunctions& editFunctions) override;
+        void apply(ScheduleCore* const scheduleCore) override;
 
         size_t getColumn() const
         {

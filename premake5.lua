@@ -23,11 +23,12 @@ newaction {
 		os.rmdir("./include/blf/obj")
 		os.remove("./include/blf/Makefile")
 		os.remove("./include/blf/BlurLevelFormat.make")
-		os.remove("include/zlib/zlib.vcxproj")
+		os.remove("./include/blf/BlurLevelFormat.vcxproj")
+		os.remove("./include/blf/BlurLevelFormat.sln")
 		os.remove("schetool.pdb")
 		-- zlib
 		print("Cleaning zlib")
-		os.remove("include/blf/blf.vcxproj")
+		os.remove("./include/zlib/zlib.vcxproj")
 		--os.remove("./include/zlib/Makefile") TODO
 	end
 }

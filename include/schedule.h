@@ -11,29 +11,16 @@
 #include <schedule_edit_history.h>
 #include <input.h>
 #include <schedule_column.h>
+#include <schedule_core.h>
 
 // TEMP
 #include <iostream>
 
-// class ScheduleEdit;
-// template<typename T>
-// class ElementEdit;
-
-const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
-const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
-const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
-
 class Schedule
 {
     private:
-        std::vector<Column> m_schedule = {};
         ScheduleEditHistory m_editHistory;
-        ColumnSortComparison m_columnSortComparison;
-        std::string m_scheduleName;
-        size_t getFlaggedColumnIndex(ScheduleColumnFlags flags);
-        Column* getColumnWithFlags(ScheduleColumnFlags flags);
-        Column* getMutableColumn(size_t column);
-        std::vector<size_t> getColumnSortedNewIndices(size_t index);
+        ScheduleCore m_core;
 
         // input listeners TODO: move to schedule_edit ?
         std::function<void()> undoCallback = std::function<void()>([&]()
@@ -72,6 +59,9 @@ class Schedule
         // Replaces the m_schedule vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
         void replaceSchedule(std::vector<Column>& columns);
 
+        const ScheduleEditHistory& getScheduleEditHistory();
+        ScheduleEditHistory& getScheduleEditHistoryMut();
+
         // Get a constant pointer to the Column at the index. TODO: Return const ref instead
         const Column* getColumn(size_t column);
         // Get a constant reference to every Column in the Schedule (m_schedule)
@@ -109,20 +99,20 @@ class Schedule
         template <typename T>
         T getValue(ElementBase* element)
         {
-            return (T)((Element<T>*)element)->getValue();
+            return m_core.getValue<T>(element);
         }
 
         // Get a pointer to the ElementBase at column; row
         ElementBase* getElement(size_t column, size_t row)
         {
-            return getMutableColumn(column)->getElement(row);
+            return m_core.getElement(column, row);
         }
 
         // Simple function that gets an ElementBase* at column; row and casts it to Element<T>*. In the future, this might check that the returned type is actually correct.
         template <typename T>
         Element<T>* getElementAsSpecial(size_t column, size_t row)
         {
-            return (Element<T>*)getElement(column, row);
+            return m_core.getElementAsSpecial<T>(column, row);
         }
 
         // Use this function to completely replace the element at column; row with the ElementBase in value.
@@ -130,62 +120,9 @@ class Schedule
         // If the types do not match, the target element pointer is replaced by the value pointer!
         // NOTE: Currently, does not add to the edit history
         void setElement(size_t column, size_t row, ElementBase* other, bool resort = true)
-        {            
-            // IF the provided Element fits the column's type, set the target Element's value directly
-            if (getColumn(column)->type == other->getType())
-            {
-                switch(other->getType())
-                {
-                    case(SCH_BOOL):
-                    {
-                        getElementAsSpecial<bool>(column, row)->setValue(((Element<bool>*)other)->getValue());
-                        break;
-                    }
-                    case(SCH_NUMBER):
-                    {
-                        getElementAsSpecial<int>(column, row)->setValue(((Element<int>*)other)->getValue());
-                        break;
-                    }
-                    case(SCH_DECIMAL):
-                    {
-                        getElementAsSpecial<double>(column, row)->setValue(((Element<double>*)other)->getValue());
-                        break;
-                    }
-                    case(SCH_TEXT):
-                    {
-                        getElementAsSpecial<std::string>(column, row)->setValue(((Element<std::string>*)other)->getValue());
-                        break;
-                    }
-                    case(SCH_SELECT):
-                    {
-                        getElementAsSpecial<SelectContainer>(column, row)->setValue(((Element<SelectContainer>*)other)->getValue());
-                        break;
-                    }
-                    case(SCH_TIME):
-                    {
-                        getElementAsSpecial<TimeContainer>(column, row)->setValue(((Element<TimeContainer>*)other)->getValue());
-                        break;
-                    }
-                    case(SCH_DATE):
-                    {
-                        getElementAsSpecial<DateContainer>(column, row)->setValue(((Element<DateContainer>*)other)->getValue());
-                        break;
-                    }
-                }
-            }
-            // IF the value being assigned is of a different type than the column's (i.e. the column's type was just changed and is being reset), REPLACE the pointer. Otherwise, the program will crash.
-            else
-            {
-                // TODO: clean previous pointer since it's gone now?
-                getMutableColumn(column)->rows[row] = other;
-            }
-
-            m_schedule.at(column).sorted = false;
-            if (resort)
-            {
-                sortColumns();
-            }
-
+        {
+            m_core.setElement(column, row, other, resort);
+            
             m_editHistory.setEditedSinceWrite(true);
         }
 
@@ -193,49 +130,23 @@ class Schedule
         template <typename T>
         T getElementValue(size_t column, size_t row)
         {
-            return getValue<T>(getColumn(column)->rows[row]);
+            return m_core.getElementValue<T>(column, row);
         }
 
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
         template <typename T>
         void setElementValue(size_t column, size_t row, const T& value, bool resort = true, bool addToHistory = true)
         {
-            ElementBase* element = getElement(column, row);
+            ElementBase* element = m_core.getElement(column, row);
 
             // add the edit to history
             if (addToHistory)
             {
-                addScheduleEdit(new ElementEdit<T>(this, column, row, element->getType(), ((Element<T>*)element)->getValue(), value)); 
+                m_editHistory.addEdit(new ElementEdit<T>(column, row, element->getType(), ((Element<T>*)element)->getValue(), value)); 
             }
 
-            ((Element<T>*)element)->setValue(value);
+            m_core.setElementValue<T>(column, row, value, resort);
 
-            ScheduleColumnFlags columnFlags = getColumn(column)->flags;
-            if (columnFlags & ScheduleColumnFlags_Start)
-            {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)->setValue(
-                    getElementAsSpecial<TimeContainer>(column, row)->getValue() 
-                    + getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)->getValue());
-            }
-            else if (columnFlags & ScheduleColumnFlags_Duration)
-            {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)->setValue(
-                    getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue() 
-                    + getElementAsSpecial<TimeContainer>(column, row)->getValue());
-            }
-            else if (columnFlags & ScheduleColumnFlags_End)
-            {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)->setValue(
-                    getElementAsSpecial<TimeContainer>(column, row)->getValue()
-                    - getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue());
-            }
-
-            m_schedule.at(column).sorted = false;
-            if (resort)
-            {
-                sortColumns();
-            }
-
-            setEditedSinceWrite(true);
+            m_editHistory.setEditedSinceWrite(true);
         }
 };

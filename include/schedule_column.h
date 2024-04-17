@@ -1,11 +1,18 @@
+#pragma once
+
 #include <vector>
+#include <iostream>
 #include <element_base.h>
+#include <element.h>
+#include <select_container.h>
+#include <time_container.h>
+#include <date_container.h>
 
 typedef int ScheduleColumnFlags;
 
 const size_t COLUMN_NAME_MAX_LENGTH = 64;
 
-enum ScheduleElementFlags_
+enum ScheduleColumnFlags_
 {
     ScheduleColumnFlags_None     = 0,
     ScheduleColumnFlags_Name     = 1 << 0,
@@ -30,7 +37,7 @@ struct Column
     SCHEDULE_TYPE type;
     std::string name;
     bool permanent;
-    ScheduleElementFlags flags;
+    ScheduleColumnFlags flags;
     COLUMN_SORT sort;
     bool sorted;
     SelectOptions selectOptions;
@@ -44,7 +51,7 @@ struct Column
         SCHEDULE_TYPE type, 
         const std::string& name,
         bool permanent = false,
-        ScheduleElementFlags flags = ScheduleElementFlags_None,
+        ScheduleColumnFlags flags = ScheduleColumnFlags_None,
         COLUMN_SORT sort = COLUMN_SORT_NONE,
         bool sorted = false,
         const SelectOptions& selectOptions = SelectOptions())

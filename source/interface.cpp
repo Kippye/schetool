@@ -75,15 +75,7 @@ void Interface::draw()
 		ImGui::FocusWindow(NULL);
 	}
 
-	// TEMP here? change the Window's title
-	if (m_schedule->getEditedSinceWrite())
-	{
-		m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(" - ").append(m_schedule->getScheduleName()).append(std::string(" *")).c_str());
-	}
-	else
-	{
-		m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(" - ").append(m_schedule->getScheduleName()).c_str());
-	}
+	m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(" - ").append(m_schedule->getScheduleName()).c_str());
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
