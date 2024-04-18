@@ -81,7 +81,7 @@ struct Column
             rows.push_back(other.rows[i]->getCopy());
         }
 
-        std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
+        // std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
     }
 
     Column& operator=(const Column& other)
@@ -101,13 +101,13 @@ struct Column
             rows.push_back(other.rows[i]->getCopy());
         }
 
-        std::cout << "Assigned column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
+        // std::cout << "Assigned column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
         return *this;
     }
 
     ~Column()
     {
-        std::cout << "Destroying Column " << name << "@" << this << std::endl;
+        // std::cout << "Destroying Column " << name << "@" << this << std::endl;
         for (size_t i = 0; i < rows.size(); i++)
         {
             delete rows[i];

@@ -26,8 +26,6 @@ Program::Program()
 
 	schedule.createDefaultSchedule();
 
-	std::cout << "Created default" << std::endl;
-
 	// There are pre-existing Schedules. Open the most recently edited one.
 	if (ioHandler.getScheduleStemNames().size() > 0)
 	{

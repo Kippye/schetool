@@ -169,13 +169,11 @@ void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
 
 void Schedule::addRow(size_t index, bool addToHistory)
 {
-    std::vector<ElementBase*> elementCopies = m_core.getRow(index);
-
     m_core.addRow(index);
 
     if (addToHistory)
     {
-        m_editHistory.addEdit(new RowEdit(false, index, elementCopies));
+        m_editHistory.addEdit(new RowEdit(false, index, m_core.getRow(index)));
     }
 
     m_editHistory.setEditedSinceWrite(true);
@@ -183,15 +181,14 @@ void Schedule::addRow(size_t index, bool addToHistory)
 
 void Schedule::removeRow(size_t index, bool addToHistory)
 {
-    std::vector<ElementBase*> elementCopies = m_core.getRow(index);
-
-    m_core.removeRow(index);
-
+    // TODO: i'd prefer if this was still AFTER the removeRow call.. eh.
     // add a remove RowEdit to the edit history with copies of the removed Elements
     if (addToHistory)
     {
-        m_editHistory.addEdit(new RowEdit(true, index, elementCopies));
+        m_editHistory.addEdit(new RowEdit(true, index, m_core.getRow(index)));
     }
+
+    m_core.removeRow(index);
 
     m_editHistory.setEditedSinceWrite(true);
 }

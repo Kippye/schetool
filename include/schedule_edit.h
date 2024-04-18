@@ -94,7 +94,7 @@ class RowEdit : public ScheduleEdit
         size_t m_row;
         std::vector<ElementBase*> m_elementData = {};
     public:
-        RowEdit(bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataCopy);
+        RowEdit(bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataToCopy);
 
         ~RowEdit() override;
 
@@ -118,11 +118,9 @@ class ColumnEdit : public ScheduleEdit
     private:
         bool m_isRemove = false;
         size_t m_column;
-        Column* m_columnData;
+        Column m_columnData;
     public:
         ColumnEdit(bool isRemove, size_t column, const Column& columnData);
-
-        ~ColumnEdit() override;
 
         void revert(ScheduleCore* const scheduleCore) override;
 
@@ -138,7 +136,7 @@ class ColumnEdit : public ScheduleEdit
             return m_column;
         }
 
-        const Column* const getColumnData() const
+        const Column& getColumnData() const
         {
             return m_columnData;
         }
@@ -148,13 +146,11 @@ class ColumnPropertyEdit : public ScheduleEdit
 {
     private:
         size_t m_column;
-        Column* m_columnData;
-        Column* m_previousColumnData;
+        Column m_columnData;
+        Column m_previousColumnData;
         COLUMN_PROPERTY m_editedProperty;
     public:
         ColumnPropertyEdit(size_t column, COLUMN_PROPERTY editedProperty, const Column& previousData, const Column& newData);
-
-        ~ColumnPropertyEdit() override;
 
         void revert(ScheduleCore* const scheduleCore) override;
 

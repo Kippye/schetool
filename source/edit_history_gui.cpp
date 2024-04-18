@@ -44,8 +44,8 @@ void EditHistoryGui::draw(Window& window, Input& input)
                     ColumnEdit* columnEdit = (ColumnEdit*)editHistory[i];
                     sprintf(buf, "%c Column %s of type %s at %zu", 
                         columnEdit->getIsRemove() ? '-' : '+',
-                        columnEdit->getColumnData()->name.c_str(), 
-                        m_schedule->scheduleTypeNames.at(columnEdit->getColumnData()->type),
+                        columnEdit->getColumnData().name.c_str(), 
+                        m_schedule->scheduleTypeNames.at(columnEdit->getColumnData().type),
                         columnEdit->getColumn());
                     break;
                 }

@@ -459,17 +459,6 @@ void ScheduleCore::removeRow(size_t index)
     }
 }
 
-void ScheduleCore::setRow(size_t index, std::vector<ElementBase*> elementData)
-{
-    if (getColumn(0)->rows.size() - 1 < index) { std::cout << "ScheduleCore::setRow: No row found at index: " << index << std::endl; return; }
-
-    for (size_t col = 0; col < getColumnCount(); col++)
-    {
-        //std::cout << col << ": " << elementData[col]->getString() << std::endl;
-        setElement(col, index, elementData[col]);
-    } 
-}
-
 std::vector<ElementBase*> ScheduleCore::getRow(size_t index)
 {
     std::vector<ElementBase*> elementData = {};
@@ -482,6 +471,17 @@ std::vector<ElementBase*> ScheduleCore::getRow(size_t index)
     }
 
     return elementData;
+}
+
+void ScheduleCore::setRow(size_t index, std::vector<ElementBase*> elementData)
+{
+    if (getColumn(0)->rows.size() - 1 < index) { std::cout << "ScheduleCore::setRow: No row found at index: " << index << std::endl; return; }
+
+    for (size_t col = 0; col < getColumnCount(); col++)
+    {
+        //std::cout << col << ": " << elementData[col]->getString() << std::endl;
+        setElement(col, index, elementData[col]);
+    } 
 }
 
 void ScheduleCore::addDefaultColumn(size_t index)

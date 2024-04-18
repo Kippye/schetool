@@ -8,7 +8,7 @@
 #include <date_container.h>
 #include <select_container.h>
 #include <iterator>
-#include <schedule.h>
+#include <schedule_column.h>
 #include <element.h>
 #include <blf.hpp>
 using namespace blf;
