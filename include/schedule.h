@@ -16,11 +16,14 @@
 // TEMP
 #include <iostream>
 
+const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
+
 class Schedule
 {
     private:
         ScheduleEditHistory m_editHistory;
         ScheduleCore m_core;
+        std::string m_scheduleName;
 
         // input listeners TODO: move to schedule_edit ?
         std::function<void()> undoCallback = std::function<void()>([&]()
@@ -48,53 +51,53 @@ class Schedule
         // WHOLE-SCHEDULE FUNCTIONS
         void init(Input& input);
 
-        // Clear the current Schedule and replace it with an empty Schedule with default Columns.
-        void createDefaultSchedule();
         // Set the schedule's name to the provided name. NOTE: Does not affect filename. Only called by IO_Manager and MainMenuBarGui through IO_Manager.
-        void setScheduleName(const std::string& name);
-        std::string getScheduleName();
+        void setName(const std::string& name);
+        std::string getName();
+        const ScheduleEditHistory& getEditHistory();
+        ScheduleEditHistory& getEditHistoryMutable();
+        void undo();
+        void redo();
+        // Clear the current Schedule and replace it with default Columns and no rows.
+        void createDefaultSchedule();
 
+        /// CORE WRAPPERS
         // Clears the Schedule and deletes all the Columns.
         void clearSchedule();
-        // Replaces the m_schedule vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
+        // Replaces the vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
         void replaceSchedule(std::vector<Column>& columns);
+        // Get a constant reference to every Column in the Schedule
+        const std::vector<Column>& getAllColumns();
+        // Generally do not use this. It's meant for reading from file only.
+        std::vector<Column>& getAllColumnsMutable();
+        void sortColumns();
 
-        const ScheduleEditHistory& getScheduleEditHistory();
-        ScheduleEditHistory& getScheduleEditHistoryMut();
-
-        // Get a constant pointer to the Column at the index. TODO: Return const ref instead
+        // COLUMNS
+        size_t getColumnCount();
+        void addColumn(size_t index, const Column& column, bool addToHistory = true);
+        void addDefaultColumn(size_t index, bool addToHistory = true);
+        void removeColumn(size_t column, bool addToHistory = true);
+        // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column);
-        // Get a constant reference to every Column in the Schedule (m_schedule)
-        const std::vector<Column>& getColumns();
-        // DO NOT USE UNLESS MEANING TO OVERWRITE THE ENTIRE SCHEDULE!
-        std::vector<Column>& getMutableColumns();
-        const SelectOptions& getColumnSelectOptions(size_t column);
-        // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
-        void modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex = 0, size_t secondIndex = 0, const std::vector<std::string>& optionNames = std::vector<std::string>{}, bool addToHistory = true);
         void setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory = true);
         void setColumnName(size_t column, const char* name, bool addToHistory = true);
         void setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory = true);
-
-        size_t getColumnCount();
-        size_t getRowCount();
-
-        void sortColumns();
-
+        const SelectOptions& getColumnSelectOptions(size_t column);
+        // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
+        void modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex = 0, size_t secondIndex = 0, const std::vector<std::string>& optionNames = std::vector<std::string>{}, bool addToHistory = true);
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
+
+        // ROWS
+        size_t getRowCount();
         void addRow(size_t index, bool addToHistory = true);
         void removeRow(size_t index, bool addToHistory = true);
-        // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
-        void setRow(size_t index, std::vector<ElementBase*> elementData);
         // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
         std::vector<ElementBase*> getRow(size_t index);
-        void addDefaultColumn(size_t index, bool addToHistory = true);
-        void addColumn(size_t index, const Column& column, bool addToHistory = true);
-        void removeColumn(size_t column, bool addToHistory = true);
+        // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
+        void setRow(size_t index, std::vector<ElementBase*> elementData);
 
-        void undo();
-        void redo();
-
+        // ELEMENTS.
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
         template <typename T>
         T getValue(ElementBase* element)

@@ -13,35 +13,6 @@
 // TEMP
 #include <iostream>
 
-void ScheduleCore::setScheduleName(const std::string& name)
-{
-    if (name.size() > SCHEDULE_NAME_MAX_LENGTH)
-    {
-        m_scheduleName = name.substr(0, SCHEDULE_NAME_MAX_LENGTH);
-    }
-    else
-    {
-        m_scheduleName = name;
-    }
-}
-
-std::string ScheduleCore::getScheduleName()
-{
-    return m_scheduleName;
-}
-
-void ScheduleCore::clearSchedule()
-{
-    m_schedule.clear();
-}
-
-void ScheduleCore::replaceSchedule(std::vector<Column>& columns)
-{
-    clearSchedule();
-
-    m_schedule = columns;
-}
-
 // NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
 size_t ScheduleCore::getFlaggedColumnIndex(ScheduleColumnFlags flags)
 {
@@ -84,63 +55,131 @@ std::vector<size_t> ScheduleCore::getColumnSortedNewIndices(size_t index)
     return newIndices;
 }
 
-const Column* ScheduleCore::getColumn(size_t column)
+
+void ScheduleCore::clearSchedule()
 {
-    return (const Column*)getMutableColumn(column);
+    m_schedule.clear();
 }
 
-const std::vector<Column>& ScheduleCore::getColumns()
+void ScheduleCore::replaceSchedule(std::vector<Column>& columns)
+{
+    clearSchedule();
+
+    m_schedule = columns;
+}
+
+const std::vector<Column>& ScheduleCore::getAllColumns()
 {
     return m_schedule;
 }
 
-std::vector<Column>& ScheduleCore::getMutableColumns()
+std::vector<Column>& ScheduleCore::getAllColumnsMutable()
 {
     return m_schedule;
 }
-
-const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column)
+  
+// Sorts every column's rows based on "sorter" columns
+void ScheduleCore::sortColumns()
 {
-    return m_schedule.at(column).selectOptions;
-}
-
-void ScheduleCore::modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex, size_t secondIndex, const std::vector<std::string>& optionNames)
-{
-    Column previousData = Column(m_schedule.at(column));
-
-    switch(selectModification)
+    for (size_t sorterColumn = 0; sorterColumn < getColumnCount(); sorterColumn++)
     {
-        case(OPTION_MODIFICATION_ADD):
-        { 
-            if (optionNames.size() == 0)
+        if (m_schedule.at(sorterColumn).sort != COLUMN_SORT_NONE)
+        {
+            std::vector<size_t> newRowIndices = getColumnSortedNewIndices(sorterColumn);
+
+            // actually sort the rows vector in every column
+            for (size_t affectedColumn = 0; affectedColumn < getColumnCount(); affectedColumn++)
             {
-                std::cout << "ScheduleCore::modifyColumnSelectOptions: Failed to add Select option because no name was provided in the arguments" << std::endl;
-                return;
+                // vector that will replace the old rows vector
+                std::vector<ElementBase*> sortedRows = {};
+                std::vector<ElementBase*>& unsortedRows = m_schedule.at(affectedColumn).rows;
+                sortedRows.reserve(unsortedRows.size());
+
+                for (size_t rowIndex = 0; rowIndex < newRowIndices.size(); rowIndex++)
+                {
+                    sortedRows.push_back(unsortedRows[newRowIndices[rowIndex]]);
+                }
+
+                m_schedule.at(affectedColumn).rows = sortedRows;
+                m_schedule.at(affectedColumn).sorted = true;
             }
-            m_schedule.at(column).selectOptions.addOption(optionNames[0]);
-            break;
-        }
-        case(OPTION_MODIFICATION_REMOVE):
-        { 
-            m_schedule.at(column).selectOptions.removeOption(firstIndex);
-            break;
-        }
-        case(OPTION_MODIFICATION_MOVE):
-        { 
-            m_schedule.at(column).selectOptions.moveOption(firstIndex, secondIndex);
-            break;
-        }
-        case(OPTION_MODIFICATION_CLEAR):
-        { 
-            m_schedule.at(column).selectOptions.clearOptions();
-            break;
-        }
-        case(OPTION_MODIFICATION_REPLACE):
-        { 
-            m_schedule.at(column).selectOptions.replaceOptions(optionNames);
+            // NOTE: for now, we only sort by one column
             break;
         }
     }
+}
+
+
+size_t ScheduleCore::getColumnCount()
+{
+    return m_schedule.size();
+}
+
+// Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
+// TODO: FIX SELECTS PROBABLY
+void ScheduleCore::addColumn(size_t index, const Column& column)
+{
+    std::cout << "Adding column: " << column.name << std::endl;
+
+    // TODO: make sure that EVERY column has the same amount of rows!!!
+    // TODO: give the new column correct creation date & time
+
+    // the last index = just add to the end
+    if (index == getColumnCount())
+    {
+        m_schedule.push_back(column);
+    }
+    else
+    {
+        m_schedule.insert(m_schedule.begin() + index, column);
+    }
+}
+
+void ScheduleCore::addDefaultColumn(size_t index)
+{
+    time_t t = std::time(nullptr);
+    tm creationTime = *std::localtime(&t);
+
+    Column addedColumn = Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Text"), false);
+
+    // the last index = just add to the end
+    if (index == getColumnCount())
+    {
+        for (size_t i = 0; i < getRowCount(); i++)
+        {
+            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+        }
+        m_schedule.push_back(addedColumn);
+    }
+    else
+    {
+        for (size_t i = 0; i < getRowCount(); i++)
+        {
+            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+        }
+        m_schedule.insert(m_schedule.begin() + index, addedColumn);
+    }
+}
+
+void ScheduleCore::removeColumn(size_t column)
+{
+    // a permanent column can't be removed
+    if (m_schedule.at(column).permanent == true) { return; }
+
+    // the last index = pop from end
+    if (column == getColumnCount() - 1)
+    {
+        m_schedule.pop_back();
+    }
+    else
+    {
+        m_schedule.erase(m_schedule.begin() + column); // invalidates pointers to Columns past this one
+    }  
+}
+
+const Column* ScheduleCore::getColumn(size_t column)
+{
+    return (const Column*)getMutableColumn(column);
 }
 
 void ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
@@ -197,43 +236,45 @@ void ScheduleCore::setColumnSort(size_t column, COLUMN_SORT sortDirection)
     }
 }
 
-size_t ScheduleCore::getColumnCount()
+const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column)
 {
-    return m_schedule.size();
+    return m_schedule.at(column).selectOptions;
 }
 
-// Return the number of rows in the schedule or 0 if there are no columns (which probably won't happen?) 
-size_t ScheduleCore::getRowCount()
+void ScheduleCore::modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex, size_t secondIndex, const std::vector<std::string>& optionNames)
 {
-    return (m_schedule.size() > 0 ? m_schedule.at(0).rows.size() : 0);
-}
+    Column previousData = Column(m_schedule.at(column));
 
-// Sorts every column's rows based on "sorter" columns
-void ScheduleCore::sortColumns()
-{
-    for (size_t sorterColumn = 0; sorterColumn < getColumnCount(); sorterColumn++)
+    switch(selectModification)
     {
-        if (m_schedule.at(sorterColumn).sort != COLUMN_SORT_NONE)
-        {
-            std::vector<size_t> newRowIndices = getColumnSortedNewIndices(sorterColumn);
-
-            // actually sort the rows vector in every column
-            for (size_t affectedColumn = 0; affectedColumn < getColumnCount(); affectedColumn++)
+        case(OPTION_MODIFICATION_ADD):
+        { 
+            if (optionNames.size() == 0)
             {
-                // vector that will replace the old rows vector
-                std::vector<ElementBase*> sortedRows = {};
-                std::vector<ElementBase*>& unsortedRows = m_schedule.at(affectedColumn).rows;
-                sortedRows.reserve(unsortedRows.size());
-
-                for (size_t rowIndex = 0; rowIndex < newRowIndices.size(); rowIndex++)
-                {
-                    sortedRows.push_back(unsortedRows[newRowIndices[rowIndex]]);
-                }
-
-                m_schedule.at(affectedColumn).rows = sortedRows;
-                m_schedule.at(affectedColumn).sorted = true;
+                std::cout << "ScheduleCore::modifyColumnSelectOptions: Failed to add Select option because no name was provided in the arguments" << std::endl;
+                return;
             }
-            // NOTE: for now, we only sort by one column
+            m_schedule.at(column).selectOptions.addOption(optionNames[0]);
+            break;
+        }
+        case(OPTION_MODIFICATION_REMOVE):
+        { 
+            m_schedule.at(column).selectOptions.removeOption(firstIndex);
+            break;
+        }
+        case(OPTION_MODIFICATION_MOVE):
+        { 
+            m_schedule.at(column).selectOptions.moveOption(firstIndex, secondIndex);
+            break;
+        }
+        case(OPTION_MODIFICATION_CLEAR):
+        { 
+            m_schedule.at(column).selectOptions.clearOptions();
+            break;
+        }
+        case(OPTION_MODIFICATION_REPLACE):
+        { 
+            m_schedule.at(column).selectOptions.replaceOptions(optionNames);
             break;
         }
     }
@@ -317,6 +358,13 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
             break;
         }
     }
+}
+
+
+// Return the number of rows in the schedule or 0 if there are no columns (which probably won't happen?) 
+size_t ScheduleCore::getRowCount()
+{
+    return (m_schedule.size() > 0 ? m_schedule.at(0).rows.size() : 0);
 }
 
 void ScheduleCore::addRow(size_t index)
@@ -482,66 +530,4 @@ void ScheduleCore::setRow(size_t index, std::vector<ElementBase*> elementData)
         //std::cout << col << ": " << elementData[col]->getString() << std::endl;
         setElement(col, index, elementData[col]);
     } 
-}
-
-void ScheduleCore::addDefaultColumn(size_t index)
-{
-    time_t t = std::time(nullptr);
-    tm creationTime = *std::localtime(&t);
-
-    Column addedColumn = Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Text"), false);
-
-    // the last index = just add to the end
-    if (index == getColumnCount())
-    {
-        for (size_t i = 0; i < getRowCount(); i++)
-        {
-            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
-        }
-        m_schedule.push_back(addedColumn);
-    }
-    else
-    {
-        for (size_t i = 0; i < getRowCount(); i++)
-        {
-            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
-        }
-        m_schedule.insert(m_schedule.begin() + index, addedColumn);
-    }
-}
-
-// Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
-// TODO: FIX SELECTS PROBABLY
-void ScheduleCore::addColumn(size_t index, const Column& column)
-{
-    std::cout << "Adding column: " << column.name << std::endl;
-
-    // TODO: make sure that EVERY column has the same amount of rows!!!
-    // TODO: give the new column correct creation date & time
-
-    // the last index = just add to the end
-    if (index == getColumnCount())
-    {
-        m_schedule.push_back(column);
-    }
-    else
-    {
-        m_schedule.insert(m_schedule.begin() + index, column);
-    }
-}
-
-void ScheduleCore::removeColumn(size_t column)
-{
-    // a permanent column can't be removed
-    if (m_schedule.at(column).permanent == true) { return; }
-
-    // the last index = pop from end
-    if (column == getColumnCount() - 1)
-    {
-        m_schedule.pop_back();
-    }
-    else
-    {
-        m_schedule.erase(m_schedule.begin() + column); // invalidates pointers to Columns past this one
-    }  
 }

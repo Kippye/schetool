@@ -12,7 +12,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
 {
     if (ImGui::Begin("Edit History", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        auto editHistory = m_schedule->getScheduleEditHistory().getEditHistory();
+        auto editHistory = m_schedule->getEditHistory().getEditHistory();
 
         for (size_t i = 0; i < editHistory.size(); i++)
         {
@@ -61,7 +61,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
             }
 
-            ImGui::Selectable(buf, m_schedule->getScheduleEditHistory().getEditHistoryIndex() == i);
+            ImGui::Selectable(buf, m_schedule->getEditHistory().getEditHistoryIndex() == i);
         }
     }
     ImGui::End();
