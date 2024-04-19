@@ -196,6 +196,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 {
                     tm creationTime = getElementCreationTime(element);
                     Element<SelectContainer>* select = new Element<SelectContainer>(type, SelectContainer(schedule[element->columnIndex].selectOptions), DateContainer(creationTime), TimeContainer(creationTime));
+                    select->getValueReference().listenToCallback();
                     select->getValueReference().replaceSelection(element->getSelection());
                     schedule[element->columnIndex].rows.push_back(select);
                     dataPointers.push_back(element);
