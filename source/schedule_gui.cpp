@@ -73,8 +73,12 @@ void ScheduleGui::draw(Window& window, Input& input)
 					ImGui::PopID();
 				}
 
-				for (size_t row = 0; row < m_schedule->getRowCount(); row++)
+				std::vector<size_t> sortedRowIndices = m_schedule->getSortedRowIndices();
+
+				for (size_t unsortedRow = 0; unsortedRow < m_schedule->getRowCount(); unsortedRow++)
 				{
+					size_t row = sortedRowIndices[unsortedRow];
+					
 					ImGui::TableNextRow();
 					for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
 					{

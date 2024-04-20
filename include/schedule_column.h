@@ -39,7 +39,6 @@ struct Column
     bool permanent;
     ScheduleColumnFlags flags;
     COLUMN_SORT sort;
-    bool sorted;
     SelectOptions selectOptions;
 
     Column()
@@ -53,7 +52,6 @@ struct Column
         bool permanent = false,
         ScheduleColumnFlags flags = ScheduleColumnFlags_None,
         COLUMN_SORT sort = COLUMN_SORT_NONE,
-        bool sorted = false,
         const SelectOptions& selectOptions = SelectOptions())
     {
         this->rows = rows;
@@ -62,7 +60,6 @@ struct Column
         this->permanent = permanent;
         this->flags = flags;
         this->sort = sort;
-        this->sorted = sorted;
         this->selectOptions = selectOptions;
     }
 
@@ -73,7 +70,6 @@ struct Column
         permanent = other.permanent;
         flags = other.flags;
         sort = other.sort;
-        sorted = other.sorted;
         selectOptions = other.selectOptions;
 
         for (size_t i = 0; i < other.rows.size(); i++)
@@ -91,7 +87,6 @@ struct Column
         permanent = other.permanent;
         flags = other.flags;
         sort = other.sort;
-        sorted = other.sorted;
         selectOptions = other.selectOptions;
 
         rows.clear();

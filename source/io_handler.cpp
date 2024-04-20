@@ -55,6 +55,7 @@ bool IO_Handler::readSchedule(const char* name)
     {
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
     }
+    m_schedule->sortColumns();
     setOpenScheduleFilename(std::string(name));
     m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
     return true;

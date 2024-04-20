@@ -59,6 +59,7 @@ std::vector<size_t> ScheduleCore::getColumnSortedNewIndices(size_t index)
 void ScheduleCore::clearSchedule()
 {
     m_schedule.clear();
+    sortColumns();
 }
 
 void ScheduleCore::replaceSchedule(std::vector<Column>& columns)
@@ -66,6 +67,7 @@ void ScheduleCore::replaceSchedule(std::vector<Column>& columns)
     clearSchedule();
 
     m_schedule = columns;
+    sortColumns();
 }
 
 const std::vector<Column>& ScheduleCore::getAllColumns()
@@ -85,26 +87,14 @@ void ScheduleCore::sortColumns()
     {
         if (m_schedule.at(sorterColumn).sort != COLUMN_SORT_NONE)
         {
-            std::vector<size_t> newRowIndices = getColumnSortedNewIndices(sorterColumn);
-
-            // actually sort the rows vector in every column
-            for (size_t affectedColumn = 0; affectedColumn < getColumnCount(); affectedColumn++)
-            {
-                // vector that will replace the old rows vector
-                std::vector<ElementBase*> sortedRows = {};
-                std::vector<ElementBase*>& unsortedRows = m_schedule.at(affectedColumn).rows;
-                sortedRows.reserve(unsortedRows.size());
-
-                for (size_t rowIndex = 0; rowIndex < newRowIndices.size(); rowIndex++)
-                {
-                    sortedRows.push_back(unsortedRows[newRowIndices[rowIndex]]);
-                }
-
-                m_schedule.at(affectedColumn).rows = sortedRows;
-                m_schedule.at(affectedColumn).sorted = true;
-            }
-            // NOTE: for now, we only sort by one column
+            m_sortedRowIndices = getColumnSortedNewIndices(sorterColumn);
             break;
+        }
+        // Last column is unsorted too which means we should not sort
+        else if (sorterColumn == getColumnCount() - 1)
+        {
+            m_sortedRowIndices.resize(getRowCount());
+            std::iota(m_sortedRowIndices.begin(), m_sortedRowIndices.end(), 0);
         }
     }
 }
@@ -133,6 +123,9 @@ void ScheduleCore::addColumn(size_t index, const Column& column)
     {
         m_schedule.insert(m_schedule.begin() + index, column);
     }
+
+    // Sort columns just in case, because the added Column could have a sort other than COLUMN_SORT_NONE
+    sortColumns();
 }
 
 void ScheduleCore::addDefaultColumn(size_t index)
@@ -159,12 +152,16 @@ void ScheduleCore::addDefaultColumn(size_t index)
         }
         m_schedule.insert(m_schedule.begin() + index, addedColumn);
     }
+
+    // I think default columns don't cause a need for sorting, since their sort is always COLUMN_SORT_NONE
 }
 
 void ScheduleCore::removeColumn(size_t column)
 {
     // a permanent column can't be removed
     if (m_schedule.at(column).permanent == true) { return; }
+
+    bool resortRequired = m_schedule.at(column).sort != COLUMN_SORT_NONE;
 
     // the last index = pop from end
     if (column == getColumnCount() - 1)
@@ -174,7 +171,12 @@ void ScheduleCore::removeColumn(size_t column)
     else
     {
         m_schedule.erase(m_schedule.begin() + column); // invalidates pointers to Columns past this one
-    }  
+    }
+
+    if (resortRequired)
+    {
+        sortColumns();
+    }
 }
 
 const Column* ScheduleCore::getColumn(size_t column)
@@ -229,11 +231,7 @@ void ScheduleCore::setColumnSort(size_t column, COLUMN_SORT sortDirection)
     Column previousData = Column(m_schedule.at(column));
 
     m_schedule.at(column).sort = sortDirection;
-    if (sortDirection != COLUMN_SORT_NONE)
-    {
-        m_schedule.at(column).sorted = false;
-        sortColumns();
-    }
+    sortColumns();
 }
 
 const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column)
@@ -278,6 +276,8 @@ void ScheduleCore::modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION 
             break;
         }
     }
+
+    sortColumns();
 }
 
 void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
@@ -358,6 +358,9 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
             break;
         }
     }
+
+    // NOTE: For performance's sake, the individual elements being reset do not resort, so we call it once here
+    sortColumns();
 }
 
 
@@ -505,6 +508,8 @@ void ScheduleCore::removeRow(size_t index)
             columnValues.erase(columnValues.begin() + index);
         }
     }
+
+    sortColumns();
 }
 
 std::vector<ElementBase*> ScheduleCore::getRow(size_t index)
@@ -528,6 +533,13 @@ void ScheduleCore::setRow(size_t index, std::vector<ElementBase*> elementData)
     for (size_t col = 0; col < getColumnCount(); col++)
     {
         //std::cout << col << ": " << elementData[col]->getString() << std::endl;
-        setElement(col, index, elementData[col]);
-    } 
+        setElement(col, index, elementData[col], false);
+    }
+
+    sortColumns();
+}
+
+std::vector<size_t> ScheduleCore::getSortedRowIndices()
+{
+    return m_sortedRowIndices;
 }

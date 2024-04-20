@@ -96,6 +96,7 @@ class Schedule
         std::vector<ElementBase*> getRow(size_t index);
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
         void setRow(size_t index, std::vector<ElementBase*> elementData);
+        std::vector<size_t> getSortedRowIndices();
 
         // ELEMENTS.
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.

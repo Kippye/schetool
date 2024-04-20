@@ -133,7 +133,6 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             loadedColumns[c]->permanent,
             (ScheduleColumnFlags)loadedColumns[c]->flags,
             (COLUMN_SORT)loadedColumns[c]->sort,
-            false,
             SelectOptions(loadedColumns[c]->getSelectOptions())
         );
 

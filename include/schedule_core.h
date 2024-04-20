@@ -13,6 +13,7 @@ class ScheduleCore
     private:
         std::vector<Column> m_schedule = {};
         ColumnSortComparison m_columnSortComparison;
+        std::vector<size_t> m_sortedRowIndices = {};
         size_t getFlaggedColumnIndex(ScheduleColumnFlags flags);
         Column* getColumnWithFlags(ScheduleColumnFlags flags);
         Column* getMutableColumn(size_t column);
@@ -54,6 +55,7 @@ class ScheduleCore
         std::vector<ElementBase*> getRow(size_t index);
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
         void setRow(size_t index, std::vector<ElementBase*> elementData);
+        std::vector<size_t> getSortedRowIndices();
 
         // ELEMENTS.
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
@@ -135,7 +137,6 @@ class ScheduleCore
                 getMutableColumn(column)->rows[row] = other;
             }
 
-            m_schedule.at(column).sorted = false;
             if (resort)
             {
                 sortColumns();
@@ -177,7 +178,6 @@ class ScheduleCore
                     - getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue());
             }
 
-            m_schedule.at(column).sorted = false;
             if (resort)
             {
                 sortColumns();

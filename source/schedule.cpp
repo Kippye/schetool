@@ -71,6 +71,7 @@ void Schedule::createDefaultSchedule()
     m_core.addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("Start"), true, ScheduleColumnFlags_Start));
     m_core.addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("Duration"), true, ScheduleColumnFlags_Duration));
     m_core.addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("End"), true, ScheduleColumnFlags_End));
+    m_core.sortColumns();
 }
 
 
@@ -270,4 +271,9 @@ std::vector<ElementBase*> Schedule::getRow(size_t index)
 void Schedule::setRow(size_t index, std::vector<ElementBase*> elementData)
 {
     m_core.setRow(index, elementData);
+}
+
+std::vector<size_t> Schedule::getSortedRowIndices()
+{
+    return m_core.getSortedRowIndices();
 }
