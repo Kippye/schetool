@@ -79,6 +79,17 @@ project "schetool"
 		"include/zlib"
 	}
 	
+	filter {"configurations:Debug"}
+		files
+		{
+			"include/tests/*.h"
+		}
+		includedirs
+		{
+			"include/tests"
+		}
+	filter{}
+	
 	defines
 	{
 		"GLFW_INCLUDE_NONE"

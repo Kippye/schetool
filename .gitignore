@@ -8,6 +8,8 @@ Debug/
 Release/
 resources/
 compile_commands/
+# tests
+include/tests
 
 # program directories
 schedules/

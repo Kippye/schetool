@@ -58,6 +58,12 @@ void SelectOptions::removeCallbackListener(intptr_t listenerPointer)
     }
 }
 
+// Remove all listeners without notifying them. It's preferrable if the listeners remove themselves so only call this if there is no other option.
+void SelectOptions::clearListeners()
+{
+    m_callbacks.clear();
+}
+
 void SelectOptions::setIsMutable(bool isMutable)
 {
     m_mutable = isMutable;

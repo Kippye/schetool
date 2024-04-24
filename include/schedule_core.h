@@ -35,26 +35,26 @@ class ScheduleCore
         size_t getColumnCount();
         void addColumn(size_t index, const Column& column);
         void addDefaultColumn(size_t index);
-        void removeColumn(size_t column);
+        bool removeColumn(size_t column);
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column);
-        void setColumnType(size_t column, SCHEDULE_TYPE type);
-        void setColumnName(size_t column, const char* name);
-        void setColumnSort(size_t column, COLUMN_SORT sortDirection);
+        bool setColumnType(size_t column, SCHEDULE_TYPE type);
+        bool setColumnName(size_t column, const char* name);
+        bool setColumnSort(size_t column, COLUMN_SORT sortDirection);
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
-        void modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex = 0, size_t secondIndex = 0, const std::vector<std::string>& optionNames = std::vector<std::string>{});
-        // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
+        bool modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex = 0, size_t secondIndex = 0, const std::vector<std::string>& optionNames = std::vector<std::string>{});
+        // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 
         // ROWS
         size_t getRowCount();
         void addRow(size_t index);
-        void removeRow(size_t index);
+        bool removeRow(size_t index);
         // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
         std::vector<ElementBase*> getRow(size_t index);
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
-        void setRow(size_t index, std::vector<ElementBase*> elementData);
+        bool setRow(size_t index, std::vector<ElementBase*> elementData);
         std::vector<size_t> getSortedRowIndices();
 
         // ELEMENTS.
@@ -68,22 +68,44 @@ class ScheduleCore
         // Get a pointer to the ElementBase at column; row
         ElementBase* getElement(size_t column, size_t row)
         {
-            return getMutableColumn(column)->getElement(row);
+            Column* mutableColumn = getMutableColumn(column);
+
+            if (mutableColumn == nullptr || mutableColumn->hasElement(row) == false)
+            {
+                printf("ScheduleCore::getElement could not get element at %zu; %zu", column, row);
+                return nullptr;
+            }
+
+            return mutableColumn->getElement(row);
         }
 
         // Simple function that gets an ElementBase* at column; row and casts it to Element<T>*. In the future, this might check that the returned type is actually correct.
         template <typename T>
         Element<T>* getElementAsSpecial(size_t column, size_t row)
         {
-            return (Element<T>*)getElement(column, row);
+            ElementBase* element = getElement(column, row);
+
+            if (element == nullptr)
+            {
+                printf("ScheduleCore::getElementAsSpecial could not get element at %zu; %zu", column, row);
+                return nullptr;
+            }
+
+            return (Element<T>*)element;
         }
 
         // Use this function to completely replace the element at column; row with the ElementBase in value.
         // NOTE: If the types match, a copy is performed.
         // If the types do not match, the target element pointer is replaced by the value pointer!
         // NOTE: Currently, does not add to the edit history
-        void setElement(size_t column, size_t row, ElementBase* other, bool resort = true)
-        {            
+        bool setElement(size_t column, size_t row, ElementBase* other, bool resort = true)
+        {
+            if (getElement(column, row) == nullptr)
+            {
+                printf("ScheduleCore::setElement failed to set element at %zu; %zu - element does not exist", column, row);
+                return false;
+            }
+
             // IF the provided Element fits the column's type, set the target Element's value directly
             if (getColumn(column)->type == other->getType())
             {
@@ -141,20 +163,36 @@ class ScheduleCore
             {
                 sortColumns();
             }
+            return true;
         }
 
         // Shortcut for getting the value of an Element at column; row
         template <typename T>
         T getElementValue(size_t column, size_t row)
         {
-            return getValue<T>(getColumn(column)->rows[row]);
+            const Column* elementColumn = getColumn(column);
+            if (elementColumn == nullptr || elementColumn->hasElement(row) == false)
+            {
+                printf("ScheduleCore::getElementValue could not return value at %zu; %zu", column, row);
+                return T();
+            }
+            return getValue<T>(elementColumn->rows[row]);
         }
 
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
         template <typename T>
-        void setElementValue(size_t column, size_t row, const T& value, bool resort = true)
+        bool setElementValue(size_t column, size_t row, const T& value, bool resort = true)
         {
+            std::cout << "setvalue" ; 
             ElementBase* element = getElement(column, row);
+
+            std::cout << "Blooper";
+
+            if (element == nullptr)
+            {
+                printf("ScheduleCore::setElementValue failed to set element at %zu; %zu - element does not exist", column, row);
+                return false;
+            }
 
             ((Element<T>*)element)->setValue(value);
 
@@ -182,5 +220,6 @@ class ScheduleCore
             {
                 sortColumns();
             }
+            return true;
         }
 };

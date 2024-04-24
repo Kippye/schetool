@@ -146,15 +146,16 @@ void Schedule::removeColumn(size_t column, bool addToHistory)
 
     Column columnCopy = *m_core.getColumn(column);
     
-    m_core.removeColumn(column);
-
     // oh cheese.
-    if (addToHistory)
+    if (m_core.removeColumn(column))
     {
-        m_editHistory.addEdit(new ColumnEdit(true, column, columnCopy));
-    }
+        if (addToHistory)
+        {
+            m_editHistory.addEdit(new ColumnEdit(true, column, columnCopy));
+        }
 
-    m_editHistory.setEditedSinceWrite(true);
+        m_editHistory.setEditedSinceWrite(true);
+    }
 }
 
 const Column* Schedule::getColumn(size_t column)
@@ -165,47 +166,50 @@ const Column* Schedule::getColumn(size_t column)
 
 void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory)
 {
-    //if (type == m_schedule[column].type) { return; }
-
     // for adding to edit history
     Column previousData = Column(*m_core.getColumn(column));
 
-    m_core.setColumnType(column, type);
+    std::cout << "Setting column type" << std::endl;
 
-    if (addToHistory)
+    if (m_core.setColumnType(column, type))
     {
-        m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_TYPE, previousData, *m_core.getColumn(column)));
+        if (addToHistory)
+        {
+            m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_TYPE, previousData, *m_core.getColumn(column)));
+        }
+
+        m_editHistory.setEditedSinceWrite(true);
     }
-    
-    m_editHistory.setEditedSinceWrite(true);
 }
 
 void Schedule::setColumnName(size_t column, const char* name, bool addToHistory)
 {
     Column previousData = Column(*m_core.getColumn(column));
 
-    m_core.setColumnName(column, name);
-
-    if (addToHistory)
+    if (m_core.setColumnName(column, name))
     {
-        m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_NAME, previousData, *m_core.getColumn(column)));
-    }
+        if (addToHistory)
+        {
+            m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_NAME, previousData, *m_core.getColumn(column)));
+        }
 
-    m_editHistory.setEditedSinceWrite(true);
+        m_editHistory.setEditedSinceWrite(true);
+    }
 }
 
 void Schedule::setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory)
 {
     Column previousData = Column(*m_core.getColumn(column));
 
-    m_core.setColumnSort(column, sortDirection);
-
-    if (addToHistory)
+    if (m_core.setColumnSort(column, sortDirection))
     {
-        m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_SORT, previousData, *m_core.getColumn(column)));
-    }
+        if (addToHistory)
+        {
+            m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_SORT, previousData, *m_core.getColumn(column)));
+        }
 
-    m_editHistory.setEditedSinceWrite(true);
+        m_editHistory.setEditedSinceWrite(true);
+    }
 }
 
 const SelectOptions& Schedule::getColumnSelectOptions(size_t column)
@@ -217,11 +221,14 @@ void Schedule::modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION sele
 {
     Column previousData = Column(*m_core.getColumn(column));
 
-    m_core.modifyColumnSelectOptions(column, selectModification, firstIndex, secondIndex, optionNames);
-
-    if (addToHistory)
+    if (m_core.modifyColumnSelectOptions(column, selectModification, firstIndex, secondIndex, optionNames))
     {
-        m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, *m_core.getColumn(column)));
+        if (addToHistory)
+        {
+            m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, *m_core.getColumn(column)));
+        }
+    
+        m_editHistory.setEditedSinceWrite(true);
     }
 }
 
@@ -251,16 +258,31 @@ void Schedule::addRow(size_t index, bool addToHistory)
 
 void Schedule::removeRow(size_t index, bool addToHistory)
 {
-    // TODO: i'd prefer if this was still AFTER the removeRow call.. eh.
-    // add a remove RowEdit to the edit history with copies of the removed Elements
-    if (addToHistory)
+    std::vector<ElementBase*> originalRow = m_core.getRow(index);
+    // temporary vector of copies
+    std::vector<ElementBase*> originalRowCopies = {};
+
+    for (ElementBase* element: originalRow)
     {
-        m_editHistory.addEdit(new RowEdit(true, index, m_core.getRow(index)));
+        originalRowCopies.push_back(element->getCopy());
     }
 
-    m_core.removeRow(index);
+    if (m_core.removeRow(index))
+    {
+        if (addToHistory)
+        {
+        std::cout << "yooohoo";
+            // add a remove RowEdit to the edit history with copies of the removed Elements
+            m_editHistory.addEdit(new RowEdit(true, index, originalRowCopies));
+        }
 
-    m_editHistory.setEditedSinceWrite(true);
+        m_editHistory.setEditedSinceWrite(true);
+    }
+
+    for (size_t i = 0; i < originalRowCopies.size(); i++)
+    {
+        delete originalRowCopies[i];
+    }
 }
 
 std::vector<ElementBase*> Schedule::getRow(size_t index)

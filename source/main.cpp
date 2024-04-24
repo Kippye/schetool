@@ -12,6 +12,10 @@
 #include <Windows.h>
 #endif
 
+#ifdef DEBUG
+#include <tests/test_edit_history.h>
+#endif
+
 Program::Program()
 {
 	// TODO: load user preferences here!
@@ -25,6 +29,15 @@ Program::Program()
 	schedule.init(input);
 
 	schedule.createDefaultSchedule();
+
+	#ifdef DEBUG
+		int seed = 0;
+		EditHistoryTest editHistoryTest = EditHistoryTest(1000, seed == 0 ? time(NULL) : seed, &schedule, 0);
+		if (editHistoryTest.begin())
+		{
+			std::cout << "TESTS PASSED!" << std::endl;
+		}
+	#endif
 
 	// There are pre-existing Schedules. Open the most recently edited one.
 	if (ioHandler.getScheduleStemNames().size() > 0)

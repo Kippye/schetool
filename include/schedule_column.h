@@ -109,8 +109,18 @@ struct Column
         }
     }
 
+    bool hasElement(size_t index) const
+    {
+        return index < rows.size();
+    }
+
     ElementBase* getElement(size_t index)
     {
+        if (hasElement(index) == false)
+        {
+            printf("The column %s has no element at index %zu", name.c_str(), index);
+            return nullptr;
+        }
         return rows[index];
     }
 };

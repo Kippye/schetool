@@ -125,9 +125,10 @@ class Schedule
         // NOTE: Currently, does not add to the edit history
         void setElement(size_t column, size_t row, ElementBase* other, bool resort = true)
         {
-            m_core.setElement(column, row, other, resort);
-            
-            m_editHistory.setEditedSinceWrite(true);
+            if (m_core.setElement(column, row, other, resort))
+            {
+                m_editHistory.setEditedSinceWrite(true);
+            }
         }
 
         // Shortcut for getting the value of an Element at column; row
@@ -143,6 +144,13 @@ class Schedule
         {
             ElementBase* element = m_core.getElement(column, row);
 
+            if (element == nullptr)
+            {
+                printf("Schedule::setElementValue failed to set element at %zu; %zu - element does not exist", column, row);
+                return;
+            }
+
+            // TODO: this might add to edit history even if it fails in the core
             // add the edit to history
             if (addToHistory)
             {

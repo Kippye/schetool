@@ -45,6 +45,7 @@ struct SelectOptions
         const SelectOptionChange& getLastChange() const;
         void addCallbackListener(intptr_t listenerPointer, std::function<void(const SelectOptionChange&)>& listener);
         void removeCallbackListener(intptr_t listenerPointer);
+        void clearListeners();
         void addOption(const std::string& option);
         void removeOption(const std::string& option);
         void removeOption(size_t option);
