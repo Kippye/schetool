@@ -25,43 +25,59 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 case (SCHEDULE_EDIT_ELEMENT):
                 {
                     ElementEditBase* elementEdit = (ElementEditBase*)editHistory[i];
-                    sprintf(buf, "Element of type %s at (%zu; %zu)", 
+                    sprintf(buf, "Element of type %s at (%zu; %zu)##%zu", 
                         m_schedule->scheduleTypeNames.at(elementEdit->getElementType()), 
                         elementEdit->getPosition().first, 
-                        elementEdit->getPosition().second);
+                        elementEdit->getPosition().second,
+                        i);
                     break;
                 }
                 case (SCHEDULE_EDIT_ROW):
                 {
                     RowEdit* rowEdit = (RowEdit*)editHistory[i];
-                    sprintf(buf, "%c Row at %zu", 
+                    sprintf(buf, "%c Row at %zu##%zu", 
                         rowEdit->getIsRemove() ? '-' : '+', 
-                        rowEdit->getRow());
+                        rowEdit->getRow(),
+                        i);
                     break;
                 }
                 case (SCHEDULE_EDIT_COLUMN):
                 {
                     ColumnEdit* columnEdit = (ColumnEdit*)editHistory[i];
-                    sprintf(buf, "%c Column %s of type %s at %zu", 
+                    sprintf(buf, "%c Column %s of type %s at %zu##%zu", 
                         columnEdit->getIsRemove() ? '-' : '+',
                         columnEdit->getColumnData().name.c_str(), 
                         m_schedule->scheduleTypeNames.at(columnEdit->getColumnData().type),
-                        columnEdit->getColumn());
+                        columnEdit->getColumn(),
+                        i);
                     break;
                 }
                 case (SCHEDULE_EDIT_COLUMN_PROPERTY):
                 {
                     ColumnPropertyEdit* columnPropertyEdit = (ColumnPropertyEdit*)editHistory[i];
                     COLUMN_PROPERTY editedProperty = columnPropertyEdit->getEditedProperty();
-                    sprintf(buf, "Column %s property %s at %zu", 
+                    sprintf(buf, "Column %s property %s at %zu##%zu", 
                         columnPropertyEdit->getColumnName().c_str(),
                         editedProperty == COLUMN_PROPERTY_NAME ? "Name" : (editedProperty == COLUMN_PROPERTY_TYPE ? "Type" : (editedProperty == COLUMN_PROPERTY_SELECT_OPTIONS ? "Select options" : "Sort")),
-                        columnPropertyEdit->getColumn());
+                        columnPropertyEdit->getColumn(),
+                        i);
                     break;
                 }
             }
 
-            ImGui::Selectable(buf, m_schedule->getEditHistory().getEditHistoryIndex() == i);
+            const ScheduleEditHistory& editHistory = m_schedule->getEditHistory();
+
+            if (ImGui::Selectable(buf, editHistory.getEditHistoryIndex() == i)) 
+            {
+                while (editHistory.getEditHistoryIndex() > i)
+                {
+                    m_schedule->undo();
+                }
+                while (editHistory.getEditHistoryIndex() < i)
+                {
+                    m_schedule->redo();
+                }
+            }
         }
     }
     ImGui::End();
