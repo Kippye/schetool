@@ -114,7 +114,7 @@ void Schedule::addColumn(size_t index, const Column& column, bool addToHistory)
 {
     if (addToHistory)
     {
-        m_editHistory.addEdit(new ColumnEdit(false, index, column));
+        // m_editHistory.addEdit(new ColumnEdit(false, index, column));
     }
 
     m_core.addColumn(index, column);
@@ -131,7 +131,7 @@ void Schedule::addDefaultColumn(size_t index, bool addToHistory)
     {
         if (index < m_core.getColumnCount())
         {
-            m_editHistory.addEdit(new ColumnEdit(false, index, *m_core.getColumn(index)));
+            // m_editHistory.addEdit(new ColumnEdit(false, index, *m_core.getColumn(index)));
         }
     }
 
@@ -144,14 +144,14 @@ void Schedule::removeColumn(size_t column, bool addToHistory)
     // a permanent column can't be removed
     if (m_core.getColumn(column)->permanent == true) { return; }
 
-    Column columnCopy = *m_core.getColumn(column);
+    // Column columnCopy = *m_core.getColumn(column);
     
     // oh cheese.
     if (m_core.removeColumn(column))
     {
         if (addToHistory)
         {
-            m_editHistory.addEdit(new ColumnEdit(true, column, columnCopy));
+            // m_editHistory.addEdit(new ColumnEdit(true, column, columnCopy));
         }
 
         m_editHistory.setEditedSinceWrite(true);
@@ -167,7 +167,7 @@ const Column* Schedule::getColumn(size_t column)
 void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory)
 {
     // for adding to edit history
-    Column previousData = Column(*m_core.getColumn(column));
+    // Column previousData = Column(*m_core.getColumn(column));
 
     std::cout << "Setting column type" << std::endl;
 
@@ -175,7 +175,7 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistor
     {
         if (addToHistory)
         {
-            m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_TYPE, previousData, *m_core.getColumn(column)));
+            // m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_TYPE, previousData, *m_core.getColumn(column)));
         }
 
         m_editHistory.setEditedSinceWrite(true);
@@ -184,13 +184,13 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistor
 
 void Schedule::setColumnName(size_t column, const char* name, bool addToHistory)
 {
-    Column previousData = Column(*m_core.getColumn(column));
+    // Column previousData = Column(*m_core.getColumn(column));
 
     if (m_core.setColumnName(column, name))
     {
         if (addToHistory)
         {
-            m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_NAME, previousData, *m_core.getColumn(column)));
+            // m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_NAME, previousData, *m_core.getColumn(column)));
         }
 
         m_editHistory.setEditedSinceWrite(true);
@@ -199,13 +199,13 @@ void Schedule::setColumnName(size_t column, const char* name, bool addToHistory)
 
 void Schedule::setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory)
 {
-    Column previousData = Column(*m_core.getColumn(column));
+    // Column previousData = Column(*m_core.getColumn(column));
 
     if (m_core.setColumnSort(column, sortDirection))
     {
         if (addToHistory)
         {
-            m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_SORT, previousData, *m_core.getColumn(column)));
+            // m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_SORT, previousData, *m_core.getColumn(column)));
         }
 
         m_editHistory.setEditedSinceWrite(true);
@@ -219,13 +219,13 @@ const SelectOptions& Schedule::getColumnSelectOptions(size_t column)
 
 void Schedule::modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex, size_t secondIndex, const std::vector<std::string>& optionNames, bool addToHistory)
 {
-    Column previousData = Column(*m_core.getColumn(column));
+    // Column previousData = Column(*m_core.getColumn(column));
 
     if (m_core.modifyColumnSelectOptions(column, selectModification, firstIndex, secondIndex, optionNames))
     {
         if (addToHistory)
         {
-            m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, *m_core.getColumn(column)));
+            // m_editHistory.addEdit(new ColumnPropertyEdit(column, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, *m_core.getColumn(column)));
         }
     
         m_editHistory.setEditedSinceWrite(true);
@@ -250,7 +250,7 @@ void Schedule::addRow(size_t index, bool addToHistory)
 
     if (addToHistory)
     {
-        m_editHistory.addEdit(new RowEdit(false, index, m_core.getRow(index)));
+        // m_editHistory.addEdit(new RowEdit(false, index, m_core.getRow(index)));
     }
 
     m_editHistory.setEditedSinceWrite(true);
@@ -258,31 +258,47 @@ void Schedule::addRow(size_t index, bool addToHistory)
 
 void Schedule::removeRow(size_t index, bool addToHistory)
 {
-    std::vector<ElementBase*> originalRow = m_core.getRow(index);
+    // std::vector<ElementBase*> originalRow = m_core.getRow(index);
     // temporary vector of copies
-    std::vector<ElementBase*> originalRowCopies = {};
+    // std::vector<ElementBase*> originalRowCopies = {};
 
-    for (ElementBase* element: originalRow)
-    {
-        originalRowCopies.push_back(element->getCopy());
-    }
+    // for (size_t i = 0; i < originalRow.size(); i++)
+    // {
+    //     if (originalRow[i]->getType() == SCH_TEXT)
+    //     {
+    //         // SEGFAULT
+    //         //std::cout << ((Element<std::string>*)originalRow[i])->getValue() << std::endl;
+    //         std::cout << "COPYING TEXT" << std::endl;
+    //         // SEGFAULT IF NOT BEFORE
+    //         // seems the getSpecialCopy makes no difference, it's just fucked up data
+    //         originalRowCopies.push_back(getElementAsSpecial<std::string>(i, index)->getSpecialCopy());
+    //         std::cout << "pushed back" << std::endl;
+    //     }
+    //     else
+    //     {
+    //         std::cout << originalRow[i]->getString() << std::endl;;
+    //         std::cout << "COPYING" << std::endl;
+    //         originalRowCopies.push_back(originalRow[i]->getCopy());
+    //     }
+    // }
+
+    // std::cout << "PASSED COPY" << std::endl;
 
     if (m_core.removeRow(index))
     {
         if (addToHistory)
         {
-        std::cout << "yooohoo";
             // add a remove RowEdit to the edit history with copies of the removed Elements
-            m_editHistory.addEdit(new RowEdit(true, index, originalRowCopies));
+            // m_editHistory.addEdit(new RowEdit(true, index, originalRowCopies));
         }
 
         m_editHistory.setEditedSinceWrite(true);
     }
 
-    for (size_t i = 0; i < originalRowCopies.size(); i++)
-    {
-        delete originalRowCopies[i];
-    }
+    // for (size_t i = 0; i < originalRowCopies.size(); i++)
+    // {
+    //     delete originalRowCopies[i];
+    // }
 }
 
 std::vector<ElementBase*> Schedule::getRow(size_t index)

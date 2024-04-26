@@ -26,7 +26,7 @@ std::string ElementBase::getString() const
     return "ElementBase";
 }
 
-ElementBase* ElementBase::getCopy() const
+ElementBase* ElementBase::getCopy()
 {
     return new ElementBase(*this);
 }

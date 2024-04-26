@@ -152,7 +152,7 @@ struct ColumnSortComparison
             }
             case(SCH_SELECT):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getValue() > ((const Element<SelectContainer>*)right)->getValue() : ((const Element<SelectContainer>*)left)->getValue() < ((const Element<SelectContainer>*)right)->getValue();
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getConstValueReference() > ((const Element<SelectContainer>*)right)->getConstValueReference() : ((const Element<SelectContainer>*)left)->getConstValueReference() < ((const Element<SelectContainer>*)right)->getConstValueReference();
             }
             case(SCH_TIME):
             {

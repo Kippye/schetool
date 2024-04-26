@@ -72,7 +72,7 @@ class ScheduleCore
 
             if (mutableColumn == nullptr || mutableColumn->hasElement(row) == false)
             {
-                printf("ScheduleCore::getElement could not get element at %zu; %zu", column, row);
+                printf("ScheduleCore::getElement could not get element at %zu; %zu\n", column, row);
                 return nullptr;
             }
 
@@ -87,7 +87,7 @@ class ScheduleCore
 
             if (element == nullptr)
             {
-                printf("ScheduleCore::getElementAsSpecial could not get element at %zu; %zu", column, row);
+                printf("ScheduleCore::getElementAsSpecial could not get element at %zu; %zu\n", column, row);
                 return nullptr;
             }
 
@@ -102,7 +102,7 @@ class ScheduleCore
         {
             if (getElement(column, row) == nullptr)
             {
-                printf("ScheduleCore::setElement failed to set element at %zu; %zu - element does not exist", column, row);
+                printf("ScheduleCore::setElement failed to set element at %zu; %zu - element does not exist\n", column, row);
                 return false;
             }
 
@@ -156,6 +156,7 @@ class ScheduleCore
             else
             {
                 // TODO: clean previous pointer since it's gone now?
+                delete getMutableColumn(column)->getElement(row);
                 getMutableColumn(column)->rows[row] = other;
             }
 
@@ -173,7 +174,7 @@ class ScheduleCore
             const Column* elementColumn = getColumn(column);
             if (elementColumn == nullptr || elementColumn->hasElement(row) == false)
             {
-                printf("ScheduleCore::getElementValue could not return value at %zu; %zu", column, row);
+                printf("ScheduleCore::getElementValue could not return value at %zu; %zu\n", column, row);
                 return T();
             }
             return getValue<T>(elementColumn->rows[row]);
@@ -183,18 +184,20 @@ class ScheduleCore
         template <typename T>
         bool setElementValue(size_t column, size_t row, const T& value, bool resort = true)
         {
-            std::cout << "setvalue" ; 
             ElementBase* element = getElement(column, row);
-
-            std::cout << "Blooper";
 
             if (element == nullptr)
             {
-                printf("ScheduleCore::setElementValue failed to set element at %zu; %zu - element does not exist", column, row);
+                printf("ScheduleCore::setElementValue failed to set element at %zu; %zu - element does not exist\n", column, row);
                 return false;
             }
 
+            printf("Setting value at (%zu; %zu) of type %zu\n", column, row, element->getType());
+
+            // CRASH HERE WITH SEED 1713956679!
             ((Element<T>*)element)->setValue(value);
+
+            printf("Set value at (%zu; %zu) to %s \n", column, row, element->getString().c_str());
 
             ScheduleColumnFlags columnFlags = getColumn(column)->flags;
             if (columnFlags & ScheduleColumnFlags_Start)

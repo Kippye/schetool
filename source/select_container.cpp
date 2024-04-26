@@ -23,7 +23,17 @@ void SelectOptions::invokeCallback()
     std::cout << "Invoking callback for " << m_callbacks.size() << " listeners" << std::endl;
     for (auto& listener: m_callbacks)
     {
-        listener.second(m_lastModification);
+        // valid callback function
+        if (listener.second)
+        {
+            listener.second(m_lastModification);
+        }
+        // remove garbage function from listeners
+        else
+        {
+            m_callbacks.erase(listener.first);
+            std::cout << "Removed invalid function from callbacks" << std::endl;
+        }
     }
 }
 
@@ -38,23 +48,23 @@ const SelectOptionChange& SelectOptions::getLastChange() const
     return m_lastModification;
 }
 
-void SelectOptions::addCallbackListener(intptr_t listenerPointer, std::function<void(const SelectOptionChange&)>& listener)
+void SelectOptions::addCallbackListener(size_t listenerID, std::function<void(const SelectOptionChange&)>& listener)
 {
-    if (m_callbacks.find(listenerPointer) != m_callbacks.end())
+    if (m_callbacks.find(listenerID) != m_callbacks.end())
     {
         std::cout << "SelectOptions::addCallbackListener: A callback listener already exists with the given key. Replacing it is not supported behaviour" << std::endl;
         return;
     }
-    m_callbacks.insert({listenerPointer, listener});
-    std::cout << "Added callback listener @" << listenerPointer << " count: " << m_callbacks.size() << std::endl;
+    m_callbacks.insert({listenerID, listener});
+    std::cout << "Added callback listener with ID: " << listenerID << " count: " << m_callbacks.size() << std::endl;
 }
 
-void SelectOptions::removeCallbackListener(intptr_t listenerPointer)
+void SelectOptions::removeCallbackListener(size_t listenerID)
 {
-    if (m_callbacks.find(listenerPointer) != m_callbacks.end())
+    if (m_callbacks.find(listenerID) != m_callbacks.end())
     {
-        m_callbacks.erase(listenerPointer);
-        std::cout << "Removed callback listener @" << listenerPointer << " count : " << m_callbacks.size() << std::endl;
+        m_callbacks.erase(listenerID);
+        std::cout << "Removed callback listener with ID: " << listenerID << " count : " << m_callbacks.size() << std::endl;
     }
 }
 
@@ -124,26 +134,47 @@ void SelectOptions::clearOptions()
 }
 
 
+// set up static ID
+size_t SelectContainer::highestSharedID = 0;
+
 SelectContainer::SelectContainer()
 {
-
+    m_instanceID = getUniqueID();
+    std::cout << "Set instance ID to: " << m_instanceID << std::endl;
 }
 
-SelectContainer::SelectContainer(SelectOptions& options) 
+SelectContainer::SelectContainer(SelectOptions& options) : SelectContainer()
 { 
     m_options = &options;
+    std::cout << "copy constructor" << std::endl;
     //m_options->addCallbackListener(intptr_t(this), updateCallback);
 }
 
 SelectContainer::SelectContainer(const SelectContainer& other) : SelectContainer(*other.m_options)
 {
     m_selection = other.m_selection;
+    std::cout << "const copy constructor" << std::endl;
+}
+
+SelectContainer& SelectContainer::operator=(SelectContainer& other)
+{
+    std::cout << "Assignment op" << std::endl;
+    std::cout << m_options << "; " << other.m_options << std::endl;
+    std::cout << m_instanceID << "; " << other.m_instanceID << std::endl;
+
+    m_options = other.m_options;
+    m_selection = other.m_selection;
+
+    return *this;
 }
 
 SelectContainer& SelectContainer::operator=(const SelectContainer& other)
 {
+    std::cout << "Const ref assignment op" << std::endl;
+    std::cout << m_options << "; " << other.m_options << std::endl;
+    std::cout << m_instanceID << "; " << other.m_instanceID << std::endl;
+
     m_options = other.m_options;
-    //m_options->addCallbackListener(intptr_t(this), updateCallback);
     m_selection = other.m_selection;
 
     return *this;
@@ -151,7 +182,13 @@ SelectContainer& SelectContainer::operator=(const SelectContainer& other)
 
 SelectContainer::~SelectContainer()
 {
-    m_options->removeCallbackListener(intptr_t(this));
+    m_options->removeCallbackListener(m_instanceID);
+}
+
+size_t SelectContainer::getUniqueID() const
+{
+    SelectContainer::highestSharedID++;
+    return SelectContainer::highestSharedID;
 }
 
 const std::set<size_t> SelectContainer::getSelection() const
@@ -193,14 +230,16 @@ void SelectContainer::replaceSelection(const std::set<size_t>& selection)
 
 void SelectContainer::listenToCallback()
 {
-    m_options->addCallbackListener(intptr_t(this), updateCallback);
+    if (m_options == nullptr)
+    {
+        throw std::runtime_error("SelectContainer::listenToCallback: m_options == nullptr");
+    }
+    m_options->addCallbackListener(m_instanceID, updateCallback);
 }
 
 // Update the SelectContainer to recorrect its indices after a modification to the attached SelectOptions
 void SelectContainer::update(const SelectOptionChange& lastChange)
 {
-    std::cout << "UPDATE " << lastChange.type << std::endl;
-
     switch(lastChange.type)
     {
         case(OPTION_MODIFICATION_ADD):
@@ -279,5 +318,4 @@ void SelectContainer::update(const SelectOptionChange& lastChange)
             break;
         }
     }
-    std::cout << "Finished update" << std::endl;
 }

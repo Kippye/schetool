@@ -21,9 +21,9 @@ enum OPTION_MODIFICATION
 
 struct SelectOptionChange
 {
-    OPTION_MODIFICATION type;
-    size_t firstIndex;
-    size_t secondIndex;
+    OPTION_MODIFICATION type = OPTION_MODIFICATION_ADD;
+    size_t firstIndex = 0;
+    size_t secondIndex = 0;
 
     public:
         void replace(OPTION_MODIFICATION type, size_t firstIndex, size_t secondIndex);
@@ -34,8 +34,8 @@ struct SelectOptions
     private:
         std::vector<std::string> m_options = {};
         SelectOptionChange m_lastModification;
-        std::map<intptr_t, std::function<void(const SelectOptionChange&)>> m_callbacks = {};
-        bool m_mutable;
+        std::map<size_t, std::function<void(const SelectOptionChange&)>> m_callbacks = {};
+        bool m_mutable = false;
         void invokeCallback();
     public:
         SelectOptions();
@@ -43,8 +43,8 @@ struct SelectOptions
 
         const std::vector<std::string>& getOptions() const;
         const SelectOptionChange& getLastChange() const;
-        void addCallbackListener(intptr_t listenerPointer, std::function<void(const SelectOptionChange&)>& listener);
-        void removeCallbackListener(intptr_t listenerPointer);
+        void addCallbackListener(size_t listenerID, std::function<void(const SelectOptionChange&)>& listener);
+        void removeCallbackListener(size_t listenerID);
         void clearListeners();
         void addOption(const std::string& option);
         void removeOption(const std::string& option);
@@ -61,16 +61,20 @@ struct SelectOptions
 struct SelectContainer
 {
     private:
+        size_t m_instanceID;
         std::set<size_t> m_selection;
-        SelectOptions* m_options;
         std::function<void(const SelectOptionChange&)> updateCallback = std::function<void(const SelectOptionChange&)>([&](const SelectOptionChange& lastChange)
         {
             update(lastChange);
         });
+        size_t getUniqueID() const;
     public:
+        SelectOptions* m_options = nullptr;
+        static size_t highestSharedID;
         SelectContainer();
         SelectContainer(SelectOptions& options);
         SelectContainer(const SelectContainer& other);
+        SelectContainer& operator=(SelectContainer& other);
         SelectContainer& operator=(const SelectContainer& other);
         ~SelectContainer();
 

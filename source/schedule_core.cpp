@@ -140,7 +140,7 @@ void ScheduleCore::addDefaultColumn(size_t index)
     {
         for (size_t i = 0; i < getRowCount(); i++)
         {
-            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)));
         }
         m_schedule.push_back(addedColumn);
     }
@@ -148,7 +148,7 @@ void ScheduleCore::addDefaultColumn(size_t index)
     {
         for (size_t i = 0; i < getRowCount(); i++)
         {
-            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)));
         }
         m_schedule.insert(m_schedule.begin() + index, addedColumn);
     }
@@ -159,7 +159,7 @@ void ScheduleCore::addDefaultColumn(size_t index)
 bool ScheduleCore::removeColumn(size_t column)
 {
     // a permanent column can't be removed
-    if (m_schedule.at(column).permanent == true || (column < getColumnCount() == false)) { return false; }
+    if ((column < getColumnCount() == false || m_schedule.at(column).permanent == true)) { return false; }
 
     bool resortRequired = m_schedule.at(column).sort != COLUMN_SORT_NONE;
 
@@ -189,6 +189,7 @@ const Column* ScheduleCore::getColumn(size_t column)
 bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
 {
     if (column < getColumnCount() == false){ return false; }
+    if (getColumn(column)->permanent == true) { printf("ScheduleCore::setColumnType tried to set type of a permanent Column at %zu! Quitting.\n", column); return false; }
 
     std::cout << "Setting column " << column << " type from " << m_schedule.at(column).type << " to " << type << std::endl;
     // HACK y
@@ -329,7 +330,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<std::string>(type, "", DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<std::string>(type, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)), false);
             }     
             break;
         }
@@ -410,7 +411,7 @@ void ScheduleCore::addRow(size_t index)
                 }
                 case(SCH_TEXT):
                 {
-                    columnValues.push_back(new Element<std::string>(column.type, "", DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.push_back(new Element<std::string>(column.type, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_SELECT):
@@ -464,7 +465,7 @@ void ScheduleCore::addRow(size_t index)
                 }
                 case(SCH_TEXT):
                 {
-                    columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, "", DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_SELECT):
@@ -499,21 +500,19 @@ bool ScheduleCore::removeRow(size_t index)
 {
     if (index < getRowCount() == false) { std::cout << "ScheduleCore::removeRow: No row found at index: " << index << std::endl; return false; }
 
-    std::vector<ElementBase*> elementCopies = {};
+    printf("Removing row %zu\n", index);
 
-    for (Column& column : m_schedule)
+    for (size_t i = 0; i < m_schedule.size(); i++)
     {
-        std::vector<ElementBase*>& columnValues = column.rows;
-
-        if (index == columnValues.size() - 1)
+        // CAUSES: warning: Heap block at 000000000ABA87B0 modified at 000000000ABA8828 past requested size of 68
+        delete m_schedule[i].rows[index];
+        if (index == m_schedule[i].rows.size() - 1)
         {
-            delete columnValues[index];
-            columnValues.pop_back();
+            m_schedule[i].rows.pop_back();
         }
         else
         {
-            delete columnValues[index];
-            columnValues.erase(columnValues.begin() + index);
+            m_schedule[i].rows.erase(m_schedule[i].rows.begin() + index);
         }
     }
 

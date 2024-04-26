@@ -20,6 +20,30 @@ Program::Program()
 {
 	// TODO: load user preferences here!
 
+	// SelectOptions options;
+
+	// SelectContainer test(options);
+	// test.listenToCallback();
+	
+	// std::cout << test.m_options << std::endl;
+
+	// SelectContainer* other = new SelectContainer(test);
+	// other->listenToCallback();
+
+	// std::cout << other->m_options << std::endl;
+
+	// SelectContainer wowie;
+
+	// std::cout << wowie.m_options << std::endl;
+
+	// wowie = *other;
+	// wowie.listenToCallback();
+
+	// std::cout << wowie.m_options << std::endl;
+
+	// delete other;
+	// std::cout << "TEST OVER" << std::endl;
+
 	// setup and initialize components
 	windowManager.init(&textureLoader);
 	input.init(&windowManager);
@@ -31,7 +55,7 @@ Program::Program()
 	schedule.createDefaultSchedule();
 
 	#ifdef DEBUG
-		int seed = 0;
+		int seed = 1714051310; //1713956679;
 		EditHistoryTest editHistoryTest = EditHistoryTest(1000, seed == 0 ? time(NULL) : seed, &schedule, 0);
 		if (editHistoryTest.begin())
 		{
@@ -39,17 +63,17 @@ Program::Program()
 		}
 	#endif
 
-	// There are pre-existing Schedules. Open the most recently edited one.
-	if (ioHandler.getScheduleStemNames().size() > 0)
-	{
-		// std::cout << "reading.." << ioHandler.getLastEditedScheduleStemName() << std::endl;
-		ioHandler.readSchedule(ioHandler.getLastEditedScheduleStemName().c_str());
-	}
-	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
-	else 
-	{
-		interface.openMainMenuBarScheduleNameModal();
-	}
+	// // There are pre-existing Schedules. Open the most recently edited one.
+	// if (ioHandler.getScheduleStemNames().size() > 0)
+	// {
+	// 	// std::cout << "reading.." << ioHandler.getLastEditedScheduleStemName() << std::endl;
+	// 	ioHandler.readSchedule(ioHandler.getLastEditedScheduleStemName().c_str());
+	// }
+	// // There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
+	// else 
+	// {
+	// 	interface.openMainMenuBarScheduleNameModal();
+	// }
 }
 
 void Program::loop()
