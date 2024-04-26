@@ -154,7 +154,7 @@ class Schedule
             // add the edit to history
             if (addToHistory)
             {
-                // m_editHistory.addEdit(new ElementEdit<T>(column, row, element->getType(), ((Element<T>*)element)->getValue(), value)); 
+                m_editHistory.addEdit(new ElementEdit<T>(column, row, element->getType(), ((Element<T>*)element)->getValue(), value)); 
             }
 
             m_core.setElementValue<T>(column, row, value, resort);

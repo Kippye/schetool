@@ -32,7 +32,7 @@ void SelectOptions::invokeCallback()
         else
         {
             m_callbacks.erase(listener.first);
-            std::cout << "Removed invalid function from callbacks" << std::endl;
+            std::cout << "Removed invalid function from SelectOptions callbacks" << std::endl;
         }
     }
 }
@@ -140,25 +140,20 @@ size_t SelectContainer::highestSharedID = 0;
 SelectContainer::SelectContainer()
 {
     m_instanceID = getUniqueID();
-    std::cout << "Set instance ID to: " << m_instanceID << std::endl;
 }
 
 SelectContainer::SelectContainer(SelectOptions& options) : SelectContainer()
 { 
     m_options = options;
-    std::cout << "copy constructor" << std::endl;
 }
 
 SelectContainer::SelectContainer(const SelectContainer& other) : SelectContainer(other.m_options)
 {
     m_selection = other.m_selection;
-    std::cout << "const copy constructor" << std::endl;
 }
 
 SelectContainer& SelectContainer::operator=(SelectContainer& other)
 {
-    std::cout << "Assignment op" << std::endl;
-
     m_options = other.m_options;
     m_selection = other.m_selection;
 
@@ -167,8 +162,6 @@ SelectContainer& SelectContainer::operator=(SelectContainer& other)
 
 SelectContainer& SelectContainer::operator=(const SelectContainer& other)
 {
-    std::cout << "Const ref assignment op" << std::endl;
-
     m_options = other.m_options;
     m_selection = other.m_selection;
 

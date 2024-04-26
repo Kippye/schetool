@@ -62,29 +62,6 @@ class Element : public ElementBase
         }
         void setValue(const T& value)
         {
-            // std::cout << getString() << std::endl;
-            // if constexpr(std::is_same_v<T, TimeContainer> || std::is_same_v<T, DateContainer>)
-            // {
-            //     std::cout << value.getString() << std::endl;
-            // }
-            // else if constexpr(std::is_same_v<T, SelectContainer>)
-            // {
-            //     std::cout << "Select" << std::endl;
-            // }
-            // else if constexpr(std::is_same_v<T, bool>)
-            // {
-            //     std::cout << (m_value == true? "True" : "False") << std::endl;
-            // }
-            // else if constexpr(std::is_same_v<T, std::string>)
-            // {
-            //     std::cout << value << std::endl;
-            // }
-            // else
-            // {
-            //     std::cout << std::to_string(value) << std::endl;
-            // }            
-            // std::cout << "Setting value" << std::endl;
             m_value = value;
-            // std::cout << "Set value" << std::endl;
         }
 };

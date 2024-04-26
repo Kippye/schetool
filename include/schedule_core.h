@@ -192,12 +192,7 @@ class ScheduleCore
                 return false;
             }
 
-            printf("Setting value at (%zu; %zu) of type %zu\n", column, row, element->getType());
-
-            // CRASH HERE WITH SEED 1713956679!
             ((Element<T>*)element)->setValue(value);
-
-            printf("Set value at (%zu; %zu) to %s \n", column, row, element->getString().c_str());
 
             ScheduleColumnFlags columnFlags = getColumn(column)->flags;
             if (columnFlags & ScheduleColumnFlags_Start)

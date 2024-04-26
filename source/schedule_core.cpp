@@ -36,7 +36,7 @@ Column* ScheduleCore::getMutableColumn(size_t column)
 {
     if (column > getColumnCount())
     {
-        std::cout << "ScheduleCore::getModifiableColumn: index out of range. Returning last column" << std::endl;
+        std::cout << "ScheduleCore::getMutableColumn: index out of range. Returning last column" << std::endl;
         return &m_schedule.at(getColumnCount() - 1);
     }
     return &m_schedule.at(column);
@@ -109,8 +109,6 @@ size_t ScheduleCore::getColumnCount()
 // TODO: FIX SELECTS PROBABLY
 void ScheduleCore::addColumn(size_t index, const Column& column)
 {
-    std::cout << "Adding column: " << column.name << std::endl;
-
     // TODO: make sure that EVERY column has the same amount of rows!!!
     // TODO: give the new column correct creation date & time
 
@@ -140,7 +138,7 @@ void ScheduleCore::addDefaultColumn(size_t index)
     {
         for (size_t i = 0; i < getRowCount(); i++)
         {
-            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)));
+            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
         }
         m_schedule.push_back(addedColumn);
     }
@@ -148,7 +146,7 @@ void ScheduleCore::addDefaultColumn(size_t index)
     {
         for (size_t i = 0; i < getRowCount(); i++)
         {
-            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)));
+            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
         }
         m_schedule.insert(m_schedule.begin() + index, addedColumn);
     }
@@ -191,7 +189,6 @@ bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
     if (column < getColumnCount() == false){ return false; }
     if (getColumn(column)->permanent == true) { printf("ScheduleCore::setColumnType tried to set type of a permanent Column at %zu! Quitting.\n", column); return false; }
 
-    std::cout << "Setting column " << column << " type from " << m_schedule.at(column).type << " to " << type << std::endl;
     // HACK y
     m_schedule.at(column).selectOptions.clearListeners();
     if (type == SCH_SELECT)
@@ -330,7 +327,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<std::string>(type, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<std::string>(type, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)), false);
             }     
             break;
         }
@@ -411,7 +408,7 @@ void ScheduleCore::addRow(size_t index)
                 }
                 case(SCH_TEXT):
                 {
-                    columnValues.push_back(new Element<std::string>(column.type, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.push_back(new Element<std::string>(column.type, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_SELECT):
@@ -465,7 +462,7 @@ void ScheduleCore::addRow(size_t index)
                 }
                 case(SCH_TEXT):
                 {
-                    columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, std::string("zmateusz"), DateContainer(creationTime), TimeContainer(creationTime)));
+                    columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
                     break;
                 }
                 case(SCH_SELECT):
@@ -500,11 +497,8 @@ bool ScheduleCore::removeRow(size_t index)
 {
     if (index < getRowCount() == false) { std::cout << "ScheduleCore::removeRow: No row found at index: " << index << std::endl; return false; }
 
-    printf("Removing row %zu\n", index);
-
     for (size_t i = 0; i < m_schedule.size(); i++)
     {
-        // CAUSES: warning: Heap block at 000000000ABA87B0 modified at 000000000ABA8828 past requested size of 68
         delete m_schedule[i].rows[index];
         if (index == m_schedule[i].rows.size() - 1)
         {
