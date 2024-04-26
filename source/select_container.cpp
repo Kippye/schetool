@@ -145,12 +145,11 @@ SelectContainer::SelectContainer()
 
 SelectContainer::SelectContainer(SelectOptions& options) : SelectContainer()
 { 
-    m_options = &options;
+    m_options = options;
     std::cout << "copy constructor" << std::endl;
-    //m_options->addCallbackListener(intptr_t(this), updateCallback);
 }
 
-SelectContainer::SelectContainer(const SelectContainer& other) : SelectContainer(*other.m_options)
+SelectContainer::SelectContainer(const SelectContainer& other) : SelectContainer(other.m_options)
 {
     m_selection = other.m_selection;
     std::cout << "const copy constructor" << std::endl;
@@ -159,8 +158,6 @@ SelectContainer::SelectContainer(const SelectContainer& other) : SelectContainer
 SelectContainer& SelectContainer::operator=(SelectContainer& other)
 {
     std::cout << "Assignment op" << std::endl;
-    std::cout << m_options << "; " << other.m_options << std::endl;
-    std::cout << m_instanceID << "; " << other.m_instanceID << std::endl;
 
     m_options = other.m_options;
     m_selection = other.m_selection;
@@ -171,8 +168,6 @@ SelectContainer& SelectContainer::operator=(SelectContainer& other)
 SelectContainer& SelectContainer::operator=(const SelectContainer& other)
 {
     std::cout << "Const ref assignment op" << std::endl;
-    std::cout << m_options << "; " << other.m_options << std::endl;
-    std::cout << m_instanceID << "; " << other.m_instanceID << std::endl;
 
     m_options = other.m_options;
     m_selection = other.m_selection;
@@ -182,7 +177,7 @@ SelectContainer& SelectContainer::operator=(const SelectContainer& other)
 
 SelectContainer::~SelectContainer()
 {
-    m_options->removeCallbackListener(m_instanceID);
+    m_options.removeCallbackListener(m_instanceID);
 }
 
 size_t SelectContainer::getUniqueID() const
@@ -198,7 +193,7 @@ const std::set<size_t> SelectContainer::getSelection() const
 
 void SelectContainer::setSelected(size_t index, bool select)
 {
-    if (index > m_options->getOptions().size() - 1)
+    if (index > m_options.getOptions().size() - 1)
     {
         std::cout << "Tried to change selection of an option that does not exist" << std::endl;
         return;
@@ -230,11 +225,11 @@ void SelectContainer::replaceSelection(const std::set<size_t>& selection)
 
 void SelectContainer::listenToCallback()
 {
-    if (m_options == nullptr)
-    {
-        throw std::runtime_error("SelectContainer::listenToCallback: m_options == nullptr");
-    }
-    m_options->addCallbackListener(m_instanceID, updateCallback);
+    // if (m_options == nullptr)
+    // {
+    //     throw std::runtime_error("SelectContainer::listenToCallback: m_options == nullptr");
+    // }
+    m_options.addCallbackListener(m_instanceID, updateCallback);
 }
 
 // Update the SelectContainer to recorrect its indices after a modification to the attached SelectOptions
@@ -255,7 +250,7 @@ void SelectContainer::update(const SelectOptionChange& lastChange)
                 m_selection.erase(lastChange.firstIndex); 
             }
 
-            for (size_t i = lastChange.firstIndex + 1; i < m_options->getOptions().size() + 1; i++)
+            for (size_t i = lastChange.firstIndex + 1; i < m_options.getOptions().size() + 1; i++)
             {
                 if (m_selection.find(i) != m_selection.end())
                 {

@@ -63,13 +63,14 @@ struct SelectContainer
     private:
         size_t m_instanceID;
         std::set<size_t> m_selection;
+        SelectOptions m_defaultOptions;
+        SelectOptions& m_options = m_defaultOptions;
         std::function<void(const SelectOptionChange&)> updateCallback = std::function<void(const SelectOptionChange&)>([&](const SelectOptionChange& lastChange)
         {
             update(lastChange);
         });
         size_t getUniqueID() const;
     public:
-        SelectOptions* m_options = nullptr;
         static size_t highestSharedID;
         SelectContainer();
         SelectContainer(SelectOptions& options);
@@ -93,7 +94,7 @@ struct SelectContainer
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
 
-            for (size_t i = 0; i < left.m_options->getOptions().size(); i++)
+            for (size_t i = 0; i < left.m_options.getOptions().size(); i++)
             {
                 // has this option selected
                 if (leftForemostOption == 1000 && left.m_selection.find(i) != left.m_selection.end())
@@ -106,7 +107,7 @@ struct SelectContainer
                 }
             }
 
-            return left.m_options->getOptions()[leftForemostOption] < right.m_options->getOptions()[rightForemostOption];
+            return left.m_options.getOptions()[leftForemostOption] < right.m_options.getOptions()[rightForemostOption];
         }
 
         friend bool operator>(const SelectContainer& left, const SelectContainer& right)
@@ -124,7 +125,7 @@ struct SelectContainer
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
 
-            for (size_t i = 0; i < left.m_options->getOptions().size(); i++)
+            for (size_t i = 0; i < left.m_options.getOptions().size(); i++)
             {
                 // has this option selected
                 if (leftForemostOption == 1000 && left.m_selection.find(i) != left.m_selection.end())
@@ -137,7 +138,7 @@ struct SelectContainer
                 }
             }
 
-            return left.m_options->getOptions()[leftForemostOption] > right.m_options->getOptions()[rightForemostOption];
+            return left.m_options.getOptions()[leftForemostOption] > right.m_options.getOptions()[rightForemostOption];
         }
 
         const std::set<size_t> getSelection() const;
