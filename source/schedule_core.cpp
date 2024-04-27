@@ -184,6 +184,66 @@ const Column* ScheduleCore::getColumn(size_t column)
     return (const Column*)getMutableColumn(column);
 }
 
+void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
+{
+    if (index < getColumnCount() == false) { std::cout << "ScheduleCore::setColumnElements: There is no Column at index " << index << std::endl; return; }
+    if (getColumn(index)->type != columnData.type) { printf("ScheduleCore::setColumnElements: The target Column and columnData types must match but are %d and %d\n", getColumn(index)->type, columnData.type); return; }
+
+    for (size_t row = 0; row < getRowCount(); row++)
+    {
+        // break early if the provided columnData was shorter than the result of getColumnCount()
+        if (row >= columnData.rows.size())
+        {
+            break;
+        }
+
+        switch(getColumn(index)->type)
+        {
+            case(SCH_BOOL):
+            {
+                setElementValue(index, row, ((Element<bool>*)columnData.rows[row])->getValue());
+                break;
+            }
+            case(SCH_NUMBER):
+            {
+                setElementValue(index, row, ((Element<int>*)columnData.rows[row])->getValue());
+                break;
+            }
+            case(SCH_DECIMAL):
+            {
+                setElementValue(index, row, ((Element<double>*)columnData.rows[row])->getValue());
+                break;
+            }
+            case(SCH_TEXT):
+            {
+                setElementValue(index, row, ((Element<std::string>*)columnData.rows[row])->getValue());
+                break;
+            }
+            case(SCH_SELECT):
+            { 
+                // pass SelectContainer by const reference to avoid unnecessary copying (it will be copied anyway i think)
+                setElementValue(index, row, ((Element<SelectContainer>*)columnData.rows[row])->getConstValueReference());
+                break;
+            }
+            case(SCH_TIME):
+            { 
+                setElementValue(index, row, ((Element<TimeContainer>*)columnData.rows[row])->getValue());
+                break;
+            }
+            case(SCH_DATE):
+            { 
+                setElementValue(index, row, ((Element<DateContainer>*)columnData.rows[row])->getValue());
+                break;
+            }
+            default:
+            {
+                std::cout << "ScheduleCore::setColumnElements: Setting an Element of type: " << getColumn(index)->type << " has not been implemented!" << std::endl;
+                break;
+            }
+        }
+    }
+}
+
 bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
 {
     if (column < getColumnCount() == false){ return false; }

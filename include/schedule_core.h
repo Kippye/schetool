@@ -38,6 +38,8 @@ class ScheduleCore
         bool removeColumn(size_t column);
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column);
+        // Set the values of every Element to be copies of the provided Column's Element values. NOTE: If the provided Column has fewer rows, only those will be modified. If it has more rows, ones past the end will be ignored.
+        void setColumnElements(size_t index, const Column& columnData);
         bool setColumnType(size_t column, SCHEDULE_TYPE type);
         bool setColumnName(size_t column, const char* name);
         bool setColumnSort(size_t column, COLUMN_SORT sortDirection);

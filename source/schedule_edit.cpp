@@ -147,6 +147,11 @@ ColumnPropertyEdit::ColumnPropertyEdit(size_t column, COLUMN_PROPERTY editedProp
         {
             m_previousColumnData.type = previousData.type;
             m_columnData.type = newData.type;
+            // copy ROWS for previous data too.. >:(
+            for (size_t i = 0; i < previousData.rows.size(); i++)
+            {
+                m_previousColumnData.rows.push_back(previousData.rows[i]->getCopy());
+            }
             break;
         }
         case(COLUMN_PROPERTY_SELECT_OPTIONS):
@@ -176,6 +181,7 @@ void ColumnPropertyEdit::revert(ScheduleCore* const scheduleCore)
         case(COLUMN_PROPERTY_TYPE):
         {
             scheduleCore->setColumnType(m_column, m_previousColumnData.type); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
+            scheduleCore->setColumnElements(m_column, m_previousColumnData);
             break;
         }
         case(COLUMN_PROPERTY_SELECT_OPTIONS):
