@@ -3,13 +3,11 @@
 TimeContainer::TimeContainer() {}
 TimeContainer::TimeContainer(int h, int m)
 {
-    hours = h;
-    minutes = m;
+    setTime(h, m);
 }
 TimeContainer::TimeContainer(const tm& t)
 {
-    hours = t.tm_hour;
-    minutes = t.tm_min; 
+    setTime(t.tm_hour, t.tm_min);
 }
 
 std::string TimeContainer::getString() const
@@ -36,6 +34,6 @@ int TimeContainer::getMinutes() const
 
 void TimeContainer::setTime(int hours, int minutes)
 {
-    this->hours = hours;
-    this->minutes = minutes;
+    this->hours = std::min(std::max(hours, 0), 23);
+    this->minutes = std::min(std::max(minutes, 0), 59);
 }

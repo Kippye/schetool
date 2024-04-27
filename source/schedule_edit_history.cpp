@@ -45,7 +45,6 @@ void ScheduleEditHistory::setEditedSinceWrite(bool to)
 
 void ScheduleEditHistory::addEdit(ScheduleEdit* edit)
 {
-    std::cout << "Added Schedule Edit of type: " << edit->getType() << std::endl;
     removeFollowingEditHistory();
     m_editHistory.push_back(edit);
     m_editHistoryIndex = m_editHistory.size() - 1;

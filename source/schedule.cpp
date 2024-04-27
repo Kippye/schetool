@@ -169,8 +169,6 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistor
     // for adding to edit history
     Column previousData = Column(*m_core.getColumn(column));
 
-    std::cout << "Setting column type" << std::endl;
-
     if (m_core.setColumnType(column, type))
     {
         if (addToHistory)
