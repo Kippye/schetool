@@ -6,14 +6,12 @@ a daily-weekly-monthly scheduling program that aims to combine the best of all o
 
 ### It knows its purpose
 
-Schetool was created to have every feature that a scheduling tool needs and is designed specifically **for** making schedules. The purpose of schetool isn't just to **allow for** making schedules, it is **made to** make schedules.
-
-### It knows nothing more
-Schetool contains everything that's needed and nothing more. Some alternatives have file sizes and memory usages in the hundreds of megabytes. Schetool can run in the background all day and you will only notice it when you are supposed to.
+Schetool was created to have every feature that a scheduling tool needs and is designed specifically **for** making schedules.
+Schetool contains everything that's needed and nothing more. Some alternatives have file sizes and memory usages in the hundreds of megabytes. Schetool can run in the background all day and you will only notice it when you need to.
 
 ## Pre-built releases
 
-The latest stable release is available under Releases. Just download it, extract and run.
+The latest stable releases for Windows and Linux (built on Fedora) are available under Releases. Just download, extract and run.
 
 ## Building schetool
 
@@ -26,22 +24,31 @@ Building hasn't been tested extensively, so the exact functionability with diffe
 * [premake5](https://premake.github.io/download) for project file generation.
 * TODO: Windows compilation prerequisites
 
+* MinGW64 to build from Makefile (recommended to get it from [MSYS2](https://www.msys2.org/))
+
 **Building**
 
+Visual Studio project file (BROKEN)
 ```
 premake5 vs2022  
 msbuild -m -p:Configuration=Release
 ```
-To clean, call:  
+Makefile
+
+Using MSYS2 MinGW64
+
+Open the MSYS2 MINGW64 shell launcher
 ```
-rmdir /S /Q obj rmdir /S /Q schetool rmdir /S /Q Debug rmdir /S /Q Release rmdir /S /Q bin  
-del /Q schetool.pdb  
-del /Q %~dp0\include\blf\blf.vcxproj  
-del /Q %~dp0\include\zlib\zlib.vcxproj
+premake5 gmake2
+make
+```
+**Cleaning**
+```
+premake5 clean
 ```
 ### Linux
 
-**Prerequisites - Fedora**  
+**Prerequisites on Fedora**  
 
 * [premake5](https://premake.github.io/download) for project file generation.
 * X11 packages need to be installed in order to compile:
@@ -58,4 +65,8 @@ make
 To run:  
 ```
 ./schetool_bin
+```
+**Cleaning**
+```
+premake5 clean
 ```
