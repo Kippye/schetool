@@ -8,7 +8,7 @@
 #include <schedule.h>
 #include <interface.h>
 
-#define PROGRAM_VERSION "0.4.0"
+#define PROGRAM_VERSION "0.5.0"
 
 class Program
 {
