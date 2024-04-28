@@ -4,6 +4,8 @@
 #include <string>
 #include <type_traits>
 
+#include <iostream>
+
 template <typename T>
 class Element : public ElementBase
 { 
@@ -11,7 +13,7 @@ class Element : public ElementBase
         T m_value;
     public:
         Element(){}
-        Element(SCHEDULE_TYPE type, T value, const DateContainer& creationDate, const TimeContainer& creationTime) : ElementBase(type, creationDate, creationTime)
+        Element(SCHEDULE_TYPE type, const T& value, const DateContainer& creationDate, const TimeContainer& creationTime) : ElementBase(type, creationDate, creationTime)
         {
             m_value = value;
         }
@@ -40,16 +42,25 @@ class Element : public ElementBase
             }
         }
 
+        ElementBase* getCopy() override
+        {
+            return new Element<T>(*this);
+        }
+
         T getValue() const
         {
             return m_value;
         }
-        // Returns a mutable reference to the Element's value. Only needs to be used for Select types when reading a Schedule. Otherwise, avoid.
+        // Returns a mutable reference to the Element's value. Only needs to be used for Select types. Otherwise, avoid.
         T& getValueReference()
         {
             return m_value;
         }
-        void setValue(const T value)
+        const T& getConstValueReference() const
+        {
+            return m_value;
+        }
+        void setValue(const T& value)
         {
             m_value = value;
         }

@@ -2,7 +2,12 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#ifdef NDEBUG
+// Windows Release build
+#if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))
+	#define WIN_RELEASE
+#endif
+
+#ifdef WIN_RELEASE
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -10,6 +15,10 @@
 #define NOMINMAX
 #endif
 #include <Windows.h>
+#endif
+
+#ifdef DEBUG
+#include <tests/test_edit_history.h>
 #endif
 
 Program::Program()
@@ -26,6 +35,15 @@ Program::Program()
 
 	schedule.createDefaultSchedule();
 
+	#ifdef DEBUG
+		// int seed = 0; //1713956679;
+		// EditHistoryTest editHistoryTest = EditHistoryTest(1000, seed == 0 ? time(NULL) : seed, &schedule, 0);
+		// if (editHistoryTest.begin())
+		// {
+		// 	std::cout << "TESTS PASSED!" << std::endl;
+		// }
+	#endif
+
 	// There are pre-existing Schedules. Open the most recently edited one.
 	if (ioHandler.getScheduleStemNames().size() > 0)
 	{
@@ -33,7 +51,7 @@ Program::Program()
 		ioHandler.readSchedule(ioHandler.getLastEditedScheduleStemName().c_str());
 	}
 	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
-	else 
+	else
 	{
 		interface.openMainMenuBarScheduleNameModal();
 	}
@@ -59,7 +77,7 @@ void Program::loop()
 	windowManager.terminate();
 }
 
-#ifdef NDEBUG
+#ifdef WINRELEASE
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow)
 {
 	Program program = Program();

@@ -1,10 +1,9 @@
-#include "datagroup.hpp"
-#include "datatable.hpp"
-#include "element.h"
-#include "element_base.h"
-#include "objectdefinition.hpp"
-#include "schedule.h"
-#include "templateobject.hpp"
+#include <datagroup.hpp>
+#include <datatable.hpp>
+#include <element.h>
+#include <element_base.h>
+#include <objectdefinition.hpp>
+#include <templateobject.hpp>
 #include <data_converter.h>
 
 tm DataConverter::getElementCreationTime(BLF_Element* element)
@@ -40,8 +39,6 @@ void DataConverter::setupObjectTable()
 
 int DataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule)
 {
-    // TODO: check if path is valid
-
     DataTable data;
 
     for (size_t c = 0; c < schedule.size(); c++)
@@ -114,7 +111,6 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 {
     std::vector<Column> scheduleCopy = schedule;
 
-    // TODO: check if path is valid
     BLFFile file = readFile(path, m_objects);
 
     // clear the provided copy just in case
@@ -127,19 +123,18 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 
     std::vector<TemplateObject*> dataPointers = {};
 
-    // loop through the sorted BLF_Columns and add them to the schedule as Columns
+    // loop through the BLF_Columns and add them to the schedule as Columns
     for (size_t c = 0; c < loadedColumns.getSize(); c++)
     {
-        Column column = Column {
+        Column column = Column(
             std::vector<ElementBase*>{}, 
             (SCHEDULE_TYPE)loadedColumns[c]->type, 
             std::string(loadedColumns[c]->name.getBuffer()),
             loadedColumns[c]->permanent,
-            (ScheduleElementFlags)loadedColumns[c]->flags,
+            (ScheduleColumnFlags)loadedColumns[c]->flags,
             (COLUMN_SORT)loadedColumns[c]->sort,
-            false,
             SelectOptions(loadedColumns[c]->getSelectOptions())
-        };
+        );
 
         column.selectOptions.setIsMutable(loadedColumns[c]->selectOptionsMutable);
 
@@ -199,9 +194,11 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 for (BLF_Select* element: file.data.get<BLF_Select>())
                 {
                     tm creationTime = getElementCreationTime(element);
-                    Element<SelectContainer>* select = new Element<SelectContainer>(type, SelectContainer(schedule[element->columnIndex].selectOptions), DateContainer(creationTime), TimeContainer(creationTime));
+                    Element<SelectContainer>* select = new Element<SelectContainer>(type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                    
                     select->getValueReference().replaceSelection(element->getSelection());
                     schedule[element->columnIndex].rows.push_back(select);
+                    schedule[element->columnIndex].selectOptions.addListener(schedule[element->columnIndex].rows.size() - 1, select->getValueReference());
                     dataPointers.push_back(element);
                 }        
                 break;

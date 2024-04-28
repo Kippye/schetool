@@ -1,10 +1,11 @@
 #include "imgui.h"
-#include <main_menu_bar_gui.h>
 #include <iostream>
 #include <interface.h>
 #include <window.h>
 #include <gui.h>
 #include <schedule_gui.h>
+#include <main_menu_bar_gui.h>
+#include <edit_history_gui.h>
 
 void Interface::init(Window* windowManager, Input* input, Schedule* schedule, IO_Handler* ioHandler)
 {
@@ -25,6 +26,9 @@ void Interface::init(Window* windowManager, Input* input, Schedule* schedule, IO
 	// ADD GUIS
     addGUI(*(new MainMenuBarGui("MainMenuBarGui", m_ioHandler, m_schedule)));
     addGUI(*(new ScheduleGui("ScheduleGui", m_schedule)));
+	#if DEBUG
+	addGUI(*(new EditHistoryGui("EditHistoryGui", m_schedule)));
+	#endif
 }
 
 void Interface::addGUI(Gui& gui)
@@ -71,15 +75,7 @@ void Interface::draw()
 		ImGui::FocusWindow(NULL);
 	}
 
-	// TEMP here? change the Window's title
-	if (m_schedule->getEditedSinceWrite())
-	{
-		m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(" - ").append(m_schedule->getScheduleName()).append(std::string(" *")).c_str());
-	}
-	else
-	{
-		m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(" - ").append(m_schedule->getScheduleName()).c_str());
-	}
+	m_windowManager->setTitle(std::string(m_windowManager->titleBase).append(" - ").append(m_schedule->getName()).c_str());
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

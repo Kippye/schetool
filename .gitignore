@@ -8,6 +8,8 @@ Debug/
 Release/
 resources/
 compile_commands/
+# tests
+include/tests
 
 # program directories
 schedules/
@@ -31,8 +33,8 @@ schedules/
 *.filters
 *.ilk
 *.pdb
-#*.sln easier to build when it's included
-#*.vcxproj
+*.sln
+*.vcxproj
 
 # premake5 generated files when using the gmake2 configuration
 Makefile

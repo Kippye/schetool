@@ -30,11 +30,12 @@ bool IO_Handler::writeSchedule(const char* name)
 
     std::string relativePath = makeRelativePathFromName(name);
 
-    if (m_converter.writeSchedule(relativePath.c_str(), m_schedule->getColumns()) == 0)
+    if (m_converter.writeSchedule(relativePath.c_str(), m_schedule->getAllColumns()) == 0)
     {
         std::cout << "Successfully wrote Schedule to file: " << relativePath << std::endl;
     }
-    m_schedule->setEditedSinceWrite(false);
+    // TODO: make some event that the Schedule can listen to?
+    m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
     return true;
 }
 
@@ -49,13 +50,14 @@ bool IO_Handler::readSchedule(const char* name)
         return false;
     }
 
-    if (m_converter.readSchedule(relativePath.c_str(), m_schedule->getMutableColumns()) == 0)
+    m_schedule->getEditHistoryMutable().clearEditHistory();
+    if (m_converter.readSchedule(relativePath.c_str(), m_schedule->getAllColumnsMutable()) == 0)
     {
-        ///m_schedule->replaceSchedule(columnsCopy);
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
     }
+    m_schedule->sortColumns();
     setOpenScheduleFilename(std::string(name));
-    m_schedule->setEditedSinceWrite(false);
+    m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
     return true;
 }
 
@@ -93,7 +95,7 @@ void IO_Handler::addToAutosaveTimer(double delta)
 
     if (m_timeSinceAutosave > (double)AUTOSAVE_DELAY_SECONDS)
     {
-        if (m_schedule->getEditedSinceWrite() == true)
+        if (m_schedule->getEditHistory().getEditedSinceWrite() == true)
         {
             writeSchedule(m_openScheduleFilename.c_str());
         }
@@ -141,7 +143,7 @@ bool IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFil
     }
 
     m_openScheduleFilename = name;
-    m_schedule->setScheduleName(name);
+    m_schedule->setName(name);
     return true;
 }
 

@@ -14,6 +14,7 @@ class ScheduleGui : public Gui
         // time editor data (should these be saved somewhere like a struct? i've always thought of making it its separate file, too)
         bool m_editorOpenLastFrame = false;
         bool m_editorOpenThisFrame = false;
+        bool m_editorHasMadeEdits = false; 
         int m_editorColumn = -1;
         int m_editorRow = -1;
         unsigned int m_editorViewedYear = 0;
