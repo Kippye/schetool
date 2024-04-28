@@ -4,8 +4,6 @@ a daily-weekly-monthly scheduling program that aims to combine the best of all o
 
 ## Why schetool?
 
-### It knows its purpose
-
 Schetool was created to have every feature that a scheduling tool needs and is designed specifically **for** making schedules.
 Schetool contains everything that's needed and nothing more. Some alternatives have file sizes and memory usages in the hundreds of megabytes. Schetool can run in the background all day and you will only notice it when you need to.
 
