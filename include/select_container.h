@@ -1,6 +1,7 @@
 #pragma once
 
 #include <set>
+#include <cstddef>
 
 enum OPTION_MODIFICATION
 {
