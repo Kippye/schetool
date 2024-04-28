@@ -13,7 +13,7 @@ class Element : public ElementBase
         T m_value;
     public:
         Element(){}
-        Element(SCHEDULE_TYPE type, T value, const DateContainer& creationDate, const TimeContainer& creationTime) : ElementBase(type, creationDate, creationTime)
+        Element(SCHEDULE_TYPE type, const T& value, const DateContainer& creationDate, const TimeContainer& creationTime) : ElementBase(type, creationDate, creationTime)
         {
             m_value = value;
         }

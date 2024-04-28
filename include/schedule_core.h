@@ -4,6 +4,7 @@
 #include <string>
 #include <schedule_column.h>
 #include <element.h>
+#include <select_options.h>
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
@@ -62,9 +63,9 @@ class ScheduleCore
         // ELEMENTS.
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
         template <typename T>
-        T getValue(ElementBase* element)
+        T& getValue(ElementBase* element)
         {
-            return (T)((Element<T>*)element)->getValue();
+            return ((Element<T>*)element)->getValueReference();
         }
 
         // Get a pointer to the ElementBase at column; row
@@ -171,13 +172,13 @@ class ScheduleCore
 
         // Shortcut for getting the value of an Element at column; row
         template <typename T>
-        T getElementValue(size_t column, size_t row)
+        T& getElementValue(size_t column, size_t row)
         {
             const Column* elementColumn = getColumn(column);
             if (elementColumn == nullptr || elementColumn->hasElement(row) == false)
             {
                 printf("ScheduleCore::getElementValue could not return value at %zu; %zu\n", column, row);
-                return T();
+                return *(new T()); // memory leak ON PURPOSE
             }
             return getValue<T>(elementColumn->rows[row]);
         }

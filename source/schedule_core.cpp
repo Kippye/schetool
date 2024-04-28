@@ -106,7 +106,6 @@ size_t ScheduleCore::getColumnCount()
 }
 
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
-// TODO: FIX SELECTS PROBABLY
 void ScheduleCore::addColumn(size_t index, const Column& column)
 {
     // TODO: make sure that EVERY column has the same amount of rows!!!
@@ -120,6 +119,17 @@ void ScheduleCore::addColumn(size_t index, const Column& column)
     else
     {
         m_schedule.insert(m_schedule.begin() + index, column);
+    }
+
+    Column* addedColumn = getMutableColumn(index);
+    if (addedColumn->type == SCH_SELECT)
+    {
+        addedColumn->selectOptions.clearListeners();
+
+        for (size_t row = 0; row < addedColumn->rows.size(); row++)
+        {
+            addedColumn->selectOptions.addListener(row, ((Element<SelectContainer>*)addedColumn->getElement(row))->getValueReference());
+        }
     }
 
     // Sort columns just in case, because the added Column could have a sort other than COLUMN_SORT_NONE
@@ -399,8 +409,8 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
                 {
                     column.selectOptions.clearOptions();
                 }
-                auto selectElement = new Element<SelectContainer>(type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime));
-                selectElement->getValueReference().listenToCallback();
+                auto selectElement = new Element<SelectContainer>(type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                column.selectOptions.addListener(row, selectElement->getValueReference());
                 setElement(index, row, (ElementBase*)selectElement, false);
             }     
             break;
@@ -443,8 +453,9 @@ void ScheduleCore::addRow(size_t index)
     // the last index = just add to the end
     if (index == getRowCount())
     {
-        for (Column& column : m_schedule)
+        for (size_t i = 0; i < getColumnCount(); i++)
         {
+            Column& column = m_schedule[i];
             std::vector<ElementBase*>& columnValues = column.rows;
             time_t t = std::time(nullptr);
             tm creationTime = *std::localtime(&t);
@@ -473,8 +484,9 @@ void ScheduleCore::addRow(size_t index)
                 }
                 case(SCH_SELECT):
                 { 
-                    columnValues.push_back(new Element<SelectContainer>(column.type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime)));      
-                    ((Element<SelectContainer>*)columnValues.back())->getValueReference().listenToCallback();
+                    Element<SelectContainer>* selectElement = new Element<SelectContainer>(column.type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                    columnValues.push_back(selectElement);
+                    column.selectOptions.addListener(index, selectElement->getValueReference());
                     break;
                 }
                 case(SCH_TIME):
@@ -497,8 +509,9 @@ void ScheduleCore::addRow(size_t index)
     }
     else
     {
-        for (Column& column : m_schedule)
+        for (size_t i = 0; i < getColumnCount(); i++)
         {
+            Column& column = m_schedule[i];
             std::vector<ElementBase*>& columnValues = column.rows;
             time_t t = std::time(nullptr);
             tm creationTime = *std::localtime(&t);
@@ -526,9 +539,10 @@ void ScheduleCore::addRow(size_t index)
                     break;
                 }
                 case(SCH_SELECT):
-                { 
-                    columnValues.insert(columnValues.begin() + index, new Element<SelectContainer>(column.type, SelectContainer(column.selectOptions), DateContainer(creationTime), TimeContainer(creationTime)));      
-                    ((Element<SelectContainer>*)columnValues.at(index))->getValueReference().listenToCallback();
+                {
+                    Element<SelectContainer>* selectElement = new Element<SelectContainer>(column.type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                    columnValues.insert(columnValues.begin() + index, selectElement);
+                    column.selectOptions.addListener(index, selectElement->getValueReference());
                     break;
                 }
                 case(SCH_TIME):
@@ -553,20 +567,25 @@ void ScheduleCore::addRow(size_t index)
     sortColumns();
 }
 
-bool ScheduleCore::removeRow(size_t index)
+bool ScheduleCore::removeRow(size_t row)
 {
-    if (index < getRowCount() == false) { std::cout << "ScheduleCore::removeRow: No row found at index: " << index << std::endl; return false; }
+    if (row < getRowCount() == false) { std::cout << "ScheduleCore::removeRow: No row found at index: " << row << std::endl; return false; }
 
     for (size_t i = 0; i < m_schedule.size(); i++)
     {
-        delete m_schedule[i].rows[index];
-        if (index == m_schedule[i].rows.size() - 1)
+        delete m_schedule[i].rows[row];
+        if (row == m_schedule[i].rows.size() - 1)
         {
             m_schedule[i].rows.pop_back();
         }
         else
         {
-            m_schedule[i].rows.erase(m_schedule[i].rows.begin() + index);
+            m_schedule[i].rows.erase(m_schedule[i].rows.begin() + row);
+        }
+        // for Select Columns, remove the Element from SelectOptions listeners
+        if (m_schedule[i].type == SCH_SELECT)
+        {
+            m_schedule[i].selectOptions.removeListener(row);
         }
     }
 

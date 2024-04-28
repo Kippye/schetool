@@ -194,10 +194,11 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 for (BLF_Select* element: file.data.get<BLF_Select>())
                 {
                     tm creationTime = getElementCreationTime(element);
-                    Element<SelectContainer>* select = new Element<SelectContainer>(type, SelectContainer(schedule[element->columnIndex].selectOptions), DateContainer(creationTime), TimeContainer(creationTime));
-                    select->getValueReference().listenToCallback();
+                    Element<SelectContainer>* select = new Element<SelectContainer>(type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                    
                     select->getValueReference().replaceSelection(element->getSelection());
                     schedule[element->columnIndex].rows.push_back(select);
+                    schedule[element->columnIndex].selectOptions.addListener(schedule[element->columnIndex].rows.size() - 1, select->getValueReference());
                     dataPointers.push_back(element);
                 }        
                 break;

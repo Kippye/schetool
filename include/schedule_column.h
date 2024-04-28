@@ -5,6 +5,7 @@
 #include <element_base.h>
 #include <element.h>
 #include <select_container.h>
+#include <select_options.h>
 #include <time_container.h>
 #include <date_container.h>
 

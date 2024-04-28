@@ -138,6 +138,13 @@ class Schedule
             return m_core.getElementValue<T>(column, row);
         }
 
+        // Shortcut for getting the value of an Element at column; row by const reference
+        template <typename T>
+        const T& getElementValueConstRef(size_t column, size_t row)
+        {
+            return m_core.getElementValue<T>(column, row);
+        }
+
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
         template <typename T>
         void setElementValue(size_t column, size_t row, const T& value, bool resort = true, bool addToHistory = true)

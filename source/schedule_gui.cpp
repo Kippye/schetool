@@ -183,7 +183,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
 								try 
 								{
-									SelectContainer value = m_schedule->getElementValue<SelectContainer>(column, row);
+									SelectContainer value = m_schedule->getElementValueConstRef<SelectContainer>(column, row);
 									auto selection = value.getSelection();
 									size_t selectedCount = selection.size();
 									const std::vector<std::string>& optionNames = m_schedule->getColumn(column)->selectOptions.getOptions();
@@ -213,8 +213,8 @@ void ScheduleGui::draw(Window& window, Input& input)
 												m_editorColumn = column;
 												m_editorRow = row;
 												m_editorSelect = value;
-												m_editorSelect.listenToCallback();
 												m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+												m_editorHasMadeEdits = false;
 												ImGui::OpenPopup("Editor");
 											}
 											// right clicking erases the option - bonus feature
@@ -223,7 +223,6 @@ void ScheduleGui::draw(Window& window, Input& input)
 												value.setSelected(selectionIndices[i], false);
 												m_schedule->setElementValue<SelectContainer>(column, row, value); 
 											}
-
 										}
 										// HACK to make this show when any of the options is hovered
 										if (i != selectedCount - 1 && ImGui::IsItemHovered())
@@ -249,7 +248,6 @@ void ScheduleGui::draw(Window& window, Input& input)
 											m_editorColumn = column;
 											m_editorRow = row;
 											m_editorSelect = value;
-											m_editorSelect.listenToCallback();
 											m_editorAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 											m_editorHasMadeEdits = false;
 											ImGui::OpenPopup("Editor");
@@ -589,6 +587,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 						if (std::string(buf).empty() == false)
 						{
 							m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_ADD, 0, 0, std::vector<std::string>{std::string(buf)});
+							m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
 							m_editorSelect.setSelected(m_schedule->getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
 							m_editorHasMadeEdits = true;
 							// NOTE: break here because otherwise the start and end of the function kind of go out of sync
@@ -607,6 +606,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
 						{
 							m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_REMOVE, i, i);
+							m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
 							m_editorHasMadeEdits = true;
 							// break because the whole thing must be restarted now
 							goto break_select_case;
@@ -631,6 +631,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 							if (i_next >= 0 && i_next < optionNames.size())
 							{
 								m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_MOVE, i, i_next);
+								m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
 								m_editorHasMadeEdits = true;
 								ImGui::ResetMouseDragDelta();
 								break;

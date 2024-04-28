@@ -1,13 +1,6 @@
 #pragma once
 
-#include <functional>
-#include <string>
 #include <set>
-#include <vector>
-#include <map>
-#include <cstdint>
-
-const size_t SELECT_OPTION_COUNT_MAX = 20;
 
 enum OPTION_MODIFICATION
 {
@@ -29,56 +22,13 @@ struct SelectOptionChange
         void replace(OPTION_MODIFICATION type, size_t firstIndex, size_t secondIndex);
 };
 
-struct SelectOptions
-{
-    private:
-        std::vector<std::string> m_options = {};
-        SelectOptionChange m_lastModification;
-        std::map<size_t, std::function<void(const SelectOptionChange&)>> m_callbacks = {};
-        bool m_mutable = false;
-        void invokeCallback();
-    public:
-        SelectOptions();
-        SelectOptions(const std::vector<std::string>& options);
-
-        const std::vector<std::string>& getOptions() const;
-        const SelectOptionChange& getLastChange() const;
-        void addCallbackListener(size_t listenerID, std::function<void(const SelectOptionChange&)>& listener);
-        void removeCallbackListener(size_t listenerID);
-        void clearListeners();
-        void addOption(const std::string& option);
-        void removeOption(const std::string& option);
-        void removeOption(size_t option);
-        void moveOption(size_t firstIndex, size_t secondIndex);
-        void replaceOptions(const std::vector<std::string>& options);
-        void clearOptions();
-        void setIsMutable(bool to);
-        bool getIsMutable() const;
-        // void renameOption(size_t option, const char* name);
-        void modificationApplied();
-};
-
 struct SelectContainer
 {
     private:
-        size_t m_instanceID;
-        std::set<size_t> m_selection;
-        SelectOptions m_defaultOptions;
-        SelectOptions& m_options = m_defaultOptions;
-        std::function<void(const SelectOptionChange&)> updateCallback = std::function<void(const SelectOptionChange&)>([&](const SelectOptionChange& lastChange)
-        {
-            update(lastChange);
-        });
-        size_t getUniqueID() const;
+        std::set<size_t> m_selection = {};
+        // updated from SelectOptions each update
+        size_t m_optionCount = 0;
     public:
-        static size_t highestSharedID;
-        SelectContainer();
-        SelectContainer(SelectOptions& options);
-        SelectContainer(const SelectContainer& other);
-        SelectContainer& operator=(SelectContainer& other);
-        SelectContainer& operator=(const SelectContainer& other);
-        ~SelectContainer();
-
         friend bool operator<(const SelectContainer& left, const SelectContainer& right)
         {
             if (left.m_selection.size() == 0)
@@ -94,20 +44,22 @@ struct SelectContainer
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
 
-            for (size_t i = 0; i < left.m_options.getOptions().size(); i++)
+            for (auto& s: left.m_selection)
             {
-                // has this option selected
-                if (leftForemostOption == 1000 && left.m_selection.find(i) != left.m_selection.end())
+                if (leftForemostOption == 1000 || s < leftForemostOption)
                 {
-                    leftForemostOption = i;
+                    leftForemostOption = s;
                 }
-                if (rightForemostOption == 1000 && right.m_selection.find(i) != right.m_selection.end())
+            }
+            for (auto& s: right.m_selection)
+            {
+                if (rightForemostOption == 1000 || s < rightForemostOption)
                 {
-                    rightForemostOption = i;
+                    rightForemostOption = s;
                 }
             }
 
-            return left.m_options.getOptions()[leftForemostOption] < right.m_options.getOptions()[rightForemostOption];
+            return leftForemostOption < rightForemostOption;
         }
 
         friend bool operator>(const SelectContainer& left, const SelectContainer& right)
@@ -125,25 +77,26 @@ struct SelectContainer
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
 
-            for (size_t i = 0; i < left.m_options.getOptions().size(); i++)
+            for (auto& s: left.m_selection)
             {
-                // has this option selected
-                if (leftForemostOption == 1000 && left.m_selection.find(i) != left.m_selection.end())
+                if (leftForemostOption == 1000 || s < leftForemostOption)
                 {
-                    leftForemostOption = i;
+                    leftForemostOption = s;
                 }
-                if (rightForemostOption == 1000 && right.m_selection.find(i) != right.m_selection.end())
+            }
+            for (auto& s: right.m_selection)
+            {
+                if (rightForemostOption == 1000 || s < rightForemostOption)
                 {
-                    rightForemostOption = i;
+                    rightForemostOption = s;
                 }
             }
 
-            return left.m_options.getOptions()[leftForemostOption] > right.m_options.getOptions()[rightForemostOption];
+            return leftForemostOption > rightForemostOption;
         }
 
         const std::set<size_t> getSelection() const;
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
-        void listenToCallback();
-        void update(const SelectOptionChange& change);
+        void update(const SelectOptionChange& change, size_t optionCount);
 };
