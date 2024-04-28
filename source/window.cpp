@@ -12,9 +12,11 @@ extern "C" {
 //include <windows.h>
 #include <vector>
 
-void Window::init(TextureLoader* textureLoader)
+void Window::init(TextureLoader* textureLoader, const std::string& programName, const std::string& programVersionString)
 {
 	m_textureLoader = textureLoader;
+	m_titleBase = programName;
+	m_titleBase = m_titleBase.append(" ").append(programVersionString);
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -24,8 +26,8 @@ void Window::init(TextureLoader* textureLoader)
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
 	//glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); //might be needed for bigger monitors?
 
-	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, titleBase, NULL, NULL);
-	setTitle(titleBase);
+	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, m_titleBase.c_str(), NULL, NULL);
+	setTitle(m_titleBase);
 
 	if (window == NULL)
 	{
@@ -117,10 +119,21 @@ void Window::setCursor(CURSOR_TYPE cursor)
 	glfwSetCursor(window, cursors[cursor]);
 }
 
-void Window::setTitle(const char* _title)
+void Window::setTitle(const std::string& title)
 {
-	title = std::string(_title);
+	m_title = title;
 	glfwSetWindowTitle(window, title.c_str());
+}
+
+void Window::setTitleSuffix(const std::string& suffix)
+{
+	std::string newTitle = m_titleBase;
+	setTitle(newTitle.append(suffix));
+}
+
+std::string Window::getTitle()
+{
+	return m_title;
 }
 
 void Window::terminate()

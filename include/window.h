@@ -23,10 +23,10 @@ class Window
 {
 	private:
 		TextureLoader* m_textureLoader;
+		std::string m_titleBase = "";
+		std::string m_title = "";
 	public:
 		GLFWwindow* window;
-		const char* titleBase = "schetool";
-		std::string title = "";
 		CURSOR_TYPE cursor = NORMAL;
 		GLFWcursor* cursors[2] = {};
 		int SCREEN_WIDTH = 800;
@@ -38,9 +38,11 @@ class Window
 		bool shouldClose = false;
 	// window functions
 	void setCursor(CURSOR_TYPE _cursor);
-	void setTitle(const char* _title);
+	void setTitle(const std::string& title);
+	void setTitleSuffix(const std::string& suffix);
+	std::string getTitle();
 	// lifecycle functions
-	void init(TextureLoader*);
+	void init(TextureLoader*, const std::string&, const std::string&);
 	void terminate();
 
 	// window events
