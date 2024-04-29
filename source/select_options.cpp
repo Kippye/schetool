@@ -1,6 +1,24 @@
 #include <select_options.h>
 #include <util.h>
 
+std::string SelectOptionsModification::getDataString()
+{
+    char buffer[2048];
+    if (m_optionNames.size() > 0)
+    {
+        sprintf(buffer, "SelectOptionsModification: {\n   Type: %d\n   First index: %zu\n   Second index: %zu\n   Option name count: %zu\n   First name: %s\n}\n", m_type, m_firstIndex, m_secondIndex, m_optionNames.size(), m_optionNames[0].c_str());
+    }
+    else
+    {
+        sprintf(buffer, "SelectOptionsModification: {\n   Type: %d\n   First index: %zu\n   Second index: %zu\n   No option names.\n}\n", m_type, m_firstIndex, m_secondIndex);
+    }
+
+    std::string s = std::string(buffer);
+    s.shrink_to_fit();
+
+    return s;
+}
+
 // Declared in select_container.h
 void SelectOptionChange::replace(OPTION_MODIFICATION type, size_t firstIndex, size_t secondIndex)
 {
@@ -8,6 +26,7 @@ void SelectOptionChange::replace(OPTION_MODIFICATION type, size_t firstIndex, si
     this->firstIndex = firstIndex;
     this->secondIndex = secondIndex;
 }
+
 
 SelectOptions::SelectOptions()
 {
@@ -42,6 +61,42 @@ size_t SelectOptions::getOptionCount() const
 const SelectOptionChange& SelectOptions::getLastChange() const
 {
     return m_lastModification;
+}
+
+bool SelectOptions::applyModification(SelectOptionsModification& modification)
+{
+    switch(modification.m_type)
+    {
+        case(OPTION_MODIFICATION_ADD):
+        {
+            if (modification.m_optionNames.size() == 0)
+            {
+                std::cout << "SelectOptions::applyModification: Failed to add Select option because no name was provided" << std::endl;
+                return false;
+            }
+            return addOption(modification.m_optionNames[0]);
+        }
+        case(OPTION_MODIFICATION_REMOVE):
+        { 
+            return removeOption(modification.m_firstIndex);
+        }
+        case(OPTION_MODIFICATION_MOVE):
+        { 
+            return moveOption(modification.m_firstIndex, modification.m_secondIndex);
+        }
+        case(OPTION_MODIFICATION_CLEAR):
+        { 
+            clearOptions();
+            break;
+        }
+        case(OPTION_MODIFICATION_REPLACE):
+        { 
+            replaceOptions(modification.m_optionNames);
+            break;
+        }
+    }
+
+    return true;
 }
 
 void SelectOptions::addListener(size_t index, SelectContainer& listener)
@@ -85,14 +140,15 @@ bool SelectOptions::getIsMutable() const
     return m_mutable;
 }
 
-void SelectOptions::addOption(const std::string& option)
+bool SelectOptions::addOption(const std::string& option)
 {
-    if (m_options.size() == SELECT_OPTION_COUNT_MAX) { return; }
+    if (m_options.size() == SELECT_OPTION_COUNT_MAX) { return false; }
     
     m_options.push_back(option);
+    return true;
 }
 
-void SelectOptions::removeOption(const std::string& option)
+bool SelectOptions::removeOption(const std::string& option)
 {
     for (int i = m_options.size() - 1; i >= 0; i--)
     {
@@ -102,22 +158,36 @@ void SelectOptions::removeOption(const std::string& option)
             m_options.erase(m_options.begin() + i);
             break;
         }
+        // failed to find the option
+        else if (i == 0)
+        {
+            return false;
+        }
     }
     updateListeners();
+    return true;
 }
 
-void SelectOptions::removeOption(size_t option)
+bool SelectOptions::removeOption(size_t option)
 {
+    if (option < m_options.size() == false) { return false; }
+
     m_lastModification.replace(OPTION_MODIFICATION_REMOVE, option, option);
     m_options.erase(m_options.begin() + option);
     updateListeners();
+
+    return true;
 }
 
-void SelectOptions::moveOption(size_t firstIndex, size_t secondIndex)
+bool SelectOptions::moveOption(size_t firstIndex, size_t secondIndex)
 {
+    if (firstIndex < m_options.size() == false || secondIndex < m_options.size() == false) { return false; }
+
     m_lastModification.replace(OPTION_MODIFICATION_MOVE, firstIndex, secondIndex);
     containers::move(m_options, firstIndex, secondIndex);
     updateListeners();
+
+    return true;
 }
 
 void SelectOptions::replaceOptions(const std::vector<std::string>& options)

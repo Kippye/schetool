@@ -586,7 +586,9 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					{
 						if (std::string(buf).empty() == false)
 						{
-							m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_ADD, 0, 0, std::vector<std::string>{std::string(buf)});
+							m_schedule->modifyColumnSelectOptions(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_ADD)
+								.firstIndex(0)
+								.optionNames(std::vector<std::string>{std::string(buf)}));
 							m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
 							m_editorSelect.setSelected(m_schedule->getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
 							m_editorHasMadeEdits = true;
@@ -605,7 +607,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 					{
 						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
 						{
-							m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_REMOVE, i, i);
+							m_schedule->modifyColumnSelectOptions(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
 							m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
 							m_editorHasMadeEdits = true;
 							// break because the whole thing must be restarted now
@@ -630,7 +632,7 @@ bool ScheduleGui::displayEditor(SCHEDULE_TYPE type)
 							size_t i_next = i + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
 							if (i_next >= 0 && i_next < optionNames.size())
 							{
-								m_schedule->modifyColumnSelectOptions(m_editorColumn, OPTION_MODIFICATION_MOVE, i, i_next);
+								m_schedule->modifyColumnSelectOptions(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next));
 								m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
 								m_editorHasMadeEdits = true;
 								ImGui::ResetMouseDragDelta();

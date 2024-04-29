@@ -6,6 +6,49 @@
 
 const size_t SELECT_OPTION_COUNT_MAX = 20;
 
+class SelectOptionsModification
+{
+    private:
+        friend class SelectOptions;
+        OPTION_MODIFICATION m_type = OPTION_MODIFICATION_ADD;
+        size_t m_firstIndex = 0;
+        size_t m_secondIndex = 0;
+        std::vector<std::string> m_optionNames = {};
+    
+    public:
+        SelectOptionsModification(OPTION_MODIFICATION type);
+
+        SelectOptionsModification& firstIndex(size_t index);
+        SelectOptionsModification& secondIndex(size_t index);
+        SelectOptionsModification& optionNames(const std::vector<std::string>& optionNames);
+
+        std::string getDataString();
+};
+
+inline SelectOptionsModification::SelectOptionsModification(OPTION_MODIFICATION type)
+{
+    m_type = type;
+}
+
+inline SelectOptionsModification& SelectOptionsModification::firstIndex(size_t index)
+{
+    m_firstIndex = index;
+    return *this;
+}
+
+inline SelectOptionsModification& SelectOptionsModification::secondIndex(size_t index)
+{
+    m_secondIndex = index;
+    return *this;
+}
+
+inline SelectOptionsModification& SelectOptionsModification::optionNames(const std::vector<std::string>& optionNames)
+{
+    m_optionNames = optionNames;
+    return *this;
+}
+
+
 class SelectOptions
 {
     private:
@@ -21,13 +64,15 @@ class SelectOptions
         const std::vector<std::string>& getOptions() const;
         size_t getOptionCount() const;
         const SelectOptionChange& getLastChange() const;
+        // Apply a SelectOptionsModification to this SelectOptions. Returns true if the modification was applied, false otherwise. NOTE:
+        bool applyModification(SelectOptionsModification& modification);
         void addListener(size_t index, SelectContainer& listener);
         void removeListener(size_t listenerID);
         void clearListeners();
-        void addOption(const std::string& option);
-        void removeOption(const std::string& option);
-        void removeOption(size_t option);
-        void moveOption(size_t firstIndex, size_t secondIndex);
+        bool addOption(const std::string& option);
+        bool removeOption(const std::string& option);
+        bool removeOption(size_t option);
+        bool moveOption(size_t firstIndex, size_t secondIndex);
         void replaceOptions(const std::vector<std::string>& options);
         void clearOptions();
         void setIsMutable(bool to);

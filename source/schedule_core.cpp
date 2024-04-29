@@ -316,44 +316,11 @@ const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column)
     return m_schedule.at(column).selectOptions;
 }
 
-bool ScheduleCore::modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex, size_t secondIndex, const std::vector<std::string>& optionNames)
+bool ScheduleCore::modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification)
 {
     if (column < getColumnCount() == false) { return false; }
-    Column previousData = Column(m_schedule.at(column));
-
-    switch(selectModification)
-    {
-        case(OPTION_MODIFICATION_ADD):
-        { 
-            if (optionNames.size() == 0)
-            {
-                std::cout << "ScheduleCore::modifyColumnSelectOptions: Failed to add Select option because no name was provided in the arguments" << std::endl;
-                return false;
-            }
-            m_schedule.at(column).selectOptions.addOption(optionNames[0]);
-            break;
-        }
-        case(OPTION_MODIFICATION_REMOVE):
-        { 
-            m_schedule.at(column).selectOptions.removeOption(firstIndex);
-            break;
-        }
-        case(OPTION_MODIFICATION_MOVE):
-        { 
-            m_schedule.at(column).selectOptions.moveOption(firstIndex, secondIndex);
-            break;
-        }
-        case(OPTION_MODIFICATION_CLEAR):
-        { 
-            m_schedule.at(column).selectOptions.clearOptions();
-            break;
-        }
-        case(OPTION_MODIFICATION_REPLACE):
-        { 
-            m_schedule.at(column).selectOptions.replaceOptions(optionNames);
-            break;
-        }
-    }
+    
+    if (m_schedule.at(column).selectOptions.applyModification(selectOptionsModification) == false) { std::cout << "ScheduleCore::modifySelectOptions: Applying the following modification failed:"; std::cout << selectOptionsModification.getDataString(); return false; }
 
     sortColumns();
     return true;

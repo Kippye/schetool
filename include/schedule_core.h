@@ -46,7 +46,7 @@ class ScheduleCore
         bool setColumnSort(size_t column, COLUMN_SORT sortDirection);
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
-        bool modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex = 0, size_t secondIndex = 0, const std::vector<std::string>& optionNames = std::vector<std::string>{});
+        bool modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification);
         // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 

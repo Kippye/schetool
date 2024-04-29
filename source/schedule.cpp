@@ -215,11 +215,11 @@ const SelectOptions& Schedule::getColumnSelectOptions(size_t column)
     return m_core.getColumnSelectOptions(column);
 }
 
-void Schedule::modifyColumnSelectOptions(size_t column, OPTION_MODIFICATION selectModification, size_t firstIndex, size_t secondIndex, const std::vector<std::string>& optionNames, bool addToHistory)
+void Schedule::modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification, bool addToHistory)
 {
     Column previousData = Column(*m_core.getColumn(column));
 
-    if (m_core.modifyColumnSelectOptions(column, selectModification, firstIndex, secondIndex, optionNames))
+    if (m_core.modifyColumnSelectOptions(column, selectOptionsModification))
     {
         if (addToHistory)
         {
