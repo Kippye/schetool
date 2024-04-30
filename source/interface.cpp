@@ -1,8 +1,5 @@
-#include "imgui.h"
 #include <iostream>
 #include <interface.h>
-#include <window.h>
-#include <gui.h>
 #include <schedule_gui.h>
 #include <main_menu_bar_gui.h>
 #include <edit_history_gui.h>

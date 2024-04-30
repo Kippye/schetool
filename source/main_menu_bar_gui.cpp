@@ -1,5 +1,3 @@
-#include "input.h"
-#include "io_handler.h"
 #include <main_menu_bar_gui.h>
 
 MainMenuBarGui::MainMenuBarGui(const char* ID, IO_Handler* ioHandler, Schedule* schedule) : Gui(ID)

@@ -1,9 +1,6 @@
 #pragma once
 #include <deque>
-#include <vector>
-#include <element_base.h>
 #include <schedule_edit.h>
-#include <schedule_column.h>
 #include <schedule_core.h>
 
 class ScheduleEditHistory

@@ -163,6 +163,10 @@ struct ColumnSortComparison
             {
                 return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<DateContainer>*)left)->getValue() > ((const Element<DateContainer>*)right)->getValue() : ((const Element<DateContainer>*)left)->getValue() < ((const Element<DateContainer>*)right)->getValue();
             }
+            default:
+            {
+                return false;
+            }
         }
     }
 

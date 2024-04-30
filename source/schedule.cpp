@@ -1,16 +1,14 @@
-#include "element.h"
-#include "element_base.h"
-#include "input.h"
-#include "schedule_edit.h"
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <schedule.h>
-#include <string.h>
-#include <time.h>
 #include <vector>
 #include <ctime>
-#include <numeric>
+#include <cstdio>
+#include <cstdlib>
+#include <string.h>
+#include <schedule.h>
+#include <element.h>
+#include <element_base.h>
+#include <input.h>
+#include <schedule_edit.h>
+#include <time.h>
 
 // TEMP
 #include <iostream>

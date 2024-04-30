@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glm.hpp>
-#include <vector>
 #include <window.h>
 #include <interface.h>
 

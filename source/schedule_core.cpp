@@ -1,7 +1,3 @@
-#include <schedule_core.h>
-
-#include "element.h"
-#include "element_base.h"
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -9,6 +5,8 @@
 #include <vector>
 #include <ctime>
 #include <numeric>
+#include <schedule_core.h>
+#include <element_base.h>
 
 // TEMP
 #include <iostream>

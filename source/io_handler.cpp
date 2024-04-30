@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <chrono>
-#include <io_handler.h>
 #include <filesystem>
 #include <limits>
+#include <io_handler.h>
 
 namespace fs = std::filesystem;
 

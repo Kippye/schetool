@@ -1,5 +1,4 @@
 #include <gui.h>
-#include <window.h>
 
 Gui::Gui()
 {

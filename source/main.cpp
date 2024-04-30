@@ -1,6 +1,5 @@
 #include <main.h>
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 
 // Windows Release build
 #if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))

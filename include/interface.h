@@ -1,6 +1,5 @@
 #pragma once
 
-#include <io_handler.h>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui_impl_glfw.h>
@@ -8,13 +7,12 @@
 
 #include <GLFW/glfw3.h>
 
-#include <textures.h>
 #include <window.h>
+#include <io_handler.h>
 #include <input.h>
 #include <gui.h>
 #include <schedule.h>
 
-#include <vector>
 #include <string>
 #include <map>
 #include <memory>

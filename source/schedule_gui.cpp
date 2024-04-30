@@ -1,19 +1,15 @@
-#include "element.h"
-#include "element_base.h"
-#include <algorithm>
 #include <array>
-#include <cctype>
 #include <ctime>
 #include <iterator>
-#include <schedule_gui.h>
-#include <schedule.h>
-#include <imgui.h>
 #include <string>
-#include <window.h>
-#include <any>
 #include <cstdio>
 #include <regex>
+#include <algorithm>
+#include <schedule_gui.h>
 #include <util.h>
+#include <element.h>
+#include <element_base.h>
+#include <schedule.h>
 
 #include <iostream>
 

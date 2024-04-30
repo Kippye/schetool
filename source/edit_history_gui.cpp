@@ -1,7 +1,6 @@
-#include "imgui.h"
-#include "schedule_edit.h"
 #include <cstdio>
 #include <edit_history_gui.h>
+#include <schedule_edit.h>
 
 EditHistoryGui::EditHistoryGui(const char* ID, Schedule* schedule) : Gui(ID)
 {

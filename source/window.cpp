@@ -5,12 +5,6 @@ extern "C" {
 #include <window.h>
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <cmath>
-#include <stdio.h>
-//include <windows.h>
-#include <vector>
 
 void Window::init(TextureLoader* textureLoader, const std::string& programName, const std::string& programVersionString)
 {
