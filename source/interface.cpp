@@ -24,20 +24,21 @@ void Interface::init(Window* windowManager, Input* input, Schedule* schedule, IO
 	imGuiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// ADD GUIS
-    addGUI(*(new MainMenuBarGui("MainMenuBarGui", m_ioHandler, m_schedule)));
-    addGUI(*(new ScheduleGui("ScheduleGui", m_schedule)));
+	
+    addGUI(std::make_shared<MainMenuBarGui>("MainMenuBarGui", m_ioHandler, m_schedule));
+    addGUI(std::make_shared<ScheduleGui>("ScheduleGui", m_schedule));
 	#if DEBUG
-	addGUI(*(new EditHistoryGui("EditHistoryGui", m_schedule)));
+	addGUI(std::make_shared<EditHistoryGui>("EditHistoryGui", m_schedule));
 	#endif
 }
 
-void Interface::addGUI(Gui& gui)
+void Interface::addGUI(std::shared_ptr<Gui> gui)
 {
-    m_guis.insert({gui.getID(), &gui});
+    m_guis.insert({gui->getID(), gui});
 }
 
 // NOTE: Returns nullptr if the Gui was not found
-Gui* Interface::getGuiByID(const std::string& ID)
+std::shared_ptr<Gui> Interface::getGuiByID(const std::string& ID)
 {
 	// No Gui with that ID
 	if (m_guis.find(ID) == m_guis.end())
@@ -82,10 +83,10 @@ void Interface::draw()
 
 void Interface::openMainMenuBarScheduleNameModal()
 {
-	Gui* gui = getGuiByID("MainMenuBarGui");
+	std::shared_ptr<Gui> gui = getGuiByID("MainMenuBarGui");
 
 	if (gui != nullptr)
 	{
-		((MainMenuBarGui*)gui)->openNewScheduleNameModal(NAME_PROMPT_NEW);
+		((MainMenuBarGui*)gui.get())->openNewScheduleNameModal(NAME_PROMPT_NEW);
 	}
 }
