@@ -15,7 +15,12 @@ void IO_Handler::init(Schedule* schedule, Input& input, Interface& interface)
 {
     m_schedule = schedule;
     input.addCallbackListener(INPUT_CALLBACK_SC_SAVE, saveCallback);
+
     m_mainMenuBarGui = std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui"));
+    m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->renameScheduleEvent.addListener(renameListener);
+    m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
+
+    m_mainMenuBarGui->getSubGui<ScheduleDeleteModalSubGui>("ScheduleDeleteModalSubGui")->deleteScheduleEvent.addListener(deleteListener);
 
     m_converter = DataConverter();
     m_converter.setupObjectTable();

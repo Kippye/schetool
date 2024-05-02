@@ -1,18 +1,5 @@
 #include <main_menu_bar_gui.h>
 
-ScheduleNameModalSubGui::ScheduleNameModalSubGui(const char* ID) : Gui(ID) {}
-
-// TEMP
-#include <iostream>
-
-void ScheduleNameModalSubGui::test(size_t argCount, std::string filename, ...)
-{
-	va_list args;
-	va_start(args, filename);
-	std::cout << filename << va_arg(args, int) << (bool)va_arg(args, int) << std::endl;
-	va_end(args);
-}
-
 int ScheduleNameModalSubGui::filterAlphanumerics(ImGuiInputTextCallbackData* data)
 {
 	if (
@@ -57,14 +44,16 @@ void ScheduleNameModalSubGui::draw(Window& window, Input& input)
 					// {
 					// 	ImGui::CloseCurrentPopup();
 					// }
+					createNewScheduleEvent.invoke(std::string(buf));
 				}
 				else if (m_promptReason == NAME_PROMPT_RENAME)
 				{
 					// Hide the modal if the open file was successfully renamed
 					// if (m_ioHandler->setOpenScheduleFilename(buf, true))
 					// {
-					// 	ImGui::CloseCurrentPopup();
+					// 	ImGui::CloseCurrentPopup(); // TODO: do this from IO_Manager
 					// }
+					renameScheduleEvent.invoke(std::string(buf), true);
 				}
 			}	
 		}
@@ -80,11 +69,48 @@ void ScheduleNameModalSubGui::setPromptReason(NAME_PROMPT_REASON promptReason)
 }
 
 
+void ScheduleDeleteModalSubGui::draw(Window& window, Input& input)
+{
+	ImGui::SetNextWindowSize(ImVec2(386.0f, 100.0f));
+	if (ImGui::BeginPopupModal("Confirm Schedule deletion", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+	{
+		ImGuiStyle& style = ImGui::GetStyle();
+		ImGui::Text("%s %s?", "Delete", m_deleteConfirmationScheduleName.c_str());
+		ImGui::NewLine();
+		float size = 120.0f + style.FramePadding.x * 2.0f;
+		float avail = ImGui::GetContentRegionAvail().x;
+		float off = (avail - size) * 0.23f;
+		if (off > 0.0f)
+		{
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+		}
+		if (ImGui::Button("Delete##DeleteSchedule", ImVec2(120, 0)))
+		{
+			deleteScheduleEvent.invoke(std::string(m_deleteConfirmationScheduleName));
+
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::SameLine();
+		// janky offset but it works so i don't much care
+		off = (avail - size) * 0.04f;
+		if (off > 0.0f)
+		{
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+		}
+		if (ImGui::Button("Cancel##CancelScheduleDeletion", ImVec2(120, 0)))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+}
+
+
 MainMenuBarGui::MainMenuBarGui(const char* ID) : Gui(ID)
 {
 	// add subguis
 	addSubGui("ScheduleNameModalSubGui", new ScheduleNameModalSubGui("ScheduleNameModalSubGui"));
-	getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->test(2, "wowzers", 69, true);
+	addSubGui("ScheduleDeleteModalSubGui", new ScheduleDeleteModalSubGui("ScheduleDeleteModalSubGui"));
 }
 
 void MainMenuBarGui::draw(Window& window, Input& input)
@@ -136,7 +162,11 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 		nameModalSubGui->draw(window, input);
 	}
 
-	displayDeleteConfirmationModal();
+	auto deleteModalSubGui = getSubGui<ScheduleDeleteModalSubGui>("ScheduleDeleteModalSubGui");
+	if (deleteModalSubGui)
+	{
+		deleteModalSubGui->draw(window, input);
+	}
 
 	if (m_openScheduleNameModal)
 	{
@@ -150,45 +180,7 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 	}
 }
 
-void MainMenuBarGui::displayDeleteConfirmationModal()
-{
-	ImGui::SetNextWindowSize(ImVec2(386.0f, 100.0f));
-	if (ImGui::BeginPopupModal("Confirm Schedule deletion", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
-	{
-		ImGuiStyle& style = ImGui::GetStyle();
-		ImGui::Text("%s %s?", "Delete", m_deleteConfirmationScheduleName.c_str());
-		ImGui::NewLine();
-		float size = 120.0f + style.FramePadding.x * 2.0f;
-		float avail = ImGui::GetContentRegionAvail().x;
-		float off = (avail - size) * 0.23f;
-		if (off > 0.0f)
-		{
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
-		}
-		if (ImGui::Button("Delete##DeleteSchedule", ImVec2(120, 0)))
-		{
-			// if (m_ioHandler->deleteSchedule(m_deleteConfirmationScheduleName.c_str()))
-			// {
-			// }
-			// close it anyway i guess
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SameLine();
-		// janky offset but it works so i don't much care
-		off = (avail - size) * 0.04f;
-		if (off > 0.0f)
-		{
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
-		}
-		if (ImGui::Button("Cancel##CancelScheduleDeletion", ImVec2(120, 0)))
-		{
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::EndPopup();
-	}
-}
-
-void MainMenuBarGui::openNewScheduleNameModal(NAME_PROMPT_REASON reason)
+void MainMenuBarGui::openScheduleNameModal(NAME_PROMPT_REASON reason)
 {
 	auto nameModalSubGui = getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui");
 	if (nameModalSubGui)
@@ -200,11 +192,11 @@ void MainMenuBarGui::openNewScheduleNameModal(NAME_PROMPT_REASON reason)
 
 void MainMenuBarGui::renameSchedule()
 {
-	openNewScheduleNameModal(NAME_PROMPT_RENAME);
+	openScheduleNameModal(NAME_PROMPT_RENAME);
 }
 void MainMenuBarGui::newSchedule()
 {
-	openNewScheduleNameModal(NAME_PROMPT_NEW);
+	openScheduleNameModal(NAME_PROMPT_NEW);
 }
 void MainMenuBarGui::openSchedule()
 {
@@ -224,5 +216,5 @@ void MainMenuBarGui::openSchedule()
 	// 		m_openDeleteConfirmationModal = true;
 	// 	}
 	// }
-	// ImGui::EndMenu();
+	ImGui::EndMenu();
 }

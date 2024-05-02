@@ -76,14 +76,3 @@ void Interface::draw()
 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-
-// TODO: remove
-void Interface::openMainMenuBarScheduleNameModal()
-{
-	std::shared_ptr<Gui> gui = getGuiByID("MainMenuBarGui");
-
-	if (gui != nullptr)
-	{
-		((MainMenuBarGui*)gui.get())->openNewScheduleNameModal(NAME_PROMPT_NEW);
-	}
-}

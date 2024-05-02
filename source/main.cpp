@@ -52,7 +52,7 @@ Program::Program()
 	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
 	else
 	{
-		interface.openMainMenuBarScheduleNameModal();
+		std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui"))->openScheduleNameModal(NAME_PROMPT_NEW);
 	}
 }
 

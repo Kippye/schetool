@@ -32,5 +32,4 @@ class Interface
 		void addGui(std::shared_ptr<Gui> gui);
 		std::shared_ptr<Gui> getGuiByID(const std::string& ID);
 		void draw();
-		void openMainMenuBarScheduleNameModal();
 };

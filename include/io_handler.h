@@ -23,6 +23,27 @@ class IO_Handler
         {
             writeSchedule(m_openScheduleFilename.c_str());
         });
+        // gui listeners
+        std::function<void(std::string, bool)> renameListener = std::function<void(std::string, bool)>([&](std::string name, bool renameFile)
+        {
+            if (setOpenScheduleFilename(name, renameFile))
+            {
+                // TODO: hide modal
+            }
+        });
+        std::function<void(std::string)> createNewListener = std::function<void(std::string)>([&](std::string name)
+        {
+            if (createNewSchedule(name.c_str()))
+            {
+                // TODO: hide modal
+            }
+        });
+        std::function<void(std::string)> deleteListener = std::function<void(std::string)>([&](std::string name)
+        {
+            if (deleteSchedule(name.c_str()));
+            // Modal hides itself
+        });
+
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
