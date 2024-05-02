@@ -3,15 +3,16 @@
 #include <gui.h>
 #include <window.h>
 #include <input.h>
+#include <select_container.h>
+#include <time_container.h>
+#include <date_container.h>
 #include <element_base.h>
-#include <schedule.h>
 
 class Schedule;
 
 class ScheduleGui : public Gui
 {
     private:
-        Schedule* m_schedule;
         // time editor data (should these be saved somewhere like a struct? i've always thought of making it its separate file, too)
         bool m_editorOpenLastFrame = false;
         bool m_editorOpenThisFrame = false;
@@ -39,7 +40,6 @@ class ScheduleGui : public Gui
         bool displayEditor(SCHEDULE_TYPE type);
     public:
         ScheduleGui(const char* ID) : Gui(ID) { }
-        ScheduleGui(const char* ID, Schedule*);
         void draw(Window& window, Input& input) override;
         static int filterNumbers(ImGuiInputTextCallbackData* data);
 };

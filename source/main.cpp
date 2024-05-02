@@ -27,10 +27,10 @@ Program::Program()
 	// setup and initialize components
 	windowManager.init(&textureLoader, PROGRAM_NAME, PROGRAM_VERSION);
 	input.init(&windowManager);
-	ioHandler.init(&schedule, input);
+	interface.init(&windowManager, &input);
+	ioHandler.init(&schedule, input, interface);
 	render.init(&windowManager, &interface);
-	interface.init(&windowManager, &input, &schedule, &ioHandler);
-	schedule.init(input);
+	schedule.init(input, interface);
 
 	schedule.createDefaultSchedule();
 

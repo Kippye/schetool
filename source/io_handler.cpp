@@ -11,10 +11,12 @@ std::string IO_Handler::makeRelativePathFromName(const char* name)
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
 }
 
-void IO_Handler::init(Schedule* schedule, Input& input)
+void IO_Handler::init(Schedule* schedule, Input& input, Interface& interface)
 {
     m_schedule = schedule;
     input.addCallbackListener(INPUT_CALLBACK_SC_SAVE, saveCallback);
+    m_mainMenuBarGui = std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui"));
+
     m_converter = DataConverter();
     m_converter.setupObjectTable();
 }

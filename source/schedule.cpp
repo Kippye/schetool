@@ -4,18 +4,16 @@
 #include <cstdlib>
 #include <string.h>
 #include <schedule.h>
-#include <element.h>
-#include <element_base.h>
-#include <input.h>
-#include <schedule_edit.h>
+#include <schedule_gui.h>
 #include <time.h>
 
 // TEMP
 #include <iostream>
 
-void Schedule::init(Input& input)
+void Schedule::init(Input& input, Interface& interface)
 {
-    m_core = ScheduleCore();
+    std::shared_ptr<ScheduleGui> scheduleGui = std::dynamic_pointer_cast<ScheduleGui>(interface.getGuiByID("ScheduleGui"));
+    m_core = ScheduleCore(scheduleGui);
 
     m_editHistory = ScheduleEditHistory(&m_core);
     input.addCallbackListener(INPUT_CALLBACK_SC_UNDO, undoCallback);

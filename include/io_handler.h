@@ -3,14 +3,17 @@
 #include <data_converter.h>
 #include <schedule.h>
 #include <input.h>
+#include <main_menu_bar_gui.h>
+#include <interface.h>
 
 const unsigned int AUTOSAVE_DELAY_SECONDS = 2 * 60;
 
 class IO_Handler
 {
     private:
-        Schedule* m_schedule;
+        Schedule* m_schedule = NULL;
         DataConverter m_converter;
+        std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::string m_openScheduleFilename;
         std::string makeRelativePathFromName(const char* name);
         double m_timeSinceAutosave = 0.0;
@@ -23,7 +26,7 @@ class IO_Handler
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
-        void init(Schedule* schedule, Input& input);
+        void init(Schedule* schedule, Input& input, Interface& interface);
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);

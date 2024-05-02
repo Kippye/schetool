@@ -2,9 +2,11 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include <schedule_column.h>
 #include <element.h>
 #include <select_options.h>
+#include <schedule_gui.h>
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
@@ -12,6 +14,7 @@ const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
 class ScheduleCore
 {
     private:
+        std::shared_ptr<ScheduleGui> m_scheduleGui = NULL;
         std::vector<Column> m_schedule = {};
         ColumnSortComparison m_columnSortComparison;
         std::vector<size_t> m_sortedRowIndices = {};
@@ -21,6 +24,9 @@ class ScheduleCore
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
 
     public:
+        // Initialise the ScheduleCore without it using the ScheduleGui.
+        ScheduleCore();
+        ScheduleCore(std::shared_ptr<ScheduleGui>& scheduleGui);
         // WHOLE-SCHEDULE FUNCTIONS
         // Clears the Schedule and deletes all the Columns.
         void clearSchedule();

@@ -8,10 +8,8 @@
 #include <GLFW/glfw3.h>
 
 #include <window.h>
-#include <io_handler.h>
 #include <input.h>
 #include <gui.h>
-#include <schedule.h>
 
 #include <string>
 #include <map>
@@ -21,9 +19,7 @@ class Interface
 {
 	private:
 		Window* m_windowManager;
-		Schedule* m_schedule;
 		Input* m_input;
-		IO_Handler* m_ioHandler;
 		std::map<std::string, std::shared_ptr<Gui>> m_guis = {};
 	public:
 		bool guiFocused = false, guiHovered = false, guiWantKeyboard = false;
@@ -32,8 +28,8 @@ class Interface
 		ImGuiContext* imGui;
 
 	public:
-		void init(Window*, Input*, Schedule*, IO_Handler*);
-		void addGUI(std::shared_ptr<Gui> gui);
+		void init(Window*, Input*);
+		void addGui(std::shared_ptr<Gui> gui);
 		std::shared_ptr<Gui> getGuiByID(const std::string& ID);
 		void draw();
 		void openMainMenuBarScheduleNameModal();

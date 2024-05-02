@@ -9,6 +9,7 @@
 #include <schedule_edit.h>
 #include <schedule_edit_history.h>
 #include <input.h>
+#include <interface.h>
 #include <schedule_column.h>
 #include <schedule_core.h>
 
@@ -48,7 +49,7 @@ class Schedule
         };
 
         // WHOLE-SCHEDULE FUNCTIONS
-        void init(Input& input);
+        void init(Input& input, Interface& interface);
 
         // Set the schedule's name to the provided name. NOTE: Does not affect filename. Only called by IO_Manager and MainMenuBarGui through IO_Manager.
         void setName(const std::string& name);

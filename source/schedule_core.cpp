@@ -11,6 +11,16 @@
 // TEMP
 #include <iostream>
 
+ScheduleCore::ScheduleCore()
+{
+
+}
+
+ScheduleCore::ScheduleCore(std::shared_ptr<ScheduleGui>& scheduleGui)
+{
+    m_scheduleGui = scheduleGui;
+}
+
 // NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
 size_t ScheduleCore::getFlaggedColumnIndex(ScheduleColumnFlags flags)
 {
