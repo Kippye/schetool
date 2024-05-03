@@ -39,6 +39,7 @@ class ScheduleDeleteModalSubGui : public Gui
         GuiEvent<std::string> deleteScheduleEvent;
 
         void draw(Window& window, Input& input) override;
+        void setAffectedScheduleName(const std::string& name);
 };
 
 class MainMenuBarGui : public Gui
@@ -46,13 +47,18 @@ class MainMenuBarGui : public Gui
     private:
         bool m_openScheduleNameModal = false;
         bool m_openDeleteConfirmationModal = false;
+        std::vector<std::string> m_fileNames = {};
 
         void renameSchedule();
         void newSchedule();
-        void openSchedule(); 
+        void displayScheduleList(); 
     public:
         MainMenuBarGui(const char* ID);
+
+        GuiEvent<std::string> openScheduleFileEvent;
+
         void draw(Window& window, Input& input) override;
         void openScheduleNameModal(NAME_PROMPT_REASON reason);
         void closeScheduleNameModal();
+        void passFileNames(const std::vector<std::string>& fileNames);
 };

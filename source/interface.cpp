@@ -72,7 +72,5 @@ void Interface::draw()
 		ImGui::FocusWindow(NULL);
 	}
 
-	// m_windowManager->setTitleSuffix(std::string(" - ").append(m_schedule->getName()).c_str());
-
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

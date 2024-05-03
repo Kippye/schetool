@@ -2,6 +2,7 @@
 
 #include <data_converter.h>
 #include <schedule.h>
+#include <window.h>
 #include <input.h>
 #include <main_menu_bar_gui.h>
 #include <interface.h>
@@ -12,6 +13,7 @@ class IO_Handler
 {
     private:
         Schedule* m_schedule = NULL;
+        Window* m_windowManager = NULL;
         DataConverter m_converter;
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::string m_openScheduleFilename;
@@ -24,30 +26,37 @@ class IO_Handler
             writeSchedule(m_openScheduleFilename.c_str());
         });
         // gui listeners
+        // ScheduleNameModalSubGui
         std::function<void(std::string, bool)> renameListener = std::function<void(std::string, bool)>([&](std::string name, bool renameFile)
         {
             if (setOpenScheduleFilename(name, renameFile))
             {
-                // TODO: hide modal
+                m_mainMenuBarGui->closeScheduleNameModal();
             }
         });
         std::function<void(std::string)> createNewListener = std::function<void(std::string)>([&](std::string name)
         {
             if (createNewSchedule(name.c_str()))
             {
-                // TODO: hide modal
+                m_mainMenuBarGui->closeScheduleNameModal();
             }
         });
+        // ScheduleDeleteModalSubGui
         std::function<void(std::string)> deleteListener = std::function<void(std::string)>([&](std::string name)
         {
-            if (deleteSchedule(name.c_str()));
+            deleteSchedule(name.c_str());
             // Modal hides itself
+        });
+        // MainMenuBarGui
+        std::function<void(std::string)> openListener = std::function<void(std::string)>([&](std::string name)
+        {
+            readSchedule(name.c_str());
         });
 
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
-        void init(Schedule* schedule, Input& input, Interface& interface);
+        void init(Schedule* schedule, Window* window, Input& input, Interface& interface);
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);

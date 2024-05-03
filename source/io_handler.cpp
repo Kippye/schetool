@@ -11,9 +11,10 @@ std::string IO_Handler::makeRelativePathFromName(const char* name)
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
 }
 
-void IO_Handler::init(Schedule* schedule, Input& input, Interface& interface)
+void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interface& interface)
 {
     m_schedule = schedule;
+    m_windowManager = window;
     input.addCallbackListener(INPUT_CALLBACK_SC_SAVE, saveCallback);
 
     m_mainMenuBarGui = std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui"));
@@ -21,6 +22,9 @@ void IO_Handler::init(Schedule* schedule, Input& input, Interface& interface)
     m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
 
     m_mainMenuBarGui->getSubGui<ScheduleDeleteModalSubGui>("ScheduleDeleteModalSubGui")->deleteScheduleEvent.addListener(deleteListener);
+
+    m_mainMenuBarGui->openScheduleFileEvent.addListener(openListener);
+    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
 
     m_converter = DataConverter();
     m_converter.setupObjectTable();
@@ -43,6 +47,7 @@ bool IO_Handler::writeSchedule(const char* name)
     }
     // TODO: make some event that the Schedule can listen to?
     m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
+    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
     return true;
 }
 
@@ -72,7 +77,7 @@ bool IO_Handler::createNewSchedule(const char* name)
 {
     m_schedule->createDefaultSchedule();
 
-    if (writeSchedule(name))
+    if (writeSchedule(name)) // passes new list of file names to gui
     {
         setOpenScheduleFilename(std::string(name));
         return true;
@@ -93,6 +98,7 @@ bool IO_Handler::deleteSchedule(const char* name)
     }
 
     fs::remove(relativePath);
+    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
     return true;
 }
 
@@ -151,6 +157,8 @@ bool IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFil
 
     m_openScheduleFilename = name;
     m_schedule->setName(name);
+    m_windowManager->setTitleSuffix(std::string(" - ").append(m_schedule->getName()).c_str());
+    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
     return true;
 }
 
