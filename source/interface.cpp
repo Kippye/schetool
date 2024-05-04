@@ -21,9 +21,9 @@ void Interface::init(Window* windowManager, Input* input)
 	// ADD GUIS
 	
 	addGui(std::shared_ptr<MainMenuBarGui>(new MainMenuBarGui("MainMenuBarGui")));
-    //addGUI(std::make_shared<ScheduleGui>("ScheduleGui", m_schedule));
+    addGui(std::shared_ptr<ScheduleGui>(new ScheduleGui("ScheduleGui")));
 	#if DEBUG
-	//addGUI(std::make_shared<EditHistoryGui>("EditHistoryGui", m_schedule));
+	//addGui(std::shared_ptr<EditHistoryGui>(new EditHistoryGui("EditHistoryGui", m_schedule)));
 	#endif
 }
 

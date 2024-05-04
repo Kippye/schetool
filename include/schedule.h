@@ -25,7 +25,7 @@ class Schedule
         ScheduleCore m_core;
         std::string m_scheduleName;
 
-        // input listeners TODO: move to schedule_edit ?
+        // input listeners AND gui listeners
         std::function<void()> undoCallback = std::function<void()>([&]()
         {
             undo();

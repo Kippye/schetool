@@ -56,6 +56,9 @@ class MainMenuBarGui : public Gui
         MainMenuBarGui(const char* ID);
 
         GuiEvent<std::string> openScheduleFileEvent;
+        GuiEvent<> undoEvent;
+        GuiEvent<> redoEvent;
+        GuiEvent<> saveEvent;
 
         void draw(Window& window, Input& input) override;
         void openScheduleNameModal(NAME_PROMPT_REASON reason);

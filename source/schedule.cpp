@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <string.h>
 #include <schedule.h>
-#include <schedule_gui.h>
+#include <main_menu_bar_gui.h>
 #include <time.h>
 
 // TEMP
@@ -12,8 +12,12 @@
 
 void Schedule::init(Input& input, Interface& interface)
 {
-    std::shared_ptr<ScheduleGui> scheduleGui = std::dynamic_pointer_cast<ScheduleGui>(interface.getGuiByID("ScheduleGui"));
-    m_core = ScheduleCore(scheduleGui);
+    if (auto mainMenuBarGui = std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui")))
+    {
+        mainMenuBarGui->undoEvent.addListener(undoCallback);
+        mainMenuBarGui->redoEvent.addListener(redoCallback);
+    }
+    m_core = ScheduleCore();
 
     m_editHistory = ScheduleEditHistory(&m_core);
     input.addCallbackListener(INPUT_CALLBACK_SC_UNDO, undoCallback);

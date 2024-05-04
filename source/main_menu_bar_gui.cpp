@@ -138,7 +138,7 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 			}
 			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
-				input.invokeCallback(INPUT_CALLBACK_SC_SAVE);
+				saveEvent.invoke();
 			}
 			ImGui::EndMenu();
 		}
@@ -146,11 +146,11 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 		{
 			if (ImGui::MenuItem("Undo", "CTRL+Z"))
 			{
-				input.invokeCallback(INPUT_CALLBACK_SC_UNDO);
+				undoEvent.invoke();
 			}
 			if (ImGui::MenuItem("Redo", "CTRL+Y")) 
 			{
-				input.invokeCallback(INPUT_CALLBACK_SC_REDO);
+				redoEvent.invoke();
 			}
 			ImGui::EndMenu();
 		}

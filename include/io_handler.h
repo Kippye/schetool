@@ -21,7 +21,7 @@ class IO_Handler
         double m_timeSinceAutosave = 0.0;
 
         // input listeners
-        std::function<void()> saveCallback = std::function<void()>([&]()
+        std::function<void()> saveListener = std::function<void()>([&]()
         {
             writeSchedule(m_openScheduleFilename.c_str());
         });

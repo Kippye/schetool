@@ -3,28 +3,69 @@
 #include <gui.h>
 #include <window.h>
 #include <input.h>
-#include <select_container.h>
-#include <time_container.h>
-#include <date_container.h>
 #include <element_base.h>
+#include <schedule.h>
 
-class Schedule;
+class ElementEditorSubGui : public Gui
+{
+    private:
+        Schedule* m_schedule = NULL;
+        SCHEDULE_TYPE m_editedType;
+        bool m_openLastFrame = false;
+        bool m_openThisFrame = false;
+        bool m_madeEdits = false; 
+        int m_editorColumn = -1;
+        int m_editorRow = -1;
+        unsigned int m_viewedYear = 0;
+        unsigned int m_viewedMonth = 0;
+        TimeContainer m_editorTime;
+        DateContainer m_editorDate;
+        SelectContainer m_editorSelect;
+        ImRect m_avoidRect;
+    public:
+        ElementEditorSubGui(const char* ID, Schedule* schedule);
+
+        void draw(Window& window, Input& input) override;
+        // Update the element editor before editing a new Element.
+        // NOTE: Sets m_madeEdits = false
+        void open(size_t column, size_t row, SCHEDULE_TYPE type, const ImRect& avoidRect);
+        void setEditorValue(const TimeContainer& value)
+        {
+            m_editorTime = value;
+        }
+        void setEditorValue(const DateContainer& value)
+        {
+            m_editorDate = value;
+            m_viewedMonth = m_editorDate.getTime()->tm_mon;
+            m_viewedYear = m_editorDate.getTime()->tm_year;
+        }
+        void setEditorValue(const SelectContainer& value)
+        {
+            m_editorSelect = value;
+        }
+        const TimeContainer& getEditorValue(const TimeContainer& _typeValueUnused)
+        {
+            return m_editorTime;
+        }
+        const DateContainer& getEditorValue(const DateContainer& _typeValueUnused)
+        {
+            return m_editorDate;
+        }
+        const SelectContainer& getEditorValue(const SelectContainer& _typeValueUnused)
+        {
+            return m_editorSelect;
+        }
+        bool getOpenLastFrame();
+        bool getOpenThisFrame();
+        bool getMadeEdits();
+        std::pair<size_t, size_t> getCoordinates();
+        static int filterNumbers(ImGuiInputTextCallbackData* data);
+};
 
 class ScheduleGui : public Gui
 {
     private:
-        // time editor data (should these be saved somewhere like a struct? i've always thought of making it its separate file, too)
-        bool m_editorOpenLastFrame = false;
-        bool m_editorOpenThisFrame = false;
-        bool m_editorHasMadeEdits = false; 
-        int m_editorColumn = -1;
-        int m_editorRow = -1;
-        unsigned int m_editorViewedYear = 0;
-        unsigned int m_editorViewedMonth = 0;
-        TimeContainer m_editorTime;
-        DateContainer m_editorDate;
-        SelectContainer m_editorSelect;
-        ImRect m_editorAvoidRect;
+        Schedule* m_schedule = NULL;
 
         ImVec4 m_dayColours[7] =
         {
@@ -40,6 +81,7 @@ class ScheduleGui : public Gui
         bool displayEditor(SCHEDULE_TYPE type);
     public:
         ScheduleGui(const char* ID) : Gui(ID) { }
+        // ScheduleGui(const char* ID, Schedule*);
+        void setSchedule(Schedule* schedule);
         void draw(Window& window, Input& input) override;
-        static int filterNumbers(ImGuiInputTextCallbackData* data);
 };

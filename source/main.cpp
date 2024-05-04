@@ -20,6 +20,9 @@
 #include <tests/test_edit_history.h>
 #endif
 
+// TEMP
+#include <schedule_gui.h>
+
 Program::Program()
 {
 	// TODO: load user preferences here!
@@ -31,6 +34,12 @@ Program::Program()
 	ioHandler.init(&schedule, &windowManager, input, interface);
 	render.init(&windowManager, &interface);
 	schedule.init(input, interface);
+
+	// HACK AS HELL !! TODO TEMP HACK HACK HACK
+	if (auto scheduleGui = std::dynamic_pointer_cast<ScheduleGui>(interface.getGuiByID("ScheduleGui")))
+	{
+		scheduleGui->setSchedule(&schedule);
+	}
 
 	schedule.createDefaultSchedule();
 

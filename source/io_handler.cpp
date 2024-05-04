@@ -15,7 +15,7 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
 {
     m_schedule = schedule;
     m_windowManager = window;
-    input.addCallbackListener(INPUT_CALLBACK_SC_SAVE, saveCallback);
+    input.addCallbackListener(INPUT_CALLBACK_SC_SAVE, saveListener);
 
     m_mainMenuBarGui = std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui"));
     m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->renameScheduleEvent.addListener(renameListener);
@@ -24,6 +24,7 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     m_mainMenuBarGui->getSubGui<ScheduleDeleteModalSubGui>("ScheduleDeleteModalSubGui")->deleteScheduleEvent.addListener(deleteListener);
 
     m_mainMenuBarGui->openScheduleFileEvent.addListener(openListener);
+    m_mainMenuBarGui->saveEvent.addListener(saveListener);
     m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
 
     m_converter = DataConverter();
