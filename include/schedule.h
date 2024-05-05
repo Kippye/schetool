@@ -36,18 +36,6 @@ class Schedule
         });
 
     public:
-        const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
-        {
-            {SCH_BOOL, "Checkbox"},
-            {SCH_NUMBER, "Number"},
-            {SCH_DECIMAL, "Decimal"},
-            {SCH_TEXT, "Text"},
-            {SCH_SELECT, "Select"},
-            {SCH_WEEKDAY, "Select Weekday"},
-            {SCH_TIME, "Time"},
-            {SCH_DATE, "Date"},
-        };
-
         // WHOLE-SCHEDULE FUNCTIONS
         void init(Input& input, Interface& interface);
 

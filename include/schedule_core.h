@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <schedule_column.h>
+#include <schedule_constants.h>
 #include <element.h>
 #include <select_options.h>
 

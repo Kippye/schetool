@@ -1,16 +1,18 @@
 #pragma once
 
 #include <gui.h>
-#include <schedule.h>
-
-class Schedule;
+#include <schedule_edit_history.h>
 
 class EditHistoryGui : public Gui
 {
     private:
-        Schedule* m_schedule;
+        const ScheduleEditHistory* m_scheduleEditHistory;
     public:
         EditHistoryGui(const char* ID) : Gui(ID) { }
-        EditHistoryGui(const char* ID, Schedule*);
+
+        GuiEvent<> undoEvent;
+        GuiEvent<> redoEvent;
+
         void draw(Window& window, Input& input) override;
+        void passScheduleEditHistory(const ScheduleEditHistory*);
 };

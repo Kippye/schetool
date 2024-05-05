@@ -5,6 +5,7 @@
 #include <string.h>
 #include <schedule.h>
 #include <main_menu_bar_gui.h>
+#include <edit_history_gui.h>
 #include <time.h>
 
 // TEMP
@@ -16,6 +17,12 @@ void Schedule::init(Input& input, Interface& interface)
     {
         mainMenuBarGui->undoEvent.addListener(undoCallback);
         mainMenuBarGui->redoEvent.addListener(redoCallback);
+    }
+    if (auto editHistoryGui = std::dynamic_pointer_cast<EditHistoryGui>(interface.getGuiByID("EditHistoryGui")))
+    {
+        editHistoryGui->passScheduleEditHistory(&m_editHistory);
+        editHistoryGui->undoEvent.addListener(undoCallback);
+        editHistoryGui->redoEvent.addListener(redoCallback);
     }
     m_core = ScheduleCore();
 

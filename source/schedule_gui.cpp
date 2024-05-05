@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <regex>
 #include <algorithm>
+#include <schedule_constants.h>
 #include <schedule_gui.h>
 #include <util.h>
 #include <element.h>
@@ -656,7 +657,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 		SCHEDULE_TYPE selected = m_schedule->getColumn(column)->type;
 		for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++)
 		{
-			if (ImGui::Selectable(m_schedule->scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
+			if (ImGui::Selectable(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
 				m_schedule->setColumnType(column, SCHEDULE_TYPE(i));
 		}
 	}
