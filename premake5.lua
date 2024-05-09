@@ -71,7 +71,6 @@ project "schetool"
 		"include/blf/include/blf",
 		"include/glad/include", 
 		"include/glad/include/glad",
-		"include/glew",
 		"include/glfw/include", 
 		"include/glm",
 		"include/imgui",
