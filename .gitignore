@@ -3,6 +3,7 @@
 .vscode
 schetool/
 bin/
+build/
 obj/ 
 Debug/
 Release/
