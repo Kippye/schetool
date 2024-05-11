@@ -1,59 +1,44 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(schetool VERSION 0.5)
+# TODO target_compile_definitions() for version number
 
-# FIRST just get it to build on Windows using Makefiles, worry about all the filters and Linux later!
 # specify the C++ standard
 add_library(compiler_flags INTERFACE)
 target_compile_features(compiler_flags INTERFACE cxx_std_17)
 
-set(CMAKE_CXX_STANDARD 17)
+# TODO: Use something to check if these libraries exist on the system
+# INCLUDE (CheckLibraryExists)
+# Usage: CHECK_LIBRARY_EXISTS(library function location variable)
 
-# TEMP?
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++")
+message("Setting compile flags for ${CMAKE_GENERATOR}")
+if (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+    if ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS)) 
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=c++17 -lstdc++")
+        message("Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++")
+        message("Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
+    endif()
+endif()
+message("Finished setting compile flags")
 
-# packages
+# package libraries
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-#find_package(imgui REQUIRED)
-#     {
-#     "name": "imgui",
-#     "features": [
-#       "glfw-binding",
-#       "opengl3-binding"
-#     ]
-#   },
 
-# include(FetchContent)
-
-# FetchContent_Declare(
-#   Imgui
-#   GIT_REPOSITORY https://github.com/ocornut/imgui.git
-#   GIT_TAG        277ae93c41314ba5f4c7444f37c4319cdf07e8cf # 1.90.4
-#   FIND_PACKAGE_ARGS NAMES imgui
-# )
-
-# FetchContent_MakeAvailable(Imgui)
-
-# find_package(imgui
-#     REQUIRED
-#     NO_DEFAULT_PATH
-#     PATHS ${imgui_SOURCE_DIR}
-# )
-
+# local source-compiled libraries
 add_subdirectory("include/blf")
 add_subdirectory("include/glad")
-# add_subdirectory("include/glfw")
-#add_subdirectory("include/glm")
-add_subdirectory("include/imgui") # TODO
-# TEMP?
 
-target_link_libraries(imgui glfw)
+add_subdirectory("include/imgui")
+target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
 
 # executable
 add_executable(schetool)
 
 target_include_directories(schetool PRIVATE "include")
+
 set(SCHETOOL_SRC "source")
 target_sources(schetool PRIVATE
     "${SCHETOOL_SRC}/data_converter.cpp"
