@@ -12,21 +12,43 @@ set(CMAKE_CXX_STANDARD 17)
 # TEMP?
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++")
 
-# BLF (has its own CMakeLists!)
-# glad (has nothing lmao, but i can probably add my own CMakeLists there since it's not a submodule?)
-# glfw (has a CMakeLists)
-# glm (has a CMakeLists)
-# imgui (purely headers and cpp files)
-# zlib (has a CMakeLists) (should be BLF's responsibility :/ ) 
+# packages
+find_package(glfw3 REQUIRED)
+find_package(glm REQUIRED)
+#find_package(imgui REQUIRED)
+#     {
+#     "name": "imgui",
+#     "features": [
+#       "glfw-binding",
+#       "opengl3-binding"
+#     ]
+#   },
+
+# include(FetchContent)
+
+# FetchContent_Declare(
+#   Imgui
+#   GIT_REPOSITORY https://github.com/ocornut/imgui.git
+#   GIT_TAG        277ae93c41314ba5f4c7444f37c4319cdf07e8cf # 1.90.4
+#   FIND_PACKAGE_ARGS NAMES imgui
+# )
+
+# FetchContent_MakeAvailable(Imgui)
+
+# find_package(imgui
+#     REQUIRED
+#     NO_DEFAULT_PATH
+#     PATHS ${imgui_SOURCE_DIR}
+# )
 
 add_subdirectory("include/blf")
 add_subdirectory("include/glad")
-add_subdirectory("include/glfw")
-add_subdirectory("include/glm")
+# add_subdirectory("include/glfw")
+#add_subdirectory("include/glm")
 add_subdirectory("include/imgui") # TODO
 # TEMP?
 
-add_subdirectory("include/zlib")
+target_link_libraries(imgui glfw)
 
 # executable
 add_executable(schetool)
@@ -39,7 +61,7 @@ target_sources(schetool PRIVATE
     "${SCHETOOL_SRC}/edit_history_gui.cpp"
     "${SCHETOOL_SRC}/element_base.cpp"
     "${SCHETOOL_SRC}/gui.cpp"
-    "${SCHETOOL_SRC}/imgui_demo.cpp"
+    #"${SCHETOOL_SRC}/imgui_demo.cpp"
     "${SCHETOOL_SRC}/input.cpp"
     "${SCHETOOL_SRC}/interface.cpp"
     "${SCHETOOL_SRC}/io_handler.cpp"
@@ -58,4 +80,10 @@ target_sources(schetool PRIVATE
     "${SCHETOOL_SRC}/window.cpp"
 )
 
-target_link_libraries(schetool PUBLIC compiler_flags blf glad glfw glm imgui zlib)
+target_link_libraries(schetool PUBLIC compiler_flags 
+    blf
+    imgui
+    glad 
+    glfw
+    glm::glm
+)

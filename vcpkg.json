@@ -1,0 +1,13 @@
+{
+  "name": "schetool",
+  "version": "0.5.0",
+  "dependencies": [
+    {
+      "name": "glfw3",
+      "version>=": "3.3.4"
+    },
+    "glm",
+    "zlib"
+  ],
+  "builtin-baseline": "cbf4a6641528cee6f172328984576f51698de726"
+}

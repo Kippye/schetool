@@ -1,10 +1,6 @@
 #pragma once
 #include <iterator>
 #include <blf.hpp>
-#include <templateobject.hpp>
-#include <enums.hpp>
-#include <objectattribute.hpp>
-#include <string.hpp>
 #include <element_base.h>
 #include <element.h>
 #include <time_container.h>

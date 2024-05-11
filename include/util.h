@@ -9,7 +9,7 @@
 #include <sstream>
 #include <ctime>
 
-#include <glm.hpp>
+#include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 
