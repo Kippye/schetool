@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(schetool VERSION 0.5.0)
-# TODO target_compile_definitions() for version number
 
 set(PROGRAM_NAME ${PROJECT_NAME})
 
@@ -36,7 +35,7 @@ add_subdirectory("include/imgui")
 target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
 
 
-# pass information like PROGRAM_NAME, PROJECT_VERSION_MAJOR and PROJECT_VERSION_MINOR to a header file to include
+# pass information like PROGRAM_NAME, PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR and PROJECT_VERSION_PATCH to a header file to include
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/program_info.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/include/generated/program_info.h")
 
 # executable
