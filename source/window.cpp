@@ -11,7 +11,16 @@ void Window::init(TextureLoader* textureLoader)
 {
 	m_textureLoader = textureLoader;
 	m_titleBase = program_info::PROGRAM_NAME;
-	m_titleBase = m_titleBase.append(" ").append(program_info::ProgramVersion::getCurrent().getString());
+	m_titleBase = m_titleBase.append(" ").append(program_info::ProgramVersion::getCurrent()
+		.getString()
+		#ifdef DEBUG
+		.append(std::string(" (DEBUG) "))
+		#endif
+	);
+
+	// #ifdef DEBUG
+	// m_titleBase = m_titleBase.append()
+	// #endif
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);

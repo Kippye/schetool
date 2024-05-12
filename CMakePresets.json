@@ -13,6 +13,17 @@
         "generator": "Unix Makefiles",
         "binaryDir": "${sourceDir}/build",
         "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        }
+      },
+      {
+        "name": "default-rel",
+        "displayName": "Default Release Config",
+        "description": "Default Release build using Make and vcpkg",
+        "generator": "Unix Makefiles",
+        "binaryDir": "${sourceDir}/build",
+        "cacheVariables": {
           "CMAKE_BUILD_TYPE": "Release",
           "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
         }

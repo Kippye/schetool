@@ -11,11 +11,20 @@ add_library(compiler_flags INTERFACE)
 # INCLUDE (CheckLibraryExists)
 # Usage: CHECK_LIBRARY_EXISTS(library function location variable)
 
-message("~~ Setting compile flags for ${CMAKE_GENERATOR}")
+message("~~ Setting compile and link flags for ${CMAKE_GENERATOR}")
 if (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
     if ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS)) 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=c++17 -lstdc++")
         message("~~ Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
+        # keep console for debug builds and hide it for release builds
+        # /ENTRY:mainCRTStartup keeps the same "main" function instead of requiring "WinMain"
+        if (${CMAKE_BUILD_TYPE} STREQUAL Debug)
+            set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,console" "-Wl,-entry,mainCRTStartup")
+            message("~~ Added Windows Debug linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
+        elseif(${CMAKE_BUILD_TYPE} STREQUAL Release)
+            set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,windows" "-Wl,-entry,mainCRTStartup")
+            message("~~ Added Windows Release linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
+        endif()
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++")
         message("~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
@@ -38,8 +47,25 @@ target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a comp
 # pass information like PROGRAM_NAME, PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR and PROJECT_VERSION_PATCH to a header file to include
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/program_info.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/include/generated/program_info.h")
 
+# TODO: option(TEST "Should tests be performed?" ON)
+
 # executable
 add_executable(${PROGRAM_NAME})
+
+# add platform-specific defines and options
+IF (WIN32)
+    target_compile_definitions(${PROGRAM_NAME} PUBLIC "WIN32")
+    target_compile_definitions(${PROGRAM_NAME} PUBLIC "_WIN32")
+    message("~~ Added Windows compile definitions")
+ELSE()
+    
+ENDIF()
+
+target_link_options(${PROGRAM_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
+
+# add build configuration defines
+target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<CONFIG:Debug>:DEBUG>")
+target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<NOT:$<CONFIG:Debug>>:NDEBUG>")
 
 target_include_directories(${PROGRAM_NAME} PRIVATE "include" PRIVATE "include/generated")
 
