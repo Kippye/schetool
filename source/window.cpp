@@ -1,16 +1,17 @@
+#include <iostream>
 extern "C" {
 #include <glad.h>
 }
 #include <GLFW/glfw3.h>
+
 #include <window.h>
+#include <generated/program_info.h>
 
-#include <iostream>
-
-void Window::init(TextureLoader* textureLoader, const std::string& programName, const std::string& programVersionString)
+void Window::init(TextureLoader* textureLoader)
 {
 	m_textureLoader = textureLoader;
-	m_titleBase = programName;
-	m_titleBase = m_titleBase.append(" ").append(programVersionString);
+	m_titleBase = program_info::PROGRAM_NAME;
+	m_titleBase = m_titleBase.append(" ").append(program_info::ProgramVersion::getCurrent().getString());
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);

@@ -1,4 +1,4 @@
-# folders
+# build dirs
 .vs/
 .vscode
 schetool/
@@ -9,8 +9,15 @@ Debug/
 Release/
 resources/
 compile_commands/
+
+# vcpkg
+vcpkg/
+
+# source / include dirs
 # tests
 include/tests
+# headers generated from h.in files
+include/generated
 
 # program directories
 schedules/

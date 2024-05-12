@@ -43,7 +43,7 @@ class Window
 	void setTitleSuffix(const std::string& suffix);
 	std::string getTitle();
 	// lifecycle functions
-	void init(TextureLoader*, const std::string&, const std::string&);
+	void init(TextureLoader*);
 	void terminate();
 
 	// window events

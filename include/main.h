@@ -8,9 +8,6 @@
 #include <schedule.h>
 #include <interface.h>
 
-#define PROGRAM_NAME "schetool"
-#define PROGRAM_VERSION "0.5.0"
-
 class Program
 {
 	public:
