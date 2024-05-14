@@ -20,7 +20,7 @@ namespace program_info
         std::string getString()
         {
             char buffer[32];
-            sprintf(buffer, "%zu.%zu.%zu", major, minor, patch);
+            sprintf(buffer, "%u.%u.%u", major, minor, patch);
             return std::string(buffer);
         }
         static ProgramVersion getCurrent()

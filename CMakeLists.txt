@@ -7,6 +7,9 @@ set(PROGRAM_NAME ${PROJECT_NAME})
 # specify the C++ standard
 add_library(compiler_flags INTERFACE)
 
+# add compile options defined by preset (might be empty)
+target_compile_options(compiler_flags INTERFACE ${PRESET_ADD_COMPILE_OPTIONS})
+
 # TODO: Use something to check if these libraries exist on the system
 # INCLUDE (CheckLibraryExists)
 # Usage: CHECK_LIBRARY_EXISTS(library function location variable)
@@ -29,6 +32,9 @@ if (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++")
         message("~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
     endif()
+elseif (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+    message("~~ Set Visual Studio compile flags to: ${CMAKE_CXX_FLAGS}")
 endif()
 message("~~ Finished setting compile flags")
 
