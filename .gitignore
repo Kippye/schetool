@@ -1,15 +1,22 @@
-# folders
+# build dirs
 .vs/
 .vscode
 schetool/
 bin/
+build/
 obj/ 
 Debug/
 Release/
 resources/
-compile_commands/
+
+# vcpkg
+vcpkg/
+
+# source / include dirs
 # tests
 include/tests
+# headers generated from h.in files
+include/generated
 
 # program directories
 schedules/
@@ -36,21 +43,12 @@ schedules/
 *.sln
 *.vcxproj
 
-# premake5 generated files when using the gmake2 configuration
-Makefile
-include/blf/Makefile
-include/glad/Makefile
-include/glfw/Makefile
-
 # clangd
 compile_commands.json
 .cache/
 
 # imgui ini file
 imgui.ini
-
-# Linux executable
-schetool_bin
 
 # Precompiled Headers
 *.gch
@@ -65,7 +63,7 @@ schetool_bin
 *.lo
 
 # Shared objects (inc. Windows DLLs)
-#*.dll
+*.dll
 *.dylib
 *.so
 *.so.*

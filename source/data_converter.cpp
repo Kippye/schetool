@@ -1,7 +1,3 @@
-#include <datagroup.hpp>
-#include <datatable.hpp>
-#include <objectdefinition.hpp>
-#include <templateobject.hpp>
 #include <data_converter.h>
 #include <element_base.h>
 #include <element.h>

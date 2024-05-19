@@ -1,0 +1,31 @@
+#pragma once
+#include <string>
+#include <string_view>
+
+namespace program_info
+{
+    inline constexpr std::string_view PROGRAM_NAME = std::string_view("@PROGRAM_NAME@");
+    inline constexpr unsigned int VERSION_MAJOR    = ${${PROGRAM_NAME}_VERSION_MAJOR};
+    inline constexpr unsigned int VERSION_MINOR    = ${${PROGRAM_NAME}_VERSION_MINOR};
+    inline constexpr unsigned int VERSION_PATCH    = ${${PROGRAM_NAME}_VERSION_PATCH};
+
+    struct ProgramVersion
+    {
+        unsigned int major;
+        unsigned int minor;
+        unsigned int patch;
+
+        ProgramVersion(unsigned int majVer, unsigned int minVer, unsigned int patVer) : major(majVer), minor(minVer), patch(patVer)
+        {}
+        std::string getString()
+        {
+            char buffer[32];
+            sprintf(buffer, "%u.%u.%u", major, minor, patch);
+            return std::string(buffer);
+        }
+        static ProgramVersion getCurrent()
+        {
+            return ProgramVersion(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+        }
+    };
+}

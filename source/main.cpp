@@ -21,7 +21,7 @@ Program::Program()
 	// TODO: load user preferences here!
 
 	// setup and initialize components
-	windowManager.init(&textureLoader, PROGRAM_NAME, PROGRAM_VERSION);
+	windowManager.init(&textureLoader);
 	input.init(&windowManager);
 	interface.init(&windowManager, &input);
 	ioHandler.init(&schedule, &windowManager, input, interface);
@@ -35,15 +35,6 @@ Program::Program()
 	}
 
 	schedule.createDefaultSchedule();
-
-	#ifdef DEBUG
-		// int seed = 0; //1713956679;
-		// EditHistoryTest editHistoryTest = EditHistoryTest(1000, seed == 0 ? time(NULL) : seed, &schedule, 0);
-		// if (editHistoryTest.begin())
-		// {
-		// 	std::cout << "TESTS PASSED!" << std::endl;
-		// }
-	#endif
 
 	// There are pre-existing Schedules. Open the most recently edited one.
 	if (ioHandler.getScheduleStemNames().size() > 0)
@@ -78,18 +69,9 @@ void Program::loop()
 	windowManager.terminate();
 }
 
-#ifdef WINRELEASE
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nCmdShow)
-{
-	Program program = Program();
-	program.loop();
-	return 0;
-}
-#else
 int main()
 {
 	Program program = Program();
 	program.loop();
 	return 0;
 }
-#endif
