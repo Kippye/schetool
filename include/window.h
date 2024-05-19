@@ -3,13 +3,14 @@
 extern "C" {
 #include <glad.h>
 }
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include <functional>
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <string>
 #include <textures.h>
 
@@ -42,7 +43,7 @@ class Window
 	void setTitleSuffix(const std::string& suffix);
 	std::string getTitle();
 	// lifecycle functions
-	void init(TextureLoader*, const std::string&, const std::string&);
+	void init(TextureLoader*);
 	void terminate();
 
 	// window events

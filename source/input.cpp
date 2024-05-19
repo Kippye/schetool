@@ -1,4 +1,3 @@
-#include <GLFW/glfw3.h>
 #include <iostream>
 #include <glm/gtx/norm.hpp>
 #include <input.h>
