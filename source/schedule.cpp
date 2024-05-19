@@ -8,27 +8,51 @@
 #include <edit_history_gui.h>
 #include <time.h>
 
+#include <schedule_gui.h>
+
 // TEMP
 #include <iostream>
 
 void Schedule::init(Input& input, Interface& interface)
 {
+    if (auto scheduleGui = std::dynamic_pointer_cast<ScheduleGui>(interface.getGuiByID("ScheduleGui")))
+    {
+        scheduleGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
+        
+        scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
+        scheduleGui->setElementValueNumber.addListener(setElementValueListenerNumber);
+        scheduleGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
+        scheduleGui->setElementValueText.addListener(setElementValueListenerText);
+        scheduleGui->setElementValueSelect.addListener(setElementValueListenerSelect);
+        scheduleGui->setElementValueTime.addListener(setElementValueListenerTime);
+        scheduleGui->setElementValueDate.addListener(setElementValueListenerDate);
+
+        scheduleGui->addDefaultColumn.addListener(addDefaultColumnListener);
+        scheduleGui->removeColumn.addListener(removeColumnListener);
+
+        scheduleGui->setColumnType.addListener(setColumnTypeListener);
+        scheduleGui->setColumnSort.addListener(setColumnSortListener);
+        scheduleGui->setColumnName.addListener(setColumnNameListener);
+
+        scheduleGui->addRow.addListener(addRowListener);
+        scheduleGui->removeRow.addListener(removeRowListener);
+    }
     if (auto mainMenuBarGui = std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui")))
     {
-        mainMenuBarGui->undoEvent.addListener(undoCallback);
-        mainMenuBarGui->redoEvent.addListener(redoCallback);
+        mainMenuBarGui->undoEvent.addListener(undoListener);
+        mainMenuBarGui->redoEvent.addListener(redoListener);
     }
     if (auto editHistoryGui = std::dynamic_pointer_cast<EditHistoryGui>(interface.getGuiByID("EditHistoryGui")))
     {
         editHistoryGui->passScheduleEditHistory(&m_editHistory);
-        editHistoryGui->undoEvent.addListener(undoCallback);
-        editHistoryGui->redoEvent.addListener(redoCallback);
+        editHistoryGui->undoEvent.addListener(undoListener);
+        editHistoryGui->redoEvent.addListener(redoListener);
     }
     m_core = ScheduleCore();
 
     m_editHistory = ScheduleEditHistory(&m_core);
-    input.addCallbackListener(INPUT_CALLBACK_SC_UNDO, undoCallback);
-    input.addCallbackListener(INPUT_CALLBACK_SC_REDO, redoCallback);
+    input.addEventListener(INPUT_EVENT_SC_UNDO, undoListener);
+    input.addEventListener(INPUT_EVENT_SC_REDO, redoListener);
 }
 
 void Schedule::setName(const std::string& name)
@@ -187,7 +211,7 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistor
     }
 }
 
-void Schedule::setColumnName(size_t column, const char* name, bool addToHistory)
+void Schedule::setColumnName(size_t column, const std::string& name, bool addToHistory)
 {
     Column previousData = Column(*m_core.getColumn(column));
 
@@ -222,7 +246,7 @@ const SelectOptions& Schedule::getColumnSelectOptions(size_t column)
     return m_core.getColumnSelectOptions(column);
 }
 
-void Schedule::modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification, bool addToHistory)
+void Schedule::modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory)
 {
     Column previousData = Column(*m_core.getColumn(column));
 

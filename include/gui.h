@@ -4,13 +4,13 @@
 #include <string>
 #include <type_traits>
 #include <map>
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
-#include <gui_event.h>
-#include <window.h>
-#include <input.h>
+#include "imgui/include/imgui.h"
+#include "imgui/include/imgui_impl_glfw.h"
+#include "imgui/include/imgui_impl_glfw.h"
+#include "imgui/include/imgui_impl_opengl3.h"
+#include "gui_event.h"
+#include "window.h"
+#include "input.h"
 
 class Gui
 {

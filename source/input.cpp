@@ -6,11 +6,11 @@ void Input::init(Window* windowManager)
 { 
 	m_windowManager = windowManager;
 	
-	for (size_t i = 0; i <= INPUT_CALLBACK_SC_REDO; i++)
+	for (size_t i = 0; i <= INPUT_EVENT_SC_REDO; i++)
 	{
-		m_callbacks.insert({(INPUT_CALLBACK)i, std::vector<std::function<void()>>{}});
-		m_callbackStates.insert({(INPUT_CALLBACK)i, false});
-		m_callbackLastFrameStates.insert({(INPUT_CALLBACK)i, false});
+		m_listeners.insert({(INPUT_EVENT)i, std::vector<std::function<void()>>{}});
+		m_eventStates.insert({(INPUT_EVENT)i, false});
+		m_eventLastFrameStates.insert({(INPUT_EVENT)i, false});
 	}
 
 	m_windowManager->key_callback = [=](auto self, int key, int scancode, int action, int mods)
@@ -36,10 +36,10 @@ void Input::init(Window* windowManager)
 
 void Input::processInput(GLFWwindow* window)
 {
-	for (auto callback: m_callbackLastFrameStates)
+	for (auto event: m_eventLastFrameStates)
 	{
-		m_callbackLastFrameStates.at(callback.first) = m_callbackStates.at(callback.first);
-		m_callbackStates.at(callback.first) = false;
+		m_eventLastFrameStates.at(event.first) = m_eventStates.at(event.first);
+		m_eventStates.at(event.first) = false;
 	}
 
 	// modifiers
@@ -59,25 +59,25 @@ void Input::processInput(GLFWwindow* window)
 	mouseMovement = glm::vec2(0.0f);
 }
 
-void Input::addCallbackListener(INPUT_CALLBACK callback, std::function<void()>& listener)
+void Input::addEventListener(INPUT_EVENT callback, std::function<void()>& listener)
 {
-	m_callbacks.at(callback).push_back(listener);
+	m_listeners.at(callback).push_back(listener);
 }
 
-void Input::invokeCallback(INPUT_CALLBACK callback)
+void Input::invokeEvent(INPUT_EVENT callback)
 {
-	auto& listeners = m_callbacks.at(callback);
+	auto& listeners = m_listeners.at(callback);
 
 	for (auto& listener : listeners)
 	{
 		listener();
 	}
-	m_callbackStates.at(callback) = true;
+	m_eventStates.at(callback) = true;
 }
 
-bool Input::getCallbackInvokedLastFrame(INPUT_CALLBACK callback)
+bool Input::getEventInvokedLastFrame(INPUT_EVENT callback)
 {
-	return m_callbackLastFrameStates.at(callback);
+	return m_eventLastFrameStates.at(callback);
 }
 
 void Input::setGuiWantKeyboard(bool to)
@@ -94,7 +94,7 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
 		{
 			if (key == shortcut.key && shortcut.hasRequiredMods(buttonStates.ctrlDown, buttonStates.altDown, buttonStates.shiftDown))
 			{
-				invokeCallback(shortcut.callback);
+				invokeEvent(shortcut.event);
 			}
 		}
 	}

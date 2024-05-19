@@ -44,11 +44,11 @@ class ScheduleCore
         // Set the values of every Element to be copies of the provided Column's Element values. NOTE: If the provided Column has fewer rows, only those will be modified. If it has more rows, ones past the end will be ignored.
         void setColumnElements(size_t index, const Column& columnData);
         bool setColumnType(size_t column, SCHEDULE_TYPE type);
-        bool setColumnName(size_t column, const char* name);
+        bool setColumnName(size_t column, const std::string& name);
         bool setColumnSort(size_t column, COLUMN_SORT sortDirection);
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
-        bool modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification);
+        bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
         // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 

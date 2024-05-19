@@ -295,12 +295,12 @@ bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
     return true;
 }
 
-bool ScheduleCore::setColumnName(size_t column, const char* name)
+bool ScheduleCore::setColumnName(size_t column, const std::string& name)
 {
     if (column < getColumnCount() == false) { return false; }
     Column previousData = Column(m_schedule.at(column));
 
-    m_schedule.at(column).name = std::string(name);
+    m_schedule.at(column).name = name;
     return true;
 }
 
@@ -319,7 +319,7 @@ const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column)
     return m_schedule.at(column).selectOptions;
 }
 
-bool ScheduleCore::modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification)
+bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification)
 {
     if (column < getColumnCount() == false) { return false; }
     

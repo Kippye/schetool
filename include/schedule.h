@@ -26,14 +26,80 @@ class Schedule
         std::string m_scheduleName;
 
         // input listeners AND gui listeners
-        std::function<void()> undoCallback = std::function<void()>([&]()
+        std::function<void()> undoListener = std::function<void()>([&]()
         {
             undo();
         });
-        std::function<void()> redoCallback = std::function<void()>([&]()
+        std::function<void()> redoListener = std::function<void()>([&]()
         {
             redo();
         });
+
+        // modifyColumnSelectOptions
+        std::function<void(const size_t&, const SelectOptionsModification&)> modifyColumnSelectOptionsListener = [&](const size_t& i, const SelectOptionsModification& modification)
+        {
+            modifyColumnSelectOptions(i, modification);
+        };
+        // setElementValue HELL
+        std::function<void(const size_t&, const size_t&, const bool&)> setElementValueListenerBool = [&](const size_t& col, const size_t& row, const bool& val)
+        {
+            setElementValue(col, row, val);
+        };
+        std::function<void(const size_t&, const size_t&, const int&)> setElementValueListenerNumber = [&](const size_t& col, const size_t& row, const int& val)
+        {
+            setElementValue(col, row, val);
+        };
+        std::function<void(const size_t&, const size_t&, const double&)> setElementValueListenerDecimal = [&](const size_t& col, const size_t& row, const double& val)
+        {
+            setElementValue(col, row, val);
+        };
+        std::function<void(const size_t&, const size_t&, const std::string&)> setElementValueListenerText = [&](const size_t& col, const size_t& row, const std::string& val)
+        {
+            setElementValue(col, row, val);
+        };
+        std::function<void(const size_t&, const size_t&, const SelectContainer&)> setElementValueListenerSelect = [&](const size_t& col, const size_t& row, const SelectContainer& val)
+        {
+            setElementValue(col, row, val);
+        };
+        std::function<void(const size_t&, const size_t&, const TimeContainer&)> setElementValueListenerTime = [&](const size_t& col, const size_t& row, const TimeContainer& val)
+        {
+            setElementValue(col, row, val);
+        };
+        std::function<void(const size_t&, const size_t&, const DateContainer&)> setElementValueListenerDate = [&](const size_t& col, const size_t& row, const DateContainer& val)
+        {
+            setElementValue(col, row, val);
+        };
+        // column add / remove
+        std::function<void(const size_t&)> addDefaultColumnListener = [&](const size_t& col)
+        {
+            addDefaultColumn(col);
+        };
+        std::function<void(const size_t&)> removeColumnListener = [&](const size_t& col)
+        {
+            removeColumn(col);
+        };
+        // column modification
+        std::function<void(const size_t&, const SCHEDULE_TYPE&)> setColumnTypeListener = [&](const size_t& col, const SCHEDULE_TYPE& type)
+        {
+            setColumnType(col, type);
+        };
+        std::function<void(const size_t&, const COLUMN_SORT&)> setColumnSortListener = [&](const size_t& col, const COLUMN_SORT& sort)
+        {
+            setColumnSort(col, sort);
+        };
+        std::function<void(const size_t&, const std::string&)> setColumnNameListener = [&](const size_t& col, const std::string& name)
+        {
+            setColumnName(col, name);
+        };
+        // row modification
+        std::function<void(const size_t&)> addRowListener = [&](const size_t& col)
+        {
+            addRow(col);
+        };
+        std::function<void(const size_t&)> removeRowListener = [&](const size_t& col)
+        {
+            removeRow(col);
+        };
 
     public:
         // WHOLE-SCHEDULE FUNCTIONS
@@ -68,11 +134,11 @@ class Schedule
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column);
         void setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory = true);
-        void setColumnName(size_t column, const char* name, bool addToHistory = true);
+        void setColumnName(size_t column, const std::string& name, bool addToHistory = true);
         void setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory = true);
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
-        void modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification, bool addToHistory = true);
+        void modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory = true);
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 

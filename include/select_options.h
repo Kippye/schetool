@@ -22,7 +22,7 @@ class SelectOptionsModification
         SelectOptionsModification& secondIndex(size_t index);
         SelectOptionsModification& optionNames(const std::vector<std::string>& optionNames);
 
-        std::string getDataString();
+        std::string getDataString() const;
 };
 
 inline SelectOptionsModification::SelectOptionsModification(OPTION_MODIFICATION type)
@@ -65,7 +65,7 @@ class SelectOptions
         size_t getOptionCount() const;
         const SelectOptionChange& getLastChange() const;
         // Apply a SelectOptionsModification to this SelectOptions. Returns true if the modification was applied, false otherwise. NOTE:
-        bool applyModification(SelectOptionsModification& modification);
+        bool applyModification(const SelectOptionsModification& modification);
         void addListener(size_t index, SelectContainer& listener);
         void removeListener(size_t listenerID);
         void clearListeners();

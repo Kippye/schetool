@@ -158,8 +158,8 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 	ImGui::EndMainMenuBar();
 
 	// check shortcuts (dunno if this is the best place for this? TODO )
-	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_RENAME)) { renameSchedule(); }
-	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_NEW)) { newSchedule(); }
+	if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) { renameSchedule(); }
+	if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) { newSchedule(); }
 
 	if (auto nameModalSubGui = getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui"))
 	{

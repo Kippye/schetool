@@ -1,10 +1,15 @@
 #pragma once
-#include <imgui.h>
+#include "imgui/include/imgui.h"
 #include <gui.h>
 #include <window.h>
 #include <input.h>
 #include <element_base.h>
+#include <select_container.h>
+#include <select_options.h>
 #include <schedule.h>
+#include <schedule_column.h>
+
+class Schedule;
 
 class ElementEditorSubGui : public Gui
 {
@@ -78,9 +83,31 @@ class ScheduleGui : public Gui
             ImVec4(216.0f / 255.0f, 188.0f / 255.0f, 47.0f / 255.0f, 1),
         };
         void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
-        bool displayEditor(SCHEDULE_TYPE type);
     public:
         ScheduleGui(const char* ID) : Gui(ID) { }
+
+        // Events
+        // modifyColumnSelectOptions
+        GuiEvent<size_t, SelectOptionsModification>        modifyColumnSelectOptions;
+        // setElementValue(column, row, value)
+        GuiEvent<size_t, size_t, bool>                      setElementValueBool;
+        GuiEvent<size_t, size_t, int>                       setElementValueNumber;
+        GuiEvent<size_t, size_t, double>                    setElementValueDecimal;
+        GuiEvent<size_t, size_t, std::string>        setElementValueText;
+        GuiEvent<size_t, size_t, SelectContainer>    setElementValueSelect;
+        GuiEvent<size_t, size_t, TimeContainer>      setElementValueTime;
+        GuiEvent<size_t, size_t, DateContainer>      setElementValueDate;
+        // column add / remove
+        GuiEvent<size_t> removeColumn;
+        GuiEvent<size_t> addDefaultColumn;
+        // column modification
+        GuiEvent<size_t, SCHEDULE_TYPE>         setColumnType;
+        GuiEvent<size_t, COLUMN_SORT>           setColumnSort;
+        GuiEvent<size_t, std::string>    setColumnName;
+        // row modification
+        GuiEvent<size_t> addRow;
+        GuiEvent<size_t> removeRow;
+
         // ScheduleGui(const char* ID, Schedule*);
         void setSchedule(Schedule* schedule);
         void draw(Window& window, Input& input) override;

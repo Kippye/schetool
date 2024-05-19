@@ -271,14 +271,6 @@ int ElementEditorSubGui::filterNumbers(ImGuiInputTextCallbackData* data)
 	return 1;
 }
 
-
-// ScheduleGui::ScheduleGui(const char* ID, Schedule* schedule) : Gui(ID)
-// {
-// 	m_schedule = schedule;
-
-// 	addSubGui("ElementEditorSubGui", new ElementEditorSubGui("ElementEditorSubGui", m_schedule));
-// } 
-
 void ScheduleGui::setSchedule(Schedule* schedule)
 {
 	m_schedule = schedule;
@@ -314,7 +306,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 					// sort button!
 					if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_schedule->getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_schedule->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
 					{
-						m_schedule->setColumnSort(column, m_schedule->getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_schedule->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
+						setColumnSort.invoke(column, m_schedule->getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_schedule->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
 					}
 					ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					// close button
@@ -323,7 +315,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 					{
 						if (ImGui::Button("X##removecolumn", ImVec2(20.0, 20.0)))
 						{
-							m_schedule->removeColumn(column);
+							removeColumn.invoke(column);
 						}
 						ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					}
@@ -352,7 +344,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 						{
 							if (ImGui::Button(std::string("X##").append(std::to_string(row)).c_str(), ImVec2(26.0, 26.0)))
 							{
-								m_schedule->removeRow(row);
+								removeRow.invoke(row);
 								// break because this row can't be drawn anymore, it was removed.
 								break;
 							}
@@ -372,7 +364,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 									bool newValue = m_schedule->getElementValue<bool>(column, row);
 									if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
 									{
-										m_schedule->setElementValue<bool>(column, row, newValue);
+										setElementValueBool.invoke(column, row, newValue);
 									}
 								}
 								catch(const std::exception& e)
@@ -388,7 +380,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 									int newValue = m_schedule->getElementValue<int>(column, row);
 									if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
 									{
-										m_schedule->setElementValue<int>(column, row, newValue);
+										setElementValueNumber.invoke(column, row, newValue);
 									}
 								}
 								catch(const std::exception& e)
@@ -404,7 +396,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 									double newValue = m_schedule->getElementValue<double>(column, row);
 									if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
 									{
-										m_schedule->setElementValue<double>(column, row, newValue);
+										setElementValueDecimal.invoke(column, row, newValue);
 									}
 								}
 								catch(const std::exception& e)
@@ -424,7 +416,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 									//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
 									if (ImGui::InputTextMultiline(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
 									{
-										m_schedule->setElementValue<std::string>(column, row, std::string(buf));
+										setElementValueText.invoke(column, row, std::string(buf));
 									}
 									// ImVec2 textSize = ImGui::CalcTextSize(buf);
 									// if (textSize.x == 106 && textSize.y == 16)
@@ -484,7 +476,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 											else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
 											{
 												value.setSelected(selectionIndices[i], false);
-												m_schedule->setElementValue<SelectContainer>(column, row, value); 
+												setElementValueSelect.invoke(column, row, value); 
 											}
 										}
 										// HACK to make this show when any of the options is hovered
@@ -524,7 +516,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 											// was editing this Element, made edits and just closed the editor. apply the edits
 											if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
 											{
-												m_schedule->setElementValue<SelectContainer>(column, row, elementEditor->getEditorValue(value));
+												setElementValueSelect.invoke(column, row, elementEditor->getEditorValue(value));
 											}
 										}
 									}
@@ -560,7 +552,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 											// was editing this Element, made edits and just closed the editor. apply the edits
 											if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
 											{
-												m_schedule->setElementValue<TimeContainer>(column, row, elementEditor->getEditorValue(value));
+												setElementValueTime.invoke(column, row, elementEditor->getEditorValue(value));
 											}
 										}
 									}
@@ -596,7 +588,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 											// was editing this Element, made edits and just closed the editor. apply the edits
 											if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
 											{
-												m_schedule->setElementValue<DateContainer>(column, row, elementEditor->getEditorValue(value));
+												setElementValueDate.invoke(column, row, elementEditor->getEditorValue(value));
 											}
 										}
 									}
@@ -624,11 +616,11 @@ void ScheduleGui::draw(Window& window, Input& input)
 		ImGui::SameLine();
 		if (ImGui::Button("+", ImVec2(32, (float)(window.SCREEN_HEIGHT - 52 - 20))))
 		{
-			m_schedule->addDefaultColumn(m_schedule->getColumnCount());
+			addDefaultColumn.invoke(m_schedule->getColumnCount());
 		}
 		if (ImGui::Button("Add row", ImVec2((float)(window.SCREEN_WIDTH - 58), 32)))
 		{
-			m_schedule->addRow(m_schedule->getRowCount());
+			addRow.invoke(m_schedule->getRowCount());
 		}
 		ImGui::PopStyleVar();
     ImGui::End();
@@ -647,7 +639,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 	
 	if (ImGui::InputText(std::string("##columnName").append(std::to_string(column)).c_str(), buf, name.capacity(), ImGuiInputTextFlags_EnterReturnsTrue))
 	{
-		m_schedule->setColumnName(column, buf);
+		setColumnName.invoke(column, buf);
 	}
 
 	// select type (for non-permanent columns)
@@ -658,7 +650,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 		for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++)
 		{
 			if (ImGui::Selectable(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
-				m_schedule->setColumnType(column, SCHEDULE_TYPE(i));
+				setColumnType.invoke(column, SCHEDULE_TYPE(i));
 		}
 	}
 

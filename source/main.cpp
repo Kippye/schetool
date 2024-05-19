@@ -16,6 +16,9 @@
 #include <Windows.h>
 #endif
 
+// TEMP
+#include <schedule_gui.h>
+
 Program::Program()
 {
 	// TODO: load user preferences here!
