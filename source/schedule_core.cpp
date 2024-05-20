@@ -17,7 +17,7 @@ ScheduleCore::ScheduleCore()
 }
 
 // NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
-size_t ScheduleCore::getFlaggedColumnIndex(ScheduleColumnFlags flags)
+size_t ScheduleCore::getFlaggedColumnIndex(ScheduleColumnFlags flags) const
 {
     for (size_t i = 0; i < m_schedule.size(); i++)
     {
@@ -73,7 +73,7 @@ void ScheduleCore::replaceSchedule(std::vector<Column>& columns)
     sortColumns();
 }
 
-const std::vector<Column>& ScheduleCore::getAllColumns()
+const std::vector<Column>& ScheduleCore::getAllColumns() const
 {
     return m_schedule;
 }
@@ -103,7 +103,7 @@ void ScheduleCore::sortColumns()
 }
 
 
-size_t ScheduleCore::getColumnCount()
+size_t ScheduleCore::getColumnCount() const
 {
     return m_schedule.size();
 }
@@ -192,9 +192,14 @@ bool ScheduleCore::removeColumn(size_t column)
     return true;
 }
 
-const Column* ScheduleCore::getColumn(size_t column)
+const Column* ScheduleCore::getColumn(size_t column) const
 {
-    return (const Column*)getMutableColumn(column);
+    if (column > getColumnCount())
+    {
+        std::cout << "ScheduleCore::getColumn: index out of range. Returning last column" << std::endl;
+        return &m_schedule.at(getColumnCount() - 1);
+    }
+    return &m_schedule.at(column);
 }
 
 void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
@@ -314,7 +319,7 @@ bool ScheduleCore::setColumnSort(size_t column, COLUMN_SORT sortDirection)
     return true;
 }
 
-const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column)
+const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column) const
 {
     return m_schedule.at(column).selectOptions;
 }
@@ -411,7 +416,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
 
 
 // Return the number of rows in the schedule or 0 if there are no columns (which probably won't happen?) 
-size_t ScheduleCore::getRowCount()
+size_t ScheduleCore::getRowCount() const
 {
     return (m_schedule.size() > 0 ? m_schedule.at(0).rows.size() : 0);
 }
@@ -590,7 +595,7 @@ bool ScheduleCore::setRow(size_t index, std::vector<ElementBase*> elementData)
     return true;
 }
 
-std::vector<size_t> ScheduleCore::getSortedRowIndices()
+std::vector<size_t> ScheduleCore::getSortedRowIndices() const
 {
     return m_sortedRowIndices;
 }

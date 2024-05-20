@@ -50,7 +50,7 @@ class Element : public ElementBase
         {
             return m_value;
         }
-        // Returns a mutable reference to the Element's value. Only needs to be used for Select types. Otherwise, avoid.
+        // Returns a mutable reference to the Element's value.
         T& getValueReference()
         {
             return m_value;

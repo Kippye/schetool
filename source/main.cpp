@@ -31,12 +31,6 @@ Program::Program()
 	render.init(&windowManager, &interface);
 	schedule.init(input, interface);
 
-	// HACK AS HELL !! TODO TEMP HACK HACK HACK
-	if (auto scheduleGui = std::dynamic_pointer_cast<ScheduleGui>(interface.getGuiByID("ScheduleGui")))
-	{
-		scheduleGui->setSchedule(&schedule);
-	}
-
 	schedule.createDefaultSchedule();
 
 	// There are pre-existing Schedules. Open the most recently edited one.

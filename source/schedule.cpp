@@ -17,7 +17,11 @@ void Schedule::init(Input& input, Interface& interface)
 {
     if (auto scheduleGui = std::dynamic_pointer_cast<ScheduleGui>(interface.getGuiByID("ScheduleGui")))
     {
-        scheduleGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
+        scheduleGui->setScheduleCore(m_core);
+        if (auto elementEditorSubGui = scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+        {
+            elementEditorSubGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener); 
+        }
         
         scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
         scheduleGui->setElementValueNumber.addListener(setElementValueListenerNumber);

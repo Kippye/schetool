@@ -1,12 +1,12 @@
 #pragma once
-#include "imgui/include/imgui.h"
+#include <imgui.h>
 #include <gui.h>
 #include <window.h>
 #include <input.h>
 #include <element_base.h>
 #include <select_container.h>
 #include <select_options.h>
-#include <schedule.h>
+#include <schedule_core.h>
 #include <schedule_column.h>
 
 class Schedule;
@@ -14,7 +14,7 @@ class Schedule;
 class ElementEditorSubGui : public Gui
 {
     private:
-        Schedule* m_schedule = NULL;
+        const ScheduleCore* m_scheduleCore = NULL;
         SCHEDULE_TYPE m_editedType;
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;
@@ -28,7 +28,11 @@ class ElementEditorSubGui : public Gui
         SelectContainer m_editorSelect;
         ImRect m_avoidRect;
     public:
-        ElementEditorSubGui(const char* ID, Schedule* schedule);
+        ElementEditorSubGui(const char* ID, const ScheduleCore* scheduleCore);
+
+        // Events
+        // modifyColumnSelectOptions
+        GuiEvent<size_t, SelectOptionsModification> modifyColumnSelectOptions;
 
         void draw(Window& window, Input& input) override;
         // Update the element editor before editing a new Element.
@@ -70,7 +74,7 @@ class ElementEditorSubGui : public Gui
 class ScheduleGui : public Gui
 {
     private:
-        Schedule* m_schedule = NULL;
+        const ScheduleCore* m_scheduleCore = NULL;
 
         ImVec4 m_dayColours[7] =
         {
@@ -87,8 +91,6 @@ class ScheduleGui : public Gui
         ScheduleGui(const char* ID) : Gui(ID) { }
 
         // Events
-        // modifyColumnSelectOptions
-        GuiEvent<size_t, SelectOptionsModification>        modifyColumnSelectOptions;
         // setElementValue(column, row, value)
         GuiEvent<size_t, size_t, bool>                      setElementValueBool;
         GuiEvent<size_t, size_t, int>                       setElementValueNumber;
@@ -109,6 +111,6 @@ class ScheduleGui : public Gui
         GuiEvent<size_t> removeRow;
 
         // ScheduleGui(const char* ID, Schedule*);
-        void setSchedule(Schedule* schedule);
+        void setScheduleCore(const ScheduleCore& scheduleCore);
         void draw(Window& window, Input& input) override;
 };

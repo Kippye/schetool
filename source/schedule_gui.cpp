@@ -15,9 +15,9 @@
 
 #include <iostream>
 
-ElementEditorSubGui::ElementEditorSubGui(const char* ID, Schedule* schedule) : Gui(ID) 
+ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore* scheduleCore) : Gui(ID) 
 {
-	m_schedule = schedule;
+	m_scheduleCore = scheduleCore;
 }
 
 void ElementEditorSubGui::draw(Window& window, Input& input)
@@ -35,7 +35,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 		ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
 		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
 
-		bool isPermanentColumn = m_schedule->getColumn(m_editorColumn)->permanent;
+		bool isPermanentColumn = m_scheduleCore->getColumn(m_editorColumn)->permanent;
 		tm formatTime;
 		
 		switch(m_editedType)
@@ -126,7 +126,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 			{
 				auto selection = m_editorSelect.getSelection();
 				size_t selectedCount = selection.size();
-				const std::vector<std::string>& optionNames = m_schedule->getColumnSelectOptions(m_editorColumn).getOptions();
+				const std::vector<std::string>& optionNames = m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptions();
 
 				std::vector<size_t> selectionIndices = {};
 
@@ -151,7 +151,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				}
 
 				// add new options
-				if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
+				if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
 				{
 					std::string str;
 					str.reserve(SELECT_OPTION_NAME_MAX_LENGTH);
@@ -161,11 +161,11 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 					{
 						if (std::string(buf).empty() == false)
 						{
-							m_schedule->modifyColumnSelectOptions(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_ADD)
+							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_ADD)
 								.firstIndex(0)
 								.optionNames(std::vector<std::string>{std::string(buf)}));
-							m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
-							m_editorSelect.setSelected(m_schedule->getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
+							m_editorSelect.update(m_scheduleCore->getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptionCount());
+							m_editorSelect.setSelected(m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
 							m_madeEdits = true;
 							// NOTE: break here because otherwise the start and end of the function kind of go out of sync
 							break;
@@ -178,12 +178,12 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				{
 					bool selected = selection.find(i) != selection.end();
 
-					if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable())
+					if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable())
 					{
 						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
 						{
-							m_schedule->modifyColumnSelectOptions(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
-							m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
+							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
+							m_editorSelect.update(m_scheduleCore->getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptionCount());
 							m_madeEdits = true;
 							// break because the whole thing must be restarted now
 							goto break_select_case;
@@ -200,15 +200,15 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 					}
 
 					// drag to reorder options
-					if (m_schedule->getColumnSelectOptions(m_editorColumn).getIsMutable())
+					if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable())
 					{
 						if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
 						{
 							size_t i_next = i + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
 							if (i_next >= 0 && i_next < optionNames.size())
 							{
-								m_schedule->modifyColumnSelectOptions(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next));
-								m_editorSelect.update(m_schedule->getColumnSelectOptions(m_editorColumn).getLastChange(), m_schedule->getColumnSelectOptions(m_editorColumn).getOptionCount());
+								modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next));
+								m_editorSelect.update(m_scheduleCore->getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptionCount());
 								m_madeEdits = true;
 								ImGui::ResetMouseDragDelta();
 								break;
@@ -271,11 +271,11 @@ int ElementEditorSubGui::filterNumbers(ImGuiInputTextCallbackData* data)
 	return 1;
 }
 
-void ScheduleGui::setSchedule(Schedule* schedule)
+void ScheduleGui::setScheduleCore(const ScheduleCore& scheduleCore)
 {
-	m_schedule = schedule;
+	m_scheduleCore = &scheduleCore;
 
-	addSubGui("ElementEditorSubGui", new ElementEditorSubGui("ElementEditorSubGui", m_schedule));
+	addSubGui("ElementEditorSubGui", new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
 }
 
 void ScheduleGui::draw(Window& window, Input& input)
@@ -290,28 +290,28 @@ void ScheduleGui::draw(Window& window, Input& input)
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 		ImGui::BeginChild("SchedulePanel", ImVec2((float)(window.SCREEN_WIDTH - 58), (float)(window.SCREEN_HEIGHT - 52 - 20)), true);
 			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableRowFlags_Headers | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
-			if (ImGui::BeginTable("ScheduleTable", m_schedule->getColumnCount(), tableFlags))
+			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore->getColumnCount(), tableFlags))
 			{ 
-				for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
+				for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
 				{
-					ImGui::TableSetupColumn(m_schedule->getColumn(column)->name.c_str());
+					ImGui::TableSetupColumn(m_scheduleCore->getColumn(column)->name.c_str());
 				}
 				// custom header row
 				ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
-				for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
+				for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
 				{
 					ImGui::TableSetColumnIndex(column);
 					const char* columnName = ImGui::TableGetColumnName(column); // get name passed to TableSetupColumn()
 					ImGui::PushID(column);
 					// sort button!
-					if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_schedule->getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_schedule->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+					if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_scheduleCore->getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_scheduleCore->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
 					{
-						setColumnSort.invoke(column, m_schedule->getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_schedule->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
+						setColumnSort.invoke(column, m_scheduleCore->getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_scheduleCore->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
 					}
 					ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					// close button
 					// permanent columns can't be removed so there's no need for a remove button
-					if (m_schedule->getColumn(column)->permanent == false)
+					if (m_scheduleCore->getColumn(column)->permanent == false)
 					{
 						if (ImGui::Button("X##removecolumn", ImVec2(20.0, 20.0)))
 						{
@@ -329,14 +329,14 @@ void ScheduleGui::draw(Window& window, Input& input)
 					ImGui::PopID();
 				}
 
-				std::vector<size_t> sortedRowIndices = m_schedule->getSortedRowIndices();
+				std::vector<size_t> sortedRowIndices = m_scheduleCore->getSortedRowIndices();
 
-				for (size_t unsortedRow = 0; unsortedRow < m_schedule->getRowCount(); unsortedRow++)
+				for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore->getRowCount(); unsortedRow++)
 				{
 					size_t row = sortedRowIndices[unsortedRow];
 					
 					ImGui::TableNextRow();
-					for (size_t column = 0; column < m_schedule->getColumnCount(); column++)
+					for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
 					{
 						ImGui::TableSetColumnIndex(column);
 						// the buttons for removing rows are displayed in the first displayed column
@@ -351,7 +351,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							ImGui::SameLine();
 						}
 
-						SCHEDULE_TYPE columnType = m_schedule->getColumn(column)->type;
+						SCHEDULE_TYPE columnType = m_scheduleCore->getColumn(column)->type;
 						// TODO: i could probably reduce the code repetition here
 						ImGui::SetNextItemWidth(-FLT_MIN);
  
@@ -361,7 +361,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
 								try
 								{
-									bool newValue = m_schedule->getElementValue<bool>(column, row);
+									bool newValue = m_scheduleCore->getElementValueConstRef<bool>(column, row);
 									if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
 									{
 										setElementValueBool.invoke(column, row, newValue);
@@ -377,7 +377,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
 								try
 								{
-									int newValue = m_schedule->getElementValue<int>(column, row);
+									int newValue = m_scheduleCore->getElementValueConstRef<int>(column, row);
 									if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
 									{
 										setElementValueNumber.invoke(column, row, newValue);
@@ -393,7 +393,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
 								try
 								{
-									double newValue = m_schedule->getElementValue<double>(column, row);
+									double newValue = m_scheduleCore->getElementValueConstRef<double>(column, row);
 									if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
 									{
 										setElementValueDecimal.invoke(column, row, newValue);
@@ -410,7 +410,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
 								try
 								{
-									std::string value = m_schedule->getElementValue<std::string>(column, row);
+									std::string value = m_scheduleCore->getElementValueConstRef<std::string>(column, row);
 									value.reserve(ELEMENT_TEXT_MAX_LENGTH);
 									char* buf = value.data();
 									//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
@@ -439,10 +439,10 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
 								try 
 								{
-									SelectContainer value = m_schedule->getElementValueConstRef<SelectContainer>(column, row);
+									SelectContainer value = m_scheduleCore->getElementValueConstRef<SelectContainer>(column, row);
 									auto selection = value.getSelection();
 									size_t selectedCount = selection.size();
-									const std::vector<std::string>& optionNames = m_schedule->getColumn(column)->selectOptions.getOptions();
+									const std::vector<std::string>& optionNames = m_scheduleCore->getColumn(column)->selectOptions.getOptions();
 
 									std::vector<int> selectionIndices = {};
 
@@ -483,7 +483,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 										if (i != selectedCount - 1 && ImGui::IsItemHovered())
 										{
 											ImGui::BeginTooltip();
-											ImGui::Text("Created: %s %s", m_schedule->getElement(column, row)->getCreationDate().getString().c_str(), m_schedule->getElement(column, row)->getCreationTime().getString().c_str());
+											ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
 											ImGui::EndTooltip();
 										}
 
@@ -532,7 +532,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
 								try
 								{
-									TimeContainer value = m_schedule->getElementValue<TimeContainer>(column, row);
+									TimeContainer value = m_scheduleCore->getElementValueConstRef<TimeContainer>(column, row);
 
 									// Button displaying the Time of the current Time element
 									if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
@@ -568,7 +568,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
 								try
 								{
-									auto value = m_schedule->getElementValue<DateContainer>(column, row);
+									auto value = m_scheduleCore->getElementValueConstRef<DateContainer>(column, row);
 								
 									// Button displaying the date of the current Date element
 									if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
@@ -605,7 +605,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 						if (ImGui::IsItemHovered())
 						{
 							ImGui::BeginTooltip();
-							ImGui::Text("Created: %s %s", m_schedule->getElement(column, row)->getCreationDate().getString().c_str(), m_schedule->getElement(column, row)->getCreationTime().getString().c_str());
+							ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
 							ImGui::EndTooltip();
 						}
 					}
@@ -616,11 +616,11 @@ void ScheduleGui::draw(Window& window, Input& input)
 		ImGui::SameLine();
 		if (ImGui::Button("+", ImVec2(32, (float)(window.SCREEN_HEIGHT - 52 - 20))))
 		{
-			addDefaultColumn.invoke(m_schedule->getColumnCount());
+			addDefaultColumn.invoke(m_scheduleCore->getColumnCount());
 		}
 		if (ImGui::Button("Add row", ImVec2((float)(window.SCREEN_WIDTH - 58), 32)))
 		{
-			addRow.invoke(m_schedule->getRowCount());
+			addRow.invoke(m_scheduleCore->getRowCount());
 		}
 		ImGui::PopStyleVar();
     ImGui::End();
@@ -633,7 +633,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 	//ImGui::TableFindByID(ImGui::GetID("ScheduleTable"));
 
 	// renaming
-	std::string name = m_schedule->getColumn(column)->name.c_str();
+	std::string name = m_scheduleCore->getColumn(column)->name.c_str();
 	name.reserve(COLUMN_NAME_MAX_LENGTH);
 	char* buf = name.data();
 	
@@ -643,10 +643,10 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 	}
 
 	// select type (for non-permanent columns)
-	if (m_schedule->getColumn(column)->permanent == false)
+	if (m_scheduleCore->getColumn(column)->permanent == false)
 	{
 		ImGui::Separator();
-		SCHEDULE_TYPE selected = m_schedule->getColumn(column)->type;
+		SCHEDULE_TYPE selected = m_scheduleCore->getColumn(column)->type;
 		for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++)
 		{
 			if (ImGui::Selectable(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
@@ -686,7 +686,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 		ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
 		for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++)
 		{
-			if (m_schedule->getColumn(otherColumnIndex)->permanent)
+			if (m_scheduleCore->getColumn(otherColumnIndex)->permanent)
 			{
 				continue;
 			}
