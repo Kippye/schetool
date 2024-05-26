@@ -441,10 +441,28 @@ void ScheduleGui::draw(Window& window, Input& input)
 								{
 									SelectContainer value = m_scheduleCore->getElementValueConstRef<SelectContainer>(column, row);
 									auto selection = value.getSelection();
-									size_t selectedCount = selection.size();
 									const std::vector<std::string>& optionNames = m_scheduleCore->getColumn(column)->selectOptions.getOptions();
 
 									std::vector<int> selectionIndices = {};
+
+                                    // error fix attempt: there should never be more selected that options
+                                    while (selection.size() > optionNames.size())
+                                    {
+                                        printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), optionNames.size());
+                                        selection.erase(--selection.end());
+                                    }
+
+                                    for (size_t s: selection)
+                                    {
+                                        // error fix attempt: there should never be selection indices that are >= optionNames.size()
+                                        if (s >= optionNames.size())
+                                        {
+                                            printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, optionNames.size());
+                                            selection.erase(s);
+                                        }
+                                    }
+
+                                    size_t selectedCount = selection.size();
 
 									for (size_t s: selection)
 									{

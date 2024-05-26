@@ -17,7 +17,7 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     m_windowManager = window;
     input.addEventListener(INPUT_EVENT_SC_SAVE, saveListener);
 
-    m_mainMenuBarGui = std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui"));
+    m_mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
     m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->renameScheduleEvent.addListener(renameListener);
     m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
 

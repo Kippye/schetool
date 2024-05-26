@@ -32,21 +32,6 @@ void Interface::addGui(std::shared_ptr<Gui> gui)
     m_guis.insert({gui->getID(), gui});
 }
 
-// NOTE: Returns nullptr if the Gui was not found
-std::shared_ptr<Gui> Interface::getGuiByID(const std::string& ID)
-{
-	// No Gui with that ID
-	if (m_guis.find(ID) == m_guis.end())
-	{
-		printf("Interface::getGuiByID(ID: %s): No Gui found with the provided ID. Returning nullptr.\n", ID.c_str());
-		return nullptr;
-	}
-	else
-	{
-		return m_guis.at(ID);
-	}
-}
-
 void Interface::draw()
 {
 	ImGui_ImplOpenGL3_NewFrame();

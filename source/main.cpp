@@ -16,9 +16,6 @@
 #include <Windows.h>
 #endif
 
-// TEMP
-#include <schedule_gui.h>
-
 Program::Program()
 {
 	// TODO: load user preferences here!
@@ -42,7 +39,7 @@ Program::Program()
 	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
 	else
 	{
-		std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui"))->openScheduleNameModal(NAME_PROMPT_NEW);
+		interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")->openScheduleNameModal(NAME_PROMPT_NEW);
 	}
 }
 

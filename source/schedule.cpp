@@ -15,7 +15,7 @@
 
 void Schedule::init(Input& input, Interface& interface)
 {
-    if (auto scheduleGui = std::dynamic_pointer_cast<ScheduleGui>(interface.getGuiByID("ScheduleGui")))
+    if (auto scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui"))
     {
         scheduleGui->setScheduleCore(m_core);
         if (auto elementEditorSubGui = scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -41,12 +41,12 @@ void Schedule::init(Input& input, Interface& interface)
         scheduleGui->addRow.addListener(addRowListener);
         scheduleGui->removeRow.addListener(removeRowListener);
     }
-    if (auto mainMenuBarGui = std::dynamic_pointer_cast<MainMenuBarGui>(interface.getGuiByID("MainMenuBarGui")))
+    if (auto mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui"))
     {
         mainMenuBarGui->undoEvent.addListener(undoListener);
         mainMenuBarGui->redoEvent.addListener(redoListener);
     }
-    if (auto editHistoryGui = std::dynamic_pointer_cast<EditHistoryGui>(interface.getGuiByID("EditHistoryGui")))
+    if (auto editHistoryGui = interface.getGuiByID<EditHistoryGui>("EditHistoryGui"))
     {
         editHistoryGui->passScheduleEditHistory(&m_editHistory);
         editHistoryGui->undoEvent.addListener(undoListener);
