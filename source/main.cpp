@@ -1,4 +1,4 @@
-#include <main.h>
+#include "main.h"
 #include <GLFW/glfw3.h>
 
 // Windows Release build
@@ -63,9 +63,11 @@ void Program::loop()
 	windowManager.terminate();
 }
 
+#ifndef PERFORM_UNIT_TESTS
 int main()
 {
 	Program program = Program();
 	program.loop();
 	return 0;
 }
+#endif
