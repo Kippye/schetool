@@ -61,7 +61,15 @@ void Input::processInput(GLFWwindow* window)
 
 void Input::addEventListener(INPUT_EVENT callback, std::function<void()>& listener)
 {
-	m_listeners.at(callback).push_back(listener);
+    if (listener)
+    {
+	    m_listeners.at(callback).push_back(listener);
+    }
+}
+
+size_t Input::getEventListenerCount(INPUT_CALLBACK callback)
+{
+    return m_listeners.at(callback).size();
 }
 
 void Input::invokeEvent(INPUT_EVENT callback)

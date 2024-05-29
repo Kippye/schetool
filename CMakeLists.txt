@@ -4,6 +4,8 @@ project(schetool VERSION 0.5.0)
 
 set(PROGRAM_NAME ${PROJECT_NAME})
 
+option(ENABLE_TESTING "Unit testing build" ON)
+
 # specify the C++ standard
 add_library(compiler_flags INTERFACE)
 
@@ -14,31 +16,32 @@ target_compile_options(compiler_flags INTERFACE ${PRESET_ADD_COMPILE_OPTIONS})
 # INCLUDE (CheckLibraryExists)
 # Usage: CHECK_LIBRARY_EXISTS(library function location variable)
 
-message("~~ Setting compile and link flags for ${CMAKE_GENERATOR}")
-if (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-    if ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS)) 
+message(STATUS "~~ Setting compile and link flags for ${CMAKE_GENERATOR}")
+IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+    IF ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS)) 
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=c++17 -lstdc++")
-        message("~~ Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
+        message(STATUS "~~ Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
         # keep console for debug builds and hide it for release builds
         # /ENTRY:mainCRTStartup keeps the same "main" function instead of requiring "WinMain"
-        if (${CMAKE_BUILD_TYPE} STREQUAL Debug)
+        IF (${CMAKE_BUILD_TYPE} STREQUAL Debug)
             set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,console" "-Wl,-entry,mainCRTStartup")
-            message("~~ Added Windows Debug linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
-        elseif(${CMAKE_BUILD_TYPE} STREQUAL Release)
+            message(STATUS "~~ Added Windows Debug linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
+            set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+            message(DEBUG "~~ Enabled exporting compile commands")
+        ELSEIF(${CMAKE_BUILD_TYPE} STREQUAL Release)
             set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,windows" "-Wl,-entry,mainCRTStartup")
-            message("~~ Added Windows Release linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
-        endif()
-    else()
+            message(STATUS "~~ Added Windows Release linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
+        ENDIF()
+    ELSE()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++")
-        message("~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
-    endif()
-elseif (CMAKE_GENERATOR MATCHES "Visual Studio")
+        message(STATUS "~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
+    ENDIF()
+ELSEIF (CMAKE_GENERATOR MATCHES "Visual Studio")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
-    message("~~ Set Visual Studio compile flags to: ${CMAKE_CXX_FLAGS}")
-endif()
-message("~~ Finished setting compile flags")
+    message(STATUS "~~ Set Visual Studio compile flags to: ${CMAKE_CXX_FLAGS}")
+ENDIF()
+message(STATUS "~~ Finished setting compile flags")
 
-# package libraries
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
@@ -56,13 +59,17 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/program_info.h.in" "${CMAKE_
 # TODO: option(TEST "Should tests be performed?" ON)
 
 # executable
-add_executable(${PROGRAM_NAME})
+IF (ENABLE_TESTING)
+    add_library(${PROGRAM_NAME})
+ELSE()
+    add_executable(${PROGRAM_NAME})
+ENDIF()
 
 # add platform-specific defines and options
 IF (WIN32)
     target_compile_definitions(${PROGRAM_NAME} PUBLIC "WIN32")
     target_compile_definitions(${PROGRAM_NAME} PUBLIC "_WIN32")
-    message("~~ Added Windows compile definitions")
+    message(STATUS "~~ Added Windows compile definitions")
 ELSE()
     
 ENDIF()
@@ -73,7 +80,11 @@ target_link_options(${PROGRAM_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
 target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<CONFIG:Debug>:DEBUG>")
 target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<NOT:$<CONFIG:Debug>>:NDEBUG>")
 
-target_include_directories(${PROGRAM_NAME} PRIVATE "include" PRIVATE "include/generated")
+IF (ENABLE_TESTING)
+    target_compile_definitions(${PROGRAM_NAME} PUBLIC "PERFORM_UNIT_TESTS")
+ENDIF (ENABLE_TESTING)
+
+target_include_directories(${PROGRAM_NAME} PUBLIC "include" PUBLIC "include/generated")
 
 set(SCHETOOL_SRC "source")
 target_sources(${PROGRAM_NAME} PRIVATE
@@ -108,3 +119,6 @@ target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags
     glfw
     glm::glm
 )
+
+# add testing subdirectory (handles its own logic)
+add_subdirectory(tests)
