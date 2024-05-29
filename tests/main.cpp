@@ -5,10 +5,6 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 #include "main.h"
 
-unsigned int Factorial( unsigned int number ) {
-    return number <= 1 ? number : Factorial(number-1)*number;
-}
-
 Program program = Program();
 
 class testProgramSetupListener : public Catch::EventListenerBase {
@@ -23,14 +19,11 @@ public:
 
 CATCH_REGISTER_LISTENER(testProgramSetupListener)
 
-TEST_CASE( "Factorials are computed", "[factorial]" ) {
-    REQUIRE( Factorial(1) == 1 );
-    REQUIRE( Factorial(2) == 2 );
-    REQUIRE( Factorial(3) == 6 );
-    REQUIRE( Factorial(10) == 3628800 );
-    REQUIRE( Factorial(69) == 420 );
+TEST_CASE( "Input system", "[input]" ) {
+    program.input.addCallbackListener(INPUT_CALLBACK_SC_RENAME, std::function<void()>(nullptr));
+    REQUIRE(program.input.getCallbackListenerCount(INPUT_CALLBACK_SC_RENAME) == 0);
+    std::function<void ()> listener = std::function<void()>([]{});
+    program.input.addCallbackListener(INPUT_CALLBACK_SC_RENAME, listener);
+    REQUIRE(program.input.getCallbackListenerCount(INPUT_CALLBACK_SC_RENAME) == 1);
+    program.input.invokeCallback(INPUT_CALLBACK_SC_RENAME);
 }
-
-// TEST_CASE( "Program functions right", "[program]" ) {
-//     //REQUIRE( program.interface.)
-// }

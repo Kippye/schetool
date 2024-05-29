@@ -61,7 +61,15 @@ void Input::processInput(GLFWwindow* window)
 
 void Input::addCallbackListener(INPUT_CALLBACK callback, std::function<void()>& listener)
 {
-	m_callbacks.at(callback).push_back(listener);
+    if (listener)
+    {
+	    m_callbacks.at(callback).push_back(listener);
+    }
+}
+
+size_t Input::getCallbackListenerCount(INPUT_CALLBACK callback)
+{
+    return m_callbacks.at(callback).size();
 }
 
 void Input::invokeCallback(INPUT_CALLBACK callback)

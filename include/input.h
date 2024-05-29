@@ -67,7 +67,8 @@ class Input
 		void init(Window*);
 		void processInput(GLFWwindow* window);
 		void addCallbackListener(INPUT_CALLBACK callback, std::function<void()>& listener);
-		void invokeCallback(INPUT_CALLBACK callback);
+		size_t getCallbackListenerCount(INPUT_CALLBACK callback);
+        void invokeCallback(INPUT_CALLBACK callback);
 		bool getCallbackInvokedLastFrame(INPUT_CALLBACK callback);
 
 		void setGuiWantKeyboard(bool to);
