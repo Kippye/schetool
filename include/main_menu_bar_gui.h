@@ -1,9 +1,8 @@
 #pragma once
+
 #include <imgui.h>
 #include <gui.h>
 #include <window.h>
-#include <io_handler.h>
-#include <schedule.h>
 #include <input.h>
 
 enum NAME_PROMPT_REASON
@@ -12,27 +11,57 @@ enum NAME_PROMPT_REASON
     NAME_PROMPT_RENAME
 };
 
+class ScheduleNameModalSubGui : public Gui
+{
+    private:
+        std::string m_scheduleNameBuffer = "";
+        NAME_PROMPT_REASON m_promptReason = NAME_PROMPT_RENAME;
+
+    public:
+        ScheduleNameModalSubGui(const char* ID) : Gui(ID) {}
+
+        GuiEvent<std::string> createNewScheduleEvent;
+        GuiEvent<std::string, bool> renameScheduleEvent;
+
+        void draw(Window& window, Input& input) override;
+        void setPromptReason(NAME_PROMPT_REASON);
+        static int filterAlphanumerics(ImGuiInputTextCallbackData* data);
+};
+
+class ScheduleDeleteModalSubGui : public Gui
+{
+    private:
+        std::string m_deleteConfirmationScheduleName = "";
+
+    public:
+        ScheduleDeleteModalSubGui(const char* ID) : Gui(ID) {}
+
+        GuiEvent<std::string> deleteScheduleEvent;
+
+        void draw(Window& window, Input& input) override;
+        void setAffectedScheduleName(const std::string& name);
+};
+
 class MainMenuBarGui : public Gui
 {
     private:
-        IO_Handler* m_ioHandler;
-        Schedule* m_schedule;
-
         bool m_openScheduleNameModal = false;
         bool m_openDeleteConfirmationModal = false;
-        NAME_PROMPT_REASON m_currentNamePromptReason;
-        std::string m_scheduleNameBuffer = "";
-        std::string m_deleteConfirmationScheduleName = "";
+        std::vector<std::string> m_fileNames = {};
 
-        void displayScheduleNameModal();
-        void displayDeleteConfirmationModal();
         void renameSchedule();
         void newSchedule();
-        void openSchedule(); 
+        void displayScheduleList(); 
     public:
-        MainMenuBarGui(const char* ID) : Gui(ID) {}
-        MainMenuBarGui(const char* ID, IO_Handler* ioHandler, Schedule* schedule);
+        MainMenuBarGui(const char* ID);
+
+        GuiEvent<std::string> openScheduleFileEvent;
+        GuiEvent<> undoEvent;
+        GuiEvent<> redoEvent;
+        GuiEvent<> saveEvent;
+
         void draw(Window& window, Input& input) override;
-        void openNewScheduleNameModal(NAME_PROMPT_REASON reason);
-        static int filterAlphanumerics(ImGuiInputTextCallbackData* data);
+        void openScheduleNameModal(NAME_PROMPT_REASON reason);
+        void closeScheduleNameModal();
+        void passFileNames(const std::vector<std::string>& fileNames);
 };

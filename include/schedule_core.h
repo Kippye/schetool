@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <schedule_column.h>
+#include <schedule_constants.h>
 #include <element.h>
 #include <select_options.h>
 
@@ -15,50 +16,51 @@ class ScheduleCore
         std::vector<Column> m_schedule = {};
         ColumnSortComparison m_columnSortComparison;
         std::vector<size_t> m_sortedRowIndices = {};
-        size_t getFlaggedColumnIndex(ScheduleColumnFlags flags);
+        size_t getFlaggedColumnIndex(ScheduleColumnFlags flags) const;
         Column* getColumnWithFlags(ScheduleColumnFlags flags);
         Column* getMutableColumn(size_t column);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
 
     public:
+        ScheduleCore();
         // WHOLE-SCHEDULE FUNCTIONS
         // Clears the Schedule and deletes all the Columns.
         void clearSchedule();
         // Replaces the m_schedule vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
         void replaceSchedule(std::vector<Column>& columns);
         // Get a constant reference to every Column in the Schedule
-        const std::vector<Column>& getAllColumns();
+        const std::vector<Column>& getAllColumns() const;
         // Generally do not use this. It's meant for reading from file only.
         std::vector<Column>& getAllColumnsMutable();
         void sortColumns();
 
         // COLUMNS
-        size_t getColumnCount();
+        size_t getColumnCount() const;
         void addColumn(size_t index, const Column& column);
         void addDefaultColumn(size_t index);
         bool removeColumn(size_t column);
         // Get a constant pointer to the Column at the index.
-        const Column* getColumn(size_t column);
+        const Column* getColumn(size_t column) const;
         // Set the values of every Element to be copies of the provided Column's Element values. NOTE: If the provided Column has fewer rows, only those will be modified. If it has more rows, ones past the end will be ignored.
         void setColumnElements(size_t index, const Column& columnData);
         bool setColumnType(size_t column, SCHEDULE_TYPE type);
-        bool setColumnName(size_t column, const char* name);
+        bool setColumnName(size_t column, const std::string& name);
         bool setColumnSort(size_t column, COLUMN_SORT sortDirection);
-        const SelectOptions& getColumnSelectOptions(size_t column);
+        const SelectOptions& getColumnSelectOptions(size_t column) const;
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
-        bool modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification);
+        bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
         // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 
         // ROWS
-        size_t getRowCount();
+        size_t getRowCount() const;
         void addRow(size_t index);
         bool removeRow(size_t index);
         // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
         std::vector<ElementBase*> getRow(size_t index);
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
         bool setRow(size_t index, std::vector<ElementBase*> elementData);
-        std::vector<size_t> getSortedRowIndices();
+        std::vector<size_t> getSortedRowIndices() const;
 
         // ELEMENTS.
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
@@ -66,6 +68,12 @@ class ScheduleCore
         T& getValue(ElementBase* element)
         {
             return ((Element<T>*)element)->getValueReference();
+        }
+        // Get the value of the element as Element<T> as a CONST ref. NOTE: You MUST provide the correct type.
+        template <typename T>
+        const T& getValueConstRef(const ElementBase* element) const
+        {
+            return ((Element<T>*)element)->getConstValueReference();
         }
 
         // Get a pointer to the ElementBase at column; row
@@ -80,6 +88,19 @@ class ScheduleCore
             }
 
             return mutableColumn->getElement(row);
+        }
+        // Get a pointer to the ElementBase at column; row
+        const ElementBase* getElementConst(size_t column, size_t row) const
+        {
+            const Column* col = getColumn(column);
+
+            if (col == nullptr || col->hasElement(row) == false)
+            {
+                printf("ScheduleCore::getElementConst could not get element at %zu; %zu\n", column, row);
+                return nullptr;
+            }
+
+            return col->getElementConst(row);
         }
 
         // Simple function that gets an ElementBase* at column; row and casts it to Element<T>*. In the future, this might check that the returned type is actually correct.
@@ -181,6 +202,18 @@ class ScheduleCore
                 return *(new T()); // memory leak ON PURPOSE
             }
             return getValue<T>(elementColumn->rows[row]);
+        }
+        // Shortcut for getting the value of an Element at column; row as a CONST reference
+        template <typename T>
+        const T& getElementValueConstRef(size_t column, size_t row) const
+        {
+            const Column* elementColumn = getColumn(column);
+            if (elementColumn == nullptr || elementColumn->hasElement(row) == false)
+            {
+                printf("ScheduleCore::getElementValueConst could not return value at %zu; %zu\n", column, row);
+                return *(new T()); // memory leak ON PURPOSE
+            }
+            return getValueConstRef<T>(elementColumn->rows[row]);
         }
 
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.

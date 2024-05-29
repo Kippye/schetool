@@ -1,17 +1,13 @@
 #include <cstdio>
 #include <edit_history_gui.h>
 #include <schedule_edit.h>
-
-EditHistoryGui::EditHistoryGui(const char* ID, Schedule* schedule) : Gui(ID)
-{
-    m_schedule = schedule;
-}
+#include <schedule_constants.h>
 
 void EditHistoryGui::draw(Window& window, Input& input)
 {
     if (ImGui::Begin("Edit History", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
-        auto editHistory = m_schedule->getEditHistory().getEditHistory();
+        auto editHistory = m_scheduleEditHistory->getEditHistory();
 
         for (size_t i = 0; i < editHistory.size(); i++)
         {
@@ -25,7 +21,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 {
                     ElementEditBase* elementEdit = (ElementEditBase*)editHistory[i];
                     sprintf(buf, "Element of type %s at (%zu; %zu)##%zu", 
-                        m_schedule->scheduleTypeNames.at(elementEdit->getElementType()), 
+                        schedule_consts::scheduleTypeNames.at(elementEdit->getElementType()), 
                         elementEdit->getPosition().first, 
                         elementEdit->getPosition().second,
                         i);
@@ -46,7 +42,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                     sprintf(buf, "%c Column %s of type %s at %zu##%zu", 
                         columnEdit->getIsRemove() ? '-' : '+',
                         columnEdit->getColumnData().name.c_str(), 
-                        m_schedule->scheduleTypeNames.at(columnEdit->getColumnData().type),
+                        schedule_consts::scheduleTypeNames.at(columnEdit->getColumnData().type),
                         columnEdit->getColumn(),
                         i);
                     break;
@@ -64,20 +60,23 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
             }
 
-            const ScheduleEditHistory& editHistory = m_schedule->getEditHistory();
-
-            if (ImGui::Selectable(buf, editHistory.getEditHistoryIndex() == i)) 
+            if (ImGui::Selectable(buf, m_scheduleEditHistory->getEditHistoryIndex() == i)) 
             {
-                while (editHistory.getEditHistoryIndex() > i)
+                while (m_scheduleEditHistory->getEditHistoryIndex() > i)
                 {
-                    m_schedule->undo();
+                    undoEvent.invoke();
                 }
-                while (editHistory.getEditHistoryIndex() < i)
+                while (m_scheduleEditHistory->getEditHistoryIndex() < i)
                 {
-                    m_schedule->redo();
+                    redoEvent.invoke();
                 }
             }
         }
     }
     ImGui::End();
+}
+
+void EditHistoryGui::passScheduleEditHistory(const ScheduleEditHistory* editHistory)
+{
+    m_scheduleEditHistory = editHistory;
 }

@@ -23,10 +23,10 @@ Program::Program()
 	// setup and initialize components
 	windowManager.init(&textureLoader);
 	input.init(&windowManager);
-	ioHandler.init(&schedule, input);
+	interface.init(&windowManager, &input);
+	ioHandler.init(&schedule, &windowManager, input, interface);
 	render.init(&windowManager, &interface);
-	interface.init(&windowManager, &input, &schedule, &ioHandler);
-	schedule.init(input);
+	schedule.init(input, interface);
 
 	schedule.createDefaultSchedule();
 
@@ -39,7 +39,7 @@ Program::Program()
 	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
 	else
 	{
-		interface.openMainMenuBarScheduleNameModal();
+		interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")->openScheduleNameModal(NAME_PROMPT_NEW);
 	}
 }
 

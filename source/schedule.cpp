@@ -4,22 +4,59 @@
 #include <cstdlib>
 #include <string.h>
 #include <schedule.h>
-#include <element.h>
-#include <element_base.h>
-#include <input.h>
-#include <schedule_edit.h>
+#include <main_menu_bar_gui.h>
+#include <edit_history_gui.h>
 #include <time.h>
+
+#include <schedule_gui.h>
 
 // TEMP
 #include <iostream>
 
-void Schedule::init(Input& input)
+void Schedule::init(Input& input, Interface& interface)
 {
+    if (auto scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui"))
+    {
+        scheduleGui->setScheduleCore(m_core);
+        if (auto elementEditorSubGui = scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+        {
+            elementEditorSubGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener); 
+        }
+        
+        scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
+        scheduleGui->setElementValueNumber.addListener(setElementValueListenerNumber);
+        scheduleGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
+        scheduleGui->setElementValueText.addListener(setElementValueListenerText);
+        scheduleGui->setElementValueSelect.addListener(setElementValueListenerSelect);
+        scheduleGui->setElementValueTime.addListener(setElementValueListenerTime);
+        scheduleGui->setElementValueDate.addListener(setElementValueListenerDate);
+
+        scheduleGui->addDefaultColumn.addListener(addDefaultColumnListener);
+        scheduleGui->removeColumn.addListener(removeColumnListener);
+
+        scheduleGui->setColumnType.addListener(setColumnTypeListener);
+        scheduleGui->setColumnSort.addListener(setColumnSortListener);
+        scheduleGui->setColumnName.addListener(setColumnNameListener);
+
+        scheduleGui->addRow.addListener(addRowListener);
+        scheduleGui->removeRow.addListener(removeRowListener);
+    }
+    if (auto mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui"))
+    {
+        mainMenuBarGui->undoEvent.addListener(undoListener);
+        mainMenuBarGui->redoEvent.addListener(redoListener);
+    }
+    if (auto editHistoryGui = interface.getGuiByID<EditHistoryGui>("EditHistoryGui"))
+    {
+        editHistoryGui->passScheduleEditHistory(&m_editHistory);
+        editHistoryGui->undoEvent.addListener(undoListener);
+        editHistoryGui->redoEvent.addListener(redoListener);
+    }
     m_core = ScheduleCore();
 
     m_editHistory = ScheduleEditHistory(&m_core);
-    input.addCallbackListener(INPUT_CALLBACK_SC_UNDO, undoCallback);
-    input.addCallbackListener(INPUT_CALLBACK_SC_REDO, redoCallback);
+    input.addEventListener(INPUT_EVENT_SC_UNDO, undoListener);
+    input.addEventListener(INPUT_EVENT_SC_REDO, redoListener);
 }
 
 void Schedule::setName(const std::string& name)
@@ -178,7 +215,7 @@ void Schedule::setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistor
     }
 }
 
-void Schedule::setColumnName(size_t column, const char* name, bool addToHistory)
+void Schedule::setColumnName(size_t column, const std::string& name, bool addToHistory)
 {
     Column previousData = Column(*m_core.getColumn(column));
 
@@ -213,7 +250,7 @@ const SelectOptions& Schedule::getColumnSelectOptions(size_t column)
     return m_core.getColumnSelectOptions(column);
 }
 
-void Schedule::modifyColumnSelectOptions(size_t column, SelectOptionsModification& selectOptionsModification, bool addToHistory)
+void Schedule::modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory)
 {
     Column previousData = Column(*m_core.getColumn(column));
 
