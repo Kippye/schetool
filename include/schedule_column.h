@@ -124,6 +124,21 @@ struct Column
         }
         return rows[index];
     }
+
+    const ElementBase* getElementConst(size_t index) const
+    {
+        if (hasElement(index) == false)
+        {
+            printf("The column %s has no element at index %zu", name.c_str(), index);
+            return nullptr;
+        }
+        return rows[index];
+    }
+
+    ElementBase* operator [] (size_t index)
+    {
+        return getElement(index);
+    }
 };
 
 struct ColumnSortComparison 

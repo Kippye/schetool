@@ -7,7 +7,7 @@ class ScheduleEditHistory
 {
     private:
         std::deque<ScheduleEdit*> m_editHistory = {};
-        ScheduleCore* m_core;
+        ScheduleCore* m_core = NULL;
         size_t m_editHistoryIndex = 0;
         bool m_editedSinceWrite = false;
     public:

@@ -5,19 +5,19 @@
 #include <map>
 #include <vector>
 
-enum INPUT_CALLBACK
+enum INPUT_EVENT
 {
-	INPUT_CALLBACK_SC_RENAME,
-	INPUT_CALLBACK_SC_NEW,
-	INPUT_CALLBACK_SC_SAVE,
-	INPUT_CALLBACK_SC_OPEN,
-	INPUT_CALLBACK_SC_UNDO,
-	INPUT_CALLBACK_SC_REDO,
+	INPUT_EVENT_SC_RENAME,
+	INPUT_EVENT_SC_NEW,
+	INPUT_EVENT_SC_SAVE,
+	INPUT_EVENT_SC_OPEN,
+	INPUT_EVENT_SC_UNDO,
+	INPUT_EVENT_SC_REDO,
 };
 
 struct InputShortcut
 {
-	INPUT_CALLBACK callback;
+	INPUT_EVENT event;
 	int key;
 	bool ctrlRequired;
 	bool altRequired;
@@ -48,16 +48,16 @@ class Input
 		bool m_firstMouseMovement = true;
 		std::vector<InputShortcut> m_shortcuts =
 		{
-			InputShortcut{INPUT_CALLBACK_SC_RENAME, GLFW_KEY_F2, true},
-			InputShortcut{INPUT_CALLBACK_SC_NEW, GLFW_KEY_S, true},
-			InputShortcut{INPUT_CALLBACK_SC_SAVE, GLFW_KEY_S, true},
-			InputShortcut{INPUT_CALLBACK_SC_OPEN, GLFW_KEY_O, true},
-			InputShortcut{INPUT_CALLBACK_SC_UNDO, GLFW_KEY_Z, true},
-			InputShortcut{INPUT_CALLBACK_SC_REDO, GLFW_KEY_Y, true},
+			InputShortcut{INPUT_EVENT_SC_RENAME, GLFW_KEY_F2, true},
+			InputShortcut{INPUT_EVENT_SC_NEW, GLFW_KEY_S, true},
+			InputShortcut{INPUT_EVENT_SC_SAVE, GLFW_KEY_S, true},
+			InputShortcut{INPUT_EVENT_SC_OPEN, GLFW_KEY_O, true},
+			InputShortcut{INPUT_EVENT_SC_UNDO, GLFW_KEY_Z, true},
+			InputShortcut{INPUT_EVENT_SC_REDO, GLFW_KEY_Y, true},
 		};
-		std::map<INPUT_CALLBACK, std::vector<std::function<void()>>> m_callbacks = {};
-		std::map<INPUT_CALLBACK, bool> m_callbackStates = {};
-		std::map<INPUT_CALLBACK, bool> m_callbackLastFrameStates = {};
+		std::map<INPUT_EVENT, std::vector<std::function<void()>>> m_listeners = {};
+		std::map<INPUT_EVENT, bool> m_eventStates = {};
+		std::map<INPUT_EVENT, bool> m_eventLastFrameStates = {};
 	public:
 		glm::vec2 mousePos;
 		glm::vec2 mouseMovement;
@@ -66,9 +66,11 @@ class Input
 
 		void init(Window*);
 		void processInput(GLFWwindow* window);
-		void addCallbackListener(INPUT_CALLBACK callback, std::function<void()>& listener);
-		void invokeCallback(INPUT_CALLBACK callback);
-		bool getCallbackInvokedLastFrame(INPUT_CALLBACK callback);
+
+		void addEventListener(INPUT_EVENT callback, std::function<void()>& listener);
+  	size_t getEventListenerCount(INPUT_EVENT callback);
+		void invokeEvent(INPUT_EVENT callback);
+		bool getEventInvokedLastFrame(INPUT_EVENT callback);
 
 		void setGuiWantKeyboard(bool to);
 

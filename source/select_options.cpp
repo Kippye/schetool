@@ -1,7 +1,7 @@
 #include <select_options.h>
 #include <util.h>
 
-std::string SelectOptionsModification::getDataString()
+std::string SelectOptionsModification::getDataString() const
 {
     char buffer[2048];
     if (m_optionNames.size() > 0)
@@ -63,7 +63,7 @@ const SelectOptionChange& SelectOptions::getLastChange() const
     return m_lastModification;
 }
 
-bool SelectOptions::applyModification(SelectOptionsModification& modification)
+bool SelectOptions::applyModification(const SelectOptionsModification& modification)
 {
     switch(modification.m_type)
     {

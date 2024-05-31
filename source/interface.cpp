@@ -4,12 +4,10 @@
 #include <main_menu_bar_gui.h>
 #include <edit_history_gui.h>
 
-void Interface::init(Window* windowManager, Input* input, Schedule* schedule, IO_Handler* ioHandler)
+void Interface::init(Window* windowManager, Input* input)
 {
 	m_windowManager = windowManager;
 	m_input = input;
-	m_schedule = schedule;
-	m_ioHandler = ioHandler;
 
     IMGUI_CHECKVERSION();
 	// imgui setup
@@ -22,30 +20,16 @@ void Interface::init(Window* windowManager, Input* input, Schedule* schedule, IO
 
 	// ADD GUIS
 	
-    addGUI(std::make_shared<MainMenuBarGui>("MainMenuBarGui", m_ioHandler, m_schedule));
-    addGUI(std::make_shared<ScheduleGui>("ScheduleGui", m_schedule));
+	addGui(std::shared_ptr<MainMenuBarGui>(new MainMenuBarGui("MainMenuBarGui")));
+    addGui(std::shared_ptr<ScheduleGui>(new ScheduleGui("ScheduleGui")));
 	#if DEBUG
-	addGUI(std::make_shared<EditHistoryGui>("EditHistoryGui", m_schedule));
+	addGui(std::shared_ptr<EditHistoryGui>(new EditHistoryGui("EditHistoryGui")));
 	#endif
 }
 
-void Interface::addGUI(std::shared_ptr<Gui> gui)
+void Interface::addGui(std::shared_ptr<Gui> gui)
 {
     m_guis.insert({gui->getID(), gui});
-}
-
-// NOTE: Returns nullptr if the Gui was not found
-std::shared_ptr<Gui> Interface::getGuiByID(const std::string& ID)
-{
-	// No Gui with that ID
-	if (m_guis.find(ID) == m_guis.end())
-	{
-		return nullptr;
-	}
-	else
-	{
-		return m_guis.at(ID);
-	}
 }
 
 void Interface::draw()
@@ -73,17 +57,5 @@ void Interface::draw()
 		ImGui::FocusWindow(NULL);
 	}
 
-	m_windowManager->setTitleSuffix(std::string(" - ").append(m_schedule->getName()).c_str());
-
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
-
-void Interface::openMainMenuBarScheduleNameModal()
-{
-	std::shared_ptr<Gui> gui = getGuiByID("MainMenuBarGui");
-
-	if (gui != nullptr)
-	{
-		((MainMenuBarGui*)gui.get())->openNewScheduleNameModal(NAME_PROMPT_NEW);
-	}
 }

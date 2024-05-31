@@ -1,70 +1,19 @@
 #include <main_menu_bar_gui.h>
 
-MainMenuBarGui::MainMenuBarGui(const char* ID, IO_Handler* ioHandler, Schedule* schedule) : Gui(ID)
+int ScheduleNameModalSubGui::filterAlphanumerics(ImGuiInputTextCallbackData* data)
 {
-	m_ioHandler = ioHandler;
-	m_schedule = schedule;
-} 
-
-void MainMenuBarGui::draw(Window& window, Input& input)
-{
-    if (ImGui::BeginMainMenuBar())
+	if (
+		(data->EventChar >= 97 && data->EventChar <= 122) // lowercase letters in english alphabet
+		|| (data->EventChar >= 60 && data->EventChar <= 90 && data->EventChar != 63) // capital letters in english alphabet MINUS some other things such as "?"
+		|| (data->EventChar >= 48 && data->EventChar <= 57) // numbers
+		|| data->EventChar == 32) // space
 	{
-		if (ImGui::BeginMenu("File"))
-		{
-			if (ImGui::MenuItem("Rename", "CTRL+F2"))
-			{
-				renameSchedule();
-			}
-			if (ImGui::MenuItem("New", "CTRL+N")) 
-			{
-				newSchedule();
-			}
-			if (ImGui::BeginMenu("Open", "CTRL+O"))
-			{
-				openSchedule();
-			}
-			if (ImGui::MenuItem("Save", "CTRL+S"))
-			{
-				input.invokeCallback(INPUT_CALLBACK_SC_SAVE);
-			}
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Edit"))
-		{
-			if (ImGui::MenuItem("Undo", "CTRL+Z"))
-			{
-				input.invokeCallback(INPUT_CALLBACK_SC_UNDO);
-			}
-			if (ImGui::MenuItem("Redo", "CTRL+Y")) 
-			{
-				input.invokeCallback(INPUT_CALLBACK_SC_REDO);
-			}
-			ImGui::EndMenu();
-		}
+		return 0;
 	}
-	ImGui::EndMainMenuBar();
-
-	// check shortcuts (dunno if this is the best place for this? TODO )
-	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_RENAME)) { renameSchedule(); }
-	if (input.getCallbackInvokedLastFrame(INPUT_CALLBACK_SC_NEW)) { newSchedule(); }
-
-	displayScheduleNameModal();
-	displayDeleteConfirmationModal();
-
-	if (m_openScheduleNameModal)
-	{
-		ImGui::OpenPopup("Enter Schedule name");
-		m_openScheduleNameModal = false;
-	}
-	if (m_openDeleteConfirmationModal)
-	{
-		ImGui::OpenPopup("Confirm Schedule deletion");
-		m_openDeleteConfirmationModal = false;
-	}
+	return 1;
 }
 
-void MainMenuBarGui::displayScheduleNameModal()
+void ScheduleNameModalSubGui::draw(Window& window, Input& input)
 {
 	float nameInputWidth = ImGui::CalcTextSize(std::string(48, 'a').c_str()).x;
 
@@ -88,21 +37,23 @@ void MainMenuBarGui::displayScheduleNameModal()
 			}
 			if (ImGui::Button("Accept name", ImVec2(128, 0)))
 			{
-				if (m_currentNamePromptReason == NAME_PROMPT_NEW)
+				if (m_promptReason == NAME_PROMPT_NEW)
 				{
 					// Only hide modal if a valid name was provided and it was successfully used to write a file
-					if (m_ioHandler->createNewSchedule(buf))
-					{
-						ImGui::CloseCurrentPopup();
-					}
+					// if (m_ioHandler->createNewSchedule(buf))
+					// {
+					// 	ImGui::CloseCurrentPopup();
+					// }
+					createNewScheduleEvent.invoke(std::string(buf));
 				}
-				else if (m_currentNamePromptReason == NAME_PROMPT_RENAME)
+				else if (m_promptReason == NAME_PROMPT_RENAME)
 				{
 					// Hide the modal if the open file was successfully renamed
-					if (m_ioHandler->setOpenScheduleFilename(buf, true))
-					{
-						ImGui::CloseCurrentPopup();
-					}
+					// if (m_ioHandler->setOpenScheduleFilename(buf, true))
+					// {
+					// 	ImGui::CloseCurrentPopup(); // TODO: do this from IO_Manager
+					// }
+					renameScheduleEvent.invoke(std::string(buf), true);
 				}
 			}	
 		}
@@ -110,7 +61,15 @@ void MainMenuBarGui::displayScheduleNameModal()
 	}
 }
 
-void MainMenuBarGui::displayDeleteConfirmationModal()
+// NOTE: Also clears the name buffer
+void ScheduleNameModalSubGui::setPromptReason(NAME_PROMPT_REASON promptReason)
+{
+	m_scheduleNameBuffer = "";
+	m_promptReason = promptReason;
+}
+
+
+void ScheduleDeleteModalSubGui::draw(Window& window, Input& input)
 {
 	ImGui::SetNextWindowSize(ImVec2(386.0f, 100.0f));
 	if (ImGui::BeginPopupModal("Confirm Schedule deletion", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
@@ -127,10 +86,8 @@ void MainMenuBarGui::displayDeleteConfirmationModal()
 		}
 		if (ImGui::Button("Delete##DeleteSchedule", ImVec2(120, 0)))
 		{
-			if (m_ioHandler->deleteSchedule(m_deleteConfirmationScheduleName.c_str()))
-			{
-			}
-			// close it anyway i guess
+			deleteScheduleEvent.invoke(std::string(m_deleteConfirmationScheduleName));
+
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SameLine();
@@ -148,51 +105,131 @@ void MainMenuBarGui::displayDeleteConfirmationModal()
 	}
 }
 
-void MainMenuBarGui::openNewScheduleNameModal(NAME_PROMPT_REASON reason)
+void ScheduleDeleteModalSubGui::setAffectedScheduleName(const std::string& name)
 {
-	m_scheduleNameBuffer = "";
-	m_currentNamePromptReason = reason;
-	m_openScheduleNameModal = true;
+	m_deleteConfirmationScheduleName = name;
 }
 
-int MainMenuBarGui::filterAlphanumerics(ImGuiInputTextCallbackData* data)
+
+MainMenuBarGui::MainMenuBarGui(const char* ID) : Gui(ID)
 {
-	if (
-		(data->EventChar >= 97 && data->EventChar <= 122) // lowercase letters in english alphabet
-		|| (data->EventChar >= 60 && data->EventChar <= 90 && data->EventChar != 63) // capital letters in english alphabet MINUS some other things such as "?"
-		|| (data->EventChar >= 48 && data->EventChar <= 57) // numbers
-		|| data->EventChar == 32) // space
+	// add subguis
+	addSubGui("ScheduleNameModalSubGui", new ScheduleNameModalSubGui("ScheduleNameModalSubGui"));
+	addSubGui("ScheduleDeleteModalSubGui", new ScheduleDeleteModalSubGui("ScheduleDeleteModalSubGui"));
+}
+
+void MainMenuBarGui::draw(Window& window, Input& input)
+{
+    if (ImGui::BeginMainMenuBar())
 	{
-		return 0;
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Rename", "CTRL+F2"))
+			{
+				renameSchedule();
+			}
+			if (ImGui::MenuItem("New", "CTRL+N")) 
+			{
+				newSchedule();
+			}
+			if (ImGui::BeginMenu("Open", "CTRL+O"))
+			{
+				displayScheduleList();
+			}
+			if (ImGui::MenuItem("Save", "CTRL+S"))
+			{
+				saveEvent.invoke();
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Edit"))
+		{
+			if (ImGui::MenuItem("Undo", "CTRL+Z"))
+			{
+				undoEvent.invoke();
+			}
+			if (ImGui::MenuItem("Redo", "CTRL+Y")) 
+			{
+				redoEvent.invoke();
+			}
+			ImGui::EndMenu();
+		}
 	}
-	return 1;
+	ImGui::EndMainMenuBar();
+
+	// check shortcuts (dunno if this is the best place for this? TODO )
+	if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) { renameSchedule(); }
+	if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) { newSchedule(); }
+
+	if (auto nameModalSubGui = getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui"))
+	{
+		nameModalSubGui->draw(window, input);
+	}
+
+	if (auto deleteModalSubGui = getSubGui<ScheduleDeleteModalSubGui>("ScheduleDeleteModalSubGui"))
+	{
+		deleteModalSubGui->draw(window, input);
+	}
+
+	if (m_openScheduleNameModal)
+	{
+		ImGui::OpenPopup("Enter Schedule name");
+		m_openScheduleNameModal = false;
+	}
+	if (m_openDeleteConfirmationModal)
+	{
+		ImGui::OpenPopup("Confirm Schedule deletion");
+		m_openDeleteConfirmationModal = false;
+	}
 }
 
 void MainMenuBarGui::renameSchedule()
 {
-	openNewScheduleNameModal(NAME_PROMPT_RENAME);
+	openScheduleNameModal(NAME_PROMPT_RENAME);
 }
 void MainMenuBarGui::newSchedule()
 {
-	openNewScheduleNameModal(NAME_PROMPT_NEW);
+	openScheduleNameModal(NAME_PROMPT_NEW);
 }
-void MainMenuBarGui::openSchedule()
+void MainMenuBarGui::displayScheduleList()
 {
-	std::vector<std::string> scheduleFilenames = m_ioHandler->getScheduleStemNamesSortedByEditTime();
-
-	for (size_t i = 0; i < scheduleFilenames.size(); i++)
+	for (size_t i = 0; i < m_fileNames.size(); i++)
 	{
 		ImGui::SetNextItemAllowOverlap();
-		if (ImGui::MenuItem(scheduleFilenames[i].c_str()))
+		if (ImGui::MenuItem(m_fileNames[i].c_str()))
 		{
-			m_ioHandler->readSchedule(scheduleFilenames[i].c_str());
+			openScheduleFileEvent.invoke(std::string(m_fileNames[i]));
 		}
 		ImGui::SameLine();
 		if (ImGui::SmallButton(std::string("X##DeleteSchedule").append(std::to_string(i)).c_str()))
 		{
-			m_deleteConfirmationScheduleName = scheduleFilenames[i];
+			if (auto deleteModalSubGui = getSubGui<ScheduleDeleteModalSubGui>("ScheduleDeleteModalSubGui"))
+			{
+				deleteModalSubGui->setAffectedScheduleName(m_fileNames[i]);
+			}
 			m_openDeleteConfirmationModal = true;
 		}
 	}
 	ImGui::EndMenu();
+}
+
+void MainMenuBarGui::openScheduleNameModal(NAME_PROMPT_REASON reason)
+{
+	if (auto nameModalSubGui = getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui"))
+	{
+		nameModalSubGui->setPromptReason(reason);
+	}
+	m_openScheduleNameModal = true;
+}
+
+#include <iostream>
+
+void MainMenuBarGui::closeScheduleNameModal()
+{
+	ImGui::CloseCurrentPopup();
+}
+
+void MainMenuBarGui::passFileNames(const std::vector<std::string>& fileNames)
+{
+	m_fileNames = fileNames;
 }

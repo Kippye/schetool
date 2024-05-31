@@ -3,7 +3,7 @@
 
 ScheduleEditHistory::ScheduleEditHistory()
 {
-    std::cout << "Schedule edit history created with default constructor. A pointer to the Schedule core must be provided!" << std::endl;
+
 }
 
 ScheduleEditHistory::ScheduleEditHistory(ScheduleCore* scheduleCore)
@@ -48,6 +48,7 @@ void ScheduleEditHistory::addEdit(ScheduleEdit* edit)
     removeFollowingEditHistory();
     m_editHistory.push_back(edit);
     m_editHistoryIndex = m_editHistory.size() - 1;
+    setEditedSinceWrite(true);
 }
 
 void ScheduleEditHistory::removeFollowingEditHistory()

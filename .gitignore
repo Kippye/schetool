@@ -13,8 +13,6 @@ resources/
 vcpkg/
 
 # source / include dirs
-# tests
-include/tests
 # headers generated from h.in files
 include/generated
 

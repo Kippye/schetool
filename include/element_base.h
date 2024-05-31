@@ -1,19 +1,7 @@
 #pragma once
 #include <time_container.h>
 #include <date_container.h>
-
-enum SCHEDULE_TYPE
-{
-    SCH_BOOL,
-    SCH_NUMBER,
-    SCH_DECIMAL,
-    SCH_TEXT,
-    SCH_SELECT,
-    SCH_TIME,
-    SCH_DATE,
-    SCH_WEEKDAY,
-    SCH_LAST,
-};
+#include <schedule_constants.h>
 
 class ElementBase
 {
