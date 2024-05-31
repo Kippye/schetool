@@ -4,7 +4,13 @@ project(schetool VERSION 0.5.0)
 
 set(PROGRAM_NAME ${PROJECT_NAME})
 
-option(ENABLE_TESTING "Unit testing build" ON)
+# enable testing by default for debug makefile builds (can't check for configuration with msvc)
+IF ((CMAKE_GENERATOR STREQUAL "Unix Makefiles") AND ("${CMAKE_BUILD_TYPE}" STREQUAL Debug))
+    option(ENABLE_TESTING "Unit testing build" ON)
+# otherwise, testing has to be manually enabled
+ELSE()
+    option(ENABLE_TESTING "Unit testing build" OFF)
+ENDIF()
 
 # specify the C++ standard
 add_library(compiler_flags INTERFACE)
