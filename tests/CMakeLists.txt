@@ -1,26 +1,19 @@
 IF (ENABLE_TESTING)
     message(STATUS "Testing is enabled.")
-    message(CHECK_START "Checking if generator is Visual Studio")
-    #IF (CMAKE_GENERATOR MATCHES "Visual Studio")
-        message(CHECK_PASS "passed")
-        set(TEST_MAIN "unit_tests")
-        set(TEST_SOURCES "main.cpp")
-        
-        #message(CHECK_START "Finding Catch2")
-        # package libraries
-        #find_package(Catch2 3)
-        # TEMP
-        add_subdirectory(../include/catch2 ../catch2)
-        #IF (Catch2_FOUND)
-            #message(CHECK_PASS "found")
-            add_executable(${TEST_MAIN} ${TEST_SOURCES})
+    set(TEST_MAIN "unit_tests")
+    set(TEST_SOURCES "main.cpp")
+    
+    # package libraries
+    #find_package(Catch2 3)
+    # TEMP
+    add_subdirectory(../include/catch2 ../catch2)
+    #IF (Catch2_FOUND)
+        #message(CHECK_PASS "found")
+        add_executable(${TEST_MAIN} ${TEST_SOURCES})
 
-            target_link_libraries(${TEST_MAIN} PUBLIC schetool Catch2::Catch2WithMain)
-            add_test(NAME ${TEST_MAIN} COMMAND ${TEST_MAIN})
-        #ELSE()
-            #message(CHECK_FAIL "not found. Tests will not be included.")
-        #ENDIF(Catch2_FOUND)
+        target_link_libraries(${TEST_MAIN} PUBLIC schetool Catch2::Catch2WithMain)
+        add_test(NAME ${TEST_MAIN} COMMAND ${TEST_MAIN})
     #ELSE()
-        message(CHECK_FAIL "failed. Tests will not be included.")
-    #ENDIF(CMAKE_GENERATOR MATCHES "Visual Studio")
+        #message(CHECK_FAIL "not found. Tests will not be included.")
+    #ENDIF(Catch2_FOUND)
 ENDIF(ENABLE_TESTING)

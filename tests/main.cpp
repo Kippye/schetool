@@ -5,6 +5,8 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 #include "main.h"
 
+#include "test_schedule_gui.h"
+
 Program program = Program();
 
 class testProgramSetupListener : public Catch::EventListenerBase 
