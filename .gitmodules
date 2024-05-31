@@ -4,3 +4,6 @@
 [submodule "include/zlib"]
 	path = include/zlib
 	url = https://github.com/madler/zlib
+[submodule "include/catch2"]
+	path = include/catch2
+	url = https://github.com/catchorg/Catch2.git

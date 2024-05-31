@@ -7,23 +7,27 @@
 
 Program program = Program();
 
-class testProgramSetupListener : public Catch::EventListenerBase {
-public:
-    using Catch::EventListenerBase::EventListenerBase;
+class testProgramSetupListener : public Catch::EventListenerBase 
+{
+    public:
+        using Catch::EventListenerBase::EventListenerBase;
 
-    void testRunStarting(Catch::TestRunInfo const&) override {
-        //program = Program();
-        std::cout << program.windowManager.getTitle() << std::endl;
-    }
+        void testRunStarting(Catch::TestRunInfo const&) override 
+        {
+            //program = Program();
+            std::cout << program.windowManager.getTitle() << std::endl;
+        }
 };
 
 CATCH_REGISTER_LISTENER(testProgramSetupListener)
 
-TEST_CASE( "Input system", "[input]" ) {
-    program.input.addCallbackListener(INPUT_CALLBACK_SC_RENAME, std::function<void()>(nullptr));
-    REQUIRE(program.input.getCallbackListenerCount(INPUT_CALLBACK_SC_RENAME) == 0);
+TEST_CASE("Input system", "[input]") 
+{
+    std::function<void ()> invalidListener = std::function<void()>(nullptr);
+    program.input.addEventListener(INPUT_EVENT_SC_RENAME, invalidListener);
+    CHECK(program.input.getEventListenerCount(INPUT_EVENT_SC_RENAME) == 0);
     std::function<void ()> listener = std::function<void()>([]{});
-    program.input.addCallbackListener(INPUT_CALLBACK_SC_RENAME, listener);
-    REQUIRE(program.input.getCallbackListenerCount(INPUT_CALLBACK_SC_RENAME) == 1);
-    program.input.invokeCallback(INPUT_CALLBACK_SC_RENAME);
+    program.input.addEventListener(INPUT_EVENT_SC_RENAME, listener);
+    CHECK(program.input.getEventListenerCount(INPUT_EVENT_SC_RENAME) == 1);
+    program.input.invokeEvent(INPUT_EVENT_SC_RENAME);
 }

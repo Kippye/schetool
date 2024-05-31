@@ -59,33 +59,33 @@ void Input::processInput(GLFWwindow* window)
 	mouseMovement = glm::vec2(0.0f);
 }
 
-void Input::addEventListener(INPUT_EVENT callback, std::function<void()>& listener)
+void Input::addEventListener(INPUT_EVENT event, std::function<void()>& listener)
 {
     if (listener)
     {
-	    m_listeners.at(callback).push_back(listener);
+	    m_listeners.at(event).push_back(listener);
     }
 }
 
-size_t Input::getEventListenerCount(INPUT_CALLBACK callback)
+size_t Input::getEventListenerCount(INPUT_EVENT event)
 {
-    return m_listeners.at(callback).size();
+    return m_listeners.at(event).size();
 }
 
-void Input::invokeEvent(INPUT_EVENT callback)
+void Input::invokeEvent(INPUT_EVENT event)
 {
-	auto& listeners = m_listeners.at(callback);
+	auto& listeners = m_listeners.at(event);
 
 	for (auto& listener : listeners)
 	{
 		listener();
 	}
-	m_eventStates.at(callback) = true;
+	m_eventStates.at(event) = true;
 }
 
-bool Input::getEventInvokedLastFrame(INPUT_EVENT callback)
+bool Input::getEventInvokedLastFrame(INPUT_EVENT event)
 {
-	return m_eventLastFrameStates.at(callback);
+	return m_eventLastFrameStates.at(event);
 }
 
 void Input::setGuiWantKeyboard(bool to)
