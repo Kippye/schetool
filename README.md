@@ -9,7 +9,7 @@ Schetool contains everything that's needed and nothing more. Some alternatives h
 
 ## Pre-built releases
 
-The latest stable releases for Windows and Linux (built on Fedora) are available under Releases. Just download, extract and run.
+The latest stable releases for Windows and Linux (built and tested on Fedora) are available under Releases. Just download, extract and run.
 
 ## Building schetool
 
@@ -19,17 +19,28 @@ Building hasn't been tested extensively, so the exact functionability with diffe
 
 **Prerequisites**
 
-* [premake5](https://premake.github.io/download) for project file generation.
+* [CMake](https://cmake.org/) version 3.25 or later for project file generation.
 * TODO: Windows compilation prerequisites
 
 * MinGW64 to build from Makefile (recommended to get it from [MSYS2](https://www.msys2.org/))
 
 **Building**
 
-Visual Studio project file (BROKEN)
+**Tests can be enabled / disabled using the ``-DENABLE_TESTING=ON`` or ``-DENABLE_TESTING=OFF`` CMake flags.**
+
+**If building with tests, the resulting executable for make, Visual Studio Debug or Visual Studio Release builds will be at ``build/tests/unit_tests.exe``, ``build\tests\Debug\unit_tests.exe`` or ``build\tests\Release\unit_tests.exe``, respectively**
+
+Using MSVC
 ```
-premake5 vs2022  
-msbuild -m -p:Configuration=Release
+cmake --preset windows-msvc2022
+  # Build Debug:
+cmake --build build --preset msvc2022-debug
+  # Build Release:
+cmake --build build --preset msvc2022-release
+  # Run Debug:
+build\Debug\schetool
+  # Run Release:
+build\Release\schetool
 ```
 Makefile
 
@@ -37,19 +48,21 @@ Using MSYS2 MinGW64
 
 Open the MSYS2 MINGW64 shell launcher
 ```
-premake5 gmake2
-make
-```
-**Cleaning**
-```
-premake5 clean
+  # Debug:
+cmake --preset make
+  # Release:
+cmake --preset make-release
+  # Build (either)
+cmake --build build
+  # Run:
+build/schetool
 ```
 ### Linux
 
 **Prerequisites on Fedora**  
 
-* [premake5](https://premake.github.io/download) for project file generation.
-* X11 packages need to be installed in order to compile:
+* CMake version 3.25 or later for project file generation.
+* The following packages need to be installed:
 ```
 sudo dnf install libX11 libXcursor-devel libXrandr-devel libXinerama-devel libXi-devel mesa-libGL-devel xorg-x11-server-devel
 ```
@@ -57,14 +70,12 @@ sudo dnf install libX11 libXcursor-devel libXrandr-devel libXinerama-devel libXi
 **Building**
 
 ```
-premake5 gmake2  
-make
-```
-To run:  
-```
-./schetool_bin
-```
-**Cleaning**
-```
-premake5 clean
+  # Debug:
+cmake --preset make
+  # Release:
+cmake --preset make-release
+  # Build (either)
+cmake --build build
+  # Run:
+build/schetool
 ```
