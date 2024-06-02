@@ -17,6 +17,16 @@ class Element : public ElementBase
             m_value = value;
         }
 
+        bool operator==(const Element<T>& other) const
+        {
+            return m_value == other.m_value;
+        }
+
+        bool operator!=(const Element<T>& other) const
+        {
+            return m_value != other.m_value;
+        }
+
         std::string getString() const override
         {
             if constexpr(std::is_same_v<T, TimeContainer> || std::is_same_v<T, DateContainer>)

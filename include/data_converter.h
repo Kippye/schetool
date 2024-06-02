@@ -180,9 +180,9 @@ class BLF_Element : public TemplateObject
     {
         this->columnIndex = columnIndex;
         this->type = element->getType();
-        this->creationYear = element->getCreationDate().time.tm_year;
-        this->creationMonth = element->getCreationDate().time.tm_mon;
-        this->creationMday = element->getCreationDate().time.tm_mday;
+        this->creationYear = element->getCreationDate().getTime()->tm_year;
+        this->creationMonth = element->getCreationDate().getTime()->tm_mon;
+        this->creationMday = element->getCreationDate().getTime()->tm_mday;
         this->creationHours = element->getCreationTime().hours;
         this->creationMinutes = element->getCreationTime().minutes;
     }

@@ -6,6 +6,7 @@
 #include "main.h"
 
 #include "test_schedule_gui.h"
+#include "test_filter.h"
 
 Program program = Program();
 

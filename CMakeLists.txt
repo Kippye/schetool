@@ -98,6 +98,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/date_container.cpp"
     "${SCHETOOL_SRC}/edit_history_gui.cpp"
     "${SCHETOOL_SRC}/element_base.cpp"
+    "${SCHETOOL_SRC}/filter_base.cpp"
     "${SCHETOOL_SRC}/gui.cpp"
     #"${SCHETOOL_SRC}/imgui_demo.cpp"
     "${SCHETOOL_SRC}/input.cpp"

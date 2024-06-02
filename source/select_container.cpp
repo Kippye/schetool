@@ -35,6 +35,7 @@ void SelectContainer::setSelected(size_t index, bool select)
 
 void SelectContainer::replaceSelection(const std::set<size_t>& selection)
 {
+    // TODO: Check if the new selection is valid
     m_selection = selection;
 }
 
