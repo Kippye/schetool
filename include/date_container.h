@@ -7,30 +7,37 @@ struct DateContainer
 {
     private:
         tm time;
+        bool m_isRelative = false;
+        int m_relativeOffset = 0;
     public:
         DateContainer();
-        DateContainer(const tm& t);
+        DateContainer(const tm& t, bool isRelative = false, int relativeOffset = 0);
         std::string getString() const;
-        const tm* getTime() const;
+        tm getTime() const;
+        bool getIsRelative() const;
+        size_t getRelativeOffset() const;
         void setTime(const tm& time);
         void setMonthDay(unsigned int day);
+        void incrementMonthDay();
         void setMonth(int month);
+        void incrementMonth();
         void setYear(int year, bool convert);
+        void incrementYear();
 
         static int convertToValidYear(int year, bool hasBeenSubtracted = false, bool subtractTmBaseYear = true);
 
         bool operator==(const DateContainer& other) const
         {
-            return (time.tm_year == other.getTime()->tm_year &&
-                    time.tm_mon == other.getTime()->tm_mon &&
-                    time.tm_mday == other.getTime()->tm_mday);
+            return (time.tm_year == other.getTime().tm_year &&
+                    time.tm_mon == other.getTime().tm_mon &&
+                    time.tm_mday == other.getTime().tm_mday);
         }
 
         bool operator!=(const DateContainer& other) const
         {
-            return (time.tm_year != other.getTime()->tm_year ||
-                time.tm_mon != other.getTime()->tm_mon ||
-                time.tm_mday != other.getTime()->tm_mday);
+            return (time.tm_year != other.getTime().tm_year ||
+                time.tm_mon != other.getTime().tm_mon ||
+                time.tm_mday != other.getTime().tm_mday);
         }
 
         friend bool operator<(const DateContainer& left, const DateContainer& right)
@@ -62,4 +69,6 @@ struct DateContainer
             }
             else return false;
         }
+
+        static DateContainer getCurrentSystemDate();
 };

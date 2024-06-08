@@ -180,9 +180,9 @@ class BLF_Element : public TemplateObject
     {
         this->columnIndex = columnIndex;
         this->type = element->getType();
-        this->creationYear = element->getCreationDate().getTime()->tm_year;
-        this->creationMonth = element->getCreationDate().getTime()->tm_mon;
-        this->creationMday = element->getCreationDate().getTime()->tm_mday;
+        this->creationYear = element->getCreationDate().getTime().tm_year;
+        this->creationMonth = element->getCreationDate().getTime().tm_mon;
+        this->creationMday = element->getCreationDate().getTime().tm_mday;
         this->creationHours = element->getCreationTime().hours;
         this->creationMinutes = element->getCreationTime().minutes;
     }
@@ -398,10 +398,10 @@ class BLF_Date : public BLF_Element
         }
         BLF_Date(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
         {
-            const tm* dateTime = element->getValue().getTime();
-            year = dateTime->tm_year;
-            month = dateTime->tm_mon;
-            mday = dateTime->tm_mday;
+            tm dateTime = element->getValue().getTime();
+            year = dateTime.tm_year;
+            month = dateTime.tm_mon;
+            mday = dateTime.tm_mday;
             attributeMap.push_back({"Year", &year, TYPE_INT});
             attributeMap.push_back({"Month", &month, TYPE_INT});
             attributeMap.push_back({"Mday", &mday, TYPE_INT});

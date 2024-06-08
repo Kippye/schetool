@@ -5,8 +5,9 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 #include "main.h"
 
-#include "test_schedule_gui.h"
+#include "test_date_container.h"
 #include "test_filter.h"
+#include "test_schedule_gui.h"
 
 Program program = Program();
 

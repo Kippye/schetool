@@ -110,7 +110,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 						m_editorDate.setMonthDay(day); 
 						m_madeEdits = true;
 					}
-					if (day == m_editorDate.getTime()->tm_mday)
+					if (day == m_editorDate.getTime().tm_mday)
 					{
 						// TODO: Highlight this day as selected in the calendar
 					}
