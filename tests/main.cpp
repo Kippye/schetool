@@ -5,7 +5,7 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 #include "main.h"
 
-#include "test_date_container.h"
+#include "test_date_container.h" // must be tested before filters since filters use it
 #include "test_filter.h"
 #include "test_schedule_gui.h"
 

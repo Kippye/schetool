@@ -28,27 +28,27 @@ struct DateContainer
 
         bool operator==(const DateContainer& other) const
         {
-            return (time.tm_year == other.getTime().tm_year &&
-                    time.tm_mon == other.getTime().tm_mon &&
-                    time.tm_mday == other.getTime().tm_mday);
+            return (getTime().tm_year == other.getTime().tm_year &&
+                    getTime().tm_mon == other.getTime().tm_mon &&
+                    getTime().tm_mday == other.getTime().tm_mday);
         }
 
         bool operator!=(const DateContainer& other) const
         {
-            return (time.tm_year != other.getTime().tm_year ||
-                time.tm_mon != other.getTime().tm_mon ||
-                time.tm_mday != other.getTime().tm_mday);
+            return (getTime().tm_year != other.getTime().tm_year ||
+                    getTime().tm_mon != other.getTime().tm_mon ||
+                    getTime().tm_mday != other.getTime().tm_mday);
         }
 
         friend bool operator<(const DateContainer& left, const DateContainer& right)
         {
-            if (left.time.tm_year < right.time.tm_year) { return true; }
-            else if (left.time.tm_year == right.time.tm_year)
+            if (left.getTime().tm_year < right.getTime().tm_year) { return true; }
+            else if (left.getTime().tm_year == right.getTime().tm_year)
             {
-                if (left.time.tm_mon < right.time.tm_mon) { return true; }
-                else if (left.time.tm_mon == right.time.tm_mon)
+                if (left.getTime().tm_mon < right.getTime().tm_mon) { return true; }
+                else if (left.getTime().tm_mon == right.getTime().tm_mon)
                 {
-                    return left.time.tm_mday < right.time.tm_mday;
+                    return left.getTime().tm_mday < right.getTime().tm_mday;
                 }
                 else return false;
             }
@@ -57,13 +57,13 @@ struct DateContainer
 
         friend bool operator>(const DateContainer& left, const DateContainer& right)
         {
-            if (left.time.tm_year > right.time.tm_year) { return true; }
-            else if (left.time.tm_year == right.time.tm_year)
+            if (left.getTime().tm_year > right.getTime().tm_year) { return true; }
+            else if (left.getTime().tm_year == right.getTime().tm_year)
             {
-                if (left.time.tm_mon > right.time.tm_mon) { return true; }
-                else if (left.time.tm_mon == right.time.tm_mon)
+                if (left.getTime().tm_mon > right.getTime().tm_mon) { return true; }
+                else if (left.getTime().tm_mon == right.getTime().tm_mon)
                 {
-                    return left.time.tm_mday > right.time.tm_mday;
+                    return left.getTime().tm_mday > right.getTime().tm_mday;
                 }
                 else return false;
             }
