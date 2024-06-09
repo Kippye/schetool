@@ -11,6 +11,7 @@
 #include <util.h>
 #include <element.h>
 #include <element_base.h>
+#include "filter.h"
 #include <schedule.h>
 
 #include <iostream>
@@ -335,6 +336,20 @@ void ScheduleGui::draw(Window& window, Input& input)
 				{
 					size_t row = sortedRowIndices[unsortedRow];
 					
+                    // CHECK FILTERS BEFORE DRAWING ROW
+                    for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
+                    {
+                        // check if the row's Element passes all Filters in this Column
+                        for (const auto& filter: m_scheduleCore->getColumn(column)->filters)
+                        {
+                            // fails to pass, don't show this row                            
+                            if (filter->checkPasses(m_scheduleCore->getElementConst(column, row)) == false)
+                            {
+                                goto do_not_draw_row;
+                            }
+                        }
+                    }
+
 					ImGui::TableNextRow();
 					for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
 					{
@@ -627,6 +642,8 @@ void ScheduleGui::draw(Window& window, Input& input)
 							ImGui::EndTooltip();
 						}
 					}
+                    do_not_draw_row:
+                    bool b = false; // stupid thing because fsr the label can't be at the end of the loop
 				}
 				ImGui::EndTable();
 			}

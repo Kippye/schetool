@@ -1,5 +1,6 @@
 #include "main.h"
 #include <GLFW/glfw3.h>
+#include <memory>
 
 // Windows Release build
 #if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))
@@ -15,6 +16,9 @@
 #endif
 #include <Windows.h>
 #endif
+
+// TEMP
+#include "filter.h"
 
 Program::Program()
 {
@@ -41,6 +45,9 @@ Program::Program()
 	{
 		interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")->openScheduleNameModal(NAME_PROMPT_NEW);
 	}
+
+    std::shared_ptr<Filter<DateContainer>> filter = std::make_shared<Filter<DateContainer>>(DateContainer(tm(), true, 0));
+    schedule.getAllColumnsMutable().at(6).addFilter(filter);
 }
 
 void Program::loop()
