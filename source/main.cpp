@@ -47,7 +47,7 @@ Program::Program()
 	}
 
     std::shared_ptr<Filter<DateContainer>> filter = std::make_shared<Filter<DateContainer>>(DateContainer(tm(), true, 0));
-    schedule.getAllColumnsMutable().at(6).addFilter(filter);
+    schedule.addColumnFilter(6, filter);
 }
 
 void Program::loop()

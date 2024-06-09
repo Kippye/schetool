@@ -265,6 +265,22 @@ void Schedule::modifyColumnSelectOptions(size_t column, const SelectOptionsModif
     }
 }
 
+void Schedule::addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter)
+{
+    if (m_core.addColumnFilter(column, filter))
+    {
+        
+    }
+}
+
+void Schedule::removeColumnFilter(size_t column, size_t index)
+{
+    if (m_core.removeColumnFilter(column, index))
+    {
+
+    }
+}
+
 void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
 {
     m_core.resetColumn(index, type);

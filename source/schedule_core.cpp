@@ -108,6 +108,17 @@ size_t ScheduleCore::getColumnCount() const
     return m_schedule.size();
 }
 
+// Check if the index is less than size. If not, a general "index out of range" error is printed
+bool ScheduleCore::existsColumnAtIndex(size_t index) const
+{
+    if (index < getColumnCount() == false) 
+    { 
+        printf("ScheduleCore::existsColumnAtIndex(%zu): Index not less than size (%zu)\n", index, getColumnCount());
+        return false; 
+    }
+    return true;
+}
+
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
 void ScheduleCore::addColumn(size_t index, const Column& column)
 {
@@ -170,7 +181,7 @@ void ScheduleCore::addDefaultColumn(size_t index)
 bool ScheduleCore::removeColumn(size_t column)
 {
     // a permanent column can't be removed
-    if ((column < getColumnCount() == false || m_schedule.at(column).permanent == true)) { return false; }
+    if ((existsColumnAtIndex(column) == false || m_schedule.at(column).permanent == true)) { return false; }
 
     bool resortRequired = m_schedule.at(column).sort != COLUMN_SORT_NONE;
 
@@ -194,7 +205,7 @@ bool ScheduleCore::removeColumn(size_t column)
 
 const Column* ScheduleCore::getColumn(size_t column) const
 {
-    if (column > getColumnCount())
+    if (existsColumnAtIndex(column) == false)
     {
         std::cout << "ScheduleCore::getColumn: index out of range. Returning last column" << std::endl;
         return &m_schedule.at(getColumnCount() - 1);
@@ -204,7 +215,7 @@ const Column* ScheduleCore::getColumn(size_t column) const
 
 void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
 {
-    if (index < getColumnCount() == false) { std::cout << "ScheduleCore::setColumnElements: There is no Column at index " << index << std::endl; return; }
+    if (existsColumnAtIndex(index) == false) { return; }
     if (getColumn(index)->type != columnData.type) { printf("ScheduleCore::setColumnElements: The target Column and columnData types must match but are %d and %d\n", getColumn(index)->type, columnData.type); return; }
 
     for (size_t row = 0; row < getRowCount(); row++)
@@ -264,7 +275,7 @@ void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
 
 bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
 {
-    if (column < getColumnCount() == false){ return false; }
+    if (existsColumnAtIndex(column) == false){ return false; }
     if (getColumn(column)->permanent == true) { printf("ScheduleCore::setColumnType tried to set type of a permanent Column at %zu! Quitting.\n", column); return false; }
 
     // HACK y
@@ -302,7 +313,7 @@ bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
 
 bool ScheduleCore::setColumnName(size_t column, const std::string& name)
 {
-    if (column < getColumnCount() == false) { return false; }
+    if (existsColumnAtIndex(column) == false) { return false; }
     Column previousData = Column(m_schedule.at(column));
 
     m_schedule.at(column).name = name;
@@ -311,7 +322,7 @@ bool ScheduleCore::setColumnName(size_t column, const std::string& name)
 
 bool ScheduleCore::setColumnSort(size_t column, COLUMN_SORT sortDirection)
 {
-    if (column < getColumnCount() == false) { return false; }
+    if (existsColumnAtIndex(column) == false) { return false; }
     Column previousData = Column(m_schedule.at(column));
 
     m_schedule.at(column).sort = sortDirection;
@@ -326,11 +337,27 @@ const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column) const
 
 bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification)
 {
-    if (column < getColumnCount() == false) { return false; }
+    if (existsColumnAtIndex(column) == false) { return false; }
     
     if (m_schedule.at(column).selectOptions.applyModification(selectOptionsModification) == false) { std::cout << "ScheduleCore::modifySelectOptions: Applying the following modification failed:"; std::cout << selectOptionsModification.getDataString(); return false; }
 
     sortColumns();
+    return true;
+}
+
+bool ScheduleCore::addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    getMutableColumn(column)->addFilter(filter);
+    return true;
+}
+
+bool ScheduleCore::removeColumnFilter(size_t column, size_t index)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    getMutableColumn(column)->removeFilter(index);
     return true;
 }
 
@@ -419,6 +446,16 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
 size_t ScheduleCore::getRowCount() const
 {
     return (m_schedule.size() > 0 ? m_schedule.at(0).rows.size() : 0);
+}
+
+bool ScheduleCore::existsRowAtIndex(size_t index) const
+{
+    if (index < getRowCount() == false) 
+    { 
+        printf("ScheduleCore::existsRowAtIndex(%zu): Index not less than size (%zu)\n", index, getRowCount());
+        return false; 
+    }
+    return true;
 }
 
 void ScheduleCore::addRow(size_t index)
@@ -544,7 +581,7 @@ void ScheduleCore::addRow(size_t index)
 
 bool ScheduleCore::removeRow(size_t row)
 {
-    if (row < getRowCount() == false) { std::cout << "ScheduleCore::removeRow: No row found at index: " << row << std::endl; return false; }
+    if (existsRowAtIndex(row) == false) { return false; }
 
     for (size_t i = 0; i < m_schedule.size(); i++)
     {
@@ -572,7 +609,7 @@ std::vector<ElementBase*> ScheduleCore::getRow(size_t index)
 {
     std::vector<ElementBase*> elementData = {};
 
-    if (index < getRowCount() == false) { std::cout << "ScheduleCore::getRow: No row found at index: " << index << std::endl; return elementData; }
+    if (existsRowAtIndex(index) == false) { return elementData; }
 
     for (size_t col = 0; col < getColumnCount(); col++)
     {
@@ -584,7 +621,7 @@ std::vector<ElementBase*> ScheduleCore::getRow(size_t index)
 
 bool ScheduleCore::setRow(size_t index, std::vector<ElementBase*> elementData)
 {
-    if (getColumn(0)->rows.size() - 1 < index) { std::cout << "ScheduleCore::setRow: No row found at index: " << index << std::endl; return false; }
+    if (existsRowAtIndex(index) == false) { return false; }
 
     for (size_t col = 0; col < getColumnCount(); col++)
     {

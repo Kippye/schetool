@@ -642,6 +642,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							ImGui::EndTooltip();
 						}
 					}
+                    // END OF for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore->getRowCount(); unsortedRow++)
                     do_not_draw_row:
                     bool b = false; // stupid thing because fsr the label can't be at the end of the loop
 				}
