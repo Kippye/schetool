@@ -220,7 +220,11 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 
 				break;
 			}
-			default: return;
+			default:
+            {
+                ImGui::EndPopup();
+                return;
+            }
 		}
 		break_select_case:
 
@@ -245,22 +249,22 @@ void ElementEditorSubGui::open(size_t column, size_t row, SCHEDULE_TYPE type, co
 	ImGui::OpenPopup("Editor");
 }
 
-bool ElementEditorSubGui::getOpenThisFrame()
+bool ElementEditorSubGui::getOpenThisFrame() const
 {
 	return  m_openThisFrame;
 }
 
-bool ElementEditorSubGui::getOpenLastFrame()
+bool ElementEditorSubGui::getOpenLastFrame() const
 {
 	return  m_openLastFrame;
 }
 
-bool ElementEditorSubGui::getMadeEdits()
+bool ElementEditorSubGui::getMadeEdits() const
 {
 	return m_madeEdits;
 }
 
-std::pair<size_t, size_t> ElementEditorSubGui::getCoordinates()
+std::pair<size_t, size_t> ElementEditorSubGui::getCoordinates() const
 {
 	return {m_editorColumn, m_editorRow};
 }
@@ -272,24 +276,436 @@ int ElementEditorSubGui::filterNumbers(ImGuiInputTextCallbackData* data)
 	return 1;
 }
 
+
+void EditorFilterState::setFilter(const std::shared_ptr<FilterBase>& filter)
+{
+    m_filter = filter;
+}
+
+std::shared_ptr<FilterBase>& EditorFilterState::getFilter()
+{
+    return m_filter;
+}
+
+void EditorFilterState::setType(SCHEDULE_TYPE type)
+{
+    if (type == SCH_LAST || type == SCH_WEEKDAY) { return; }
+    m_type = type;
+}
+
+SCHEDULE_TYPE EditorFilterState::getType() const
+{
+    return m_type;
+}
+
+bool EditorFilterState::hasValidFilter() const
+{
+    if (m_filter)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore) : Gui(ID) 
+{
+	m_scheduleCore = scheduleCore;
+}
+
+void FilterEditorSubGui::draw(Window& window, Input& input)
+{
+	m_openLastFrame = m_openThisFrame;
+
+	if (ImGui::BeginPopupEx(ImGui::GetID("Filter Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
+	{
+        if (m_scheduleCore->existsColumnAtIndex(m_editorColumn) == false)
+        {
+            printf("FilterEditorSubGui::draw(): There is no Column at the editor column index %d\n", m_editorColumn);
+            ImGui::EndPopup();
+            return;
+        }
+        if (m_scheduleCore->getColumn(m_editorColumn)->type != m_filterState.getType())
+        {
+            printf("FilterEditorSubGui::draw(): The types of the Column (%d) and the editor's filter state (%d) do not match!\n", m_scheduleCore->getColumn(m_editorColumn)->type, m_filterState.getType());
+            ImGui::EndPopup();
+            return;
+        }
+
+		// TODO clean up / make the positioning more precise!
+		ImGuiDir dir = ImGuiDir_Down;
+		ImGuiWindow* popup = ImGui::GetCurrentWindow();
+		ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
+		ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
+		//ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
+		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
+
+		bool isPermanentColumn = m_scheduleCore->getColumn(m_editorColumn)->permanent;
+		tm formatTime;
+
+        ImGui::Text("%s is ", m_scheduleCore->getColumn(m_editorColumn)->name.c_str());
+		
+		switch(m_filterState.getType())
+		{
+            case(SCH_BOOL):
+            {
+                bool newValue = std::dynamic_pointer_cast<Filter<bool>>(m_filterState.getFilter())->getPassValue();
+                if (ImGui::Checkbox(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
+                {
+                    std::dynamic_pointer_cast<Filter<bool>>(m_filterState.getFilter())->setPassValue(newValue);
+                }
+                break;
+            }
+            case(SCH_NUMBER):
+            {
+                int newValue = std::dynamic_pointer_cast<Filter<int>>(m_filterState.getFilter())->getPassValue();
+                if (ImGui::InputInt(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
+                {
+                    std::dynamic_pointer_cast<Filter<int>>(m_filterState.getFilter())->setPassValue(newValue);
+                }
+                break;
+            }
+            case(SCH_DECIMAL):
+            {
+                double newValue = std::dynamic_pointer_cast<Filter<double>>(m_filterState.getFilter())->getPassValue();
+                if (ImGui::InputDouble(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
+                {
+                    std::dynamic_pointer_cast<Filter<double>>(m_filterState.getFilter())->setPassValue(newValue);
+                }
+                break;
+            }
+            case(SCH_TEXT):
+            {
+                std::string value = std::dynamic_pointer_cast<Filter<std::string>>(m_filterState.getFilter())->getPassValue();
+                value.reserve(ELEMENT_TEXT_MAX_LENGTH);
+                char* buf = value.data();
+                //ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
+                if (ImGui::InputTextMultiline(std::string("##filterEditor").append(std::to_string(m_editorColumn)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+                {
+                    std::dynamic_pointer_cast<Filter<std::string>>(m_filterState.getFilter())->setPassValue(std::string(buf));
+                }
+
+                break;
+            }
+            // case(SCH_SELECT):
+            // {
+                // SelectContainer value = m_scheduleCore->getElementValueConstRef<SelectContainer>(column, row);
+                // auto selection = value.getSelection();
+                // const std::vector<std::string>& optionNames = m_scheduleCore->getColumn(column)->selectOptions.getOptions();
+
+                // std::vector<int> selectionIndices = {};
+
+                // // error fix attempt: there should never be more selected that options
+                // while (selection.size() > optionNames.size())
+                // {
+                //     printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), optionNames.size());
+                //     selection.erase(--selection.end());
+                // }
+
+                // for (size_t s: selection)
+                // {
+                //     // error fix attempt: there should never be selection indices that are >= optionNames.size()
+                //     if (s >= optionNames.size())
+                //     {
+                //         printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, optionNames.size());
+                //         selection.erase(s);
+                //     }
+                // }
+
+                // size_t selectedCount = selection.size();
+
+                // for (size_t s: selection)
+                // {
+                //     selectionIndices.push_back(s);
+                // }
+
+                // // sort indices so that the same options are always displayed in the same order
+                // std::sort(std::begin(selectionIndices), std::end(selectionIndices));
+
+                // float displayedChars = 0;
+                // float pixelsPerCharacter = 12.0f;
+                // float columnWidth = ImGui::GetColumnWidth(column);
+
+                // for (size_t i = 0; i < selectedCount; i++)
+                // {
+                //     // TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
+                //     if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                //     {
+                //         // left clicking opens the editor like the user would expect
+                //         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+                //         {
+                //             if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                //             {
+                //                 elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                //                 elementEditor->setEditorValue(value);
+                //             }
+                //         }
+                //         // right clicking erases the option - bonus feature
+                //         else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                //         {
+                //             value.setSelected(selectionIndices[i], false);
+                //             setElementValueSelect.invoke(column, row, value); 
+                //         }
+                //     }
+                //     // HACK to make this show when any of the options is hovered
+                //     if (i != selectedCount - 1 && ImGui::IsItemHovered())
+                //     {
+                //         ImGui::BeginTooltip();
+                //         ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
+                //         ImGui::EndTooltip();
+                //     }
+
+                //     displayedChars += optionNames[selectionIndices[i]].length();
+                //     if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
+                //     {
+                //         ImGui::SameLine();
+                //     }
+                //     // ImGui::PopStyleColor(1);
+                // }
+
+                // // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
+                // if (selectedCount == 0)
+                // {
+                //     if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                //     {
+                //         if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                //         {
+                //             elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                //             elementEditor->setEditorValue(value);
+                //         }
+                //     }
+                // }
+                // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                // {
+                //     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                //     if (column == editorColumn && row == editorRow)
+                //     {
+                //         elementEditor->draw(window, input);
+                //         // was editing this Element, made edits and just closed the editor. apply the edits
+                //         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                //         {
+                //             setElementValueSelect.invoke(column, row, elementEditor->getEditorValue(value));
+                //         }
+                //     }
+                // }
+
+                // break;
+            // }
+            case(SCH_TIME):
+            {
+                TimeContainer value = std::dynamic_pointer_cast<Filter<TimeContainer>>(m_filterState.getFilter())->getPassValue();
+
+                // Button displaying the Time of the current Time element
+                if (ImGui::Button(value.getString().append("##filterEditor").append(std::to_string(m_editorColumn)).c_str()))
+                {
+                    // TODO: OPEN EDITOR TO EDIT VALUE
+                    // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                    // {
+                    //     elementEditor->setEditorValue(value);
+                    //     elementEditor->open(column, row, SCH_TIME, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                    // }
+                }
+                // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                // {
+                //     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                //     if (column == editorColumn && row == editorRow)
+                //     {
+                //         elementEditor->draw(window, input);
+                //         // was editing this Element, made edits and just closed the editor. apply the edits
+                //         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                //         {
+                //             setElementValueTime.invoke(column, row, elementEditor->getEditorValue(value));
+                //         }
+                //     }
+                // }
+ 
+                break;
+            }
+            case(SCH_DATE):
+            {
+                DateContainer value = std::dynamic_pointer_cast<Filter<DateContainer>>(m_filterState.getFilter())->getPassValue();
+            
+                // Button displaying the date of the current Date element
+                if (ImGui::Button(value.getString().append("##filterEditor").append(std::to_string(m_editorColumn)).c_str()))
+                {
+                    // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                    // {
+                    //     elementEditor->setEditorValue(value);
+                    //     elementEditor->open(column, row, SCH_DATE, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                    // }
+                }
+                // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                // {
+                //     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                //     if (column == editorColumn && row == editorRow)
+                //     {
+                //         elementEditor->draw(window, input);
+                //         // was editing this Element, made edits and just closed the editor. apply the edits
+                //         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                //         {
+                //             setElementValueDate.invoke(column, row, elementEditor->getEditorValue(value));
+                //         }
+                //     }
+                // }
+                
+                break;
+            }
+			default:
+            {
+                ImGui::EndPopup();
+                return;
+            }
+		}
+
+        ImGui::SameLine();
+        if (ImGui::SmallButton("X##removeFilter"))
+        {
+            removeColumnFilter.invoke(m_editorColumn, m_editorFilter);
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (ImGui::Button("Apply"))
+        {
+            addColumnFilter.invoke(m_editorColumn, m_filterState.getFilter());
+            ImGui::CloseCurrentPopup();
+        }
+
+		m_openThisFrame = true;
+		ImGui::EndPopup();
+	}
+	else
+	{
+		m_openThisFrame = false;
+	}
+}
+
+void FilterEditorSubGui::open_edit(size_t column, size_t filterIndex, const ImRect& avoidRect)
+{
+    if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
+
+	m_editorColumn = column;
+    m_editorFilter = filterIndex;
+	m_avoidRect = avoidRect;
+
+	m_madeEdits = false;
+
+    m_filterState.setType(m_scheduleCore->getColumn(column)->type);
+    m_filterState.setFilter(m_scheduleCore->getColumn(column)->filters.at(filterIndex));
+
+	ImGui::OpenPopup("Filter Editor");
+}
+
+void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
+{ 
+    if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
+
+	m_editorColumn = column;
+	m_avoidRect = avoidRect;
+
+	m_madeEdits = false;
+
+    SCHEDULE_TYPE columnType = m_scheduleCore->getColumn(column)->type;
+
+    m_filterState.setType(columnType);
+
+    switch(columnType)
+    {
+        case(SCH_BOOL):
+        {
+            m_filterState.setFilter(std::make_shared<Filter<bool>>(false));
+            break;
+        }
+        case(SCH_NUMBER):
+        {
+            m_filterState.setFilter(std::make_shared<Filter<int>>(0));
+            break;
+        }
+        case(SCH_DECIMAL):
+        {
+            m_filterState.setFilter(std::make_shared<Filter<double>>(0.0));
+            break;
+        }
+        case(SCH_TEXT):
+        {
+            m_filterState.setFilter(std::make_shared<Filter<std::string>>(std::string("")));
+            break;
+        }
+        // case(SCH_SELECT):
+        // {
+        //     Filter filter = Filter(SelectContainer());
+        //     m_filterState.setFilter(std::make_shared(&filter));
+        //     break;
+        // }
+        case(SCH_TIME):
+        {
+            m_filterState.setFilter(std::make_shared<Filter<TimeContainer>>(TimeContainer(0, 0)));
+            break;
+        }
+        case(SCH_DATE):
+        {
+            m_filterState.setFilter(std::make_shared<Filter<DateContainer>>(DateContainer(tm(), true, 0)));
+            break;
+        }
+        default:
+        {
+            printf("FilterEditorSubGui::open_create(%zu): Creating filters for type %d has not been implemented\n", column, columnType);
+            return;
+        }
+    }
+
+	ImGui::OpenPopup("Filter Editor");
+}
+
+bool FilterEditorSubGui::getOpenThisFrame() const
+{
+	return  m_openThisFrame;
+}
+
+bool FilterEditorSubGui::getOpenLastFrame() const
+{
+	return  m_openLastFrame;
+}
+
+bool FilterEditorSubGui::getMadeEdits() const
+{
+	return m_madeEdits;
+}
+
+size_t FilterEditorSubGui::getFilterColumn() const
+{
+	return m_editorColumn;
+}
+
+
 void ScheduleGui::setScheduleCore(const ScheduleCore& scheduleCore)
 {
 	m_scheduleCore = &scheduleCore;
 
 	addSubGui("ElementEditorSubGui", new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
+	addSubGui("FilterEditorSubGui", new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore));
 }
 
 void ScheduleGui::draw(Window& window, Input& input)
 {
+    const float FILTER_SPACE_VERTICAL = 0.0f; // 48.0f;
+    const float SCHEDULE_OFFSET = 32.0f; // highestFilterCount * FILTER_SPACE_VERTICAL;
+    const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
+    const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
+    const float CHILD_WINDOW_WIDTH = (float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 6);
+    const float CHILD_WINDOW_HEIGHT = (float)(window.SCREEN_HEIGHT - SCHEDULE_OFFSET - ADD_ROW_BUTTON_HEIGHT - 10.0f);
     //ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
-	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT - 20.0f));
-	ImGui::SetNextWindowPos(ImVec2(0.0, 20.0f));
+	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
+	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 
-	ImGui::Begin(m_ID.c_str(), NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBringToFrontOnFocus);
+	ImGui::Begin(m_ID.c_str(), NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
 		// TODO: For the schedule table, combine
 		// Reorderable, hideable, with headers & ImGuiTableFlags_ScrollY and background colours and context menus in body and custom headers
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-		ImGui::BeginChild("SchedulePanel", ImVec2((float)(window.SCREEN_WIDTH - 58), (float)(window.SCREEN_HEIGHT - 52 - 20)), true);
+	    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_OFFSET));
+		ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
 			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableRowFlags_Headers | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
 			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore->getColumnCount(), tableFlags))
 			{ 
@@ -297,6 +713,52 @@ void ScheduleGui::draw(Window& window, Input& input)
 				{
 					ImGui::TableSetupColumn(m_scheduleCore->getColumn(column)->name.c_str());
 				}
+ 
+                // filters row
+                ImGui::TableNextRow();
+                for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
+                {
+                    ImGui::TableSetColumnIndex(column);
+
+                    if (ImGui::SmallButton(std::string("+##addFilter").append(std::to_string(column)).c_str()))
+                    {
+                        // display the Filter editor to add a filter to this Column
+                        if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+                        {
+                            filterEditor->open_create(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                        }
+                    }
+                        
+                    if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+                    {
+                        if (filterEditor->getFilterColumn() == column)
+                        {
+                            filterEditor->draw(window, input);
+                        }
+                    }
+
+                    const Column* currentColumn = m_scheduleCore->getColumn(column);
+
+                    ImGui::SameLine();
+
+                    for (size_t i = 0; i < currentColumn->filters.size(); i++)
+                    {
+                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->filters.size();
+                        if (ImGui::Button(std::string(m_scheduleCore->getColumn(column)->name).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
+                        {
+                            if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+                            {
+                                filterEditor->open_edit(column, i, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                            }
+                        }
+
+                        if (i < currentColumn->filters.size() - 1)
+                        {
+                            ImGui::SameLine();
+                        }
+                    }
+                }
+
 				// custom header row
 				ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
 				for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
@@ -650,11 +1112,11 @@ void ScheduleGui::draw(Window& window, Input& input)
 			}
 		ImGui::EndChild();
 		ImGui::SameLine();
-		if (ImGui::Button("+", ImVec2(32, (float)(window.SCREEN_HEIGHT - 52 - 20))))
+		if (ImGui::Button("+", ImVec2(ADD_COLUMN_BUTTON_WIDTH, (float)(CHILD_WINDOW_HEIGHT))))
 		{
 			addDefaultColumn.invoke(m_scheduleCore->getColumnCount());
 		}
-		if (ImGui::Button("Add row", ImVec2((float)(window.SCREEN_WIDTH - 58), 32)))
+		if (ImGui::Button("Add row", ImVec2((float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 26), ADD_ROW_BUTTON_HEIGHT)))
 		{
 			addRow.invoke(m_scheduleCore->getRowCount());
 		}

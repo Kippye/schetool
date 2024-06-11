@@ -3,6 +3,19 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
 #include "schedule_gui.h"
+#include "filter.h"
+
+TEST_CASE("EditorFilterState")
+{
+    EditorFilterState editorFilterState;
+
+    CHECK(editorFilterState.hasValidFilter() == false);
+    editorFilterState.setType(SCH_NUMBER);
+    CHECK(editorFilterState.getType() == SCH_NUMBER);
+    editorFilterState.setFilter(std::make_shared<Filter<int>>(420));
+    CHECK(editorFilterState.hasValidFilter() == true);
+    CHECK(std::dynamic_pointer_cast<Filter<int>>(editorFilterState.getFilter())->getPassValue() == 420);
+}
 
 TEST_CASE("ScheduleGui", "[gui]")
 {
@@ -10,8 +23,9 @@ TEST_CASE("ScheduleGui", "[gui]")
     ScheduleGui scheduleGui = ScheduleGui("ScheduleGui");
     scheduleGui.setScheduleCore(scheduleCore);
 
-    SECTION("has ElementEditorSubGui")
+    SECTION("has subguis")
     {
         CHECK(scheduleGui.getSubGui<ElementEditorSubGui>("ElementEditorSubGui"));
+        CHECK(scheduleGui.getSubGui<FilterEditorSubGui>("FilterEditorSubGui"));
     }
 }

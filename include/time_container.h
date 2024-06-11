@@ -49,6 +49,18 @@ struct TimeContainer
         return lhs; // return the result by value (uses move constructor)
     }
 
+    bool operator==(const TimeContainer& other) const
+    {
+        return (getHours() == other.getHours() &&
+                getMinutes() == other.getMinutes());
+    }
+
+    bool operator!=(const TimeContainer& other) const
+    {
+        return (getHours() != other.getHours() ||
+                getMinutes() != other.getMinutes());
+    }
+
     friend bool operator<(const TimeContainer& left, const TimeContainer& right)
     {
         if (left.hours < right.hours) { return true; }

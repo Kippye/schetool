@@ -17,9 +17,6 @@
 #include <Windows.h>
 #endif
 
-// TEMP
-#include "filter.h"
-
 Program::Program()
 {
 	// TODO: load user preferences here!
@@ -45,9 +42,6 @@ Program::Program()
 	{
 		interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")->openScheduleNameModal(NAME_PROMPT_NEW);
 	}
-
-    std::shared_ptr<Filter<DateContainer>> filter = std::make_shared<Filter<DateContainer>>(DateContainer(tm(), true, 0));
-    schedule.addColumnFilter(6, filter);
 }
 
 void Program::loop()

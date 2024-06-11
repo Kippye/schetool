@@ -35,12 +35,21 @@ class Schedule
             redo();
         });
 
-        // modifyColumnSelectOptions
+        // modifyColumnSelectOptions (ElementEditorSubGui)
         std::function<void(const size_t&, const SelectOptionsModification&)> modifyColumnSelectOptionsListener = [&](const size_t& i, const SelectOptionsModification& modification)
         {
             modifyColumnSelectOptions(i, modification);
         };
-        // setElementValue HELL
+        // FilterEditorSubGui
+        std::function<void(const size_t&, const std::shared_ptr<FilterBase>&)> addFilterListener = [&](const size_t& col, const std::shared_ptr<FilterBase>& filter)
+        {
+            addColumnFilter(col, filter);
+        };
+        std::function<void(const size_t&, const size_t&)> removeFilterListener = [&](const size_t& col, const size_t& filterIndex)
+        {
+            removeColumnFilter(col, filterIndex);
+        };
+        // setElementValue HELL (ScheduleGui)
         std::function<void(const size_t&, const size_t&, const bool&)> setElementValueListenerBool = [&](const size_t& col, const size_t& row, const bool& val)
         {
             setElementValue(col, row, val);

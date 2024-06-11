@@ -10,9 +10,20 @@ Gui::Gui(const char* ID)
     m_ID = std::string(ID);
 }
 
-std::string Gui::getID()
+std::string Gui::getID() const
 {
     return m_ID;
+}
+
+bool Gui::getVisible() const
+{
+    return m_visible;
+}
+
+// NOTE: Guis should not modify m_visible themselves. So this is the main way to make them visible / hidden
+void Gui::setVisible(bool visible)
+{
+    m_visible = true;
 }
 
 void Gui::draw(Window& window, Input& input)

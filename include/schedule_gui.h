@@ -9,8 +9,6 @@
 #include <schedule_core.h>
 #include <schedule_column.h>
 
-class Schedule;
-
 class ElementEditorSubGui : public Gui
 {
     private:
@@ -52,23 +50,69 @@ class ElementEditorSubGui : public Gui
         {
             m_editorSelect = value;
         }
-        const TimeContainer& getEditorValue(const TimeContainer& _typeValueUnused)
+        const TimeContainer& getEditorValue(const TimeContainer& _typeValueUnused) const
         {
             return m_editorTime;
         }
-        const DateContainer& getEditorValue(const DateContainer& _typeValueUnused)
+        const DateContainer& getEditorValue(const DateContainer& _typeValueUnused) const
         {
             return m_editorDate;
         }
-        const SelectContainer& getEditorValue(const SelectContainer& _typeValueUnused)
+        const SelectContainer& getEditorValue(const SelectContainer& _typeValueUnused) const
         {
             return m_editorSelect;
         }
-        bool getOpenLastFrame();
-        bool getOpenThisFrame();
-        bool getMadeEdits();
-        std::pair<size_t, size_t> getCoordinates();
+        bool getOpenLastFrame() const;
+        bool getOpenThisFrame() const;
+        bool getMadeEdits() const;
+        std::pair<size_t, size_t> getCoordinates() const;
         static int filterNumbers(ImGuiInputTextCallbackData* data);
+};
+
+class EditorFilterState
+{
+    private:
+        std::shared_ptr<FilterBase> m_filter = NULL;
+        SCHEDULE_TYPE m_type = SCH_LAST;
+    public:
+        void setFilter(const std::shared_ptr<FilterBase>& filter);
+        std::shared_ptr<FilterBase>& getFilter();
+        void setType(SCHEDULE_TYPE type);
+        SCHEDULE_TYPE getType() const;
+        // only checks if the filter shared pointer is valid (so not NULL i guess?)
+        bool hasValidFilter() const;
+};
+
+class FilterEditorSubGui : public Gui
+{
+    private:
+        const ScheduleCore* m_scheduleCore = NULL;
+        EditorFilterState m_filterState;
+        bool m_openLastFrame = false;
+        bool m_openThisFrame = false;
+        bool m_madeEdits = false; 
+        int m_editorColumn = -1;
+        size_t m_editorFilter = 0;
+        ImRect m_avoidRect;
+    public:
+        FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore);
+
+        // Events
+        GuiEvent<size_t, std::shared_ptr<FilterBase>> addColumnFilter;
+        GuiEvent<size_t, size_t> removeColumnFilter;
+
+        void draw(Window& window, Input& input) override;
+        // Update the filter editor before editing a Filter.
+        // NOTE: Sets m_madeEdits = false
+        // open the editor to edit a pre-existing Filter
+        void open_edit(size_t column, size_t filterIndex, const ImRect& avoidRect);
+        // open the editor to add a new Filter to a Column
+        void open_create(size_t column, const ImRect& avoidRect);
+
+        bool getOpenLastFrame() const;
+        bool getOpenThisFrame() const;
+        bool getMadeEdits() const;
+        size_t getFilterColumn() const;
 };
 
 class ScheduleGui : public Gui

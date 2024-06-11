@@ -22,6 +22,12 @@ void Schedule::init(Input& input, Interface& interface)
         {
             elementEditorSubGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener); 
         }
+
+        if (auto filterEditorSubGui = scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+        {
+            filterEditorSubGui->addColumnFilter.addListener(addFilterListener); 
+            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener); 
+        }
         
         scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
         scheduleGui->setElementValueNumber.addListener(setElementValueListenerNumber);
