@@ -82,7 +82,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
                 {
                     m_madeEdits = true;
                 }
-                				
+
 				break;
 			}
 			case(SCH_SELECT):
@@ -803,263 +803,209 @@ void ScheduleGui::draw(Window& window, Input& input)
 						{
 							case(SCH_BOOL):
 							{
-								try
-								{
-									bool newValue = m_scheduleCore->getElementValueConstRef<bool>(column, row);
-									if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
-									{
-										setElementValueBool.invoke(column, row, newValue);
-									}
-								}
-								catch(const std::exception& e)
-								{
-									std::cerr << e.what() << '\n';
-								}
+                                bool newValue = m_scheduleCore->getElementValueConstRef<bool>(column, row);
+                                if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
+                                {
+                                    setElementValueBool.invoke(column, row, newValue);
+                                }
 								break;
 							}
 							case(SCH_NUMBER):
 							{
-								try
-								{
-									int newValue = m_scheduleCore->getElementValueConstRef<int>(column, row);
-									if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
-									{
-										setElementValueNumber.invoke(column, row, newValue);
-									}
-								}
-								catch(const std::exception& e)
-								{
-									std::cerr << e.what() << '\n';
-								}
+                                int newValue = m_scheduleCore->getElementValueConstRef<int>(column, row);
+                                if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+                                {
+                                    setElementValueNumber.invoke(column, row, newValue);
+                                }
 								break;
 							}
 							case(SCH_DECIMAL):
 							{
-								try
-								{
-									double newValue = m_scheduleCore->getElementValueConstRef<double>(column, row);
-									if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
-									{
-										setElementValueDecimal.invoke(column, row, newValue);
-									}
-								}
-								catch(const std::exception& e)
-								{
-									std::cerr << e.what() << '\n';
-								}
-								
+                                double newValue = m_scheduleCore->getElementValueConstRef<double>(column, row);
+                                if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
+                                {
+                                    setElementValueDecimal.invoke(column, row, newValue);
+                                }
 								break;
 							}
 							case(SCH_TEXT):
 							{
-								try
-								{
-									std::string value = m_scheduleCore->getElementValueConstRef<std::string>(column, row);
-									value.reserve(ELEMENT_TEXT_MAX_LENGTH);
-									char* buf = value.data();
-									//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
-									if (ImGui::InputTextMultiline(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
-									{
-										setElementValueText.invoke(column, row, std::string(buf));
-									}
-									// ImVec2 textSize = ImGui::CalcTextSize(buf);
-									// if (textSize.x == 106 && textSize.y == 16)
-									// {
-									// 	ImGuiInputTextState* state = ImGui::GetInputTextState(ImGui::GetItemID());
-									// 	std::cout << "newline" << std::endl;
-									// 	state->OnKeyPressed((int)'\n');
-									// 	std::cout << buf << std::endl;
-									// }
-									// std::cout << textSize.x << "; " << textSize.y << std::endl;
-								}
-								catch(const std::exception& e)
-								{
-									std::cerr << e.what() << '\n';
-								}
-								
+                                std::string value = m_scheduleCore->getElementValueConstRef<std::string>(column, row);
+                                value.reserve(ELEMENT_TEXT_MAX_LENGTH);
+                                char* buf = value.data();
+                                //ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
+                                if (ImGui::InputTextMultiline(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+                                {
+                                    setElementValueText.invoke(column, row, std::string(buf));
+                                }
+                                // ImVec2 textSize = ImGui::CalcTextSize(buf);
+                                // if (textSize.x == 106 && textSize.y == 16)
+                                // {
+                                // 	ImGuiInputTextState* state = ImGui::GetInputTextState(ImGui::GetItemID());
+                                // 	std::cout << "newline" << std::endl;
+                                // 	state->OnKeyPressed((int)'\n');
+                                // 	std::cout << buf << std::endl;
+                                // }
+                                // std::cout << textSize.x << "; " << textSize.y << std::endl;
 								break;
 							}
 							case(SCH_SELECT):
 							{
-								try 
-								{
-									SelectContainer value = m_scheduleCore->getElementValueConstRef<SelectContainer>(column, row);
-									auto selection = value.getSelection();
-									const std::vector<std::string>& optionNames = m_scheduleCore->getColumn(column)->selectOptions.getOptions();
+                                SelectContainer value = m_scheduleCore->getElementValueConstRef<SelectContainer>(column, row);
+                                auto selection = value.getSelection();
+                                const std::vector<std::string>& optionNames = m_scheduleCore->getColumn(column)->selectOptions.getOptions();
 
-									std::vector<int> selectionIndices = {};
+                                std::vector<int> selectionIndices = {};
 
-                                    // error fix attempt: there should never be more selected that options
-                                    while (selection.size() > optionNames.size())
+                                // error fix attempt: there should never be more selected that options
+                                while (selection.size() > optionNames.size())
+                                {
+                                    printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), optionNames.size());
+                                    selection.erase(--selection.end());
+                                }
+
+                                for (size_t s: selection)
+                                {
+                                    // error fix attempt: there should never be selection indices that are >= optionNames.size()
+                                    if (s >= optionNames.size())
                                     {
-                                        printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), optionNames.size());
-                                        selection.erase(--selection.end());
+                                        printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, optionNames.size());
+                                        selection.erase(s);
                                     }
+                                }
 
-                                    for (size_t s: selection)
+                                size_t selectedCount = selection.size();
+
+                                for (size_t s: selection)
+                                {
+                                    selectionIndices.push_back(s);
+                                }
+
+                                // sort indices so that the same options are always displayed in the same order
+                                std::sort(std::begin(selectionIndices), std::end(selectionIndices));
+
+                                float displayedChars = 0;
+                                float pixelsPerCharacter = 12.0f;
+                                float columnWidth = ImGui::GetColumnWidth(column);
+
+                                for (size_t i = 0; i < selectedCount; i++)
+                                {
+                                    // TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
+                                    if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
-                                        // error fix attempt: there should never be selection indices that are >= optionNames.size()
-                                        if (s >= optionNames.size())
+                                        // left clicking opens the editor like the user would expect
+                                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
                                         {
-                                            printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, optionNames.size());
-                                            selection.erase(s);
+                                            if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                            {
+                                                elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                                elementEditor->setEditorValue(value);
+                                            }
+                                        }
+                                        // right clicking erases the option - bonus feature
+                                        else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                                        {
+                                            value.setSelected(selectionIndices[i], false);
+                                            setElementValueSelect.invoke(column, row, value); 
                                         }
                                     }
+                                    // HACK to make this show when any of the options is hovered
+                                    if (i != selectedCount - 1 && ImGui::IsItemHovered())
+                                    {
+                                        ImGui::BeginTooltip();
+                                        ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
+                                        ImGui::EndTooltip();
+                                    }
 
-                                    size_t selectedCount = selection.size();
+                                    displayedChars += optionNames[selectionIndices[i]].length();
+                                    if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
+                                    {
+                                        ImGui::SameLine();
+                                    }
+                                    // ImGui::PopStyleColor(1);
+                                }
 
-									for (size_t s: selection)
-									{
-										selectionIndices.push_back(s);
-									}
-
-									// sort indices so that the same options are always displayed in the same order
-									std::sort(std::begin(selectionIndices), std::end(selectionIndices));
-
-									float displayedChars = 0;
-									float pixelsPerCharacter = 12.0f;
-									float columnWidth = ImGui::GetColumnWidth(column);
-
-									for (size_t i = 0; i < selectedCount; i++)
-									{
-										// TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
-										if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
-										{
-											// left clicking opens the editor like the user would expect
-											if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-											{
-												if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-												{
-													elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-													elementEditor->setEditorValue(value);
-												}
-											}
-											// right clicking erases the option - bonus feature
-											else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
-											{
-												value.setSelected(selectionIndices[i], false);
-												setElementValueSelect.invoke(column, row, value); 
-											}
-										}
-										// HACK to make this show when any of the options is hovered
-										if (i != selectedCount - 1 && ImGui::IsItemHovered())
-										{
-											ImGui::BeginTooltip();
-											ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
-											ImGui::EndTooltip();
-										}
-
-										displayedChars += optionNames[selectionIndices[i]].length();
-										if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
-										{
-											ImGui::SameLine();
-										}
-										// ImGui::PopStyleColor(1);
-									}
-
-									// TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
-									if (selectedCount == 0)
-									{
-										if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
-										{
-											if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-											{
-												elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-												elementEditor->setEditorValue(value);
-											}
-										}
-									}
-									if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-									{
-										auto [editorColumn, editorRow] = elementEditor->getCoordinates();
-										if (column == editorColumn && row == editorRow)
-										{
-											elementEditor->draw(window, input);
-											// was editing this Element, made edits and just closed the editor. apply the edits
-											if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
-											{
-												setElementValueSelect.invoke(column, row, elementEditor->getEditorValue(value));
-											}
-										}
-									}
-								}
-								catch(const std::exception& e)
-								{
-									std::cerr << e.what() << '\n';
-								}
-
+                                // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
+                                if (selectedCount == 0)
+                                {
+                                    if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                    {
+                                        if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                        {
+                                            elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                            elementEditor->setEditorValue(value);
+                                        }
+                                    }
+                                }
+                                if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                {
+                                    auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                                    if (column == editorColumn && row == editorRow)
+                                    {
+                                        elementEditor->draw(window, input);
+                                        // was editing this Element, made edits and just closed the editor. apply the edits
+                                        if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                                        {
+                                            setElementValueSelect.invoke(column, row, elementEditor->getEditorValue(value));
+                                        }
+                                    }
+                                }
 								break;
 							}
 							case(SCH_TIME):
 							{
-								try
-								{
-									TimeContainer value = m_scheduleCore->getElementValueConstRef<TimeContainer>(column, row);
+                                TimeContainer value = m_scheduleCore->getElementValueConstRef<TimeContainer>(column, row);
 
-									// Button displaying the Time of the current Time element
-									if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
-									{
-										if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-										{
-											elementEditor->setEditorValue(value);
-											elementEditor->open(column, row, SCH_TIME, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-										}
-									}
-									if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-									{
-										auto [editorColumn, editorRow] = elementEditor->getCoordinates();
-										if (column == editorColumn && row == editorRow)
-										{
-											elementEditor->draw(window, input);
-											// was editing this Element, made edits and just closed the editor. apply the edits
-											if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
-											{
-												setElementValueTime.invoke(column, row, elementEditor->getEditorValue(value));
-											}
-										}
-									}
-								}
-								catch(const std::exception& e)
-								{
-									std::cerr << e.what() << '\n';
-								}
-								
+                                // Button displaying the Time of the current Time element
+                                if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                {
+                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                    {
+                                        elementEditor->setEditorValue(value);
+                                        elementEditor->open(column, row, SCH_TIME, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                    }
+                                }
+                                if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                {
+                                    auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                                    if (column == editorColumn && row == editorRow)
+                                    {
+                                        elementEditor->draw(window, input);
+                                        // was editing this Element, made edits and just closed the editor. apply the edits
+                                        if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                                        {
+                                            setElementValueTime.invoke(column, row, elementEditor->getEditorValue(value));
+                                        }
+                                    }
+                                }
 								break;
 							}
 							case(SCH_DATE):
 							{
-								try
-								{
-									auto value = m_scheduleCore->getElementValueConstRef<DateContainer>(column, row);
-								
-									// Button displaying the date of the current Date element
-									if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
-									{
-										if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-										{
-											elementEditor->setEditorValue(value);
-											elementEditor->open(column, row, SCH_DATE, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-										}
-									}
-									if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-									{
-										auto [editorColumn, editorRow] = elementEditor->getCoordinates();
-										if (column == editorColumn && row == editorRow)
-										{
-											elementEditor->draw(window, input);
-											// was editing this Element, made edits and just closed the editor. apply the edits
-											if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
-											{
-												setElementValueDate.invoke(column, row, elementEditor->getEditorValue(value));
-											}
-										}
-									}
-								}
-								catch(const std::exception& e)
-								{
-									std::cerr << e.what() << '\n';
-								}
-								
+                                auto value = m_scheduleCore->getElementValueConstRef<DateContainer>(column, row);
+                            
+                                // Button displaying the date of the current Date element
+                                if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                {
+                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                    {
+                                        elementEditor->setEditorValue(value);
+                                        elementEditor->open(column, row, SCH_DATE, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                    }
+                                }
+                                if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                {
+                                    auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                                    if (column == editorColumn && row == editorRow)
+                                    {
+                                        elementEditor->draw(window, input);
+                                        // was editing this Element, made edits and just closed the editor. apply the edits
+                                        if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                                        {
+                                            setElementValueDate.invoke(column, row, elementEditor->getEditorValue(value));
+                                        }
+                                    }
+                                }
 								break;
 							}
 						}
