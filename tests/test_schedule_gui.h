@@ -14,7 +14,7 @@ TEST_CASE("EditorFilterState")
     CHECK(editorFilterState.getType() == SCH_NUMBER);
     editorFilterState.setFilter(std::make_shared<Filter<int>>(420));
     CHECK(editorFilterState.hasValidFilter() == true);
-    CHECK(std::dynamic_pointer_cast<Filter<int>>(editorFilterState.getFilter())->getPassValue() == 420);
+    CHECK(editorFilterState.getFilter<int>()->getPassValue() == 420);
 }
 
 TEST_CASE("ScheduleGui", "[gui]")

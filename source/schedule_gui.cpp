@@ -78,49 +78,11 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 			}
 			case(SCH_DATE):
 			{
-				ImGui::Text("%s", m_editorDate.getString().c_str());
-				// DATE / CALENDAR
-				if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
-				{
-					m_viewedMonth = m_viewedMonth == 0 ? 11 : m_viewedMonth - 1;
-				}
-				ImGui::SameLine();
-				char monthName[16];
-				formatTime.tm_mon = m_viewedMonth;
-				std::strftime(monthName, sizeof(monthName), "%B", &formatTime);
-				ImGui::Button(std::string(monthName).append(std::string("##Month")).c_str(), ImVec2(96, 0));
-				ImGui::SameLine();
-				if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
-				{
-					m_viewedMonth = m_viewedMonth == 11 ? 0 : m_viewedMonth + 1;
-				}
-				int yearInput = m_viewedYear + 1900;
-				if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
-				{
-					m_viewedYear = DateContainer::convertToValidYear(yearInput);
-				}
-
-				unsigned int daysInMonth = mytime::get_month_day_count(m_viewedYear, m_viewedMonth);
-
-				for (unsigned int day = 1; day <= daysInMonth; day++)
-				{
-					if (ImGui::Button(std::to_string(day).c_str(), ImVec2(24, 24)))
-					{
-						m_editorDate.setYear(m_viewedYear, false);
-						m_editorDate.setMonth(m_viewedMonth);
-						m_editorDate.setMonthDay(day); 
-						m_madeEdits = true;
-					}
-					if (day == m_editorDate.getTime().tm_mday)
-					{
-						// TODO: Highlight this day as selected in the calendar
-					}
-					if (day % 7 != 0)
-					{
-						ImGui::SameLine();
-					}
-				}
-				
+				if (ScheduleGui::displayDateEditor(m_editorDate, m_viewedYear, m_viewedMonth))
+                {
+                    m_madeEdits = true;
+                }
+                				
 				break;
 			}
 			case(SCH_SELECT):
@@ -282,7 +244,7 @@ void EditorFilterState::setFilter(const std::shared_ptr<FilterBase>& filter)
     m_filter = filter;
 }
 
-std::shared_ptr<FilterBase>& EditorFilterState::getFilter()
+std::shared_ptr<FilterBase> EditorFilterState::getFilterBase()
 {
     return m_filter;
 }
@@ -352,40 +314,40 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		{
             case(SCH_BOOL):
             {
-                bool newValue = std::dynamic_pointer_cast<Filter<bool>>(m_filterState.getFilter())->getPassValue();
+                bool newValue = m_filterState.getFilter<bool>()->getPassValue();
                 if (ImGui::Checkbox(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
-                    std::dynamic_pointer_cast<Filter<bool>>(m_filterState.getFilter())->setPassValue(newValue);
+                    m_filterState.getFilter<bool>()->setPassValue(newValue);
                 }
                 break;
             }
             case(SCH_NUMBER):
             {
-                int newValue = std::dynamic_pointer_cast<Filter<int>>(m_filterState.getFilter())->getPassValue();
+                int newValue = m_filterState.getFilter<int>()->getPassValue();
                 if (ImGui::InputInt(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
-                    std::dynamic_pointer_cast<Filter<int>>(m_filterState.getFilter())->setPassValue(newValue);
+                    m_filterState.getFilter<int>()->setPassValue(newValue);
                 }
                 break;
             }
             case(SCH_DECIMAL):
             {
-                double newValue = std::dynamic_pointer_cast<Filter<double>>(m_filterState.getFilter())->getPassValue();
+                double newValue = m_filterState.getFilter<double>()->getPassValue();
                 if (ImGui::InputDouble(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
-                    std::dynamic_pointer_cast<Filter<double>>(m_filterState.getFilter())->setPassValue(newValue);
+                    m_filterState.getFilter<double>()->setPassValue(newValue);
                 }
                 break;
             }
             case(SCH_TEXT):
             {
-                std::string value = std::dynamic_pointer_cast<Filter<std::string>>(m_filterState.getFilter())->getPassValue();
+                std::string value = m_filterState.getFilter<std::string>()->getPassValue();
                 value.reserve(ELEMENT_TEXT_MAX_LENGTH);
                 char* buf = value.data();
                 //ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
                 if (ImGui::InputTextMultiline(std::string("##filterEditor").append(std::to_string(m_editorColumn)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
                 {
-                    std::dynamic_pointer_cast<Filter<std::string>>(m_filterState.getFilter())->setPassValue(std::string(buf));
+                    m_filterState.getFilter<std::string>()->setPassValue(std::string(buf));
                 }
 
                 break;
@@ -496,7 +458,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             // }
             case(SCH_TIME):
             {
-                TimeContainer value = std::dynamic_pointer_cast<Filter<TimeContainer>>(m_filterState.getFilter())->getPassValue();
+                TimeContainer value = m_filterState.getFilter<TimeContainer>()->getPassValue();
 
                 // Button displaying the Time of the current Time element
                 if (ImGui::Button(value.getString().append("##filterEditor").append(std::to_string(m_editorColumn)).c_str()))
@@ -526,7 +488,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
             case(SCH_DATE):
             {
-                DateContainer value = std::dynamic_pointer_cast<Filter<DateContainer>>(m_filterState.getFilter())->getPassValue();
+                DateContainer value = m_filterState.getFilter<DateContainer>()->getPassValue();
             
                 // Button displaying the date of the current Date element
                 if (ImGui::Button(value.getString().append("##filterEditor").append(std::to_string(m_editorColumn)).c_str()))
@@ -536,6 +498,11 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     //     elementEditor->setEditorValue(value);
                     //     elementEditor->open(column, row, SCH_DATE, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                     // }
+                }
+
+                if (ScheduleGui::displayDateEditor(value, m_viewedYear, m_viewedMonth))
+                {
+                    m_filterState.getFilter<DateContainer>()->setPassValue(value);
                 }
                 // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                 // {
@@ -569,7 +536,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 
         if (ImGui::Button("Apply"))
         {
-            addColumnFilter.invoke(m_editorColumn, m_filterState.getFilter());
+            addColumnFilter.invoke(m_editorColumn, m_filterState.getFilterBase());
             ImGui::CloseCurrentPopup();
         }
 
@@ -1205,4 +1172,53 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 
 	if (ImGui::Button("Close"))
 		ImGui::CloseCurrentPopup();
+}
+
+bool ScheduleGui::displayDateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth)
+{
+    bool changedDate = false;
+    ImGui::Text("%s", editorDate.getString().c_str());
+    // DATE / CALENDAR
+    if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
+    {
+        viewedMonth = viewedMonth == 0 ? 11 : viewedMonth - 1;
+    }
+    ImGui::SameLine();
+    char monthName[16];
+    tm formatTime;
+    formatTime.tm_mon = viewedMonth;
+    std::strftime(monthName, sizeof(monthName), "%B", &formatTime);
+    ImGui::Button(std::string(monthName).append(std::string("##Month")).c_str(), ImVec2(96, 0));
+    ImGui::SameLine();
+    if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
+    {
+        viewedMonth = viewedMonth == 11 ? 0 : viewedMonth + 1;
+    }
+    int yearInput = viewedYear + 1900;
+    if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        viewedYear = DateContainer::convertToValidYear(yearInput);
+    }
+
+    unsigned int daysInMonth = mytime::get_month_day_count(viewedYear, viewedMonth);
+
+    for (unsigned int day = 1; day <= daysInMonth; day++)
+    {
+        if (ImGui::Button(std::to_string(day).c_str(), ImVec2(24, 24)))
+        {
+            editorDate.setYear(viewedYear, false);
+            editorDate.setMonth(viewedMonth);
+            editorDate.setMonthDay(day); 
+            changedDate = true;
+        }
+        if (day == editorDate.getTime().tm_mday)
+        {
+            // TODO: Highlight this day as selected in the calendar
+        }
+        if (day % 7 != 0)
+        {
+            ImGui::SameLine();
+        }
+    }
+    return changedDate;
 }

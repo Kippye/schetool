@@ -8,6 +8,7 @@
 #include <select_options.h>
 #include <schedule_core.h>
 #include <schedule_column.h>
+#include "filter.h"
 
 class ElementEditorSubGui : public Gui
 {
@@ -76,7 +77,18 @@ class EditorFilterState
         SCHEDULE_TYPE m_type = SCH_LAST;
     public:
         void setFilter(const std::shared_ptr<FilterBase>& filter);
-        std::shared_ptr<FilterBase>& getFilter();
+        template <typename T>
+        std::shared_ptr<Filter<T>> getFilter()
+        {
+            if (hasValidFilter() == false) 
+            { 
+                printf("EditorFilterState::getFilter(): Can't cast invalid filter pointer! Returning dummy shared_ptr\n"); 
+                auto errorReturn = std::make_shared<Filter<T>>(Filter<T>(T()));
+                return errorReturn; 
+            }
+            return std::dynamic_pointer_cast<Filter<T>>(getFilterBase());
+        }
+        std::shared_ptr<FilterBase> getFilterBase();
         void setType(SCHEDULE_TYPE type);
         SCHEDULE_TYPE getType() const;
         // only checks if the filter shared pointer is valid (so not NULL i guess?)
@@ -93,6 +105,8 @@ class FilterEditorSubGui : public Gui
         bool m_madeEdits = false; 
         int m_editorColumn = -1;
         size_t m_editorFilter = 0;
+        unsigned int m_viewedYear = 0;
+        unsigned int m_viewedMonth = 0;
         ImRect m_avoidRect;
     public:
         FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore);
@@ -157,4 +171,6 @@ class ScheduleGui : public Gui
         // ScheduleGui(const char* ID, Schedule*);
         void setScheduleCore(const ScheduleCore& scheduleCore);
         void draw(Window& window, Input& input) override;
+        // STATIC. Displays a date editor, applies date edits to the provided DateContainer& and uses viewedYear and viewedMonth to store the *viewed* Date. Returns true if the DateContainer was modified.
+        static bool displayDateEditor(DateContainer& dateContainer, unsigned int& viewedYear, unsigned int& viewedMonth);
 };
