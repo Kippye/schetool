@@ -41,6 +41,7 @@ class ElementEditorSubGui : public Gui
         {
             m_editorTime = value;
         }
+        // NOTE: Also sets m_viewedMonth and m_viewedYear to the DateContainer's month and year
         void setEditorValue(const DateContainer& value)
         {
             m_editorDate = value;
@@ -103,8 +104,9 @@ class FilterEditorSubGui : public Gui
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;
         bool m_madeEdits = false; 
-        int m_editorColumn = -1;
-        size_t m_editorFilter = 0;
+        bool m_editing = false;
+        size_t m_editorColumn = 0;
+        size_t m_editorFilterIndex = 0;
         unsigned int m_viewedYear = 0;
         unsigned int m_viewedMonth = 0;
         ImRect m_avoidRect;
@@ -113,6 +115,7 @@ class FilterEditorSubGui : public Gui
 
         // Events
         GuiEvent<size_t, std::shared_ptr<FilterBase>> addColumnFilter;
+        GuiEvent<size_t, size_t, std::shared_ptr<FilterBase>> editColumnFilter;
         GuiEvent<size_t, size_t> removeColumnFilter;
 
         void draw(Window& window, Input& input) override;

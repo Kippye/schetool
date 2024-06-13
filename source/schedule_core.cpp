@@ -353,6 +353,14 @@ bool ScheduleCore::addColumnFilter(size_t column, const std::shared_ptr<FilterBa
     return true;
 }
 
+bool ScheduleCore::replaceColumnFilter(size_t column, size_t index, const std::shared_ptr<FilterBase>& filter)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    
+    getMutableColumn(column)->replaceFilter(index, filter);
+    return true;
+}
+
 bool ScheduleCore::removeColumnFilter(size_t column, size_t index)
 {
     if (existsColumnAtIndex(column) == false) { return false; }

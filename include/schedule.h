@@ -40,15 +40,21 @@ class Schedule
         {
             modifyColumnSelectOptions(i, modification);
         };
+
         // FilterEditorSubGui
         std::function<void(const size_t&, const std::shared_ptr<FilterBase>&)> addFilterListener = [&](const size_t& col, const std::shared_ptr<FilterBase>& filter)
         {
             addColumnFilter(col, filter);
         };
+        std::function<void(const size_t&, const size_t&, const std::shared_ptr<FilterBase>&)> editFilterListener = [&](const size_t& col, const size_t& filterIndex, const std::shared_ptr<FilterBase>& filter)
+        {
+            replaceColumnFilter(col, filterIndex, filter);
+        };
         std::function<void(const size_t&, const size_t&)> removeFilterListener = [&](const size_t& col, const size_t& filterIndex)
         {
             removeColumnFilter(col, filterIndex);
         };
+
         // setElementValue HELL (ScheduleGui)
         std::function<void(const size_t&, const size_t&, const bool&)> setElementValueListenerBool = [&](const size_t& col, const size_t& row, const bool& val)
         {
@@ -149,6 +155,7 @@ class Schedule
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory = true);
         void addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter);
+        void replaceColumnFilter(size_t column, size_t index, const std::shared_ptr<FilterBase>& filter);
         void removeColumnFilter(size_t column, size_t index);
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);

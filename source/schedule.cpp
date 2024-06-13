@@ -26,6 +26,7 @@ void Schedule::init(Input& input, Interface& interface)
         if (auto filterEditorSubGui = scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
         {
             filterEditorSubGui->addColumnFilter.addListener(addFilterListener); 
+            filterEditorSubGui->editColumnFilter.addListener(editFilterListener);
             filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener); 
         }
         
@@ -276,6 +277,14 @@ void Schedule::addColumnFilter(size_t column, const std::shared_ptr<FilterBase>&
     if (m_core.addColumnFilter(column, filter))
     {
         
+    }
+}
+
+void Schedule::replaceColumnFilter(size_t column, size_t index, const std::shared_ptr<FilterBase>& filter)
+{
+    if (m_core.replaceColumnFilter(column, index, filter))
+    {
+
     }
 }
 

@@ -308,8 +308,17 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		bool isPermanentColumn = m_scheduleCore->getColumn(m_editorColumn)->permanent;
 		tm formatTime;
 
+        auto displayRemoveFilterButton = [&]() 
+        {
+            if (ImGui::SmallButton("X##removeFilter"))
+            {
+                removeColumnFilter.invoke(m_editorColumn, m_editorFilterIndex);
+                ImGui::CloseCurrentPopup();
+            }
+        };
+
         ImGui::Text("%s is ", m_scheduleCore->getColumn(m_editorColumn)->name.c_str());
-		
+
 		switch(m_filterState.getType())
 		{
             case(SCH_BOOL):
@@ -354,105 +363,6 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
             // case(SCH_SELECT):
             // {
-                // SelectContainer value = m_scheduleCore->getElementValueConstRef<SelectContainer>(column, row);
-                // auto selection = value.getSelection();
-                // const std::vector<std::string>& optionNames = m_scheduleCore->getColumn(column)->selectOptions.getOptions();
-
-                // std::vector<int> selectionIndices = {};
-
-                // // error fix attempt: there should never be more selected that options
-                // while (selection.size() > optionNames.size())
-                // {
-                //     printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), optionNames.size());
-                //     selection.erase(--selection.end());
-                // }
-
-                // for (size_t s: selection)
-                // {
-                //     // error fix attempt: there should never be selection indices that are >= optionNames.size()
-                //     if (s >= optionNames.size())
-                //     {
-                //         printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, optionNames.size());
-                //         selection.erase(s);
-                //     }
-                // }
-
-                // size_t selectedCount = selection.size();
-
-                // for (size_t s: selection)
-                // {
-                //     selectionIndices.push_back(s);
-                // }
-
-                // // sort indices so that the same options are always displayed in the same order
-                // std::sort(std::begin(selectionIndices), std::end(selectionIndices));
-
-                // float displayedChars = 0;
-                // float pixelsPerCharacter = 12.0f;
-                // float columnWidth = ImGui::GetColumnWidth(column);
-
-                // for (size_t i = 0; i < selectedCount; i++)
-                // {
-                //     // TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
-                //     if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
-                //     {
-                //         // left clicking opens the editor like the user would expect
-                //         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-                //         {
-                //             if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                //             {
-                //                 elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                //                 elementEditor->setEditorValue(value);
-                //             }
-                //         }
-                //         // right clicking erases the option - bonus feature
-                //         else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
-                //         {
-                //             value.setSelected(selectionIndices[i], false);
-                //             setElementValueSelect.invoke(column, row, value); 
-                //         }
-                //     }
-                //     // HACK to make this show when any of the options is hovered
-                //     if (i != selectedCount - 1 && ImGui::IsItemHovered())
-                //     {
-                //         ImGui::BeginTooltip();
-                //         ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
-                //         ImGui::EndTooltip();
-                //     }
-
-                //     displayedChars += optionNames[selectionIndices[i]].length();
-                //     if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
-                //     {
-                //         ImGui::SameLine();
-                //     }
-                //     // ImGui::PopStyleColor(1);
-                // }
-
-                // // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
-                // if (selectedCount == 0)
-                // {
-                //     if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
-                //     {
-                //         if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                //         {
-                //             elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                //             elementEditor->setEditorValue(value);
-                //         }
-                //     }
-                // }
-                // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                // {
-                //     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
-                //     if (column == editorColumn && row == editorRow)
-                //     {
-                //         elementEditor->draw(window, input);
-                //         // was editing this Element, made edits and just closed the editor. apply the edits
-                //         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
-                //         {
-                //             setElementValueSelect.invoke(column, row, elementEditor->getEditorValue(value));
-                //         }
-                //     }
-                // }
 
                 // break;
             // }
@@ -493,30 +403,20 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 // Button displaying the date of the current Date element
                 if (ImGui::Button(value.getString().append("##filterEditor").append(std::to_string(m_editorColumn)).c_str()))
                 {
-                    // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                    // {
-                    //     elementEditor->setEditorValue(value);
-                    //     elementEditor->open(column, row, SCH_DATE, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                    // }
+
+                }
+
+                if (m_editing == true)
+                {
+                    ImGui::SameLine();
+                    displayRemoveFilterButton();
                 }
 
                 if (ScheduleGui::displayDateEditor(value, m_viewedYear, m_viewedMonth))
                 {
-                    m_filterState.getFilter<DateContainer>()->setPassValue(value);
+                    // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false
+                    m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime()));
                 }
-                // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                // {
-                //     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
-                //     if (column == editorColumn && row == editorRow)
-                //     {
-                //         elementEditor->draw(window, input);
-                //         // was editing this Element, made edits and just closed the editor. apply the edits
-                //         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
-                //         {
-                //             setElementValueDate.invoke(column, row, elementEditor->getEditorValue(value));
-                //         }
-                //     }
-                // }
                 
                 break;
             }
@@ -527,16 +427,22 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
 		}
 
-        ImGui::SameLine();
-        if (ImGui::SmallButton("X##removeFilter"))
+        if (m_editing == true && m_filterState.getType() != SCH_DATE)
         {
-            removeColumnFilter.invoke(m_editorColumn, m_editorFilter);
-            ImGui::CloseCurrentPopup();
+            ImGui::SameLine();
+            displayRemoveFilterButton();
         }
 
-        if (ImGui::Button("Apply"))
+        if (ImGui::Button(m_editing == true ? "Apply" : "Create"))
         {
-            addColumnFilter.invoke(m_editorColumn, m_filterState.getFilterBase());
+            if (m_editing)
+            {
+                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, m_filterState.getFilterBase());
+            }
+            else
+            {
+                addColumnFilter.invoke(m_editorColumn, m_filterState.getFilterBase());
+            }
             ImGui::CloseCurrentPopup();
         }
 
@@ -554,8 +460,13 @@ void FilterEditorSubGui::open_edit(size_t column, size_t filterIndex, const ImRe
     if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
 
 	m_editorColumn = column;
-    m_editorFilter = filterIndex;
+    m_editorFilterIndex = filterIndex;
+    m_editing = true;
 	m_avoidRect = avoidRect;
+
+    DateContainer currentDate = DateContainer::getCurrentSystemDate();
+    m_viewedYear = currentDate.getTime().tm_year;
+    m_viewedMonth = currentDate.getTime().tm_mon;
 
 	m_madeEdits = false;
 
@@ -570,7 +481,12 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
     if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
 
 	m_editorColumn = column;
+    m_editing = false;
 	m_avoidRect = avoidRect;
+
+    DateContainer currentDate = DateContainer::getCurrentSystemDate();
+    m_viewedYear = currentDate.getTime().tm_year;
+    m_viewedMonth = currentDate.getTime().tm_mon;
 
 	m_madeEdits = false;
 
@@ -1161,7 +1077,8 @@ bool ScheduleGui::displayDateEditor(DateContainer& editorDate, unsigned int& vie
         {
             // TODO: Highlight this day as selected in the calendar
         }
-        if (day % 7 != 0)
+        // sameline when not the last day of the week and not the last day of the month (trailing sameline = bad)
+        if (day % 7 != 0 && day < daysInMonth)
         {
             ImGui::SameLine();
         }

@@ -52,6 +52,7 @@ class ScheduleCore
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
         bool addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter);
+        bool replaceColumnFilter(size_t column, size_t index, const std::shared_ptr<FilterBase>& filter);
         bool removeColumnFilter(size_t column, size_t index);
         // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);

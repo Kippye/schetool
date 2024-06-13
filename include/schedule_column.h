@@ -91,6 +91,7 @@ struct Column
     const ElementBase* getElementConst(size_t index) const;
 
     void addFilter(const std::shared_ptr<FilterBase>& filter);
+    void replaceFilter(size_t index, const std::shared_ptr<FilterBase>& filter);
     void removeFilter(size_t index);
 };
 
