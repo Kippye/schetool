@@ -35,6 +35,36 @@ bool EditorFilterState::hasValidFilter() const
 }
 
 
+ComparisonOptions TypeComparisonOptions::getOptions(SCHEDULE_TYPE type)
+{
+    if (m_comparisonOptions.find(type) == m_comparisonOptions.end()) { printf("TypeComparisonOptions::getComparisonOptions(%d): No comparison options for type.\n", type); return ComparisonOptions("" , 0); }
+
+    return m_comparisonOptions.at(type);
+}
+
+int TypeComparisonOptions::getOptionSelection(SCHEDULE_TYPE type)
+{
+    if (m_selectedOptions.find(type) == m_selectedOptions.end()) { printf("TypeComparisonOptions::getOptionSelection(%d): No selection for type.\n", type); return 0; }
+    return m_selectedOptions.at(type);
+}
+
+void TypeComparisonOptions::setOptionSelection(SCHEDULE_TYPE type, int selection)
+{
+    if (m_comparisonOptions.find(type) == m_comparisonOptions.end()) { printf("TypeComparisonOptions::setOptionSelection(%d, %d): No comparison options for type.\n", type, selection); return; }
+    if (m_selectedOptions.find(type) == m_selectedOptions.end()) { printf("TypeComparisonOptions::setOptionSelection(%d, %d): No selection for type.\n", type, selection); return; }
+
+    size_t optionCount = getOptions(type).count;
+
+    if (selection >= optionCount) 
+    { 
+        printf("TypeComparisonOptions::setOptionSelection(%d, %d): Selection higher than amount of options (%td). Clamping it to %td.\n", type, selection, optionCount, optionCount - 1);
+        selection = optionCount - 1;
+    }
+
+    m_selectedOptions.at(type) = selection;
+}
+
+
 FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore) : Gui(ID) 
 {
 	m_scheduleCore = scheduleCore;
@@ -133,41 +163,29 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             case(SCH_TIME):
             {
                 TimeContainer value = m_filterState.getFilter<TimeContainer>()->getPassValue();
+                int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_TIME);
 
-                // Button displaying the Time of the current Time element
-                if (ImGui::Button(value.getString().append("##filterEditor").append(std::to_string(m_editorColumn)).c_str()))
+                if (ImGui::Combo("##filterEditorTimeComparison", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_TIME).string))
                 {
-                    // TODO: OPEN EDITOR TO EDIT VALUE
-                    // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                    // {
-                    //     elementEditor->setEditorValue(value);
-                    //     elementEditor->open(column, row, SCH_TIME, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                    // }
+                    m_typeComparisonOptions.setOptionSelection(SCH_TIME, comparisonOptionTemp);
                 }
-                // if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                // {
-                //     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
-                //     if (column == editorColumn && row == editorRow)
-                //     {
-                //         elementEditor->draw(window, input);
-                //         // was editing this Element, made edits and just closed the editor. apply the edits
-                //         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
-                //         {
-                //             setElementValueTime.invoke(column, row, elementEditor->getEditorValue(value));
-                //         }
-                //     }
-                // }
+
+                if (gui_templates::TimeEditor(value))
+                {
+                    m_filterState.getFilter<TimeContainer>()->setPassValue(value);
+                }
  
                 break;
             }
             case(SCH_DATE):
             {
                 DateContainer value = m_filterState.getFilter<DateContainer>()->getPassValue();
+                int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_DATE);
             
                 // Switch between a relative and absolute filter
-                if (ImGui::Combo("##filterEditorDateMode", (int*)&m_selectedDateMode, m_dateModeOptions))
+                if (ImGui::Combo("##filterEditorDateMode", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_DATE).string))
                 {
-                    if (m_selectedDateMode == DateMode::Absolute)
+                    if ((DateMode)comparisonOptionTemp == DateMode::Absolute)
                     {
                         m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), false));
                     }
@@ -175,6 +193,8 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     {
                         m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), true));
                     }
+
+                    m_typeComparisonOptions.setOptionSelection(SCH_DATE, comparisonOptionTemp);
                 }
 
                 ImGui::SameLine();
@@ -194,6 +214,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 
                 if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth, false))
                 {
+                    m_typeComparisonOptions.setOptionSelection(SCH_DATE, 1);
                     m_selectedDateMode = DateMode::Absolute;
                     // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false
                     m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime()));

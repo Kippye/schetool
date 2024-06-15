@@ -1,3 +1,4 @@
+#include <regex>
 #include "gui_templates.h"
 
 bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate)
@@ -125,4 +126,48 @@ void gui_templates::TextWithBackground(const ImVec2& size, const char *fmt, ...)
     ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::Button(text, size);
     ImGui::PopItemFlag();
+}
+
+bool gui_templates::TimeEditor(TimeContainer& editorTime)
+{
+    bool madeEdits = false;
+    tm formatTime;
+    formatTime.tm_hour = editorTime.getHours();
+    char hourBuf[3];
+    std::strftime(hourBuf, sizeof(hourBuf), "%H", &formatTime);
+    ImGui::SetNextItemWidth(24);
+    if (ImGui::InputText("##TimeEditorHours", hourBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
+    {
+        int hourValue = 0;
+        if (std::regex_match(hourBuf, std::regex("[0-9]+")))
+        {
+            hourValue = std::stoi(hourBuf);
+        }
+        editorTime.setTime(hourValue, editorTime.getMinutes());
+        madeEdits = true;
+    }
+    ImGui::SameLine();
+    formatTime.tm_min = editorTime.getMinutes();
+    char minBuf[3];
+    std::strftime(minBuf, sizeof(minBuf), "%M", &formatTime);
+    ImGui::SetNextItemWidth(24);
+    if (ImGui::InputText("##TimeEditorMinutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
+    {
+        int minValue = 0;
+        if (std::regex_match(minBuf, std::regex("[0-9]+")))
+        {
+            minValue = std::stoi(minBuf);
+        }
+        editorTime.setTime(editorTime.getHours(), minValue);
+        madeEdits = true;
+    }
+
+    return madeEdits;
+}
+
+int gui_callbacks::filterNumbers(ImGuiInputTextCallbackData* data)
+{
+	if (data->EventChar > 47 && data->EventChar < 58)
+		return 0;
+	return 1;
 }

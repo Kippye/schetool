@@ -29,36 +29,10 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 		{
 			case(SCH_TIME):
 			{
-				// TIME
-				formatTime.tm_hour = m_editorTime.getHours();
-				char hourBuf[3];
-				std::strftime(hourBuf, sizeof(hourBuf), "%H", &formatTime);
-				ImGui::SetNextItemWidth(24);
-				if (ImGui::InputText("##EditTimeHours", hourBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, filterNumbers))
-				{
-					int hourValue = 0;
-					if (std::regex_match(hourBuf, std::regex("[0-9]+")))
-					{
-						hourValue = std::stoi(hourBuf);
-					}
-					m_editorTime.setTime(hourValue, m_editorTime.getMinutes());
-					m_madeEdits = true;
-				}
-				ImGui::SameLine();
-				formatTime.tm_min = m_editorTime.getMinutes();
-				char minBuf[3];
-				std::strftime(minBuf, sizeof(minBuf), "%M", &formatTime);
-				ImGui::SetNextItemWidth(24);
-				if (ImGui::InputText("##Minutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, filterNumbers))
-				{
-					int minValue = 0;
-					if (std::regex_match(minBuf, std::regex("[0-9]+")))
-					{
-						minValue = std::stoi(minBuf);
-					}
-					m_editorTime.setTime(m_editorTime.getHours(), minValue);
-					m_madeEdits = true;
-				}
+                if (gui_templates::TimeEditor(m_editorTime))
+                {
+                    m_madeEdits = true;
+                }
 
 				break;
 			}
@@ -215,11 +189,4 @@ bool ElementEditorSubGui::getMadeEdits() const
 std::pair<size_t, size_t> ElementEditorSubGui::getCoordinates() const
 {
 	return {m_editorColumn, m_editorRow};
-}
-
-int ElementEditorSubGui::filterNumbers(ImGuiInputTextCallbackData* data)
-{
-	if (data->EventChar > 47 && data->EventChar < 58)
-		return 0;
-	return 1;
 }

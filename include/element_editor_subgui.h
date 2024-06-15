@@ -65,5 +65,4 @@ class ElementEditorSubGui : public Gui
         bool getOpenThisFrame() const;
         bool getMadeEdits() const;
         std::pair<size_t, size_t> getCoordinates() const;
-        static int filterNumbers(ImGuiInputTextCallbackData* data);
 };
