@@ -5,6 +5,7 @@
 #include <vector>
 #include <ctime>
 #include <numeric>
+#include "filter.h"
 #include <schedule_core.h>
 #include <element_base.h>
 
@@ -340,6 +341,17 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
     if (existsColumnAtIndex(column) == false) { return false; }
     
     if (m_schedule.at(column).selectOptions.applyModification(selectOptionsModification) == false) { std::cout << "ScheduleCore::modifySelectOptions: Applying the following modification failed:"; std::cout << selectOptionsModification.getDataString(); return false; }
+    
+    if (m_schedule.at(column).type == SCH_SELECT)
+    {
+        for (std::shared_ptr<FilterBase> filter: m_schedule.at(column).filters)
+        {
+            std::shared_ptr<Filter<SelectContainer>> filterPtr = std::dynamic_pointer_cast<Filter<SelectContainer>>(filter); 
+            SelectContainer updatedValue = filterPtr->getPassValue();
+            updatedValue.update(getColumnSelectOptions(column).getLastChange(), getColumnSelectOptions(column).getOptionCount());
+            filterPtr->setPassValue(updatedValue);
+        }
+    }
 
     sortColumns();
     return true;

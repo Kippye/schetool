@@ -30,6 +30,17 @@ struct SelectContainer
         // updated from SelectOptions each update
         size_t m_optionCount = 0;
     public:
+        // NOTE: Still passes if the SelectContainers are associated with different SelectOptions
+        bool operator==(const SelectContainer& other)
+        {
+            return m_selection == other.getSelection();
+        }
+
+        bool operator!=(const SelectContainer& other)
+        {
+            return m_selection != other.getSelection();
+        }
+
         friend bool operator<(const SelectContainer& left, const SelectContainer& right)
         {
             if (left.m_selection.size() == 0)

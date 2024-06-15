@@ -155,11 +155,50 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 
                 break;
             }
-            // case(SCH_SELECT):
-            // {
+            case(SCH_SELECT):
+            {
+				SelectContainer value = m_filterState.getFilter<SelectContainer>()->getPassValue();
 
-                // break;
-            // }
+                int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_SELECT);
+
+                if (ImGui::Combo("##filterEditorSelectComparison", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_SELECT).string))
+                {
+                    m_typeComparisonOptions.setOptionSelection(SCH_SELECT, comparisonOptionTemp);
+                }
+
+                // Remove button
+                if (m_editing == true)
+                {
+                    ImGui::SameLine();
+                    displayRemoveFilterButton();
+                }
+
+                auto selection = value.getSelection();
+				const std::vector<std::string>& optionNames = m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptions();
+
+                // Options
+				for (size_t i = 0; i < optionNames.size(); i++)
+				{
+					bool selected = selection.find(i) != selection.end();
+
+                    if (ImGui::Checkbox(std::string("##SelectFilterEditorCheck").append(std::to_string(i)).c_str(), &selected))
+                    {
+                        value.setSelected(i, selected);
+                        m_filterState.getFilter<SelectContainer>()->setPassValue(value);
+                    }
+
+                    ImGui::SameLine();
+
+					std::string optionName = std::string(optionNames[i]);
+
+					if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
+					{
+						value.setSelected(i, selected);
+                        m_filterState.getFilter<SelectContainer>()->setPassValue(value);
+					}
+				}
+                break;
+            }
             case(SCH_TIME):
             {
                 TimeContainer value = m_filterState.getFilter<TimeContainer>()->getPassValue();
@@ -169,6 +208,8 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 {
                     m_typeComparisonOptions.setOptionSelection(SCH_TIME, comparisonOptionTemp);
                 }
+
+                ImGui::SameLine();
 
                 if (gui_templates::TimeEditor(value))
                 {
@@ -229,7 +270,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
 		}
 
-        if (m_editing == true && m_filterState.getType() != SCH_DATE)
+        if (m_editing == true && (m_filterState.getType() != SCH_SELECT && m_filterState.getType() != SCH_DATE))
         {
             ImGui::SameLine();
             displayRemoveFilterButton();
@@ -324,12 +365,11 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
             m_filterState.setFilter(std::make_shared<Filter<std::string>>(std::string("")));
             break;
         }
-        // case(SCH_SELECT):
-        // {
-        //     Filter filter = Filter(SelectContainer());
-        //     m_filterState.setFilter(std::make_shared(&filter));
-        //     break;
-        // }
+        case(SCH_SELECT):
+        {
+            m_filterState.setFilter(std::make_shared<Filter<SelectContainer>>(SelectContainer()));
+            break;
+        }
         case(SCH_TIME):
         {
             m_filterState.setFilter(std::make_shared<Filter<TimeContainer>>(TimeContainer(0, 0)));
