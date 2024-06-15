@@ -79,7 +79,9 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
         };
 
-        ImGui::Text("%s is ", m_scheduleCore->getColumn(m_editorColumn)->name.c_str());
+        gui_templates::TextWithBackground("%s", m_scheduleCore->getColumn(m_editorColumn)->name.c_str());
+
+        ImGui::SameLine();
 
 		switch(m_filterState.getType())
 		{
@@ -162,20 +164,37 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             {
                 DateContainer value = m_filterState.getFilter<DateContainer>()->getPassValue();
             
-                // Button displaying the date of the current Date element
-                if (ImGui::Button(value.getString().append("##filterEditor").append(std::to_string(m_editorColumn)).c_str()))
+                // Switch between a relative and absolute filter
+                if (ImGui::Combo("##filterEditorDateMode", (int*)&m_selectedDateMode, m_dateModeOptions))
                 {
-
+                    if (m_selectedDateMode == DateMode::Absolute)
+                    {
+                        m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), false));
+                    }
+                    else
+                    {
+                        m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), true));
+                    }
                 }
 
+                ImGui::SameLine();
+
+                // !!! update value, might have been modified above
+                value = m_filterState.getFilter<DateContainer>()->getPassValue();
+
+                // Display the date of the current Date element
+                gui_templates::TextWithBackground("%s##filterEditor%zu", value.getString().c_str(), m_editorColumn);
+
+                // If editing, display the remove filter button here, before the Date editor 
                 if (m_editing == true)
                 {
                     ImGui::SameLine();
                     displayRemoveFilterButton();
                 }
 
-                if (gui_template_funcs::dateEditor(value, m_viewedYear, m_viewedMonth))
+                if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth))
                 {
+                    m_selectedDateMode = DateMode::Absolute;
                     // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false
                     m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime()));
                 }
@@ -235,6 +254,12 @@ void FilterEditorSubGui::open_edit(size_t column, size_t filterIndex, const ImRe
     m_filterState.setType(m_scheduleCore->getColumn(column)->type);
     m_filterState.setFilter(m_scheduleCore->getColumn(column)->filters.at(filterIndex));
 
+    // set m_selectedDateMode based on the filter's Date pass value if it is a Date filter
+    if (m_filterState.getType() == SCH_DATE)
+    {
+        m_selectedDateMode = m_filterState.getFilter<DateContainer>()->getPassValue().getIsRelative() ? DateMode::Relative : DateMode::Absolute;
+    }
+
 	ImGui::OpenPopup("Filter Editor");
 }
 
@@ -291,6 +316,8 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
         }
         case(SCH_DATE):
         {
+            // default date mode to relative
+            m_selectedDateMode = DateMode::Relative;
             m_filterState.setFilter(std::make_shared<Filter<DateContainer>>(DateContainer(tm(), true, 0)));
             break;
         }

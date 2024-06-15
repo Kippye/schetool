@@ -13,7 +13,23 @@ std::string DateContainer::getString() const
 {
     char output[1024];
 
-    std::strftime(output, sizeof(output), "%d/%m/%y", &time);
+    if (m_isRelative == false)
+    {
+        std::strftime(output, sizeof(output), "%d/%m/%y", &time); 
+    }
+    else
+    {
+        if (m_relativeOffset > 1)
+        {
+            sprintf(output, "in %d days", m_relativeOffset);
+        }
+        else
+        {        
+            sprintf(output, m_relativeOffset == 
+            0 ? "Today"
+            : "Tomorrow");
+        }
+    }
 
     return std::string(output);
 }

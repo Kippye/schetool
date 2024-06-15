@@ -64,7 +64,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 			}
 			case(SCH_DATE):
 			{
-				if (gui_template_funcs::dateEditor(m_editorDate, m_viewedYear, m_viewedMonth))
+				if (gui_templates::DateEditor(m_editorDate, m_viewedYear, m_viewedMonth))
                 {
                     m_madeEdits = true;
                 }

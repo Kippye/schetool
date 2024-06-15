@@ -8,6 +8,12 @@
 #include "element_base.h"
 #include "schedule_core.h"
 
+enum class DateMode : int
+{
+    Relative,
+    Absolute
+};
+
 class EditorFilterState
 {
     private:
@@ -37,6 +43,8 @@ class FilterEditorSubGui : public Gui
 {
     private:
         const ScheduleCore* m_scheduleCore = NULL;
+        const char* m_dateModeOptions = "is relative to today\0is\0";
+        DateMode m_selectedDateMode = DateMode::Relative;
         EditorFilterState m_filterState;
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;
