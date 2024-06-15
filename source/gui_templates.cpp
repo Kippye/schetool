@@ -1,9 +1,12 @@
 #include "gui_templates.h"
 
-bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth)
+bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate)
 {
     bool changedDate = false;
-    ImGui::Text("%s", editorDate.getString().c_str());
+    if (displayDate)
+    {
+        TextWithBackground("%s", editorDate.getString().c_str());
+    }
     // DATE / CALENDAR
     if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
     {

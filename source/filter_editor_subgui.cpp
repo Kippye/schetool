@@ -192,7 +192,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     displayRemoveFilterButton();
                 }
 
-                if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth))
+                if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth, false))
                 {
                     m_selectedDateMode = DateMode::Absolute;
                     // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false
