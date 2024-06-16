@@ -1,6 +1,6 @@
 #include <schedule_edit.h>
 
-ScheduleEdit::ScheduleEdit(SCHEDULE_EDIT_TYPE type) 
+ScheduleEdit::ScheduleEdit(ScheduleEditType type) 
 { 
     m_type = type;
 }
@@ -22,7 +22,7 @@ void ScheduleEdit::apply(ScheduleCore* const scheduleCore)
 
 
 // ElementEditBase
-ElementEditBase::ElementEditBase(size_t column, size_t row, SCHEDULE_TYPE elementType) : ScheduleEdit(SCHEDULE_EDIT_ELEMENT) 
+ElementEditBase::ElementEditBase(size_t column, size_t row, SCHEDULE_TYPE elementType) : ScheduleEdit(ScheduleEditType::ElementChange) 
 {
     m_column = column;
     m_row = row;
@@ -31,7 +31,7 @@ ElementEditBase::ElementEditBase(size_t column, size_t row, SCHEDULE_TYPE elemen
 
 
 // RowEdit
-RowEdit::RowEdit(bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataToCopy) : ScheduleEdit(SCHEDULE_EDIT_ROW) 
+RowEdit::RowEdit(bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataToCopy) : ScheduleEdit(ScheduleEditType::RowAddOrRemove) 
 {
     m_isRemove = isRemove;
     m_row = row;
@@ -87,7 +87,7 @@ void RowEdit::apply(ScheduleCore* const scheduleCore)
 
 
 // ColumnEdit
-ColumnEdit::ColumnEdit(bool isRemove, size_t column, const Column& columnData) : ScheduleEdit(SCHEDULE_EDIT_COLUMN) 
+ColumnEdit::ColumnEdit(bool isRemove, size_t column, const Column& columnData) : ScheduleEdit(ScheduleEditType::ColumnAddOrRemove) 
 {
     m_isRemove = isRemove;
     m_column = column;
@@ -128,7 +128,7 @@ void ColumnEdit::apply(ScheduleCore* const scheduleCore)
 
 
 // ColumnPropertyEdit
-ColumnPropertyEdit::ColumnPropertyEdit(size_t column, COLUMN_PROPERTY editedProperty, const Column& previousData, const Column& newData) : ScheduleEdit(SCHEDULE_EDIT_COLUMN_PROPERTY) 
+ColumnPropertyEdit::ColumnPropertyEdit(size_t column, COLUMN_PROPERTY editedProperty, const Column& previousData, const Column& newData) : ScheduleEdit(ScheduleEditType::ColumnPropertyChange) 
 {
     m_column = column;
     m_editedProperty = editedProperty;
@@ -231,4 +231,51 @@ void ColumnPropertyEdit::apply(ScheduleCore* const scheduleCore)
 std::string ColumnPropertyEdit::getColumnName() const
 {
     return m_previousColumnData.name;
+}
+
+
+// FilterEditBase
+FilterEditBase::FilterEditBase(size_t column, size_t filterIndex, ScheduleEditType editType) : ScheduleEdit(editType)
+{
+    m_column = column;
+    m_filterIndex = filterIndex;
+}
+
+// FilterEdit
+FilterEdit::FilterEdit(bool isRemove, size_t column, size_t filterIndex, std::shared_ptr<FilterBase> filterData) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterAddOrRemove) 
+{
+    m_isRemove = isRemove;
+    m_filterData = filterData;
+}
+
+void FilterEdit::revert(ScheduleCore* const scheduleCore)
+{
+    // reverting a removal means adding the filter
+    if (m_isRemove)
+    {
+        scheduleCore->addColumnFilter(m_column, m_filterData);
+    }
+    // reverting an addition means removing the filter
+    else
+    {
+        scheduleCore->removeColumnFilter(m_column, m_filterIndex);
+    }
+
+    m_isReverted = true;
+} 
+
+void FilterEdit::apply(ScheduleCore* const scheduleCore)
+{
+    // applying a removal means removing the filter
+    if (m_isRemove)
+    {
+        scheduleCore->removeColumnFilter(m_column, m_filterIndex);
+    }
+    // applying an addition means adding the filter
+    else
+    {
+        scheduleCore->addColumnFilter(m_column, m_filterData);
+    }
+
+    m_isReverted = false;
 }

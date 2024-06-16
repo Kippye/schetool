@@ -1,16 +1,19 @@
 #pragma once
 
-#include <element_base.h>
-#include <element.h>
-#include <schedule_column.h>
-#include <schedule_core.h>
+#include "filter.h"
+#include "element_base.h"
+#include "element.h"
+#include "schedule_column.h"
+#include "schedule_core.h"
 
-enum SCHEDULE_EDIT_TYPE
+enum class ScheduleEditType
 {
-    SCHEDULE_EDIT_ELEMENT,
-    SCHEDULE_EDIT_ROW,
-    SCHEDULE_EDIT_COLUMN,
-    SCHEDULE_EDIT_COLUMN_PROPERTY
+    ElementChange,
+    RowAddOrRemove,
+    ColumnAddOrRemove,
+    ColumnPropertyChange,
+    FilterAddOrRemove,
+    FilterChange
 };
 
 enum COLUMN_PROPERTY
@@ -25,9 +28,9 @@ class ScheduleEdit
 {
     protected:
         bool m_isReverted = false;
-        SCHEDULE_EDIT_TYPE m_type;
+        ScheduleEditType m_type;
     public:
-        ScheduleEdit(SCHEDULE_EDIT_TYPE type);
+        ScheduleEdit(ScheduleEditType type);
         virtual ~ScheduleEdit();
         virtual void revert(ScheduleCore* const scheduleCore);
         virtual void apply(ScheduleCore* const scheduleCore);
@@ -36,7 +39,7 @@ class ScheduleEdit
             return m_isReverted;
         }
 
-        SCHEDULE_EDIT_TYPE getType() const
+        ScheduleEditType getType() const
         {
             return m_type;
         }
@@ -169,3 +172,74 @@ class ColumnPropertyEdit : public ScheduleEdit
         // Returns the Column name from the previous data
         std::string getColumnName() const;
 };
+
+class FilterEditBase : public ScheduleEdit
+{
+    protected:
+        size_t m_column;
+        size_t m_filterIndex;
+    public:
+        FilterEditBase(size_t column, size_t filterIndex, ScheduleEditType editType);
+
+        size_t getColumn() const
+        {
+            return m_column;
+        }
+
+        size_t getFilterIndex() const
+        {
+            return m_filterIndex;
+        }
+};
+
+class FilterEdit : public FilterEditBase
+{
+    private:
+        bool m_isRemove = false;
+        std::shared_ptr<FilterBase> m_filterData;
+    public:
+        FilterEdit(bool isRemove, size_t column, size_t filterIndex, std::shared_ptr<FilterBase> filterData);
+
+        void revert(ScheduleCore* const scheduleCore) override;
+
+        void apply(ScheduleCore* const scheduleCore) override;
+
+        bool getIsRemove() const
+        {
+            return m_isRemove;
+        }
+};
+
+// template <typename T>
+// class FilterEdit : public 
+// {
+//     private:
+        // SCHEDULE_TYPE m_valueType;
+
+//         T m_previousValue;
+//         T m_newValue;
+//     public:
+//         ElementEdit<T>(size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(column, row, elementType) 
+//         {
+//             m_previousValue = previousValue;
+//             m_newValue = newValue;
+//         }
+
+//         void revert(ScheduleCore* const scheduleCore) override
+//         {
+//             scheduleCore->setElementValue(m_column, m_row, m_previousValue, true);
+//             m_isReverted = true;
+//         }
+
+//         void apply(ScheduleCore* const scheduleCore) override
+//         {
+//             scheduleCore->setElementValue(m_column, m_row, m_newValue, true);
+//             m_isReverted = false;
+//         }
+
+
+        // SCHEDULE_TYPE getValueType() const
+        // {
+        //     return m_valueType;
+        // }
+// };

@@ -17,7 +17,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
 
             switch (editHistory[i]->getType())
             {
-                case (SCHEDULE_EDIT_ELEMENT):
+                case (ScheduleEditType::ElementChange):
                 {
                     ElementEditBase* elementEdit = (ElementEditBase*)editHistory[i];
                     sprintf(buf, "Element of type %s at (%zu; %zu)##%zu", 
@@ -27,7 +27,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         i);
                     break;
                 }
-                case (SCHEDULE_EDIT_ROW):
+                case (ScheduleEditType::RowAddOrRemove):
                 {
                     RowEdit* rowEdit = (RowEdit*)editHistory[i];
                     sprintf(buf, "%c Row at %zu##%zu", 
@@ -36,7 +36,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         i);
                     break;
                 }
-                case (SCHEDULE_EDIT_COLUMN):
+                case (ScheduleEditType::ColumnAddOrRemove):
                 {
                     ColumnEdit* columnEdit = (ColumnEdit*)editHistory[i];
                     sprintf(buf, "%c Column %s of type %s at %zu##%zu", 
@@ -47,7 +47,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         i);
                     break;
                 }
-                case (SCHEDULE_EDIT_COLUMN_PROPERTY):
+                case (ScheduleEditType::ColumnPropertyChange):
                 {
                     ColumnPropertyEdit* columnPropertyEdit = (ColumnPropertyEdit*)editHistory[i];
                     COLUMN_PROPERTY editedProperty = columnPropertyEdit->getEditedProperty();
@@ -56,6 +56,21 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         editedProperty == COLUMN_PROPERTY_NAME ? "Name" : (editedProperty == COLUMN_PROPERTY_TYPE ? "Type" : (editedProperty == COLUMN_PROPERTY_SELECT_OPTIONS ? "Select options" : "Sort")),
                         columnPropertyEdit->getColumn(),
                         i);
+                    break;
+                }
+                case (ScheduleEditType::FilterAddOrRemove):
+                {
+                    FilterEdit* filterEdit = (FilterEdit*)editHistory[i];
+                    sprintf(buf, "%c Filter #%zu of Column %zu##%zu", 
+                        filterEdit->getIsRemove() ? '-' : '+', 
+                        filterEdit->getFilterIndex(),
+                        filterEdit->getColumn(),
+                        i);
+                    break;
+                }
+                default:
+                {
+                    sprintf(buf, "Edit of unknown type##%zu", i);
                     break;
                 }
             }

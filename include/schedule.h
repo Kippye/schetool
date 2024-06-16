@@ -154,9 +154,9 @@ class Schedule
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory = true);
-        void addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter);
+        void addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter, bool addToHistory = true);
         void replaceColumnFilter(size_t column, size_t index, const std::shared_ptr<FilterBase>& filter);
-        void removeColumnFilter(size_t column, size_t index);
+        void removeColumnFilter(size_t column, size_t index, bool addToHistory = true);
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 

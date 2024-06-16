@@ -53,6 +53,12 @@ void ScheduleEditHistory::addEdit(ScheduleEdit* edit)
 
 void ScheduleEditHistory::removeFollowingEditHistory()
 {
+    // added fix: if there is only one edit and it has been undone and another edit is added, that edit should be removed to avoid unwanted behavior 
+    if (m_editHistory.size() == 1 && m_editHistory.at(0)->getIsReverted() == true)
+    {
+        m_editHistory.pop_back();
+        return;
+    }
     if (m_editHistory.size() == 0) { return; }
 
     for (int i = m_editHistory.size() - 1; i > m_editHistoryIndex; i--)
