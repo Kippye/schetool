@@ -98,7 +98,7 @@ class FilterEditorSubGui : public Gui
 
         // Events
         GuiEvent<size_t, std::shared_ptr<FilterBase>> addColumnFilter;
-        GuiEvent<size_t, size_t, std::shared_ptr<FilterBase>> editColumnFilter;
+        GuiEvent<size_t, size_t, std::shared_ptr<FilterBase>, std::shared_ptr<FilterBase>> editColumnFilter;
         GuiEvent<size_t, size_t> removeColumnFilter;
 
         void draw(Window& window, Input& input) override;

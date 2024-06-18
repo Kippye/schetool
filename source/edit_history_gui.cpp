@@ -60,9 +60,18 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::FilterAddOrRemove):
                 {
-                    FilterEdit* filterEdit = (FilterEdit*)editHistory[i];
+                    FilterAddOrRemoveEditBase* filterEdit = (FilterAddOrRemoveEditBase*)editHistory[i];
                     sprintf(buf, "%c Filter #%zu of Column %zu##%zu", 
                         filterEdit->getIsRemove() ? '-' : '+', 
+                        filterEdit->getFilterIndex(),
+                        filterEdit->getColumn(),
+                        i);
+                    break;
+                }
+                case (ScheduleEditType::FilterChange):
+                {
+                    FilterEditBase* filterEdit = (FilterEditBase*)editHistory[i];
+                    sprintf(buf, "Filter #%zu of Column %zu edited##%zu", 
                         filterEdit->getFilterIndex(),
                         filterEdit->getColumn(),
                         i);

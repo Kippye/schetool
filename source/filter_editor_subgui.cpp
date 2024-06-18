@@ -100,12 +100,22 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		bool isPermanentColumn = m_scheduleCore->getColumn(m_editorColumn)->permanent;
 		tm formatTime;
 
+        // LAMBDA
         auto displayRemoveFilterButton = [&]() 
         {
             if (ImGui::SmallButton("X##removeFilter"))
             {
                 removeColumnFilter.invoke(m_editorColumn, m_editorFilterIndex);
                 ImGui::CloseCurrentPopup();
+            }
+        };
+
+        // LAMBDA that invokes editColumnFilter if m_editing
+        auto invokeEventIfEditing = [&]()
+        {
+            if (m_editing)
+            {
+                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, std::make_shared<FilterBase>(*m_filterState.getFilterBase()), m_filterState.getFilterBase());
             }
         };
 
@@ -121,6 +131,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 if (ImGui::Checkbox(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
                     m_filterState.getFilter<bool>()->setPassValue(newValue);
+                    invokeEventIfEditing();
                 }
                 break;
             }
@@ -130,6 +141,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 if (ImGui::InputInt(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
                     m_filterState.getFilter<int>()->setPassValue(newValue);
+                    invokeEventIfEditing();
                 }
                 break;
             }
@@ -139,6 +151,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 if (ImGui::InputDouble(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
                     m_filterState.getFilter<double>()->setPassValue(newValue);
+                    invokeEventIfEditing();
                 }
                 break;
             }
@@ -151,6 +164,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 if (ImGui::InputTextMultiline(std::string("##filterEditor").append(std::to_string(m_editorColumn)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
                 {
                     m_filterState.getFilter<std::string>()->setPassValue(std::string(buf));
+                    invokeEventIfEditing();
                 }
 
                 break;
@@ -185,6 +199,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     {
                         value.setSelected(i, selected);
                         m_filterState.getFilter<SelectContainer>()->setPassValue(value);
+                        invokeEventIfEditing();
                     }
 
                     ImGui::SameLine();
@@ -195,6 +210,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 					{
 						value.setSelected(i, selected);
                         m_filterState.getFilter<SelectContainer>()->setPassValue(value);
+                        invokeEventIfEditing();
 					}
 				}
                 break;
@@ -214,6 +230,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 if (gui_templates::TimeEditor(value))
                 {
                     m_filterState.getFilter<TimeContainer>()->setPassValue(value);
+                    invokeEventIfEditing();
                 }
  
                 break;
@@ -259,6 +276,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     m_selectedDateMode = DateMode::Absolute;
                     // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false
                     m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime()));
+                    invokeEventIfEditing();
                 }
                 
                 break;
@@ -276,16 +294,9 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             displayRemoveFilterButton();
         }
 
-        if (ImGui::Button(m_editing == true ? "Apply" : "Create"))
+        if (m_editing == false && ImGui::Button("Create"))
         {
-            if (m_editing)
-            {
-                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, m_filterState.getFilterBase());
-            }
-            else
-            {
-                addColumnFilter.invoke(m_editorColumn, m_filterState.getFilterBase());
-            }
+            addColumnFilter.invoke(m_editorColumn, m_filterState.getFilterBase());
             ImGui::CloseCurrentPopup();
         }
 

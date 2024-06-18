@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
-#include "filter_base.h"
+#include "filter.h"
 #include "element_base.h"
 #include "element.h"
 #include "select_container.h"
@@ -90,8 +90,24 @@ struct Column
 
     const ElementBase* getElementConst(size_t index) const;
 
-    void addFilter(const std::shared_ptr<FilterBase>& filter);
-    void replaceFilter(size_t index, const std::shared_ptr<FilterBase>& filter);
+    template <typename T>
+    void addFilter(SCHEDULE_TYPE type, const Filter<T>& filter)
+    {
+        filters.push_back(std::make_shared<Filter<T>>(filter));
+    }
+
+    template <typename T>
+    void replaceFilter(size_t index, const Filter<T>& filter)
+    {
+        if (index >= filters.size())
+        {
+            printf("Column::replaceFilter(%zu): Filter index out of range\n", index);
+            return;
+        }
+
+        *std::dynamic_pointer_cast<Filter<T>>(filters.at(index)) = filter;
+    }
+
     void removeFilter(size_t index);
 };
 

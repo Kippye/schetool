@@ -44,15 +44,96 @@ class Schedule
         // FilterEditorSubGui
         std::function<void(const size_t&, const std::shared_ptr<FilterBase>&)> addFilterListener = [&](const size_t& col, const std::shared_ptr<FilterBase>& filter)
         {
-            addColumnFilter(col, filter);
+            SCHEDULE_TYPE columnType = getColumn(col)->type;
+            switch(columnType)
+            {
+                case SCH_BOOL:
+                    addColumnFilter<bool>(col, *std::dynamic_pointer_cast<Filter<bool>>(filter));
+                break;
+                case SCH_NUMBER:
+                    addColumnFilter<int>(col, *std::dynamic_pointer_cast<Filter<int>>(filter));
+                break;
+                case SCH_DECIMAL:
+                    addColumnFilter<double>(col, *std::dynamic_pointer_cast<Filter<double>>(filter));
+                break;
+                case SCH_TEXT:
+                    addColumnFilter<std::string>(col, *std::dynamic_pointer_cast<Filter<std::string>>(filter));
+                break;
+                case SCH_SELECT:
+                    addColumnFilter<SelectContainer>(col, *std::dynamic_pointer_cast<Filter<SelectContainer>>(filter));
+                break;
+                case SCH_TIME:
+                    addColumnFilter<TimeContainer>(col, *std::dynamic_pointer_cast<Filter<TimeContainer>>(filter));
+                break;
+                case SCH_DATE:
+                    addColumnFilter<DateContainer>(col, *std::dynamic_pointer_cast<Filter<DateContainer>>(filter));
+                break;
+                default:
+                    printf("Schedule listener addFilterListener(%zu, const std::shared_ptr<FilterBase>&): Failed to find Schedule::addColumnFilter() for type %d\n", col, columnType);
+                break;
+            }
         };
-        std::function<void(const size_t&, const size_t&, const std::shared_ptr<FilterBase>&)> editFilterListener = [&](const size_t& col, const size_t& filterIndex, const std::shared_ptr<FilterBase>& filter)
+        std::function<void(const size_t&, const size_t&, const std::shared_ptr<FilterBase>&, const std::shared_ptr<FilterBase>&)> editFilterListener = [&](const size_t& col, const size_t& filterIndex, const std::shared_ptr<FilterBase>& previousFilter, const std::shared_ptr<FilterBase>& filter)
         {
-            replaceColumnFilter(col, filterIndex, filter);
+            SCHEDULE_TYPE columnType = getColumn(col)->type;
+            switch(columnType)
+            {
+                case SCH_BOOL:
+                    replaceColumnFilter<bool>(col, filterIndex, *std::dynamic_pointer_cast<Filter<bool>>(previousFilter), *std::dynamic_pointer_cast<Filter<bool>>(filter));
+                break;
+                case SCH_NUMBER:
+                    replaceColumnFilter<int>(col, filterIndex, *std::dynamic_pointer_cast<Filter<int>>(previousFilter), *std::dynamic_pointer_cast<Filter<int>>(filter));
+                break;
+                case SCH_DECIMAL:
+                    replaceColumnFilter<double>(col, filterIndex, *std::dynamic_pointer_cast<Filter<double>>(previousFilter), *std::dynamic_pointer_cast<Filter<double>>(filter));
+                break;
+                case SCH_TEXT:
+                    replaceColumnFilter<std::string>(col, filterIndex, *std::dynamic_pointer_cast<Filter<std::string>>(previousFilter), *std::dynamic_pointer_cast<Filter<std::string>>(filter));
+                break;
+                case SCH_SELECT:
+                    replaceColumnFilter<SelectContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<SelectContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<SelectContainer>>(filter));
+                break;
+                case SCH_TIME:
+                    replaceColumnFilter<TimeContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<TimeContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<TimeContainer>>(filter));
+                break;
+                case SCH_DATE:
+                    replaceColumnFilter<DateContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<DateContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<DateContainer>>(filter));
+                break;
+                default:
+                    printf("Schedule listener editFilterListener(%zu, %zu, const std::shared_ptr<FilterBase>&): Failed to find Schedule::replaceColumnFilter() for type %d\n", col, filterIndex, columnType);
+                break;
+            }
         };
         std::function<void(const size_t&, const size_t&)> removeFilterListener = [&](const size_t& col, const size_t& filterIndex)
         {
-            removeColumnFilter(col, filterIndex);
+            SCHEDULE_TYPE columnType = getColumn(col)->type;
+            switch(columnType)
+            {
+                case SCH_BOOL:
+                    removeColumnFilter<bool>(col, filterIndex);
+                break;
+                case SCH_NUMBER:
+                    removeColumnFilter<int>(col, filterIndex);
+                break;
+                case SCH_DECIMAL:
+                    removeColumnFilter<double>(col, filterIndex);
+                break;
+                case SCH_TEXT:
+                    removeColumnFilter<std::string>(col, filterIndex);
+                break;
+                case SCH_SELECT:
+                    removeColumnFilter<SelectContainer>(col, filterIndex);
+                break;
+                case SCH_TIME:
+                    removeColumnFilter<TimeContainer>(col, filterIndex);
+                break;
+                case SCH_DATE:
+                    removeColumnFilter<DateContainer>(col, filterIndex);
+                break;
+                default:
+                    printf("Schedule listener removeFilterListener(%zu, %zu): Failed to find Schedule::removeColumnFilter() for type %d\n", col, filterIndex, columnType);
+                break;
+            }
         };
 
         // setElementValue HELL (ScheduleGui)
@@ -154,9 +235,47 @@ class Schedule
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory = true);
-        void addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter, bool addToHistory = true);
-        void replaceColumnFilter(size_t column, size_t index, const std::shared_ptr<FilterBase>& filter);
-        void removeColumnFilter(size_t column, size_t index, bool addToHistory = true);
+        template <typename T>
+        void addColumnFilter(size_t column, Filter<T> filter, bool addToHistory = true)
+        {
+            if (m_core.addColumnFilter(column, filter))
+            {
+                if (addToHistory)
+                {
+                    m_editHistory.addEdit(new FilterEdit(false, column, m_core.getColumn(column)->filters.size() - 1, filter));
+                }
+            }
+        }
+        template <typename T>
+        void replaceColumnFilter(size_t column, size_t index, Filter<T> previousFilter, Filter<T> filter, bool addToHistory = true)
+        {
+            // OK so it seems that currently the given ptr and the existing ptr store different values
+            // so i COULD just get both of them and use them
+            // still, i need to find T somehow.
+            // the only way would be to trust the pointer and get the column's type
+            // i could turn this into a template function and get the type in the listener func since it is the only one that calls this.
+
+            if (m_core.replaceColumnFilter<T>(column, index, filter))
+            {
+                if (addToHistory)
+                {
+                    m_editHistory.addEdit(new FilterChangeEdit<T>(column, index, m_core.getColumn(column)->type, previousFilter, filter));
+                }
+            }
+        }
+        template <typename T>
+        void removeColumnFilter(size_t column, size_t index, bool addToHistory = true)
+        {
+            Filter<T> filterData = *std::dynamic_pointer_cast<Filter<T>>(m_core.getColumn(column)->filters.at(index));
+
+            if (m_core.removeColumnFilter(column, index))
+            {
+                if (addToHistory)
+                {
+                    m_editHistory.addEdit(new FilterEdit(true, column, index, filterData));
+                }
+            }
+        }
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 

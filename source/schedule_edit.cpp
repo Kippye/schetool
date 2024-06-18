@@ -241,41 +241,8 @@ FilterEditBase::FilterEditBase(size_t column, size_t filterIndex, ScheduleEditTy
     m_filterIndex = filterIndex;
 }
 
-// FilterEdit
-FilterEdit::FilterEdit(bool isRemove, size_t column, size_t filterIndex, std::shared_ptr<FilterBase> filterData) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterAddOrRemove) 
+// FilterAddOrRemoveEditBase
+FilterAddOrRemoveEditBase::FilterAddOrRemoveEditBase(bool isRemove, size_t column, size_t filterIndex) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterAddOrRemove) 
 {
     m_isRemove = isRemove;
-    m_filterData = filterData;
-}
-
-void FilterEdit::revert(ScheduleCore* const scheduleCore)
-{
-    // reverting a removal means adding the filter
-    if (m_isRemove)
-    {
-        scheduleCore->addColumnFilter(m_column, m_filterData);
-    }
-    // reverting an addition means removing the filter
-    else
-    {
-        scheduleCore->removeColumnFilter(m_column, m_filterIndex);
-    }
-
-    m_isReverted = true;
-} 
-
-void FilterEdit::apply(ScheduleCore* const scheduleCore)
-{
-    // applying a removal means removing the filter
-    if (m_isRemove)
-    {
-        scheduleCore->removeColumnFilter(m_column, m_filterIndex);
-    }
-    // applying an addition means adding the filter
-    else
-    {
-        scheduleCore->addColumnFilter(m_column, m_filterData);
-    }
-
-    m_isReverted = false;
 }

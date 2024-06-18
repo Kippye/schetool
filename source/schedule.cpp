@@ -272,38 +272,6 @@ void Schedule::modifyColumnSelectOptions(size_t column, const SelectOptionsModif
     }
 }
 
-void Schedule::addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter, bool addToHistory)
-{
-    if (m_core.addColumnFilter(column, filter))
-    {
-        if (addToHistory)
-        {
-            m_editHistory.addEdit(new FilterEdit(false, column, m_core.getColumn(column)->filters.size() - 1, m_core.getColumn(column)->filters.back()));
-        }
-    }
-}
-
-void Schedule::replaceColumnFilter(size_t column, size_t index, const std::shared_ptr<FilterBase>& filter)
-{
-    if (m_core.replaceColumnFilter(column, index, filter))
-    {
-
-    }
-}
-
-void Schedule::removeColumnFilter(size_t column, size_t index, bool addToHistory)
-{
-    auto filterData = m_core.getColumn(column)->filters.at(index);
-
-    if (m_core.removeColumnFilter(column, index))
-    {
-        if (addToHistory)
-        {
-            m_editHistory.addEdit(new FilterEdit(true, column, index, filterData));
-        }
-    }
-}
-
 void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
 {
     m_core.resetColumn(index, type);

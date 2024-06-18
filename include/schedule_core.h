@@ -2,10 +2,11 @@
 
 #include <vector>
 #include <string>
-#include <schedule_column.h>
-#include <schedule_constants.h>
-#include <element.h>
-#include <select_options.h>
+#include "filter.h"
+#include "schedule_column.h"
+#include "schedule_constants.h"
+#include "element.h"
+#include "select_options.h"
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
@@ -51,8 +52,22 @@ class ScheduleCore
         const SelectOptions& getColumnSelectOptions(size_t column) const;
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
-        bool addColumnFilter(size_t column, const std::shared_ptr<FilterBase>& filter);
-        bool replaceColumnFilter(size_t column, size_t index, const std::shared_ptr<FilterBase>& filter);
+        template <typename T>
+        bool addColumnFilter(size_t column, const Filter<T>& filter)
+        {
+            if (existsColumnAtIndex(column) == false) { return false; }
+
+            getMutableColumn(column)->addFilter(getColumn(column)->type, filter);
+            return true;
+        }
+        template <typename T>
+        bool replaceColumnFilter(size_t column, size_t index, const Filter<T>& filter)
+        {
+            if (existsColumnAtIndex(column) == false) { return false; }
+            
+            getMutableColumn(column)->replaceFilter(index, filter);
+            return true;
+        }
         bool removeColumnFilter(size_t column, size_t index);
         // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);

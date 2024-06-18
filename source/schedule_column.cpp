@@ -75,22 +75,6 @@ const ElementBase* Column::getElementConst(size_t index) const
     return rows[index];
 }
 
-void Column::addFilter(const std::shared_ptr<FilterBase>& filter)
-{
-    filters.push_back(filter);
-}
-
-void Column::replaceFilter(size_t index, const std::shared_ptr<FilterBase>& filter)
-{
-    if (index >= filters.size())
-    {
-        printf("Column::replaceFilter(%zu): Filter index out of range\n", index);
-        return;
-    }
-
-    filters.at(index) = filter;
-}
-
 void Column::removeFilter(size_t index)
 {
     if (index >= filters.size())
