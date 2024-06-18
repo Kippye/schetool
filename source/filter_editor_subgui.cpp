@@ -110,15 +110,6 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
         };
 
-        // LAMBDA that invokes editColumnFilter if m_editing
-        auto invokeEventIfEditing = [&]()
-        {
-            if (m_editing)
-            {
-                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, std::make_shared<FilterBase>(*m_filterState.getFilterBase()), m_filterState.getFilterBase());
-            }
-        };
-
         gui_templates::TextWithBackground("%s", m_scheduleCore->getColumn(m_editorColumn)->name.c_str());
 
         ImGui::SameLine();
@@ -128,43 +119,50 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             case(SCH_BOOL):
             {
                 bool newValue = m_filterState.getFilter<bool>()->getPassValue();
+                auto prevFilter = *m_filterState.getFilter<bool>(); 
+
                 if (ImGui::Checkbox(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
                     m_filterState.getFilter<bool>()->setPassValue(newValue);
-                    invokeEventIfEditing();
+                    invokeFilterEditEvent<bool>(prevFilter, *m_filterState.getFilter<bool>());
                 }
                 break;
             }
             case(SCH_NUMBER):
             {
                 int newValue = m_filterState.getFilter<int>()->getPassValue();
+                auto prevFilter = *m_filterState.getFilter<int>(); 
+
                 if (ImGui::InputInt(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
                     m_filterState.getFilter<int>()->setPassValue(newValue);
-                    invokeEventIfEditing();
+                    invokeFilterEditEvent<int>(prevFilter, *m_filterState.getFilter<int>());
                 }
                 break;
             }
             case(SCH_DECIMAL):
             {
                 double newValue = m_filterState.getFilter<double>()->getPassValue();
+                auto prevFilter = *m_filterState.getFilter<double>(); 
+                
                 if (ImGui::InputDouble(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
                 {
                     m_filterState.getFilter<double>()->setPassValue(newValue);
-                    invokeEventIfEditing();
+                    invokeFilterEditEvent<double>(prevFilter, *m_filterState.getFilter<double>());
                 }
                 break;
             }
             case(SCH_TEXT):
             {
                 std::string value = m_filterState.getFilter<std::string>()->getPassValue();
+                auto prevFilter = *m_filterState.getFilter<std::string>(); 
                 value.reserve(ELEMENT_TEXT_MAX_LENGTH);
                 char* buf = value.data();
                 //ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
                 if (ImGui::InputTextMultiline(std::string("##filterEditor").append(std::to_string(m_editorColumn)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
                 {
                     m_filterState.getFilter<std::string>()->setPassValue(std::string(buf));
-                    invokeEventIfEditing();
+                    invokeFilterEditEvent<std::string>(prevFilter, *m_filterState.getFilter<std::string>());
                 }
 
                 break;
@@ -172,6 +170,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             case(SCH_SELECT):
             {
 				SelectContainer value = m_filterState.getFilter<SelectContainer>()->getPassValue();
+                auto prevFilter = *m_filterState.getFilter<SelectContainer>(); 
 
                 int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_SELECT);
 
@@ -199,7 +198,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     {
                         value.setSelected(i, selected);
                         m_filterState.getFilter<SelectContainer>()->setPassValue(value);
-                        invokeEventIfEditing();
+                        invokeFilterEditEvent<SelectContainer>(prevFilter, *m_filterState.getFilter<SelectContainer>());
                     }
 
                     ImGui::SameLine();
@@ -210,7 +209,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 					{
 						value.setSelected(i, selected);
                         m_filterState.getFilter<SelectContainer>()->setPassValue(value);
-                        invokeEventIfEditing();
+                        invokeFilterEditEvent<SelectContainer>(prevFilter, *m_filterState.getFilter<SelectContainer>());
 					}
 				}
                 break;
@@ -218,6 +217,8 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             case(SCH_TIME):
             {
                 TimeContainer value = m_filterState.getFilter<TimeContainer>()->getPassValue();
+                auto prevFilter = *m_filterState.getFilter<TimeContainer>(); 
+                
                 int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_TIME);
 
                 if (ImGui::Combo("##filterEditorTimeComparison", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_TIME).string))
@@ -230,7 +231,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 if (gui_templates::TimeEditor(value))
                 {
                     m_filterState.getFilter<TimeContainer>()->setPassValue(value);
-                    invokeEventIfEditing();
+                    invokeFilterEditEvent<TimeContainer>(prevFilter, *m_filterState.getFilter<TimeContainer>());
                 }
  
                 break;
@@ -238,6 +239,8 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             case(SCH_DATE):
             {
                 DateContainer value = m_filterState.getFilter<DateContainer>()->getPassValue();
+                auto prevFilter = *m_filterState.getFilter<DateContainer>(); 
+
                 int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_DATE);
             
                 // Switch between a relative and absolute filter
@@ -253,6 +256,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     }
 
                     m_typeComparisonOptions.setOptionSelection(SCH_DATE, comparisonOptionTemp);
+                    invokeFilterEditEvent<DateContainer>(prevFilter, *m_filterState.getFilter<DateContainer>());
                 }
 
                 ImGui::SameLine();
@@ -276,7 +280,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     m_selectedDateMode = DateMode::Absolute;
                     // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false
                     m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime()));
-                    invokeEventIfEditing();
+                    invokeFilterEditEvent<DateContainer>(prevFilter, *m_filterState.getFilter<DateContainer>());
                 }
                 
                 break;

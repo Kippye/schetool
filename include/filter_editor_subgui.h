@@ -102,12 +102,19 @@ class FilterEditorSubGui : public Gui
         GuiEvent<size_t, size_t> removeColumnFilter;
 
         void draw(Window& window, Input& input) override;
-        // Update the filter editor before editing a Filter.
-        // NOTE: Sets m_madeEdits = false
         // open the editor to edit a pre-existing Filter
         void open_edit(size_t column, size_t filterIndex, const ImRect& avoidRect);
         // open the editor to add a new Filter to a Column
         void open_create(size_t column, const ImRect& avoidRect);
+
+        template <typename T>
+        void invokeFilterEditEvent(Filter<T> previousValue, Filter<T> newValue)
+        {
+            if (m_editing)
+            {
+                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, std::make_shared<Filter<T>>(previousValue), std::make_shared<Filter<T>>(newValue));
+            }
+        };
 
         bool getOpenLastFrame() const;
         bool getOpenThisFrame() const;

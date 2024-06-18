@@ -36,13 +36,13 @@ class Schedule
         });
 
         // modifyColumnSelectOptions (ElementEditorSubGui)
-        std::function<void(const size_t&, const SelectOptionsModification&)> modifyColumnSelectOptionsListener = [&](const size_t& i, const SelectOptionsModification& modification)
+        std::function<void(size_t, SelectOptionsModification)> modifyColumnSelectOptionsListener = [&](size_t i, SelectOptionsModification modification)
         {
             modifyColumnSelectOptions(i, modification);
         };
 
         // FilterEditorSubGui
-        std::function<void(const size_t&, const std::shared_ptr<FilterBase>&)> addFilterListener = [&](const size_t& col, const std::shared_ptr<FilterBase>& filter)
+        std::function<void(size_t, std::shared_ptr<FilterBase>)> addFilterListener = [&](size_t col, std::shared_ptr<FilterBase> filter)
         {
             SCHEDULE_TYPE columnType = getColumn(col)->type;
             switch(columnType)
@@ -73,7 +73,7 @@ class Schedule
                 break;
             }
         };
-        std::function<void(const size_t&, const size_t&, const std::shared_ptr<FilterBase>&, const std::shared_ptr<FilterBase>&)> editFilterListener = [&](const size_t& col, const size_t& filterIndex, const std::shared_ptr<FilterBase>& previousFilter, const std::shared_ptr<FilterBase>& filter)
+        std::function<void(size_t, size_t, std::shared_ptr<FilterBase>, std::shared_ptr<FilterBase>)> editFilterListener = [&](size_t col, size_t filterIndex, std::shared_ptr<FilterBase> previousFilter, std::shared_ptr<FilterBase> filter)
         {
             SCHEDULE_TYPE columnType = getColumn(col)->type;
             switch(columnType)
@@ -104,7 +104,7 @@ class Schedule
                 break;
             }
         };
-        std::function<void(const size_t&, const size_t&)> removeFilterListener = [&](const size_t& col, const size_t& filterIndex)
+        std::function<void(size_t, size_t)> removeFilterListener = [&](size_t col, size_t filterIndex)
         {
             SCHEDULE_TYPE columnType = getColumn(col)->type;
             switch(columnType)
@@ -137,62 +137,62 @@ class Schedule
         };
 
         // setElementValue HELL (ScheduleGui)
-        std::function<void(const size_t&, const size_t&, const bool&)> setElementValueListenerBool = [&](const size_t& col, const size_t& row, const bool& val)
+        std::function<void(size_t, size_t, bool)> setElementValueListenerBool = [&](size_t col, size_t row, bool val)
         {
             setElementValue(col, row, val);
         };
-        std::function<void(const size_t&, const size_t&, const int&)> setElementValueListenerNumber = [&](const size_t& col, const size_t& row, const int& val)
+        std::function<void(size_t, size_t, int)> setElementValueListenerNumber = [&](size_t col, size_t row, int val)
         {
             setElementValue(col, row, val);
         };
-        std::function<void(const size_t&, const size_t&, const double&)> setElementValueListenerDecimal = [&](const size_t& col, const size_t& row, const double& val)
+        std::function<void(size_t, size_t, double)> setElementValueListenerDecimal = [&](size_t col, size_t row, double val)
         {
             setElementValue(col, row, val);
         };
-        std::function<void(const size_t&, const size_t&, const std::string&)> setElementValueListenerText = [&](const size_t& col, const size_t& row, const std::string& val)
+        std::function<void(size_t, size_t, std::string)> setElementValueListenerText = [&](size_t col, size_t row, std::string val)
         {
             setElementValue(col, row, val);
         };
-        std::function<void(const size_t&, const size_t&, const SelectContainer&)> setElementValueListenerSelect = [&](const size_t& col, const size_t& row, const SelectContainer& val)
+        std::function<void(size_t, size_t, SelectContainer)> setElementValueListenerSelect = [&](size_t col, size_t row, SelectContainer val)
         {
             setElementValue(col, row, val);
         };
-        std::function<void(const size_t&, const size_t&, const TimeContainer&)> setElementValueListenerTime = [&](const size_t& col, const size_t& row, const TimeContainer& val)
+        std::function<void(size_t, size_t, TimeContainer)> setElementValueListenerTime = [&](size_t col, size_t row, TimeContainer val)
         {
             setElementValue(col, row, val);
         };
-        std::function<void(const size_t&, const size_t&, const DateContainer&)> setElementValueListenerDate = [&](const size_t& col, const size_t& row, const DateContainer& val)
+        std::function<void(size_t, size_t, DateContainer)> setElementValueListenerDate = [&](size_t col, size_t row, DateContainer val)
         {
             setElementValue(col, row, val);
         };
         // column add / remove
-        std::function<void(const size_t&)> addDefaultColumnListener = [&](const size_t& col)
+        std::function<void(size_t)> addDefaultColumnListener = [&](size_t col)
         {
             addDefaultColumn(col);
         };
-        std::function<void(const size_t&)> removeColumnListener = [&](const size_t& col)
+        std::function<void(size_t)> removeColumnListener = [&](size_t col)
         {
             removeColumn(col);
         };
         // column modification
-        std::function<void(const size_t&, const SCHEDULE_TYPE&)> setColumnTypeListener = [&](const size_t& col, const SCHEDULE_TYPE& type)
+        std::function<void(size_t, SCHEDULE_TYPE)> setColumnTypeListener = [&](size_t col, SCHEDULE_TYPE type)
         {
             setColumnType(col, type);
         };
-        std::function<void(const size_t&, const COLUMN_SORT&)> setColumnSortListener = [&](const size_t& col, const COLUMN_SORT& sort)
+        std::function<void(size_t, COLUMN_SORT)> setColumnSortListener = [&](size_t col, COLUMN_SORT sort)
         {
             setColumnSort(col, sort);
         };
-        std::function<void(const size_t&, const std::string&)> setColumnNameListener = [&](const size_t& col, const std::string& name)
+        std::function<void(size_t, std::string)> setColumnNameListener = [&](size_t col, std::string name)
         {
             setColumnName(col, name);
         };
         // row modification
-        std::function<void(const size_t&)> addRowListener = [&](const size_t& col)
+        std::function<void(size_t)> addRowListener = [&](size_t col)
         {
             addRow(col);
         };
-        std::function<void(const size_t&)> removeRowListener = [&](const size_t& col)
+        std::function<void(size_t)> removeRowListener = [&](size_t col)
         {
             removeRow(col);
         };

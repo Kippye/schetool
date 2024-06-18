@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 #include "data_converter.h"
 #include "schedule.h"
 #include "window.h"
@@ -28,14 +29,14 @@ class IO_Handler
         });
         // gui listeners
         // ScheduleNameModalSubGui
-        std::function<void(const std::string&, const bool&)> renameListener = std::function<void(const std::string&, const bool&)>([&](const std::string& name, const bool& renameFile)
+        std::function<void(std::string, bool)> renameListener = std::function<void(std::string, bool)>([&](std::string name, bool renameFile)
         {
             if (setOpenScheduleFilename(name, renameFile))
             {
                 m_mainMenuBarGui->closeScheduleNameModal();
             }
         });
-        std::function<void(const std::string&)> createNewListener = std::function<void(const std::string&)>([&](const std::string& name)
+        std::function<void(std::string)> createNewListener = std::function<void(std::string)>([&](std::string name)
         {
             if (createNewSchedule(name.c_str()))
             {
@@ -43,13 +44,13 @@ class IO_Handler
             }
         });
         // ScheduleDeleteModalSubGui
-        std::function<void(const std::string&)> deleteListener = std::function<void(const std::string&)>([&](const std::string& name)
+        std::function<void(std::string)> deleteListener = std::function<void(std::string)>([&](std::string name)
         {
             deleteSchedule(name.c_str());
             // Modal hides itself
         });
         // MainMenuBarGui
-        std::function<void(const std::string&)> openListener = std::function<void(const std::string&)>([&](const std::string& name)
+        std::function<void(std::string)> openListener = std::function<void(std::string)>([&](std::string name)
         {
             readSchedule(name.c_str());
         });
