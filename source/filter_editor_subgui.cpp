@@ -13,7 +13,7 @@ std::shared_ptr<FilterBase> EditorFilterState::getFilterBase()
 
 void EditorFilterState::setType(SCHEDULE_TYPE type)
 {
-    if (type == SCH_LAST || type == SCH_WEEKDAY) { return; }
+    if (type == SCH_LAST) { return; }
     m_type = type;
 }
 
@@ -35,36 +35,6 @@ bool EditorFilterState::hasValidFilter() const
 }
 
 
-ComparisonOptions TypeComparisonOptions::getOptions(SCHEDULE_TYPE type)
-{
-    if (m_comparisonOptions.find(type) == m_comparisonOptions.end()) { printf("TypeComparisonOptions::getComparisonOptions(%d): No comparison options for type.\n", type); return ComparisonOptions("" , 0); }
-
-    return m_comparisonOptions.at(type);
-}
-
-int TypeComparisonOptions::getOptionSelection(SCHEDULE_TYPE type)
-{
-    if (m_selectedOptions.find(type) == m_selectedOptions.end()) { printf("TypeComparisonOptions::getOptionSelection(%d): No selection for type.\n", type); return 0; }
-    return m_selectedOptions.at(type);
-}
-
-void TypeComparisonOptions::setOptionSelection(SCHEDULE_TYPE type, int selection)
-{
-    if (m_comparisonOptions.find(type) == m_comparisonOptions.end()) { printf("TypeComparisonOptions::setOptionSelection(%d, %d): No comparison options for type.\n", type, selection); return; }
-    if (m_selectedOptions.find(type) == m_selectedOptions.end()) { printf("TypeComparisonOptions::setOptionSelection(%d, %d): No selection for type.\n", type, selection); return; }
-
-    size_t optionCount = getOptions(type).count;
-
-    if (selection >= optionCount) 
-    { 
-        printf("TypeComparisonOptions::setOptionSelection(%d, %d): Selection higher than amount of options (%td). Clamping it to %td.\n", type, selection, optionCount, optionCount - 1);
-        selection = optionCount - 1;
-    }
-
-    m_selectedOptions.at(type) = selection;
-}
-
-
 FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore) : Gui(ID) 
 {
 	m_scheduleCore = scheduleCore;
@@ -78,7 +48,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 	{
         if (m_scheduleCore->existsColumnAtIndex(m_editorColumn) == false)
         {
-            printf("FilterEditorSubGui::draw(): There is no Column at the editor column index %d\n", m_editorColumn);
+            printf("FilterEditorSubGui::draw(): There is no Column at the editor column index %zu\n", m_editorColumn);
             ImGui::EndPopup();
             return;
         }
@@ -100,6 +70,42 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		bool isPermanentColumn = m_scheduleCore->getColumn(m_editorColumn)->permanent;
 		tm formatTime;
 
+        // LAMBDA.
+        // Display a Selectable combo for choosing the comparison with options for the provided type
+        auto displayComparisonCombo = [&](SCHEDULE_TYPE type)
+        {
+            int selectedComparison = m_typeComparisonOptions.getOptionSelection(type);
+            TypeComparisonInfo comparisonInfo = m_typeComparisonOptions.getOptions(type);
+
+            bool hasMultipleOptions = comparisonInfo.names.size() > 1;
+            if (hasMultipleOptions == false)
+            {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            }
+            if (ImGui::BeginCombo("##filterEditorSelectComparison", comparisonInfo.names.at(selectedComparison).c_str(), hasMultipleOptions == true ? ImGuiComboFlags_None : ImGuiComboFlags_NoArrowButton))
+            {
+                for (size_t i = 0; i < comparisonInfo.names.size(); i++)
+                {
+                    bool isSelected = selectedComparison == i;
+                    if (ImGui::Selectable(comparisonInfo.names[i].c_str(), isSelected))
+                    {
+                        m_typeComparisonOptions.setOptionSelection(type, i);
+                    }
+
+                    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                    if (isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            if (hasMultipleOptions == false)
+            {
+                ImGui::PopItemFlag();
+            }
+        };
+    
         // LAMBDA
         auto displayRemoveFilterButton = [&]() 
         {
@@ -118,6 +124,10 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		{
             case(SCH_BOOL):
             {
+                displayComparisonCombo(SCH_BOOL);
+
+                ImGui::SameLine();
+
                 bool newValue = m_filterState.getFilter<bool>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<bool>(); 
 
@@ -130,6 +140,10 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
             case(SCH_NUMBER):
             {
+                displayComparisonCombo(SCH_NUMBER);
+
+                ImGui::SameLine();
+
                 int newValue = m_filterState.getFilter<int>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<int>(); 
 
@@ -142,6 +156,10 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
             case(SCH_DECIMAL):
             {
+                displayComparisonCombo(SCH_DECIMAL);
+
+                ImGui::SameLine();
+
                 double newValue = m_filterState.getFilter<double>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<double>(); 
                 
@@ -154,6 +172,8 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
             case(SCH_TEXT):
             {
+                displayComparisonCombo(SCH_TEXT);
+
                 std::string value = m_filterState.getFilter<std::string>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<std::string>(); 
                 value.reserve(ELEMENT_TEXT_MAX_LENGTH);
@@ -172,12 +192,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 				SelectContainer value = m_filterState.getFilter<SelectContainer>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<SelectContainer>(); 
 
-                int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_SELECT);
-
-                if (ImGui::Combo("##filterEditorSelectComparison", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_SELECT).string))
-                {
-                    m_typeComparisonOptions.setOptionSelection(SCH_SELECT, comparisonOptionTemp);
-                }
+                displayComparisonCombo(SCH_SELECT);
 
                 // Remove button
                 if (m_editing == true)
@@ -214,17 +229,58 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 				}
                 break;
             }
+            case(SCH_WEEKDAY):
+            {
+				WeekdayContainer value = m_filterState.getFilter<WeekdayContainer>()->getPassValue();
+                auto prevFilter = *m_filterState.getFilter<WeekdayContainer>(); 
+
+                displayComparisonCombo(SCH_WEEKDAY);
+
+                // Remove button
+                if (m_editing == true)
+                {
+                    ImGui::SameLine();
+                    displayRemoveFilterButton();
+                }
+
+                if (m_typeComparisonOptions.getOptionSelection(SCH_WEEKDAY) == 0)
+                {
+                    auto selection = value.getSelection();
+                    const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
+                    // Options
+                    for (size_t i = 0; i < optionNames.size(); i++)
+                    {
+                        bool selected = selection.find(i) != selection.end();
+
+                        if (ImGui::Checkbox(std::string("##WeekdayFilterEditorCheck").append(std::to_string(i)).c_str(), &selected))
+                        {
+                            value.setSelected(i, selected);
+                            m_filterState.getFilter<WeekdayContainer>()->setPassValue(value);
+                            invokeFilterEditEvent<WeekdayContainer>(prevFilter, *m_filterState.getFilter<WeekdayContainer>());
+                        }
+
+                        ImGui::SameLine();
+
+                        std::string optionName = std::string(optionNames[i]);
+
+                        ImGui::PushStyleColor(ImGuiCol_Header, gui_colors::dayColors[i]);
+                        if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
+                        {
+                            value.setSelected(i, selected);
+                            m_filterState.getFilter<WeekdayContainer>()->setPassValue(value);
+                            invokeFilterEditEvent<WeekdayContainer>(prevFilter, *m_filterState.getFilter<WeekdayContainer>());
+                        }
+                        ImGui::PopStyleColor(1);
+                    }
+                }
+                break;
+            }
             case(SCH_TIME):
             {
                 TimeContainer value = m_filterState.getFilter<TimeContainer>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<TimeContainer>(); 
                 
-                int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_TIME);
-
-                if (ImGui::Combo("##filterEditorTimeComparison", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_TIME).string))
-                {
-                    m_typeComparisonOptions.setOptionSelection(SCH_TIME, comparisonOptionTemp);
-                }
+                displayComparisonCombo(SCH_TIME);
 
                 ImGui::SameLine();
 
@@ -241,23 +297,23 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 DateContainer value = m_filterState.getFilter<DateContainer>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<DateContainer>(); 
 
-                int comparisonOptionTemp = m_typeComparisonOptions.getOptionSelection(SCH_DATE);
-            
-                // Switch between a relative and absolute filter
-                if (ImGui::Combo("##filterEditorDateMode", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_DATE).string))
-                {
-                    if ((DateMode)comparisonOptionTemp == DateMode::Absolute)
-                    {
-                        m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), false));
-                    }
-                    else
-                    {
-                        m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), true));
-                    }
+                displayComparisonCombo(SCH_DATE);
 
-                    m_typeComparisonOptions.setOptionSelection(SCH_DATE, comparisonOptionTemp);
-                    invokeFilterEditEvent<DateContainer>(prevFilter, *m_filterState.getFilter<DateContainer>());
-                }
+                // Switch between a relative and absolute filter
+                // if (ImGui::Combo("##filterEditorDateMode", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_DATE).string))
+                // {
+                //     if ((DateMode)comparisonOptionTemp == DateMode::Absolute)
+                //     {
+                //         m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), false));
+                //     }
+                //     else
+                //     {
+                //         m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), true));
+                //     }
+
+                //     m_typeComparisonOptions.setOptionSelection(SCH_DATE, comparisonOptionTemp);
+                //     invokeFilterEditEvent<DateContainer>(prevFilter, *m_filterState.getFilter<DateContainer>());
+                // }
 
                 ImGui::SameLine();
 
@@ -292,7 +348,9 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
 		}
 
-        if (m_editing == true && (m_filterState.getType() != SCH_SELECT && m_filterState.getType() != SCH_DATE))
+        std::set<SCHEDULE_TYPE> typesWithCustomRemovePosition = { SCH_SELECT, SCH_WEEKDAY, SCH_DATE };
+
+        if (m_editing == true && typesWithCustomRemovePosition.find(m_filterState.getType()) == typesWithCustomRemovePosition.end())
         {
             ImGui::SameLine();
             displayRemoveFilterButton();
@@ -383,6 +441,11 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
         case(SCH_SELECT):
         {
             m_filterState.setFilter(std::make_shared<Filter<SelectContainer>>(SelectContainer()));
+            break;
+        }
+        case(SCH_WEEKDAY):
+        {
+            m_filterState.setFilter(std::make_shared<Filter<WeekdayContainer>>(WeekdayContainer()));
             break;
         }
         case(SCH_TIME):

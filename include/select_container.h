@@ -25,7 +25,7 @@ struct SelectOptionChange
 
 struct SelectContainer
 {
-    private:
+    protected:
         std::set<size_t> m_selection = {};
         // updated from SelectOptions each update
         size_t m_optionCount = 0;

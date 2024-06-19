@@ -35,6 +35,7 @@ void Schedule::init(Input& input, Interface& interface)
         scheduleGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
         scheduleGui->setElementValueText.addListener(setElementValueListenerText);
         scheduleGui->setElementValueSelect.addListener(setElementValueListenerSelect);
+        scheduleGui->setElementValueWeekday.addListener(setElementValueListenerWeekday);
         scheduleGui->setElementValueTime.addListener(setElementValueListenerTime);
         scheduleGui->setElementValueDate.addListener(setElementValueListenerDate);
 

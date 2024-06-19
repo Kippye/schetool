@@ -40,43 +40,6 @@ class EditorFilterState
         bool hasValidFilter() const;
 };
 
-struct ComparisonOptions
-{
-    public:
-        const char* string;
-        const size_t count;
-        ComparisonOptions(const char* string, size_t count) : string(string), count(count) {}
-};
-
-class TypeComparisonOptions
-{
-    private:
-        std::map<SCHEDULE_TYPE, ComparisonOptions> m_comparisonOptions =
-        {
-            { SCH_BOOL,     ComparisonOptions("is\0", 1) },
-            { SCH_NUMBER,   ComparisonOptions("is\0", 1) },
-            { SCH_DECIMAL,  ComparisonOptions("is\0", 1) },
-            { SCH_TEXT,     ComparisonOptions("is\0", 1) },
-            { SCH_SELECT,   ComparisonOptions("is\0", 1) },
-            { SCH_TIME,     ComparisonOptions("is\0", 1) },
-            { SCH_DATE,     ComparisonOptions("is relative to today\0is\0", 2) },
-        };
-        std::map<SCHEDULE_TYPE, int> m_selectedOptions =
-        {
-            { SCH_BOOL,     0 },
-            { SCH_NUMBER,   0 },
-            { SCH_DECIMAL,  0 },
-            { SCH_TEXT,     0 },
-            { SCH_SELECT,   0 },
-            { SCH_TIME,     0 },
-            { SCH_DATE,     0 },
-        };
-    public:
-        ComparisonOptions getOptions(SCHEDULE_TYPE type);
-        int getOptionSelection(SCHEDULE_TYPE type);
-        void setOptionSelection(SCHEDULE_TYPE type, int selection);
-};
-
 class FilterEditorSubGui : public Gui
 {
     private:

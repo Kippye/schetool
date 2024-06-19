@@ -12,7 +12,7 @@
 #include <element_base.h>
 #include "filter.h"
 #include <schedule.h>
-
+#include "gui_templates.h"
 #include <iostream>
 
 void ScheduleGui::setScheduleCore(const ScheduleCore& scheduleCore)
@@ -315,6 +315,109 @@ void ScheduleGui::draw(Window& window, Input& input)
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
                                             setElementValueSelect.invoke(column, row, elementEditor->getEditorValue(value));
+                                        }
+                                    }
+                                }
+								break;
+							}
+                            case(SCH_WEEKDAY):
+							{
+                                WeekdayContainer value = m_scheduleCore->getElementValueConstRef<WeekdayContainer>(column, row);
+                                auto selection = value.getSelection();
+                                const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
+
+                                std::vector<int> selectionIndices = {};
+
+                                // error fix attempt: there should never be more selected that options
+                                while (selection.size() > 7)
+                                {
+                                    printf("ScheduleGui::draw: WeekdayContainer at (%zu; %zu) has more indices in selection (%zu) than existing options (%d). Removing selection indices until valid!\n", column, row, selection.size(), 7);
+                                    selection.erase(--selection.end());
+                                }
+
+                                for (size_t s: selection)
+                                {
+                                    // error fix attempt: there should never be selection indices that are >= optionNames.size()
+                                    if (s >= 7)
+                                    {
+                                        printf("ScheduleGui::draw: WeekdayContainer at (%zu; %zu) index (%zu) >= optionNames.size() (%d). Removing index from selection.\n", column, row, s, 7);
+                                        selection.erase(s);
+                                    }
+                                }
+
+                                size_t selectedCount = selection.size();
+
+                                for (size_t s: selection)
+                                {
+                                    selectionIndices.push_back(s);
+                                }
+
+                                // sort indices so that the same options are always displayed in the same order
+                                std::sort(std::begin(selectionIndices), std::end(selectionIndices));
+
+                                float displayedChars = 0;
+                                float pixelsPerCharacter = 12.0f;
+                                float columnWidth = ImGui::GetColumnWidth(column);
+
+                                for (size_t i = 0; i < selectedCount; i++)
+                                {
+                                    ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::dayColors[selectionIndices[i]]);
+                                    if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                                    {
+                                        // left clicking opens the editor like the user would expect
+                                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
+                                        {
+                                            if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                            {
+                                                elementEditor->open(column, row, SCH_WEEKDAY, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                                elementEditor->setEditorValue(value);
+                                            }
+                                        }
+                                        // right clicking erases the option - bonus feature
+                                        else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                                        {
+                                            value.setSelected(selectionIndices[i], false);
+                                            setElementValueSelect.invoke(column, row, value); 
+                                        }
+                                    }
+                                    // HACK to make this show when any of the options is hovered
+                                    if (i != selectedCount - 1 && ImGui::IsItemHovered())
+                                    {
+                                        ImGui::BeginTooltip();
+                                        ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
+                                        ImGui::EndTooltip();
+                                    }
+
+                                    displayedChars += optionNames[selectionIndices[i]].length();
+                                    if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
+                                    {
+                                        ImGui::SameLine();
+                                    }
+                                    ImGui::PopStyleColor(1);
+                                }
+
+                                // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
+                                if (selectedCount == 0)
+                                {
+                                    if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                    {
+                                        if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                        {
+                                            elementEditor->open(column, row, SCH_WEEKDAY, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                            elementEditor->setEditorValue(value);
+                                        }
+                                    }
+                                }
+                                if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                {
+                                    auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                                    if (column == editorColumn && row == editorRow)
+                                    {
+                                        elementEditor->draw(window, input);
+                                        // was editing this Element, made edits and just closed the editor. apply the edits
+                                        if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                                        {
+                                            setElementValueWeekday.invoke(column, row, elementEditor->getEditorValue(value));
                                         }
                                     }
                                 }

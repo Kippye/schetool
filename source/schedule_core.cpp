@@ -6,6 +6,7 @@
 #include <ctime>
 #include <numeric>
 #include "filter.h"
+#include "weekday_container.h"
 #include <schedule_core.h>
 #include <element_base.h>
 
@@ -158,23 +159,11 @@ void ScheduleCore::addDefaultColumn(size_t index)
 
     Column addedColumn = Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Text"), false);
 
-    // the last index = just add to the end
-    if (index == getColumnCount())
+    for (size_t i = 0; i < getRowCount(); i++)
     {
-        for (size_t i = 0; i < getRowCount(); i++)
-        {
-            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
-        }
-        m_schedule.push_back(addedColumn);
+        addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
     }
-    else
-    {
-        for (size_t i = 0; i < getRowCount(); i++)
-        {
-            addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
-        }
-        m_schedule.insert(m_schedule.begin() + index, addedColumn);
-    }
+    m_schedule.insert(m_schedule.begin() + index, addedColumn);
 
     // I think default columns don't cause a need for sorting, since their sort is always COLUMN_SORT_NONE
 }
@@ -251,8 +240,12 @@ void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
             }
             case(SCH_SELECT):
             { 
-                // pass SelectContainer by const reference to avoid unnecessary copying (it will be copied anyway i think)
-                setElementValue(index, row, ((Element<SelectContainer>*)columnData.rows[row])->getConstValueReference());
+                setElementValue(index, row, ((Element<SelectContainer>*)columnData.rows[row])->getValue());
+                break;
+            }
+            case(SCH_WEEKDAY):
+            { 
+                setElementValue(index, row, ((Element<WeekdayContainer>*)columnData.rows[row])->getValue());
                 break;
             }
             case(SCH_TIME):
@@ -277,29 +270,13 @@ void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
 bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
 {
     if (existsColumnAtIndex(column) == false){ return false; }
-    if (getColumn(column)->permanent == true) { printf("ScheduleCore::setColumnType tried to set type of a permanent Column at %zu! Quitting.\n", column); return false; }
+    if (getColumn(column)->permanent == true) { printf("ScheduleCore::setColumnType tried to set type of a permanent Column at %zu! Returning.\n", column); return false; }
 
     // HACK y
     m_schedule.at(column).selectOptions.clearListeners();
     if (type == SCH_SELECT)
     {
         m_schedule.at(column).selectOptions.setIsMutable(true);
-    }
-    // setup for weekday type
-    else if (type == SCH_WEEKDAY)
-    {
-        m_schedule.at(column).selectOptions.clearOptions();
-        m_schedule.at(column).selectOptions.addOption(std::string("Monday"));
-        m_schedule.at(column).selectOptions.addOption(std::string("Tuesday"));
-        m_schedule.at(column).selectOptions.addOption(std::string("Wednesday"));
-        m_schedule.at(column).selectOptions.addOption(std::string("Thursday"));
-        m_schedule.at(column).selectOptions.addOption(std::string("Friday"));
-        m_schedule.at(column).selectOptions.addOption(std::string("Saturday"));
-        m_schedule.at(column).selectOptions.addOption(std::string("Sunday"));
-        // TODO: set up colours as well
-        m_schedule.at(column).selectOptions.setIsMutable(false);
-        // IMPORTANT!
-        type = SCH_SELECT;
     }
 
     // TODO: try to convert types..? i guess there's no point in doing that. only really numbers could be turned into text.
@@ -421,6 +398,15 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
             }     
             break;
         }
+        case(SCH_WEEKDAY):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
+                auto weekdayElement = new Element<WeekdayContainer>(type, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                setElement(index, row, (ElementBase*)weekdayElement, false);
+            }     
+            break;
+        }
         case(SCH_TIME):
         {
             for (size_t row = 0; row < rowCount; row++)
@@ -466,116 +452,62 @@ void ScheduleCore::addRow(size_t index)
 {
     std::vector<ElementBase*> elementCopies = {};
 
-    // the last index = just add to the end
-    if (index == getRowCount())
+    for (size_t i = 0; i < getColumnCount(); i++)
     {
-        for (size_t i = 0; i < getColumnCount(); i++)
-        {
-            Column& column = m_schedule[i];
-            std::vector<ElementBase*>& columnValues = column.rows;
-            time_t t = std::time(nullptr);
-            tm creationTime = *std::localtime(&t);
+        Column& column = m_schedule[i];
+        std::vector<ElementBase*>& columnValues = column.rows;
+        time_t t = std::time(nullptr);
+        tm creationTime = *std::localtime(&t);
 
-            switch(column.type)
+        switch(column.type)
+        {
+            case(SCH_BOOL):
             {
-                case(SCH_BOOL):
-                {
-                    columnValues.push_back(new Element<bool>(column.type, false, DateContainer(creationTime), TimeContainer(creationTime)));
-                    break;
-                }
-                case(SCH_NUMBER):
-                {
-                    columnValues.push_back(new Element<int>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
-                    break;
-                }
-                case(SCH_DECIMAL):
-                {
-                    columnValues.push_back(new Element<double>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
-                    break;
-                }
-                case(SCH_TEXT):
-                {
-                    columnValues.push_back(new Element<std::string>(column.type, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
-                    break;
-                }
-                case(SCH_SELECT):
-                { 
-                    Element<SelectContainer>* selectElement = new Element<SelectContainer>(column.type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
-                    columnValues.push_back(selectElement);
-                    column.selectOptions.addListener(index, selectElement->getValueReference());
-                    break;
-                }
-                case(SCH_TIME):
-                { 
-                    columnValues.push_back(new Element<TimeContainer>(column.type, TimeContainer(0, 0), DateContainer(creationTime), TimeContainer(creationTime)));      
-                    break;
-                }
-                case(SCH_DATE):
-                { 
-                    columnValues.push_back(new Element<DateContainer>(column.type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)));      
-                    break;
-                }
-                default:
-                {
-                    std::cout << "ScheduleCore::addRow: Adding rows of type: " << column.type << " has not been implemented!" << std::endl;
-                    break;
-                }
+                columnValues.insert(columnValues.begin() + index, new Element<bool>(column.type, false, DateContainer(creationTime), TimeContainer(creationTime)));
+                break;
             }
-        }
-    }
-    else
-    {
-        for (size_t i = 0; i < getColumnCount(); i++)
-        {
-            Column& column = m_schedule[i];
-            std::vector<ElementBase*>& columnValues = column.rows;
-            time_t t = std::time(nullptr);
-            tm creationTime = *std::localtime(&t);
-
-            switch(column.type)
+            case(SCH_NUMBER):
             {
-                case(SCH_BOOL):
-                {
-                    columnValues.insert(columnValues.begin() + index, new Element<bool>(column.type, false, DateContainer(creationTime), TimeContainer(creationTime)));
-                    break;
-                }
-                case(SCH_NUMBER):
-                {
-                    columnValues.insert(columnValues.begin() + index, new Element<int>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
-                    break;
-                }
-                case(SCH_DECIMAL):
-                {
-                    columnValues.insert(columnValues.begin() + index, new Element<double>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
-                    break;
-                }
-                case(SCH_TEXT):
-                {
-                    columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
-                    break;
-                }
-                case(SCH_SELECT):
-                {
-                    Element<SelectContainer>* selectElement = new Element<SelectContainer>(column.type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
-                    columnValues.insert(columnValues.begin() + index, selectElement);
-                    column.selectOptions.addListener(index, selectElement->getValueReference());
-                    break;
-                }
-                case(SCH_TIME):
-                { 
-                    columnValues.insert(columnValues.begin() + index, new Element<TimeContainer>(column.type, TimeContainer(0, 0), DateContainer(creationTime), TimeContainer(creationTime)));      
-                    break;
-                }
-                case(SCH_DATE):
-                { 
-                    columnValues.insert(columnValues.begin() + index, new Element<DateContainer>(column.type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)));      
-                    break;
-                }
-                default:
-                {
-                    std::cout << "ScheduleCore::addRow: Adding rows of type: " << column.type << " has not been implemented!" << std::endl;
-                    break;
-                }
+                columnValues.insert(columnValues.begin() + index, new Element<int>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
+                break;
+            }
+            case(SCH_DECIMAL):
+            {
+                columnValues.insert(columnValues.begin() + index, new Element<double>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
+                break;
+            }
+            case(SCH_TEXT):
+            {
+                columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+                break;
+            }
+            case(SCH_SELECT):
+            {
+                Element<SelectContainer>* selectElement = new Element<SelectContainer>(column.type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                columnValues.insert(columnValues.begin() + index, selectElement);
+                column.selectOptions.addListener(index, selectElement->getValueReference());
+                break;
+            }
+            case(SCH_WEEKDAY):
+            {
+                Element<WeekdayContainer>* weekdayElement = new Element<WeekdayContainer>(column.type, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                columnValues.insert(columnValues.begin() + index, weekdayElement);
+                break;
+            }
+            case(SCH_TIME):
+            { 
+                columnValues.insert(columnValues.begin() + index, new Element<TimeContainer>(column.type, TimeContainer(0, 0), DateContainer(creationTime), TimeContainer(creationTime)));      
+                break;
+            }
+            case(SCH_DATE):
+            { 
+                columnValues.insert(columnValues.begin() + index, new Element<DateContainer>(column.type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)));      
+                break;
+            }
+            default:
+            {
+                std::cout << "ScheduleCore::addRow: Adding rows of type: " << column.type << " has not been implemented!" << std::endl;
+                break;
             }
         }
     }

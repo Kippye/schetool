@@ -120,6 +120,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/select_options.cpp"
     "${SCHETOOL_SRC}/textures.cpp"
     "${SCHETOOL_SRC}/time_container.cpp"
+    "${SCHETOOL_SRC}/weekday_container.cpp"
     "${SCHETOOL_SRC}/window.cpp"
 )
 

@@ -28,6 +28,7 @@ void DataConverter::setupObjectTable()
         createDefinition<BLF_Decimal>(),
         createDefinition<BLF_Text>(),
         createDefinition<BLF_Select>(),
+        createDefinition<BLF_Weekday>(),
         createDefinition<BLF_Time>(),
         createDefinition<BLF_Date>(),
     };
@@ -71,6 +72,11 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
                     data.addObject(new BLF_Select((Element<SelectContainer>*)element, c));
                     break;
                 }
+                case(SCH_WEEKDAY):
+                { 
+                    data.addObject(new BLF_Weekday((Element<WeekdayContainer>*)element, c));
+                    break;
+                }
                 case(SCH_TIME):
                 { 
                     data.addObject(new BLF_Time((Element<TimeContainer>*)element, c));
@@ -80,6 +86,10 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
                 { 
                     data.addObject(new BLF_Date((Element<DateContainer>*)element, c));
                     break;
+                }
+                default:
+                {
+                    printf("DataConverter::writeSchedule(%s, schedule): Tried to write element with invalid type %d\n", path, element->getType());
                 }
             }
         }
@@ -139,7 +149,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
         dataPointers.push_back(loadedColumns[c]);
     }
 
-    for (size_t t = 0; t <= (size_t)SCH_LAST; t++)
+    for (size_t t = 0; t < (size_t)SCH_LAST; t++)
     {
         SCHEDULE_TYPE type = (SCHEDULE_TYPE)t;
 
@@ -199,6 +209,19 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 }        
                 break;
             }
+            case(SCH_WEEKDAY):
+            { 
+                for (BLF_Weekday* element: file.data.get<BLF_Weekday>())
+                {
+                    tm creationTime = getElementCreationTime(element);
+                    Element<WeekdayContainer>* weekday = new Element<WeekdayContainer>(type, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                    
+                    weekday->getValueReference().replaceSelection(element->getSelection());
+                    schedule[element->columnIndex].rows.push_back(weekday);
+                    dataPointers.push_back(element);
+                }        
+                break;
+            }
             case(SCH_TIME):
             { 
                 for (BLF_Time* element: file.data.get<BLF_Time>())
@@ -222,6 +245,10 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                     dataPointers.push_back(element);
                 }                      
                 break;
+            }
+            default:
+            {
+                printf("DataConverter::readSchedule(%s, schedule): Read element with invalid type %d\n", path, type);
             }
         }
     }

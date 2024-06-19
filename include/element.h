@@ -2,6 +2,7 @@
 
 #include <element_base.h>
 #include <select_container.h>
+#include "weekday_container.h"
 #include <string>
 #include <type_traits>
 
@@ -33,7 +34,7 @@ class Element : public ElementBase
             {
                 return m_value.getString();
             }
-            else if constexpr(std::is_same_v<T, SelectContainer>)
+            else if constexpr(std::is_same_v<T, SelectContainer> || std::is_same_v<T, WeekdayContainer>)
             {
                 return "";
             }

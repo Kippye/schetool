@@ -1,6 +1,7 @@
 #ifndef SCHEDULE_CONSTANTS
 #define SCHEDULE_CONSTANTS
 #include <map>
+#include <vector>
 
 enum SCHEDULE_TYPE
 {
@@ -9,9 +10,9 @@ enum SCHEDULE_TYPE
     SCH_DECIMAL,
     SCH_TEXT,
     SCH_SELECT,
+    SCH_WEEKDAY,
     SCH_TIME,
     SCH_DATE,
-    SCH_WEEKDAY,
     SCH_LAST,
 };
 
@@ -24,9 +25,19 @@ namespace schedule_consts
         {SCH_DECIMAL, "Decimal"},
         {SCH_TEXT, "Text"},
         {SCH_SELECT, "Select"},
-        {SCH_WEEKDAY, "Select Weekday"},
+        {SCH_WEEKDAY, "Weekday"},
         {SCH_TIME, "Time"},
         {SCH_DATE, "Date"},
+    };
+    const std::vector<std::string> weekdayNames =
+    {
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
     };
 }
 #endif

@@ -29,3 +29,30 @@ class Filter : public FilterBase
             m_passValue = passValue;
         }
 };
+
+template <>
+class Filter<DateContainer> : public FilterBase
+{
+    private:
+        DateContainer m_passValue;
+    public:
+        Filter<DateContainer>() = delete;
+        Filter<DateContainer>(const DateContainer& passValue)
+        {
+            m_passValue = passValue;
+        }
+
+        bool checkPasses(const ElementBase* element) override
+        {
+            // TODO: Check if the provided ElementBase is of the correct type.
+            return (((const Element<DateContainer>*)element)->getValue() == m_passValue);
+        }
+        DateContainer getPassValue() const
+        {
+            return m_passValue; 
+        }
+        void setPassValue(const DateContainer& passValue)
+        {
+            m_passValue = passValue;
+        }
+};

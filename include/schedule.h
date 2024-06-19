@@ -62,6 +62,9 @@ class Schedule
                 case SCH_SELECT:
                     addColumnFilter<SelectContainer>(col, *std::dynamic_pointer_cast<Filter<SelectContainer>>(filter));
                 break;
+                case SCH_WEEKDAY:
+                    addColumnFilter<WeekdayContainer>(col, *std::dynamic_pointer_cast<Filter<WeekdayContainer>>(filter));
+                break;
                 case SCH_TIME:
                     addColumnFilter<TimeContainer>(col, *std::dynamic_pointer_cast<Filter<TimeContainer>>(filter));
                 break;
@@ -92,6 +95,9 @@ class Schedule
                 break;
                 case SCH_SELECT:
                     replaceColumnFilter<SelectContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<SelectContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<SelectContainer>>(filter));
+                break;
+                case SCH_WEEKDAY:
+                    replaceColumnFilter<WeekdayContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<WeekdayContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<WeekdayContainer>>(filter));
                 break;
                 case SCH_TIME:
                     replaceColumnFilter<TimeContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<TimeContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<TimeContainer>>(filter));
@@ -124,6 +130,9 @@ class Schedule
                 case SCH_SELECT:
                     removeColumnFilter<SelectContainer>(col, filterIndex);
                 break;
+                case SCH_WEEKDAY:
+                    removeColumnFilter<WeekdayContainer>(col, filterIndex);
+                break;
                 case SCH_TIME:
                     removeColumnFilter<TimeContainer>(col, filterIndex);
                 break;
@@ -154,6 +163,10 @@ class Schedule
             setElementValue(col, row, val);
         };
         std::function<void(size_t, size_t, SelectContainer)> setElementValueListenerSelect = [&](size_t col, size_t row, SelectContainer val)
+        {
+            setElementValue(col, row, val);
+        };
+        std::function<void(size_t, size_t, WeekdayContainer)> setElementValueListenerWeekday = [&](size_t col, size_t row, WeekdayContainer val)
         {
             setElementValue(col, row, val);
         };

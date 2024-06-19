@@ -1,6 +1,7 @@
 #include <regex>
 #include "element_editor_subgui.h"
 #include "gui_templates.h"
+#include "schedule_constants.h"
 
 ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore* scheduleCore) : Gui(ID) 
 {
@@ -138,6 +139,56 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 							}
 						}
 					}
+				}
+
+				break;
+			}
+            case(SCH_WEEKDAY):
+			{
+				auto selection = m_editorWeekday.getSelection();
+				size_t selectedCount = selection.size();
+				const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
+
+				std::vector<size_t> selectionIndices = {};
+
+				for (size_t s: selection)
+				{
+					selectionIndices.push_back(s);
+				}
+
+				// sort indices so that the same options are always displayed in the same order
+				std::sort(std::begin(selectionIndices), std::end(selectionIndices));
+				
+				for (size_t i = 0; i < selectedCount; i++)
+				{
+					ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::dayColors[selectionIndices[i]]);
+					if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##EditorSelectedOption").append(std::to_string(i)).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+					{
+						m_editorWeekday.setSelected(selectionIndices[i], false);
+						m_madeEdits = true;
+					}
+                    // no sameline for the last selected option
+                    if (i != selectedCount - 1)
+                    {
+					    ImGui::SameLine();
+                    }
+					ImGui::PopStyleColor(1);
+				}
+
+				// display existing options
+				for (size_t i = 0; i < optionNames.size(); i++)
+				{
+					bool selected = selection.find(i) != selection.end();
+
+					std::string optionName = std::string(optionNames[i]);
+
+                    ImGui::PushStyleColor(ImGuiCol_Header, gui_colors::dayColors[i]);
+					if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
+					{
+						m_editorWeekday.setSelected(i, selected);
+						m_madeEdits = true;
+					}
+                    ImGui::PopStyleColor(1);
 				}
 
 				break;

@@ -2,6 +2,7 @@
 
 #include "gui.h"
 #include "select_container.h"
+#include "weekday_container.h"
 #include "time_container.h"
 #include "date_container.h"
 #include "element_base.h"
@@ -22,6 +23,7 @@ class ElementEditorSubGui : public Gui
         TimeContainer m_editorTime;
         DateContainer m_editorDate;
         SelectContainer m_editorSelect;
+        WeekdayContainer m_editorWeekday;
         ImRect m_avoidRect;
     public:
         ElementEditorSubGui(const char* ID, const ScheduleCore* scheduleCore);
@@ -49,6 +51,10 @@ class ElementEditorSubGui : public Gui
         {
             m_editorSelect = value;
         }
+        void setEditorValue(const WeekdayContainer& value)
+        {
+            m_editorWeekday = value;
+        }
         const TimeContainer& getEditorValue(const TimeContainer& _typeValueUnused) const
         {
             return m_editorTime;
@@ -60,6 +66,10 @@ class ElementEditorSubGui : public Gui
         const SelectContainer& getEditorValue(const SelectContainer& _typeValueUnused) const
         {
             return m_editorSelect;
+        }
+        const WeekdayContainer& getEditorValue(const WeekdayContainer& _typeValueUnused) const
+        {
+            return m_editorWeekday;
         }
         bool getOpenLastFrame() const;
         bool getOpenThisFrame() const;

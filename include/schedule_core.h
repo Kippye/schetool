@@ -182,6 +182,11 @@ class ScheduleCore
                         getElementAsSpecial<SelectContainer>(column, row)->setValue(((Element<SelectContainer>*)other)->getValue());
                         break;
                     }
+                    case(SCH_WEEKDAY):
+                    {
+                        getElementAsSpecial<WeekdayContainer>(column, row)->setValue(((Element<WeekdayContainer>*)other)->getValue());
+                        break;
+                    }
                     case(SCH_TIME):
                     {
                         getElementAsSpecial<TimeContainer>(column, row)->setValue(((Element<TimeContainer>*)other)->getValue());
@@ -232,7 +237,7 @@ class ScheduleCore
             const Column* elementColumn = getColumn(column);
             if (elementColumn == nullptr || elementColumn->hasElement(row) == false)
             {
-                printf("ScheduleCore::getElementValueConst could not return value at %zu; %zu\n", column, row);
+                printf("ScheduleCore::getElementValueConstRef could not return value at %zu; %zu\n", column, row);
                 return *(new T()); // memory leak ON PURPOSE
             }
             return getValueConstRef<T>(elementColumn->rows[row]);

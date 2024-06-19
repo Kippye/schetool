@@ -362,6 +362,77 @@ class BLF_Select : public BLF_Element
         }
 };
 
+class BLF_Weekday : public BLF_Element
+{
+    private:
+        std::vector<int*> m_selectionPointers = 
+        {
+            &selection_0,
+            &selection_1,
+            &selection_2,
+            &selection_3,
+            &selection_4,
+            &selection_5,
+            &selection_6,
+        };
+    public:
+        BLF_Weekday() 
+        {
+            for (size_t i = 0; i < m_selectionPointers.size(); i++)
+            {
+                attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
+            }
+
+            objectName = "BLF_Weekday";
+        }
+        BLF_Weekday(const Element<WeekdayContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        {
+            const std::set<size_t>& selection = element->getValue().getSelection();
+        
+            size_t i = 0;
+            for (size_t s: selection)
+            {
+                *this->m_selectionPointers[i] = (int)s;
+                i++;
+            }
+
+            for (i = 0; i < m_selectionPointers.size(); i++)
+            {
+                attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
+            }
+
+            objectName = "BLF_Weekday";
+        }
+
+    public:
+        int selection_0 = -1;
+        int selection_1 = -1;
+        int selection_2 = -1;
+        int selection_3 = -1;
+        int selection_4 = -1;
+        int selection_5 = -1;
+        int selection_6 = -1;
+          
+        std::set<size_t> getSelection()
+        {
+            std::set<size_t> selection = {};
+
+            for (size_t i = 0; i < std::size(m_selectionPointers); i++)
+            {
+                if (*m_selectionPointers[i] != -1)
+                {
+                    selection.insert(*m_selectionPointers[i]);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return selection;
+        }
+};
+
 class BLF_Time : public BLF_Element
 {
     public:

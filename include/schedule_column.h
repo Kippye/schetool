@@ -8,6 +8,7 @@
 #include "element.h"
 #include "select_container.h"
 #include "select_options.h"
+#include "weekday_container.h"
 #include "time_container.h"
 #include "date_container.h"
 
@@ -138,7 +139,11 @@ struct ColumnSortComparison
             }
             case(SCH_SELECT):
             {
-                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getConstValueReference() > ((const Element<SelectContainer>*)right)->getConstValueReference() : ((const Element<SelectContainer>*)left)->getConstValueReference() < ((const Element<SelectContainer>*)right)->getConstValueReference();
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getValue() > ((const Element<SelectContainer>*)right)->getValue() : ((const Element<SelectContainer>*)left)->getValue() < ((const Element<SelectContainer>*)right)->getValue();
+            }
+            case(SCH_WEEKDAY):
+            {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<WeekdayContainer>*)left)->getValue() > ((const Element<WeekdayContainer>*)right)->getValue() : ((const Element<WeekdayContainer>*)left)->getValue() < ((const Element<WeekdayContainer>*)right)->getValue();
             }
             case(SCH_TIME):
             {
