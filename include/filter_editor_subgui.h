@@ -44,8 +44,6 @@ class FilterEditorSubGui : public Gui
 {
     private:
         const ScheduleCore* m_scheduleCore = NULL;
-        TypeComparisonOptions m_typeComparisonOptions;
-        DateMode m_selectedDateMode = DateMode::Relative;
         EditorFilterState m_filterState;
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;

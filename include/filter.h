@@ -17,6 +17,7 @@ class Filter : public FilterBase
 
         bool checkPasses(const ElementBase* element) override
         {
+            if (isComparisonValidForElement(element) == false) { return false; }
             // TODO: Check if the provided ElementBase is of the correct type.
             return (((const Element<T>*)element)->getValue() == m_passValue);
         }
@@ -44,8 +45,21 @@ class Filter<DateContainer> : public FilterBase
 
         bool checkPasses(const ElementBase* element) override
         {
+            DateContainer value = ((const Element<DateContainer>*)element)->getValue();
+
+            switch(m_comparison)
+            {
+                case Comparison::Is:
+                {
+                    return (value == m_passValue);
+                }
+                case Comparison::IsRelativeToToday:
+                {
+                    // TODO: Handle offsets as well, maybe.
+                    return (value == DateContainer::getCurrentSystemDate());
+                }
+            }
             // TODO: Check if the provided ElementBase is of the correct type.
-            return (((const Element<DateContainer>*)element)->getValue() == m_passValue);
         }
         DateContainer getPassValue() const
         {

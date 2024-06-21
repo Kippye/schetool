@@ -1,70 +1,38 @@
 #include "filter_base.h"
 #include <cstring>
 
-TypeComparisonInfo TypeComparisonOptions::getOptions(SCHEDULE_TYPE type)
+bool FilterBase::isComparisonValidForElement(const ElementBase* element, bool printInvalidWarning)
 {
-    if (m_comparisonOptions.find(type) == m_comparisonOptions.end()) { printf("TypeComparisonOptions::getComparisonOptions(%d): No comparison options for type.\n", type); return TypeComparisonInfo({} , {}); }
-
-    auto comparisons = m_comparisonOptions.at(type);
-
-    // // thank you ZMATEUSZ!
-    // int len = 0;
-    // // did this if you're gonna add more
-    // for(int i = 0; i < comparisons.size(); i++)
-    // {
-    //     // +1 to account for NULL.
-    //     len += strlen(comparisonStrings.at(comparisons[i])) + 1;
-    // }
-
-    // char* output = new char[len];
-    // char* head = output;
-
-    // for(int i = 0; i < comparisons.size(); i++)
-    // {
-    //     int stringLen = strlen(comparisonStrings.at(comparisons[i])) + 1;
-    //     // assuming that the string is in fact null terminated (i mean we used strlen and it didnt shit itself until this point so it has to be.)
-    //     std::memcpy(head, comparisonStrings.at(comparisons[i]), stringLen);
-    //     head += stringLen;
-    // }
-
-    std::vector<std::string> comparisonNames = {};
-
-    for (Comparison comparison : comparisons)
+    bool validComparison = false;
+    for (Comparison comparison : filter_consts::getComparisonInfo(element->getType()).comparisons)
     {
-        comparisonNames.push_back(std::string(comparisonStrings.at(comparison)));
+        if (comparison == m_comparison)
+        {
+            validComparison = true;
+            break;
+        }
     }
 
-    return TypeComparisonInfo(m_comparisonOptions.at(type), comparisonNames);
-}
-
-int TypeComparisonOptions::getOptionSelection(SCHEDULE_TYPE type)
-{
-    if (m_selectedOptions.find(type) == m_selectedOptions.end()) { printf("TypeComparisonOptions::getOptionSelection(%d): No selection for type.\n", type); return 0; }
-    return m_selectedOptions.at(type);
-}
-
-const char* TypeComparisonOptions::getComparisonString(Comparison comparison) const
-{
-    return comparisonStrings.at(comparison);
-}
-
-void TypeComparisonOptions::setOptionSelection(SCHEDULE_TYPE type, int selection)
-{
-    if (m_comparisonOptions.find(type) == m_comparisonOptions.end()) { printf("TypeComparisonOptions::setOptionSelection(%d, %d): No comparison options for type.\n", type, selection); return; }
-    if (m_selectedOptions.find(type) == m_selectedOptions.end()) { printf("TypeComparisonOptions::setOptionSelection(%d, %d): No selection for type.\n", type, selection); return; }
-
-    size_t optionCount = getOptions(type).comparisons.size();
-
-    if (selection >= optionCount) 
-    { 
-        printf("TypeComparisonOptions::setOptionSelection(%d, %d): Selection higher than amount of options (%td). Clamping it to %td.\n", type, selection, optionCount, optionCount - 1);
-        selection = optionCount - 1;
+    if (validComparison == false && printInvalidWarning)
+    {
+        printf("FilterBase::isComparisonValidForElement(): Comparison %s is not valid for element type %d\n", filter_consts::comparisonStrings.at(m_comparison), element->getType());
     }
 
-    m_selectedOptions.at(type) = selection;
+    return validComparison;
 }
 
 bool FilterBase::checkPasses(const ElementBase* element)
 {
+    if (isComparisonValidForElement(element) == false) { return false; }
     return true;
+}
+ 
+Comparison FilterBase::getComparison() const
+{
+    return m_comparison;
+}
+
+void FilterBase::setComparison(Comparison comparison)
+{
+    m_comparison = comparison;
 }

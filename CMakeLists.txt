@@ -111,6 +111,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/main.cpp"
     "${SCHETOOL_SRC}/render.cpp"
     "${SCHETOOL_SRC}/schedule_column.cpp"
+    "${SCHETOOL_SRC}/schedule_constants.cpp"
     "${SCHETOOL_SRC}/schedule_core.cpp"
     "${SCHETOOL_SRC}/schedule_edit_history.cpp"
     "${SCHETOOL_SRC}/schedule_edit.cpp"

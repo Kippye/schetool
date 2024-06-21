@@ -1,5 +1,8 @@
 #include "filter_editor_subgui.h"
 #include "gui_templates.h"
+#include "schedule_constants.h"
+
+using filter_consts::TypeComparisonInfo;
 
 void EditorFilterState::setFilter(const std::shared_ptr<FilterBase>& filter)
 {
@@ -71,39 +74,44 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		tm formatTime;
 
         // LAMBDA.
-        // Display a Selectable combo for choosing the comparison with options for the provided type
-        auto displayComparisonCombo = [&](SCHEDULE_TYPE type)
+        // Display a Selectable combo for choosing the comparison with options for the provided type.
+        // Returns a pair containing a bool (whether the comparison was changed) and a Comparison (the selected Comparison)
+        auto displayComparisonCombo = [&](SCHEDULE_TYPE type) -> std::pair<bool, Comparison>
         {
-            int selectedComparison = m_typeComparisonOptions.getOptionSelection(type);
-            TypeComparisonInfo comparisonInfo = m_typeComparisonOptions.getOptions(type);
+            Comparison currentComparison = m_filterState.getFilterBase()->getComparison();
+            TypeComparisonInfo comparisonInfo = filter_consts::getComparisonInfo(type);
+            bool selectionChanged = false;
 
             bool hasMultipleOptions = comparisonInfo.names.size() > 1;
             if (hasMultipleOptions == false)
             {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-            if (ImGui::BeginCombo("##filterEditorSelectComparison", comparisonInfo.names.at(selectedComparison).c_str(), hasMultipleOptions == true ? ImGuiComboFlags_None : ImGuiComboFlags_NoArrowButton))
+            if (ImGui::BeginCombo("##filterEditorComparison", filter_consts::comparisonStrings.at(currentComparison)))
             {
                 for (size_t i = 0; i < comparisonInfo.names.size(); i++)
                 {
-                    bool isSelected = selectedComparison == i;
+                    bool isSelected = comparisonInfo.comparisons[i] == currentComparison;
                     if (ImGui::Selectable(comparisonInfo.names[i].c_str(), isSelected))
                     {
-                        m_typeComparisonOptions.setOptionSelection(type, i);
+                        m_filterState.getFilterBase()->setComparison(comparisonInfo.comparisons.at(i));
+                        selectionChanged = true;
                     }
 
                     // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                    if (isSelected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
+                    // if (isSelected)
+                    // {
+                    //     ImGui::SetItemDefaultFocus();
+                    // }
                 }
+
                 ImGui::EndCombo();
             }
             if (hasMultipleOptions == false)
             {
                 ImGui::PopItemFlag();
             }
+            return { selectionChanged, m_filterState.getFilterBase()->getComparison() };
         };
     
         // LAMBDA
@@ -243,7 +251,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     displayRemoveFilterButton();
                 }
 
-                if (m_typeComparisonOptions.getOptionSelection(SCH_WEEKDAY) == 0)
+                if (m_filterState.getFilterBase()->getComparison() != Comparison::ContainsToday)
                 {
                     auto selection = value.getSelection();
                     const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
@@ -297,7 +305,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 DateContainer value = m_filterState.getFilter<DateContainer>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<DateContainer>(); 
 
-                displayComparisonCombo(SCH_DATE);
+                auto [_comparisonChanged, newComparison] = displayComparisonCombo(SCH_DATE);
 
                 // Switch between a relative and absolute filter
                 // if (ImGui::Combo("##filterEditorDateMode", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_DATE).string))
@@ -321,7 +329,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 value = m_filterState.getFilter<DateContainer>()->getPassValue();
 
                 // Display the date of the current Date element
-                gui_templates::TextWithBackground("%s##filterEditor%zu", value.getString().c_str(), m_editorColumn);
+                gui_templates::TextWithBackground("%s##filterEditor%zu", newComparison == Comparison::IsRelativeToToday ? "Today" : value.getString().c_str(), m_editorColumn);
 
                 // If editing, display the remove filter button here, before the Date editor 
                 if (m_editing == true)
@@ -332,8 +340,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 
                 if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth, false))
                 {
-                    m_typeComparisonOptions.setOptionSelection(SCH_DATE, 1);
-                    m_selectedDateMode = DateMode::Absolute;
+                    m_filterState.getFilter<DateContainer>()->setComparison(Comparison::Is);
                     // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false
                     m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime()));
                     invokeFilterEditEvent<DateContainer>(prevFilter, *m_filterState.getFilter<DateContainer>());
@@ -388,12 +395,6 @@ void FilterEditorSubGui::open_edit(size_t column, size_t filterIndex, const ImRe
 
     m_filterState.setType(m_scheduleCore->getColumn(column)->type);
     m_filterState.setFilter(m_scheduleCore->getColumn(column)->filters.at(filterIndex));
-
-    // set m_selectedDateMode based on the filter's Date pass value if it is a Date filter
-    if (m_filterState.getType() == SCH_DATE)
-    {
-        m_selectedDateMode = m_filterState.getFilter<DateContainer>()->getPassValue().getIsRelative() ? DateMode::Relative : DateMode::Absolute;
-    }
 
 	ImGui::OpenPopup("Filter Editor");
 }
@@ -456,8 +457,8 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
         case(SCH_DATE):
         {
             // default date mode to relative
-            m_selectedDateMode = DateMode::Relative;
-            m_filterState.setFilter(std::make_shared<Filter<DateContainer>>(DateContainer(tm(), true, 0)));
+            m_filterState.setFilter(std::make_shared<Filter<DateContainer>>(DateContainer::getCurrentSystemDate()));
+            m_filterState.getFilter<DateContainer>()->setComparison(Comparison::IsRelativeToToday);
             break;
         }
         default:
