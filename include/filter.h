@@ -31,79 +31,64 @@ class Filter : public FilterBase
         }
 };
 
-template <>
-class Filter<SelectContainer> : public FilterBase
+template<>
+inline bool Filter<SelectContainer>::checkPasses(const ElementBase* element)
 {
-    private:
-        SelectContainer m_passValue;
-    public:
-        Filter<SelectContainer>() = delete;
-        Filter<SelectContainer>(const SelectContainer& passValue)
-        {
-            m_passValue = passValue;
-        }
+    SelectContainer value = ((const Element<SelectContainer>*)element)->getValue();
 
-        bool checkPasses(const ElementBase* element) override
+    switch(m_comparison)
+    {
+        case Comparison::Is:
         {
-            SelectContainer value = ((const Element<SelectContainer>*)element)->getValue();
+            return (value == m_passValue);
+        }
+        case Comparison::Contains:
+        {
+            return (value.contains(m_passValue));
+        }
+        default: isComparisonValidForElement(element); return false;
+    }
+}
 
-            switch(m_comparison)
-            {
-                case Comparison::Is:
-                {
-                    return (value == m_passValue);
-                }
-                case Comparison::Contains:
-                {
-                    return (value.contains(m_passValue));
-                }
-            }
-        }
-        SelectContainer getPassValue() const
+template<>
+inline bool Filter<WeekdayContainer>::checkPasses(const ElementBase* element)
+{
+    WeekdayContainer value = ((const Element<WeekdayContainer>*)element)->getValue();
+
+    switch(m_comparison)
+    {
+        case Comparison::Is:
         {
-            return m_passValue; 
+            return (value == m_passValue);
         }
-        void setPassValue(const SelectContainer& passValue)
+        case Comparison::Contains:
         {
-            m_passValue = passValue;
+            return (value.contains(m_passValue));
         }
-};
+        case Comparison::ContainsToday:
+        {
+            return (value.contains(WeekdayContainer::getCurrentSystemWeekday()));
+        }
+        default: isComparisonValidForElement(element); return false;
+    }
+}
 
 template <>
-class Filter<DateContainer> : public FilterBase
+inline bool Filter<DateContainer>::checkPasses(const ElementBase* element)
 {
-    private:
-        DateContainer m_passValue;
-    public:
-        Filter<DateContainer>() = delete;
-        Filter<DateContainer>(const DateContainer& passValue)
-        {
-            m_passValue = passValue;
-        }
+    DateContainer value = ((const Element<DateContainer>*)element)->getValue();
 
-        bool checkPasses(const ElementBase* element) override
+    switch(m_comparison)
+    {
+        case Comparison::Is:
         {
-            DateContainer value = ((const Element<DateContainer>*)element)->getValue();
-
-            switch(m_comparison)
-            {
-                case Comparison::Is:
-                {
-                    return (value == m_passValue);
-                }
-                case Comparison::IsRelativeToToday:
-                {
-                    // TODO: Handle offsets as well, maybe.
-                    return (value == DateContainer::getCurrentSystemDate());
-                }
-            }
+            return (value == m_passValue);
         }
-        DateContainer getPassValue() const
+        case Comparison::IsRelativeToToday:
         {
-            return m_passValue; 
+            // TODO: Handle offsets as well, maybe.
+            return (value == DateContainer::getCurrentSystemDate());
         }
-        void setPassValue(const DateContainer& passValue)
-        {
-            m_passValue = passValue;
-        }
-};
+        default: isComparisonValidForElement(element); return false;
+    }
+}

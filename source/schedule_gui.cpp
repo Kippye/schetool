@@ -114,6 +114,9 @@ void ScheduleGui::draw(Window& window, Input& input)
 						if (ImGui::Button("X##removecolumn", ImVec2(20.0, 20.0)))
 						{
 							removeColumn.invoke(column);
+                            ImGui::PopID();
+                            ImGui::EndTable();
+                            goto skip_schedule_table;
 						}
 						ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					}
@@ -494,6 +497,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 				}
 				ImGui::EndTable();
 			}
+        skip_schedule_table:
 		ImGui::EndChild();
 		ImGui::SameLine();
 		if (ImGui::Button("+", ImVec2(ADD_COLUMN_BUTTON_WIDTH, (float)(CHILD_WINDOW_HEIGHT))))

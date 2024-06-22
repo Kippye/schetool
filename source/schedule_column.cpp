@@ -37,6 +37,39 @@ Column::Column(const Column& other)
     {
         rows.push_back(other.rows[i]->getCopy());
     }
+    for (size_t i = 0; i < other.filters.size(); i++)
+    {
+        switch(type)
+        {
+            case SCH_BOOL:
+                filters.push_back(std::make_shared<Filter<bool>>(*std::dynamic_pointer_cast<Filter<bool>>(other.filters.at(i))));
+            break;
+            case SCH_NUMBER:
+                filters.push_back(std::make_shared<Filter<int>>(*std::dynamic_pointer_cast<Filter<int>>(other.filters.at(i))));
+            break;
+            case SCH_DECIMAL:
+                filters.push_back(std::make_shared<Filter<double>>(*std::dynamic_pointer_cast<Filter<double>>(other.filters.at(i))));
+            break;
+            case SCH_TEXT:
+                filters.push_back(std::make_shared<Filter<std::string>>(*std::dynamic_pointer_cast<Filter<std::string>>(other.filters.at(i))));
+            break;
+            case SCH_SELECT:
+                filters.push_back(std::make_shared<Filter<SelectContainer>>(*std::dynamic_pointer_cast<Filter<SelectContainer>>(other.filters.at(i))));
+            break;
+            case SCH_WEEKDAY:
+                filters.push_back(std::make_shared<Filter<WeekdayContainer>>(*std::dynamic_pointer_cast<Filter<WeekdayContainer>>(other.filters.at(i))));
+            break;
+            case SCH_TIME:
+                filters.push_back(std::make_shared<Filter<TimeContainer>>(*std::dynamic_pointer_cast<Filter<TimeContainer>>(other.filters.at(i))));
+            break;
+            case SCH_DATE:
+                filters.push_back(std::make_shared<Filter<DateContainer>>(*std::dynamic_pointer_cast<Filter<DateContainer>>(other.filters.at(i))));
+            break;
+            default:
+            
+            break;
+        }
+    }
 
     // std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
 }

@@ -58,23 +58,28 @@ struct Column
 
     Column(const Column& other);
 
+    // copy assignment operator
     Column& operator=(const Column& other)
     {
-        type = other.type;
-        name = other.name;
-        permanent = other.permanent;
-        flags = other.flags;
-        sort = other.sort;
-        selectOptions = other.selectOptions;
-
-        rows.clear();
-
-        for (size_t i = 0; i < other.rows.size(); i++)
+        if (this != &other)
         {
-            rows.push_back(other.rows[i]->getCopy());
+            filters = other.filters;
+            type = other.type;
+            name = other.name;
+            permanent = other.permanent;
+            flags = other.flags;
+            sort = other.sort;
+            selectOptions = other.selectOptions;
+
+            rows.clear();
+
+            for (size_t i = 0; i < other.rows.size(); i++)
+            {
+                rows.push_back(other.rows[i]->getCopy());
+            }
         }
 
-        // std::cout << "Assigned column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
+        // std::cout << "Copy assigned column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
         return *this;
     }
 
