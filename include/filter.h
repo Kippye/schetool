@@ -32,6 +32,44 @@ class Filter : public FilterBase
 };
 
 template <>
+class Filter<SelectContainer> : public FilterBase
+{
+    private:
+        SelectContainer m_passValue;
+    public:
+        Filter<SelectContainer>() = delete;
+        Filter<SelectContainer>(const SelectContainer& passValue)
+        {
+            m_passValue = passValue;
+        }
+
+        bool checkPasses(const ElementBase* element) override
+        {
+            SelectContainer value = ((const Element<SelectContainer>*)element)->getValue();
+
+            switch(m_comparison)
+            {
+                case Comparison::Is:
+                {
+                    return (value == m_passValue);
+                }
+                case Comparison::Contains:
+                {
+                    return (value.contains(m_passValue));
+                }
+            }
+        }
+        SelectContainer getPassValue() const
+        {
+            return m_passValue; 
+        }
+        void setPassValue(const SelectContainer& passValue)
+        {
+            m_passValue = passValue;
+        }
+};
+
+template <>
 class Filter<DateContainer> : public FilterBase
 {
     private:
@@ -59,7 +97,6 @@ class Filter<DateContainer> : public FilterBase
                     return (value == DateContainer::getCurrentSystemDate());
                 }
             }
-            // TODO: Check if the provided ElementBase is of the correct type.
         }
         DateContainer getPassValue() const
         {

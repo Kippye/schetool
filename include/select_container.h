@@ -111,4 +111,5 @@ struct SelectContainer
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
         void update(const SelectOptionChange& change, size_t optionCount);
+        bool contains(const SelectContainer& other) const;
 };

@@ -123,3 +123,15 @@ void SelectContainer::update(const SelectOptionChange& lastChange, size_t option
         }
     }
 }
+
+bool SelectContainer::contains(const SelectContainer& other) const
+{
+    for (size_t otherSelected : other.getSelection())
+    {
+        if (m_selection.find(otherSelected) == m_selection.end())
+        {
+            return false;
+        }
+    }
+    return true;
+}
