@@ -45,28 +45,28 @@ FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* sched
 
 void FilterEditorSubGui::draw(Window& window, Input& input)
 {
-	m_openLastFrame = m_openThisFrame;
-
 	if (ImGui::BeginPopupEx(ImGui::GetID("Filter Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
 	{
         if (m_scheduleCore->existsColumnAtIndex(m_editorColumn) == false)
         {
             printf("FilterEditorSubGui::draw(): There is no Column at the editor column index %zu\n", m_editorColumn);
             ImGui::EndPopup();
+            close();
             return;
         }
         if (m_scheduleCore->getColumn(m_editorColumn)->type != m_filterState.getType())
         {
             printf("FilterEditorSubGui::draw(): The types of the Column (%d) and the editor's filter state (%d) do not match!\n", m_scheduleCore->getColumn(m_editorColumn)->type, m_filterState.getType());
             ImGui::EndPopup();
+            close();
             return;
         }
 
-		// TODO clean up / make the positioning more precise!
-		ImGuiDir dir = ImGuiDir_Down;
-		ImGuiWindow* popup = ImGui::GetCurrentWindow();
-		ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
-		ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
+		// TO/DO clean up / make the positioning more precise!
+		// ImGuiDir dir = ImGuiDir_Down;
+		// ImGuiWindow* popup = ImGui::GetCurrentWindow();
+		// ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
+		// ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
 		//ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
 		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
 
@@ -307,22 +307,6 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 
                 auto [_comparisonChanged, newComparison] = displayComparisonCombo(SCH_DATE);
 
-                // Switch between a relative and absolute filter
-                // if (ImGui::Combo("##filterEditorDateMode", &comparisonOptionTemp, m_typeComparisonOptions.getOptions(SCH_DATE).string))
-                // {
-                //     if ((DateMode)comparisonOptionTemp == DateMode::Absolute)
-                //     {
-                //         m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), false));
-                //     }
-                //     else
-                //     {
-                //         m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime(), true));
-                //     }
-
-                //     m_typeComparisonOptions.setOptionSelection(SCH_DATE, comparisonOptionTemp);
-                //     invokeFilterEditEvent<DateContainer>(prevFilter, *m_filterState.getFilter<DateContainer>());
-                // }
-
                 ImGui::SameLine();
 
                 // !!! update value, might have been modified above
@@ -369,12 +353,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             ImGui::CloseCurrentPopup();
         }
 
-		m_openThisFrame = true;
 		ImGui::EndPopup();
-	}
-	else
-	{
-		m_openThisFrame = false;
 	}
 }
 
@@ -390,8 +369,6 @@ void FilterEditorSubGui::open_edit(size_t column, size_t filterIndex, const ImRe
     DateContainer currentDate = DateContainer::getCurrentSystemDate();
     m_viewedYear = currentDate.getTime().tm_year;
     m_viewedMonth = currentDate.getTime().tm_mon;
-
-	m_madeEdits = false;
 
     m_filterState.setType(m_scheduleCore->getColumn(column)->type);
     m_filterState.setFilter(m_scheduleCore->getColumn(column)->getFiltersConst().at(filterIndex));
@@ -410,8 +387,6 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
     DateContainer currentDate = DateContainer::getCurrentSystemDate();
     m_viewedYear = currentDate.getTime().tm_year;
     m_viewedMonth = currentDate.getTime().tm_mon;
-
-	m_madeEdits = false;
 
     SCHEDULE_TYPE columnType = m_scheduleCore->getColumn(column)->type;
 
@@ -471,19 +446,12 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
 	ImGui::OpenPopup("Filter Editor");
 }
 
-bool FilterEditorSubGui::getOpenThisFrame() const
+void FilterEditorSubGui::close()
 {
-	return  m_openThisFrame;
-}
-
-bool FilterEditorSubGui::getOpenLastFrame() const
-{
-	return  m_openLastFrame;
-}
-
-bool FilterEditorSubGui::getMadeEdits() const
-{
-	return m_madeEdits;
+    if (ImGui::IsPopupOpen("Filter Editor"))
+    {
+        ImGui::CloseCurrentPopup();
+    }
 }
 
 size_t FilterEditorSubGui::getFilterColumn() const

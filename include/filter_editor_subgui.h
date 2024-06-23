@@ -9,12 +9,6 @@
 #include "element_base.h"
 #include "schedule_core.h"
 
-enum class DateMode : int
-{
-    Relative,
-    Absolute
-};
-
 class EditorFilterState
 {
     private:
@@ -45,9 +39,6 @@ class FilterEditorSubGui : public Gui
     private:
         const ScheduleCore* m_scheduleCore = NULL;
         EditorFilterState m_filterState;
-        bool m_openLastFrame = false;
-        bool m_openThisFrame = false;
-        bool m_madeEdits = false; 
         bool m_editing = false;
         size_t m_editorColumn = 0;
         size_t m_editorFilterIndex = 0;
@@ -67,6 +58,8 @@ class FilterEditorSubGui : public Gui
         void open_edit(size_t column, size_t filterIndex, const ImRect& avoidRect);
         // open the editor to add a new Filter to a Column
         void open_create(size_t column, const ImRect& avoidRect);
+        // close the filter editor popup if it is open
+        void close();
 
         template <typename T>
         void invokeFilterEditEvent(Filter<T> previousValue, Filter<T> newValue)
@@ -77,8 +70,6 @@ class FilterEditorSubGui : public Gui
             }
         };
 
-        bool getOpenLastFrame() const;
-        bool getOpenThisFrame() const;
         bool getMadeEdits() const;
         size_t getFilterColumn() const;
 };
