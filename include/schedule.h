@@ -4,14 +4,15 @@
 #include <map>
 #include <cstddef>
 #include <string>
-#include <element_base.h>
-#include <element.h>
-#include <schedule_edit.h>
-#include <schedule_edit_history.h>
-#include <input.h>
-#include <interface.h>
-#include <schedule_column.h>
-#include <schedule_core.h>
+#include "schedule_events.h"
+#include "element_base.h"
+#include "element.h"
+#include "schedule_edit.h"
+#include "schedule_edit_history.h"
+#include "input.h"
+#include "interface.h"
+#include "schedule_column.h"
+#include "schedule_core.h"
 
 // TEMP
 #include <iostream>
@@ -23,6 +24,7 @@ class Schedule
     private:
         ScheduleEditHistory m_editHistory;
         ScheduleCore m_core;
+        ScheduleEvents m_scheduleEvents;
         std::string m_scheduleName;
 
         // input listeners AND gui listeners
@@ -219,6 +221,7 @@ class Schedule
         std::string getName();
         const ScheduleEditHistory& getEditHistory();
         ScheduleEditHistory& getEditHistoryMutable();
+        ScheduleEvents& getScheduleEvents();
         void undo();
         void redo();
         // Clear the current Schedule and replace it with default Columns and no rows.

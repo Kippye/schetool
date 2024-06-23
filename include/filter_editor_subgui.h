@@ -7,6 +7,7 @@
 #include "time_container.h"
 #include "date_container.h"
 #include "element_base.h"
+#include "schedule_events.h"
 #include "schedule_core.h"
 
 class EditorFilterState
@@ -45,13 +46,28 @@ class FilterEditorSubGui : public Gui
         unsigned int m_viewedYear = 0;
         unsigned int m_viewedMonth = 0;
         ImRect m_avoidRect;
+
+        std::function<void(size_t)> columnAddedListener = std::function<void(size_t)>([&](size_t column)
+        {
+            if (column <= m_editorColumn)
+            {
+                close();
+            }
+        });
+        std::function<void(size_t)> columnRemovedListener = std::function<void(size_t)>([&](size_t column)
+        {
+            if (column <= m_editorColumn)
+            {
+                close();
+            }
+        });
     public:
-        FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore);
+        FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
-        GuiEvent<size_t, std::shared_ptr<FilterBase>> addColumnFilter;
-        GuiEvent<size_t, size_t, std::shared_ptr<FilterBase>, std::shared_ptr<FilterBase>> editColumnFilter;
-        GuiEvent<size_t, size_t> removeColumnFilter;
+        Event<size_t, std::shared_ptr<FilterBase>> addColumnFilter;
+        Event<size_t, size_t, std::shared_ptr<FilterBase>, std::shared_ptr<FilterBase>> editColumnFilter;
+        Event<size_t, size_t> removeColumnFilter;
 
         void draw(Window& window, Input& input) override;
         // open the editor to edit a pre-existing Filter

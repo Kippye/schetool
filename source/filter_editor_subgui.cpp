@@ -38,9 +38,11 @@ bool EditorFilterState::hasValidFilter() const
 }
 
 
-FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore) : Gui(ID) 
+FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents) : Gui(ID) 
 {
 	m_scheduleCore = scheduleCore;
+    scheduleEvents.columnAdded.addListener(columnAddedListener);
+    scheduleEvents.columnRemoved.addListener(columnRemovedListener);
 }
 
 void FilterEditorSubGui::draw(Window& window, Input& input)

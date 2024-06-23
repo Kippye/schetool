@@ -1,14 +1,15 @@
 #pragma once
 #include "element_editor_subgui.h"
 #include "filter_editor_subgui.h"
-#include <gui.h>
-#include <window.h>
-#include <input.h>
-#include <element_base.h>
-#include <select_container.h>
-#include <select_options.h>
-#include <schedule_core.h>
-#include <schedule_column.h>
+#include "gui.h"
+#include "window.h"
+#include "input.h"
+#include "element_base.h"
+#include "select_container.h"
+#include "select_options.h"
+#include "schedule_events.h"
+#include "schedule_core.h"
+#include "schedule_column.h"
 
 class ScheduleGui : public Gui
 {
@@ -20,26 +21,26 @@ class ScheduleGui : public Gui
 
         // Events
         // setElementValue(column, row, value)
-        GuiEvent<size_t, size_t, bool>                      setElementValueBool;
-        GuiEvent<size_t, size_t, int>                       setElementValueNumber;
-        GuiEvent<size_t, size_t, double>                    setElementValueDecimal;
-        GuiEvent<size_t, size_t, std::string>        setElementValueText;
-        GuiEvent<size_t, size_t, SelectContainer>    setElementValueSelect;
-        GuiEvent<size_t, size_t, WeekdayContainer>    setElementValueWeekday;
-        GuiEvent<size_t, size_t, TimeContainer>      setElementValueTime;
-        GuiEvent<size_t, size_t, DateContainer>      setElementValueDate;
+        Event<size_t, size_t, bool>                      setElementValueBool;
+        Event<size_t, size_t, int>                       setElementValueNumber;
+        Event<size_t, size_t, double>                    setElementValueDecimal;
+        Event<size_t, size_t, std::string>        setElementValueText;
+        Event<size_t, size_t, SelectContainer>    setElementValueSelect;
+        Event<size_t, size_t, WeekdayContainer>    setElementValueWeekday;
+        Event<size_t, size_t, TimeContainer>      setElementValueTime;
+        Event<size_t, size_t, DateContainer>      setElementValueDate;
         // column add / remove
-        GuiEvent<size_t> removeColumn;
-        GuiEvent<size_t> addDefaultColumn;
+        Event<size_t> removeColumn;
+        Event<size_t> addDefaultColumn;
         // column modification
-        GuiEvent<size_t, SCHEDULE_TYPE>         setColumnType;
-        GuiEvent<size_t, COLUMN_SORT>           setColumnSort;
-        GuiEvent<size_t, std::string>    setColumnName;
+        Event<size_t, SCHEDULE_TYPE>         setColumnType;
+        Event<size_t, COLUMN_SORT>           setColumnSort;
+        Event<size_t, std::string>    setColumnName;
         // row modification
-        GuiEvent<size_t> addRow;
-        GuiEvent<size_t> removeRow;
+        Event<size_t> addRow;
+        Event<size_t> removeRow;
 
         // ScheduleGui(const char* ID, Schedule*);
-        void setScheduleCore(const ScheduleCore& scheduleCore);
+        void passScheduleComponents(const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
         void draw(Window& window, Input& input) override;
 };

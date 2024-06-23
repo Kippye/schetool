@@ -15,12 +15,12 @@
 #include "gui_templates.h"
 #include <iostream>
 
-void ScheduleGui::setScheduleCore(const ScheduleCore& scheduleCore)
+void ScheduleGui::passScheduleComponents(const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
 {
 	m_scheduleCore = &scheduleCore;
 
 	addSubGui("ElementEditorSubGui", new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
-	addSubGui("FilterEditorSubGui", new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore));
+	addSubGui("FilterEditorSubGui", new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 }
 
 void ScheduleGui::draw(Window& window, Input& input)

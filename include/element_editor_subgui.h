@@ -30,7 +30,7 @@ class ElementEditorSubGui : public Gui
 
         // Events
         // modifyColumnSelectOptions
-        GuiEvent<size_t, SelectOptionsModification> modifyColumnSelectOptions;
+        Event<size_t, SelectOptionsModification> modifyColumnSelectOptions;
 
         void draw(Window& window, Input& input) override;
         // Update the element editor before editing a new Element.
