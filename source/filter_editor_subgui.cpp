@@ -155,7 +155,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 int newValue = m_filterState.getFilter<int>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<int>(); 
 
-                if (ImGui::InputInt(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
+                if (ImGui::InputInt(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
                 {
                     m_filterState.getFilter<int>()->setPassValue(newValue);
                     invokeFilterEditEvent<int>(prevFilter, *m_filterState.getFilter<int>());
@@ -171,7 +171,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 double newValue = m_filterState.getFilter<double>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<double>(); 
                 
-                if (ImGui::InputDouble(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
+                if (ImGui::InputDouble(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
                 {
                     m_filterState.getFilter<double>()->setPassValue(newValue);
                     invokeFilterEditEvent<double>(prevFilter, *m_filterState.getFilter<double>());
