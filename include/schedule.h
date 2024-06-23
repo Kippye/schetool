@@ -255,7 +255,7 @@ class Schedule
             {
                 if (addToHistory)
                 {
-                    m_editHistory.addEdit(new FilterEdit(false, column, m_core.getColumn(column)->filters.size() - 1, filter));
+                    m_editHistory.addEdit(new FilterEdit(false, column, m_core.getColumn(column)->getFilterCount() - 1, filter));
                 }
             }
         }
@@ -279,7 +279,7 @@ class Schedule
         template <typename T>
         void removeColumnFilter(size_t column, size_t index, bool addToHistory = true)
         {
-            Filter<T> filterData = *std::dynamic_pointer_cast<Filter<T>>(m_core.getColumn(column)->filters.at(index));
+            Filter<T> filterData = *std::dynamic_pointer_cast<Filter<T>>(m_core.getColumn(column)->getFiltersConst().at(index));
 
             if (m_core.removeColumnFilter(column, index))
             {

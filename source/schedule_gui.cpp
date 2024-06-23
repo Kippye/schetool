@@ -76,9 +76,9 @@ void ScheduleGui::draw(Window& window, Input& input)
 
                     ImGui::SameLine();
 
-                    for (size_t i = 0; i < currentColumn->filters.size(); i++)
+                    for (size_t i = 0; i < currentColumn->getFilterCount(); i++)
                     {
-                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->filters.size();
+                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterCount();
                         if (ImGui::Button(std::string(m_scheduleCore->getColumn(column)->name).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
                         {
                             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
@@ -87,7 +87,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                             }
                         }
 
-                        if (i < currentColumn->filters.size() - 1)
+                        if (i < currentColumn->getFilterCount() - 1)
                         {
                             ImGui::SameLine();
                         }
@@ -140,7 +140,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                     for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
                     {
                         // check if the row's Element passes all Filters in this Column
-                        for (const auto& filter: m_scheduleCore->getColumn(column)->filters)
+                        for (const auto& filter: m_scheduleCore->getColumn(column)->getFiltersConst())
                         {
                             // fails to pass, don't show this row                            
                             if (filter->checkPasses(m_scheduleCore->getElementConst(column, row)) == false)

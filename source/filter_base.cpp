@@ -1,7 +1,7 @@
 #include "filter_base.h"
 #include <cstring>
 
-bool FilterBase::isComparisonValidForElement(const ElementBase* element, bool printInvalidWarning)
+bool FilterBase::isComparisonValidForElement(const ElementBase* element, bool printInvalidWarning) const
 {
     bool validComparison = false;
     for (Comparison comparison : filter_consts::getComparisonInfo(element->getType()).comparisons)
@@ -21,7 +21,7 @@ bool FilterBase::isComparisonValidForElement(const ElementBase* element, bool pr
     return validComparison;
 }
 
-bool FilterBase::checkPasses(const ElementBase* element)
+bool FilterBase::checkPasses(const ElementBase* element) const
 {
     if (isComparisonValidForElement(element) == false) { return false; }
     return true;

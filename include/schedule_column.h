@@ -37,84 +37,91 @@ enum COLUMN_SORT_
 
 struct Column
 {
-    std::vector<ElementBase*> rows = {};
-    std::vector<std::shared_ptr<FilterBase>> filters = {};
-    SCHEDULE_TYPE type;
-    std::string name;
-    bool permanent = false;
-    ScheduleColumnFlags flags;
-    COLUMN_SORT sort;
-    SelectOptions selectOptions;
+    private:
+        void setupFiltersPerType();
+        std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterBase>>> m_filtersPerType = {};
+    public:
+        std::vector<ElementBase*> rows = {};
+        SCHEDULE_TYPE type;
+        std::string name;
+        bool permanent = false;
+        ScheduleColumnFlags flags;
+        COLUMN_SORT sort;
+        SelectOptions selectOptions;
 
-    Column();
-    Column(const std::vector<ElementBase*>& rows, 
-        SCHEDULE_TYPE type, 
-        const std::string& name,
-        bool permanent = false,
-        ScheduleColumnFlags flags = ScheduleColumnFlags_None,
-        COLUMN_SORT sort = COLUMN_SORT_NONE,
-        const SelectOptions& selectOptions = SelectOptions()
-    );
+        Column();
+        Column(const std::vector<ElementBase*>& rows, 
+            SCHEDULE_TYPE type, 
+            const std::string& name,
+            bool permanent = false,
+            ScheduleColumnFlags flags = ScheduleColumnFlags_None,
+            COLUMN_SORT sort = COLUMN_SORT_NONE,
+            const SelectOptions& selectOptions = SelectOptions()
+        );
 
-    Column(const Column& other);
+        Column(const Column& other);
 
-    // copy assignment operator
-    Column& operator=(const Column& other)
-    {
-        if (this != &other)
-        {
-            filters = other.filters;
-            type = other.type;
-            name = other.name;
-            permanent = other.permanent;
-            flags = other.flags;
-            sort = other.sort;
-            selectOptions = other.selectOptions;
-
-            rows.clear();
-
-            for (size_t i = 0; i < other.rows.size(); i++)
+        // copy assignment operator
+        Column& operator=(const Column& other)
+        { 
+            if (this != &other)
             {
-                rows.push_back(other.rows[i]->getCopy());
+                m_filtersPerType = other.getFiltersPerType();
+                type = other.type;
+                name = other.name;
+                permanent = other.permanent;
+                flags = other.flags;
+                sort = other.sort;
+                selectOptions = other.selectOptions;
+
+                rows.clear();
+
+                for (size_t i = 0; i < other.rows.size(); i++)
+                {
+                    rows.push_back(other.rows[i]->getCopy());
+                }
             }
+
+            // std::cout << "Copy assigned column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
+            return *this;
         }
 
-        // std::cout << "Copy assigned column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
-        return *this;
-    }
-
-    ElementBase* operator [] (size_t index)
-    {
-        return getElement(index);
-    }
-
-    ~Column();
-
-    bool hasElement(size_t index) const;
-
-    ElementBase* getElement(size_t index);
-
-    const ElementBase* getElementConst(size_t index) const;
-
-    template <typename T>
-    void addFilter(SCHEDULE_TYPE type, const Filter<T>& filter)
-    {
-        filters.push_back(std::make_shared<Filter<T>>(filter));
-    }
-
-    template <typename T>
-    void replaceFilter(size_t index, const Filter<T>& filter)
-    {
-        if (index >= filters.size())
+        ElementBase* operator [] (size_t index)
         {
-            printf("Column::replaceFilter(%zu): Filter index out of range\n", index);
-            return;
+            return getElement(index);
         }
 
-        *std::dynamic_pointer_cast<Filter<T>>(filters.at(index)) = filter;
-    }
+        ~Column();
 
-    void removeFilter(size_t index);
+        bool hasElement(size_t index) const;
+
+        ElementBase* getElement(size_t index);
+
+        const ElementBase* getElementConst(size_t index) const;
+
+        const std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterBase>>>& getFiltersPerType() const;
+        std::vector<std::shared_ptr<FilterBase>>& getFilters();
+        const std::vector<std::shared_ptr<FilterBase>>& getFiltersConst() const;
+        size_t getFilterCount() const;
+
+        template <typename T>
+        void addFilter(const Filter<T>& filter)
+        {
+            if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::addFilter(filter): There is no filters vector for the Column %s's type %d\n", name.c_str(), type); return; }
+
+            m_filtersPerType.at(type).push_back(std::make_shared<Filter<T>>(filter));
+        }
+
+        template <typename T>
+        void replaceFilter(size_t index, const Filter<T>& filter)
+        {
+            if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::replaceFilter(%zu, filter): There is no filters vector for the Column %s's type %d\n", index, name.c_str(), type); return; }
+            if (index >= m_filtersPerType.at(type).size())  { printf("Column::replaceFilter(%zu): Filter index out of range\n", index); return; }
+
+            *std::dynamic_pointer_cast<Filter<T>>(m_filtersPerType.at(type).at(index)) = filter;
+        }
+
+        void removeFilter(size_t index);
 };
 
 struct ColumnSortComparison 

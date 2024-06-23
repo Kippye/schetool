@@ -394,7 +394,7 @@ void FilterEditorSubGui::open_edit(size_t column, size_t filterIndex, const ImRe
 	m_madeEdits = false;
 
     m_filterState.setType(m_scheduleCore->getColumn(column)->type);
-    m_filterState.setFilter(m_scheduleCore->getColumn(column)->filters.at(filterIndex));
+    m_filterState.setFilter(m_scheduleCore->getColumn(column)->getFiltersConst().at(filterIndex));
 
 	ImGui::OpenPopup("Filter Editor");
 }

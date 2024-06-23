@@ -321,7 +321,7 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
     
     if (m_schedule.at(column).type == SCH_SELECT)
     {
-        for (std::shared_ptr<FilterBase> filter: m_schedule.at(column).filters)
+        for (std::shared_ptr<FilterBase> filter: m_schedule.at(column).getFilters())
         {
             std::shared_ptr<Filter<SelectContainer>> filterPtr = std::dynamic_pointer_cast<Filter<SelectContainer>>(filter); 
             SelectContainer updatedValue = filterPtr->getPassValue();

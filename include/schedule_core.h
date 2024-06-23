@@ -57,7 +57,7 @@ class ScheduleCore
         {
             if (existsColumnAtIndex(column) == false) { return false; }
 
-            getMutableColumn(column)->addFilter(getColumn(column)->type, filter);
+            getMutableColumn(column)->addFilter(filter);
             return true;
         }
         template <typename T>

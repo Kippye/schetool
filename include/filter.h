@@ -15,7 +15,7 @@ class Filter : public FilterBase
             m_passValue = passValue;
         }
 
-        bool checkPasses(const ElementBase* element) override
+        bool checkPasses(const ElementBase* element) const override
         {
             if (isComparisonValidForElement(element) == false) { return false; }
             // TODO: Check if the provided ElementBase is of the correct type.
@@ -31,8 +31,8 @@ class Filter : public FilterBase
         }
 };
 
-template<>
-inline bool Filter<SelectContainer>::checkPasses(const ElementBase* element)
+template <>
+inline bool Filter<SelectContainer>::checkPasses(const ElementBase* element) const
 {
     SelectContainer value = ((const Element<SelectContainer>*)element)->getValue();
 
@@ -50,8 +50,8 @@ inline bool Filter<SelectContainer>::checkPasses(const ElementBase* element)
     }
 }
 
-template<>
-inline bool Filter<WeekdayContainer>::checkPasses(const ElementBase* element)
+template <>
+inline bool Filter<WeekdayContainer>::checkPasses(const ElementBase* element) const
 {
     WeekdayContainer value = ((const Element<WeekdayContainer>*)element)->getValue();
 
@@ -74,7 +74,7 @@ inline bool Filter<WeekdayContainer>::checkPasses(const ElementBase* element)
 }
 
 template <>
-inline bool Filter<DateContainer>::checkPasses(const ElementBase* element)
+inline bool Filter<DateContainer>::checkPasses(const ElementBase* element) const
 {
     DateContainer value = ((const Element<DateContainer>*)element)->getValue();
 

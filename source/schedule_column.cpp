@@ -2,6 +2,7 @@
 
 Column::Column()
 {
+    setupFiltersPerType();
     type = SCH_TEXT;
     name = "Text";
 }
@@ -15,6 +16,7 @@ Column::Column(const std::vector<ElementBase*>& rows,
         const SelectOptions& selectOptions
 )
 {
+    setupFiltersPerType();
     this->rows = rows;
     this->type = type;
     this->name = name;
@@ -26,6 +28,7 @@ Column::Column(const std::vector<ElementBase*>& rows,
 
 Column::Column(const Column& other)
 {
+    setupFiltersPerType();
     type = other.type;
     name = other.name;
     permanent = other.permanent;
@@ -37,33 +40,35 @@ Column::Column(const Column& other)
     {
         rows.push_back(other.rows[i]->getCopy());
     }
-    for (size_t i = 0; i < other.filters.size(); i++)
+    const auto& otherFiltersPerType = other.getFiltersPerType();
+    for (size_t i = 0; i < otherFiltersPerType.at(type).size(); i++)
     {
+        auto otherFilter = otherFiltersPerType.at(type).at(i);
         switch(type)
         {
             case SCH_BOOL:
-                filters.push_back(std::make_shared<Filter<bool>>(*std::dynamic_pointer_cast<Filter<bool>>(other.filters.at(i))));
+                m_filtersPerType.at(type).push_back(std::make_shared<Filter<bool>>(*std::dynamic_pointer_cast<Filter<bool>>(otherFilter)));
             break;
             case SCH_NUMBER:
-                filters.push_back(std::make_shared<Filter<int>>(*std::dynamic_pointer_cast<Filter<int>>(other.filters.at(i))));
+                m_filtersPerType.at(type).push_back(std::make_shared<Filter<int>>(*std::dynamic_pointer_cast<Filter<int>>(otherFilter)));
             break;
             case SCH_DECIMAL:
-                filters.push_back(std::make_shared<Filter<double>>(*std::dynamic_pointer_cast<Filter<double>>(other.filters.at(i))));
+                m_filtersPerType.at(type).push_back(std::make_shared<Filter<double>>(*std::dynamic_pointer_cast<Filter<double>>(otherFilter)));
             break;
             case SCH_TEXT:
-                filters.push_back(std::make_shared<Filter<std::string>>(*std::dynamic_pointer_cast<Filter<std::string>>(other.filters.at(i))));
+                m_filtersPerType.at(type).push_back(std::make_shared<Filter<std::string>>(*std::dynamic_pointer_cast<Filter<std::string>>(otherFilter)));
             break;
             case SCH_SELECT:
-                filters.push_back(std::make_shared<Filter<SelectContainer>>(*std::dynamic_pointer_cast<Filter<SelectContainer>>(other.filters.at(i))));
+                m_filtersPerType.at(type).push_back(std::make_shared<Filter<SelectContainer>>(*std::dynamic_pointer_cast<Filter<SelectContainer>>(otherFilter)));
             break;
             case SCH_WEEKDAY:
-                filters.push_back(std::make_shared<Filter<WeekdayContainer>>(*std::dynamic_pointer_cast<Filter<WeekdayContainer>>(other.filters.at(i))));
+                m_filtersPerType.at(type).push_back(std::make_shared<Filter<WeekdayContainer>>(*std::dynamic_pointer_cast<Filter<WeekdayContainer>>(otherFilter)));
             break;
             case SCH_TIME:
-                filters.push_back(std::make_shared<Filter<TimeContainer>>(*std::dynamic_pointer_cast<Filter<TimeContainer>>(other.filters.at(i))));
+                m_filtersPerType.at(type).push_back(std::make_shared<Filter<TimeContainer>>(*std::dynamic_pointer_cast<Filter<TimeContainer>>(otherFilter)));
             break;
             case SCH_DATE:
-                filters.push_back(std::make_shared<Filter<DateContainer>>(*std::dynamic_pointer_cast<Filter<DateContainer>>(other.filters.at(i))));
+                m_filtersPerType.at(type).push_back(std::make_shared<Filter<DateContainer>>(*std::dynamic_pointer_cast<Filter<DateContainer>>(otherFilter)));
             break;
             default:
             
@@ -80,6 +85,15 @@ Column::~Column()
     for (size_t i = 0; i < rows.size(); i++)
     {
         delete rows[i];
+    }
+}
+
+// private function. Sets up the m_filtersPerType map to contain an empty vector for each SCHEDULE_TYPE
+void Column::setupFiltersPerType()
+{
+    for (int i = 0; i < SCH_LAST; i++)
+    {
+        m_filtersPerType.insert_or_assign<std::vector<std::shared_ptr<FilterBase>>>((SCHEDULE_TYPE)i, {});
     }
 }
 
@@ -108,13 +122,42 @@ const ElementBase* Column::getElementConst(size_t index) const
     return rows[index];
 }
 
-void Column::removeFilter(size_t index)
+const std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterBase>>>& Column::getFiltersPerType() const
 {
-    if (index >= filters.size())
-    {
-        printf("Column::removeFilter(%zu): Filter index out of range\n", index);
-        return;
+    return m_filtersPerType;
+}
+
+std::vector<std::shared_ptr<FilterBase>>& Column::getFilters()
+{
+    if (m_filtersPerType.find(type) == m_filtersPerType.end()) 
+    { 
+        printf("Column::getFilters(): Warning: There is no filters vector for the Column %s's type %d. Can't return reference early!\n", name.c_str(), type); 
     }
 
-    filters.erase(filters.begin() + index);
+    return m_filtersPerType.at(type);
+}
+
+const std::vector<std::shared_ptr<FilterBase>>& Column::getFiltersConst() const
+{
+    if (m_filtersPerType.find(type) == m_filtersPerType.end()) 
+    { 
+        printf("Column::getFiltersConst(): Warning: There is no filters vector for the Column %s's type %d. Can't return reference early!\n", name.c_str(), type); 
+    }
+
+    return m_filtersPerType.at(type);
+}
+
+size_t Column::getFilterCount() const
+{
+    if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::getFilterCount(): There is no filters vector for the Column %s's type %d\n", name.c_str(), type); return 0; }
+   
+    return m_filtersPerType.at(type).size();
+}
+
+void Column::removeFilter(size_t index)
+{
+    if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::removeFilter(%zu): There is no filters vector for the Column %s's type %d\n", index, name.c_str(), type); return; }
+    if (index >= m_filtersPerType.at(type).size()) { printf("Column::removeFilter(%zu): Filter index out of range\n", index); return; }
+
+    m_filtersPerType.at(type).erase(m_filtersPerType.at(type).begin() + index);
 }
