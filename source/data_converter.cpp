@@ -21,6 +21,14 @@ void DataConverter::setupObjectTable()
 {
     m_objects =
     {
+        createDefinition<BLF_Filter<bool>>(),
+        createDefinition<BLF_Filter<int>>(),
+        createDefinition<BLF_Filter<double>>(),
+        createDefinition<BLF_Filter<std::string>>(),
+        createDefinition<BLF_Filter<SelectContainer>>(),
+        createDefinition<BLF_Filter<WeekdayContainer>>(),
+        createDefinition<BLF_Filter<TimeContainer>>(),
+        createDefinition<BLF_Filter<DateContainer>>(),
         createDefinition<BLF_Column>(),
         createDefinition<BLF_Element>(),
         createDefinition<BLF_Bool>(),
@@ -40,7 +48,62 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
 
     for (size_t c = 0; c < schedule.size(); c++)
     {
+        SCHEDULE_TYPE columnType = schedule[c].type;
         data.addObject(new BLF_Column(&schedule[c], c));
+
+        auto filters = schedule[c].getFiltersConst();
+        for (size_t f = 0; f < schedule[c].getFilterCount(); f++)
+        {
+            auto filter = filters.at(f).get();
+
+            switch(columnType)
+            {
+                case(SCH_BOOL):
+                {
+                    data.addObject(new BLF_Filter<bool>((Filter<bool>*)filter, columnType, c, f));
+                    break;
+                }
+                case(SCH_NUMBER):
+                {
+                    data.addObject(new BLF_Filter<int>((Filter<int>*)filter, columnType, c, f));
+                    break;
+                }
+                case(SCH_DECIMAL):
+                {
+                    data.addObject(new BLF_Filter<double>((Filter<double>*)filter, columnType, c, f));
+                    break;
+                }
+                case(SCH_TEXT):
+                {
+                    data.addObject(new BLF_Filter<std::string>((Filter<std::string>*)filter, columnType, c, f));
+                    break;
+                }
+                case(SCH_SELECT):
+                { 
+                    data.addObject(new BLF_Filter<SelectContainer>((Filter<SelectContainer>*)filter, columnType, c, f));
+                    break;
+                }
+                case(SCH_WEEKDAY):
+                { 
+                    data.addObject(new BLF_Filter<WeekdayContainer>((Filter<WeekdayContainer>*)filter, columnType, c, f));
+                    break;
+                }
+                case(SCH_TIME):
+                { 
+                    data.addObject(new BLF_Filter<TimeContainer>((Filter<TimeContainer>*)filter, columnType, c, f));
+                    break;
+                }
+                case(SCH_DATE):
+                { 
+                    data.addObject(new BLF_Filter<DateContainer>((Filter<DateContainer>*)filter, columnType, c, f));
+                    break;
+                }
+                default:
+                {
+                    printf("DataConverter::writeSchedule(%s, schedule): Tried to write filter with invalid type %d\n", path, schedule[c].type);
+                }
+            }
+        }
 
         for (size_t r = 0; r < schedule[c].rows.size(); r++)
         {
@@ -144,10 +207,134 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 
         column.selectOptions.setIsMutable(loadedColumns[c]->selectOptionsMutable);
 
+        SCHEDULE_TYPE columnType = (SCHEDULE_TYPE)loadedColumns[c]->type;
+
+        // TEMP get filters
+        switch(columnType)
+        {
+            case(SCH_BOOL):
+            {
+                for (BLF_Filter<bool>* filter: file.data.get<BLF_Filter<bool>>())
+                {
+                    if (filter->columnIndex == c)
+                    {
+                        auto specialFilter = Filter<bool>(filter->value);
+                        specialFilter.setComparison((Comparison)filter->comparison);
+                        column.addFilter(specialFilter);
+                        dataPointers.push_back(filter);
+                    }
+                }
+                break;
+            }
+            case(SCH_NUMBER):
+            {
+                for (BLF_Filter<int>* filter: file.data.get<BLF_Filter<int>>())
+                {
+                    if (filter->columnIndex == c)
+                    {
+                        auto specialFilter = Filter<int>(filter->value);
+                        specialFilter.setComparison((Comparison)filter->comparison);
+                        column.addFilter(specialFilter);
+                        dataPointers.push_back(filter);
+                    }
+                }
+                break;
+            }
+            case(SCH_DECIMAL):
+            {
+                for (BLF_Filter<double>* filter: file.data.get<BLF_Filter<double>>())
+                {
+                    if (filter->columnIndex == c)
+                    {
+                        auto specialFilter = Filter<double>(filter->value);
+                        specialFilter.setComparison((Comparison)filter->comparison);
+                        column.addFilter(specialFilter);
+                        dataPointers.push_back(filter);
+                    }
+                }    
+                break;
+            }
+            case(SCH_TEXT):
+            {
+                for (BLF_Filter<std::string>* filter: file.data.get<BLF_Filter<std::string>>())
+                {
+                    if (filter->columnIndex == c)
+                    {
+                        auto specialFilter = Filter<std::string>(filter->value);
+                        specialFilter.setComparison((Comparison)filter->comparison);
+                        column.addFilter(specialFilter);
+                        dataPointers.push_back(filter);
+                    }
+                }                 
+                break;
+            }
+            case(SCH_SELECT):
+            { 
+                for (BLF_Filter<SelectContainer>* filter: file.data.get<BLF_Filter<SelectContainer>>())
+                {
+                    if (filter->columnIndex == c)
+                    {
+                        auto specialFilter = Filter<SelectContainer>(filter->getValue());
+                        specialFilter.setComparison((Comparison)filter->comparison);
+                        column.addFilter(specialFilter);
+                        dataPointers.push_back(filter);
+                    }
+                }        
+                break;
+            }
+            case(SCH_WEEKDAY):
+            { 
+                for (BLF_Filter<WeekdayContainer>* filter: file.data.get<BLF_Filter<WeekdayContainer>>())
+                {
+                    if (filter->columnIndex == c)
+                    {
+                        auto specialFilter = Filter<WeekdayContainer>(filter->getValue());
+                        specialFilter.setComparison((Comparison)filter->comparison);
+                        column.addFilter(specialFilter);
+                        dataPointers.push_back(filter);
+                    }
+                }     
+                break;
+            }
+            case(SCH_TIME):
+            { 
+                for (BLF_Filter<TimeContainer>* filter: file.data.get<BLF_Filter<TimeContainer>>())
+                {
+                    if (filter->columnIndex == c)
+                    {
+                        auto specialFilter = Filter<TimeContainer>(filter->getValue());
+                        specialFilter.setComparison((Comparison)filter->comparison);
+                        column.addFilter(specialFilter);
+                        dataPointers.push_back(filter);
+                    }
+                }                     
+                break;
+            }
+            case(SCH_DATE):
+            { 
+                for (BLF_Filter<DateContainer>* filter: file.data.get<BLF_Filter<DateContainer>>())
+                {
+                    if (filter->columnIndex == c)
+                    {
+                        auto specialFilter = Filter<DateContainer>(filter->getValue());
+                        specialFilter.setComparison((Comparison)filter->comparison);
+                        column.addFilter(specialFilter);
+                        dataPointers.push_back(filter);
+                    }
+                }                   
+                break;
+            }
+            default:
+            {
+                printf("DataConverter::readSchedule(%s, schedule): Reading filter of type %d has not been implemented\n", path, columnType);
+            }
+        }
+
         schedule.push_back(column);
 
         dataPointers.push_back(loadedColumns[c]);
     }
+
 
     for (size_t t = 0; t < (size_t)SCH_LAST; t++)
     {
@@ -248,7 +435,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             default:
             {
-                printf("DataConverter::readSchedule(%s, schedule): Read element with invalid type %d\n", path, type);
+                printf("DataConverter::readSchedule(%s, schedule): Reading elements with type %d has not been implemented\n", path, type);
             }
         }
     }

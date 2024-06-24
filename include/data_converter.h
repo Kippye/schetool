@@ -1,6 +1,6 @@
 #pragma once
 #include <iterator>
-#include <blf.hpp>
+#include "blf/include/blf.hpp"
 #include <element_base.h>
 #include <element.h>
 #include <time_container.h>
@@ -10,10 +10,365 @@
 #include <element.h>
 using namespace blf;
 
+class BLF_FilterBase : public TemplateObject
+{
+    protected:
+        const char* objectName = "BLF_FilterBase";
+        std::vector<ObjectAttribute> attributeMap = 
+        {
+            {"ColumnIndex", &columnIndex, TYPE_INT},
+            {"FilterIndex", &filterIndex, TYPE_INT},
+            {"Type", &type, TYPE_INT},
+            {"Comparison", &comparison, TYPE_INT},
+        };
+    public:
+        int columnIndex;
+        int filterIndex;
+        int type;
+        int comparison;
+
+    BLF_FilterBase() 
+    {
+    }
+
+    BLF_FilterBase(Comparison comparison, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0)
+    {
+        this->columnIndex = columnIndex;
+        this->filterIndex = filterIndex;
+        this->type = type;
+        this->comparison = (int)comparison;
+    }
+
+    const char* getObjectName() const override
+    {
+        return objectName;
+    }
+
+    std::vector<ObjectAttribute> getAttributeMap() override
+    {
+        return attributeMap;
+    }
+};
+
+template <typename T>
+class BLF_Filter : public BLF_FilterBase {};
+
+template <>
+class BLF_Filter<bool> : public BLF_FilterBase
+{
+    public:
+        bool value;
+
+        BLF_Filter<bool>()
+        {
+            attributeMap.push_back({"Value", &value, TYPE_BOOL});
+            objectName = "BLF_Filter_Bool";
+        }
+
+        BLF_Filter<bool>(const Filter<bool>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        {
+            value = filter->getPassValue();
+            attributeMap.push_back({"Value", &value, TYPE_BOOL});
+            objectName = "BLF_Filter_Bool";
+        }
+};
+
+template <>
+class BLF_Filter<int> : public BLF_FilterBase
+{
+    public:
+        int value;
+
+        BLF_Filter<int>()
+        {
+            attributeMap.push_back({"Value", &value, TYPE_INT});
+            objectName = "BLF_Filter_Number";
+        }
+
+        BLF_Filter<int>(const Filter<int>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        {
+            value = filter->getPassValue();
+            attributeMap.push_back({"Value", &value, TYPE_INT});
+            objectName = "BLF_Filter_Number";
+        }
+};
+
+template <>
+class BLF_Filter<double> : public BLF_FilterBase
+{
+    public:
+        double value;
+
+        BLF_Filter<double>()
+        {
+            attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
+            objectName = "BLF_Filter_Decimal";
+        }
+
+        BLF_Filter<double>(const Filter<double>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        {
+            value = filter->getPassValue();
+            attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
+            objectName = "BLF_Decimal";
+        }
+};
+
+template <>
+class BLF_Filter<std::string> : public BLF_FilterBase
+{
+    public:
+        std::string value;
+
+        BLF_Filter<std::string>()
+        {
+            attributeMap.push_back({"Value", &value, TYPE_STRING});
+            objectName = "BLF_Filter_Text";
+        }
+
+        BLF_Filter<std::string>(const Filter<std::string>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        {
+            value = filter->getPassValue();
+            attributeMap.push_back({"Value", &value, TYPE_STRING});
+            objectName = "BLF_Filter_Text";
+        }
+};
+
+template <>
+class BLF_Filter<SelectContainer> : public BLF_FilterBase
+{
+    private:
+        std::vector<int*> m_selectionPointers = 
+        {
+            &selection_0,
+            &selection_1,
+            &selection_2,
+            &selection_3,
+            &selection_4,
+            &selection_5,
+            &selection_6,
+            &selection_7,
+            &selection_8,
+            &selection_9,
+            &selection_10,
+            &selection_11,
+            &selection_12,
+            &selection_13,
+            &selection_14,
+            &selection_15,
+            &selection_16,
+            &selection_17,
+            &selection_18,
+            &selection_19,
+        };
+    public:
+        int selection_0 = -1;
+        int selection_1 = -1;
+        int selection_2 = -1;
+        int selection_3 = -1;
+        int selection_4 = -1;
+        int selection_5 = -1;
+        int selection_6 = -1;
+        int selection_7 = -1;
+        int selection_8 = -1;
+        int selection_9 = -1;
+        int selection_10 = -1;
+        int selection_11 = -1;
+        int selection_12 = -1;
+        int selection_13 = -1;
+        int selection_14 = -1;
+        int selection_15 = -1;
+        int selection_16 = -1;
+        int selection_17 = -1;
+        int selection_18 = -1;
+        int selection_19 = -1;
+
+        BLF_Filter<SelectContainer>() 
+        {
+            for (size_t i = 0; i < m_selectionPointers.size(); i++)
+            {
+                attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
+            }
+
+            objectName = "BLF_Filter_Select";
+        }
+        BLF_Filter<SelectContainer>(const Filter<SelectContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        {
+            const std::set<size_t>& selection = filter->getPassValue().getSelection();
+        
+            size_t i = 0;
+            for (size_t s: selection)
+            {
+                *this->m_selectionPointers[i] = (int)s;
+                i++;
+            }
+
+            for (i = 0; i < m_selectionPointers.size(); i++)
+            {
+                attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
+            }
+
+            objectName = "BLF_Filter_Select";
+        }
+          
+        SelectContainer getValue()
+        {
+            std::set<size_t> selection = {};
+
+            for (size_t i = 0; i < std::size(m_selectionPointers); i++)
+            {
+                if (*m_selectionPointers[i] != -1)
+                {
+                    selection.insert(*m_selectionPointers[i]);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            SelectContainer value;
+            value.replaceSelection(selection);
+            return value;
+        }
+};
+
+template <>
+class BLF_Filter<WeekdayContainer> : public BLF_FilterBase
+{
+    private:
+        std::vector<int*> m_selectionPointers = 
+        {
+            &selection_0,
+            &selection_1,
+            &selection_2,
+            &selection_3,
+            &selection_4,
+            &selection_5,
+            &selection_6,
+        };
+    public:
+        BLF_Filter<WeekdayContainer>() 
+        {
+            for (size_t i = 0; i < m_selectionPointers.size(); i++)
+            {
+                attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
+            }
+
+            objectName = "BLF_Filter_Weekday";
+        }
+        BLF_Filter<WeekdayContainer>(const Filter<WeekdayContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0 ) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        {
+            const std::set<size_t>& selection = filter->getPassValue().getSelection();
+        
+            size_t i = 0;
+            for (size_t s: selection)
+            {
+                *this->m_selectionPointers[i] = (int)s;
+                i++;
+            }
+
+            for (i = 0; i < m_selectionPointers.size(); i++)
+            {
+                attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
+            }
+
+            objectName = "BLF_Filter_Weekday";
+        }
+
+    public:
+        int selection_0 = -1;
+        int selection_1 = -1;
+        int selection_2 = -1;
+        int selection_3 = -1;
+        int selection_4 = -1;
+        int selection_5 = -1;
+        int selection_6 = -1;
+          
+        WeekdayContainer getValue()
+        {
+            std::set<size_t> selection = {};
+
+            for (size_t i = 0; i < std::size(m_selectionPointers); i++)
+            {
+                if (*m_selectionPointers[i] != -1)
+                {
+                    selection.insert(*m_selectionPointers[i]);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            WeekdayContainer value;
+            value.replaceSelection(selection);
+            return value;
+        }
+};
+
+template <>
+class BLF_Filter<TimeContainer> : public BLF_FilterBase
+{
+    public:
+        int hours;
+        int minutes;
+        BLF_Filter<TimeContainer>() 
+        {
+            attributeMap.push_back({"Hours", &hours, TYPE_INT});
+            attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
+            objectName = "BLF_Filter_Time";
+        }
+        BLF_Filter<TimeContainer>(const Filter<TimeContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        {
+            hours = filter->getPassValue().getHours();
+            minutes = filter->getPassValue().getMinutes();
+            attributeMap.push_back({"Hours", &hours, TYPE_INT});
+            attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
+            objectName = "BLF_Filter_Time";
+        }
+
+        TimeContainer getValue()
+        {
+            return TimeContainer(hours, minutes);
+        }
+};
+
+template <>
+class BLF_Filter<DateContainer> : public BLF_FilterBase
+{
+    public:
+        int year;
+        int month;
+        int mday;
+        BLF_Filter<DateContainer>() 
+        {
+            attributeMap.push_back({"Year", &year, TYPE_INT});
+            attributeMap.push_back({"Month", &month, TYPE_INT});
+            attributeMap.push_back({"Mday", &mday, TYPE_INT});
+            objectName = "BLF_Filter_Date";
+        }
+        BLF_Filter<DateContainer>(const Filter<DateContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        {
+            tm dateTime = filter->getPassValue().getTime();
+            year = dateTime.tm_year;
+            month = dateTime.tm_mon;
+            mday = dateTime.tm_mday;
+            attributeMap.push_back({"Year", &year, TYPE_INT});
+            attributeMap.push_back({"Month", &month, TYPE_INT});
+            attributeMap.push_back({"Mday", &mday, TYPE_INT});
+            objectName = "BLF_Filter_Date";
+        }
+
+        DateContainer getValue()
+        {
+            return DateContainer(tm{0, 0, 0, mday, month, year});
+        }
+};
+
+
 class BLF_Column : public TemplateObject
 {
     private:
-
     protected:
         const char* objectName = "BLF_Column";
         std::vector<ObjectAttribute> attributeMap = 
