@@ -2,7 +2,7 @@
 #include <element_base.h>
 #include <element.h>
 
-tm DataConverter::getElementCreationTime(BLF_Element* element)
+tm DataConverter::getElementCreationTime(BLF_ElementBase* element)
 {
     return tm {
         0,
@@ -30,15 +30,15 @@ void DataConverter::setupObjectTable()
         createDefinition<BLF_Filter<TimeContainer>>(),
         createDefinition<BLF_Filter<DateContainer>>(),
         createDefinition<BLF_Column>(),
-        createDefinition<BLF_Element>(),
-        createDefinition<BLF_Bool>(),
-        createDefinition<BLF_Number>(),
-        createDefinition<BLF_Decimal>(),
-        createDefinition<BLF_Text>(),
-        createDefinition<BLF_Select>(),
-        createDefinition<BLF_Weekday>(),
-        createDefinition<BLF_Time>(),
-        createDefinition<BLF_Date>(),
+        createDefinition<BLF_ElementBase>(),
+        createDefinition<BLF_Element<bool>>(),
+        createDefinition<BLF_Element<int>>(),
+        createDefinition<BLF_Element<double>>(),
+        createDefinition<BLF_Element<std::string>>(),
+        createDefinition<BLF_Element<SelectContainer>>(),
+        createDefinition<BLF_Element<WeekdayContainer>>(),
+        createDefinition<BLF_Element<TimeContainer>>(),
+        createDefinition<BLF_Element<DateContainer>>(),
     };
 }
 
@@ -49,112 +49,35 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
     for (size_t c = 0; c < schedule.size(); c++)
     {
         SCHEDULE_TYPE columnType = schedule[c].type;
-        data.addObject(new BLF_Column(&schedule[c], c));
-
-        auto filters = schedule[c].getFiltersConst();
-        for (size_t f = 0; f < schedule[c].getFilterCount(); f++)
+        switch(columnType)
         {
-            auto filter = filters.at(f).get();
-
-            switch(columnType)
-            {
-                case(SCH_BOOL):
-                {
-                    data.addObject(new BLF_Filter<bool>((Filter<bool>*)filter, columnType, c, f));
-                    break;
-                }
-                case(SCH_NUMBER):
-                {
-                    data.addObject(new BLF_Filter<int>((Filter<int>*)filter, columnType, c, f));
-                    break;
-                }
-                case(SCH_DECIMAL):
-                {
-                    data.addObject(new BLF_Filter<double>((Filter<double>*)filter, columnType, c, f));
-                    break;
-                }
-                case(SCH_TEXT):
-                {
-                    data.addObject(new BLF_Filter<std::string>((Filter<std::string>*)filter, columnType, c, f));
-                    break;
-                }
-                case(SCH_SELECT):
-                { 
-                    data.addObject(new BLF_Filter<SelectContainer>((Filter<SelectContainer>*)filter, columnType, c, f));
-                    break;
-                }
-                case(SCH_WEEKDAY):
-                { 
-                    data.addObject(new BLF_Filter<WeekdayContainer>((Filter<WeekdayContainer>*)filter, columnType, c, f));
-                    break;
-                }
-                case(SCH_TIME):
-                { 
-                    data.addObject(new BLF_Filter<TimeContainer>((Filter<TimeContainer>*)filter, columnType, c, f));
-                    break;
-                }
-                case(SCH_DATE):
-                { 
-                    data.addObject(new BLF_Filter<DateContainer>((Filter<DateContainer>*)filter, columnType, c, f));
-                    break;
-                }
-                default:
-                {
-                    printf("DataConverter::writeSchedule(%s, schedule): Tried to write filter with invalid type %d\n", path, schedule[c].type);
-                }
-            }
-        }
-
-        for (size_t r = 0; r < schedule[c].rows.size(); r++)
-        {
-            const ElementBase* element = schedule[c].rows[r];
-            switch(element->getType())
-            {
-                case(SCH_BOOL):
-                {
-                    data.addObject(new BLF_Bool((Element<bool>*)element, c));
-                    break;
-                }
-                case(SCH_NUMBER):
-                {
-                    data.addObject(new BLF_Number((Element<int>*)element, c));
-                    break;
-                }
-                case(SCH_DECIMAL):
-                {
-                    data.addObject(new BLF_Decimal((Element<double>*)element, c));
-                    break;
-                }
-                case(SCH_TEXT):
-                {
-                    data.addObject(new BLF_Text((Element<std::string>*)element, c));
-                    break;
-                }
-                case(SCH_SELECT):
-                { 
-                    data.addObject(new BLF_Select((Element<SelectContainer>*)element, c));
-                    break;
-                }
-                case(SCH_WEEKDAY):
-                { 
-                    data.addObject(new BLF_Weekday((Element<WeekdayContainer>*)element, c));
-                    break;
-                }
-                case(SCH_TIME):
-                { 
-                    data.addObject(new BLF_Time((Element<TimeContainer>*)element, c));
-                    break;
-                }
-                case(SCH_DATE):
-                { 
-                    data.addObject(new BLF_Date((Element<DateContainer>*)element, c));
-                    break;
-                }
-                default:
-                {
-                    printf("DataConverter::writeSchedule(%s, schedule): Tried to write element with invalid type %d\n", path, element->getType());
-                }
-            }
+            case(SCH_BOOL):
+                addColumnToData<bool>(data, schedule[c], c);
+                break;
+            case(SCH_NUMBER):
+                addColumnToData<int>(data, schedule[c], c);
+                break;
+            case(SCH_DECIMAL):
+                addColumnToData<double>(data, schedule[c], c);
+                break;
+            case(SCH_TEXT):
+                addColumnToData<std::string>(data, schedule[c], c);
+                break;
+            case(SCH_SELECT):
+                addColumnToData<SelectContainer>(data, schedule[c], c);
+                break;
+            case(SCH_WEEKDAY):
+                addColumnToData<WeekdayContainer>(data, schedule[c], c);
+                break;
+            case(SCH_TIME):
+                addColumnToData<TimeContainer>(data, schedule[c], c);
+                break;
+            case(SCH_DATE):
+                addColumnToData<DateContainer>(data, schedule[c], c);
+                break;
+            default:
+                printf("DataConverter::writeSchedule(%s, schedule): Writing Columns of type %d has not been implemented\n", path, schedule[c].type);
+                break;
         }
     }
 
@@ -344,7 +267,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
         {
             case(SCH_BOOL):
             {
-                for (BLF_Bool* element: file.data.get<BLF_Bool>())
+                for (BLF_Element<bool>* element: file.data.get<BLF_Element<bool>>())
                 {
                     tm creationTime = getElementCreationTime(element);
                     schedule[element->columnIndex].rows.push_back(new Element<bool>(type, element->value, DateContainer(creationTime), TimeContainer(creationTime)));
@@ -354,7 +277,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             case(SCH_NUMBER):
             {
-                for (BLF_Number* element: file.data.get<BLF_Number>())
+                for (BLF_Element<int>* element: file.data.get<BLF_Element<int>>())
                 {
                     tm creationTime = getElementCreationTime(element);
                     schedule[element->columnIndex].rows.push_back(new Element<int>(type, element->value, DateContainer(creationTime), TimeContainer(creationTime)));
@@ -364,7 +287,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             case(SCH_DECIMAL):
             {
-                for (BLF_Decimal* element: file.data.get<BLF_Decimal>())
+                for (BLF_Element<double>* element: file.data.get<BLF_Element<double>>())
                 {
                     tm creationTime = getElementCreationTime(element);
                     schedule[element->columnIndex].rows.push_back(new Element<double>(type, element->value, DateContainer(creationTime), TimeContainer(creationTime)));
@@ -374,7 +297,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             case(SCH_TEXT):
             {
-                for (BLF_Text* element: file.data.get<BLF_Text>())
+                for (BLF_Element<std::string>* element: file.data.get<BLF_Element<std::string>>())
                 {
                     tm creationTime = getElementCreationTime(element);
                     schedule[element->columnIndex].rows.push_back(new Element<std::string>(type, element->value.getBuffer(), DateContainer(creationTime), TimeContainer(creationTime)));
@@ -384,7 +307,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             case(SCH_SELECT):
             { 
-                for (BLF_Select* element: file.data.get<BLF_Select>())
+                for (BLF_Element<SelectContainer>* element: file.data.get<BLF_Element<SelectContainer>>())
                 {
                     tm creationTime = getElementCreationTime(element);
                     Element<SelectContainer>* select = new Element<SelectContainer>(type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
@@ -398,7 +321,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             case(SCH_WEEKDAY):
             { 
-                for (BLF_Weekday* element: file.data.get<BLF_Weekday>())
+                for (BLF_Element<WeekdayContainer>* element: file.data.get<BLF_Element<WeekdayContainer>>())
                 {
                     tm creationTime = getElementCreationTime(element);
                     Element<WeekdayContainer>* weekday = new Element<WeekdayContainer>(type, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
@@ -411,7 +334,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             case(SCH_TIME):
             { 
-                for (BLF_Time* element: file.data.get<BLF_Time>())
+                for (BLF_Element<TimeContainer>* element: file.data.get<BLF_Element<TimeContainer>>())
                 {
                     tm creationTime = getElementCreationTime(element);
                     schedule[element->columnIndex].rows.push_back(new Element<TimeContainer>(type, TimeContainer(element->hours, element->minutes), DateContainer(creationTime), TimeContainer(creationTime)));
@@ -421,7 +344,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             case(SCH_DATE):
             { 
-                for (BLF_Date* element: file.data.get<BLF_Date>())
+                for (BLF_Element<DateContainer>* element: file.data.get<BLF_Element<DateContainer>>())
                 {
                     tm creationTime = getElementCreationTime(element);
                     tm dateTime;

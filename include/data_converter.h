@@ -506,10 +506,10 @@ class BLF_Column : public TemplateObject
     }
 };
 
-class BLF_Element : public TemplateObject
+class BLF_ElementBase : public TemplateObject
 {
     protected:
-        const char* objectName = "BLF_Element";
+        const char* objectName = "BLF_ElementBase";
         std::vector<ObjectAttribute> attributeMap = 
         {
             {"ColumnIndex", &columnIndex, TYPE_INT},
@@ -529,9 +529,9 @@ class BLF_Element : public TemplateObject
         int creationHours;
         int creationMinutes;
 
-    BLF_Element() {}
+    BLF_ElementBase() {}
 
-    BLF_Element(const ElementBase* element, size_t columnIndex = 0)
+    BLF_ElementBase(const ElementBase* element, size_t columnIndex = 0)
     {
         this->columnIndex = columnIndex;
         this->type = element->getType();
@@ -553,75 +553,83 @@ class BLF_Element : public TemplateObject
     }
 };
 
-class BLF_Bool : public BLF_Element
+template <typename T>
+class BLF_Element : public BLF_ElementBase {};
+
+template <>
+class BLF_Element<bool> : public BLF_ElementBase
 {
     public:
         bool value;
-        BLF_Bool() 
+        BLF_Element<bool>() 
         {
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
-            objectName = "BLF_Bool";
+            objectName = "BLF_Element<bool>";
         }
-        BLF_Bool(const Element<bool>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Element<bool>(const Element<bool>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
-            objectName = "BLF_Bool";
+            objectName = "BLF_Element<bool>";
         }
 };
 
-class BLF_Number : public BLF_Element
+template <>
+class BLF_Element<int> : public BLF_ElementBase
 {
     public:
         int value;
-        BLF_Number() 
+        BLF_Element<int>() 
         {
             attributeMap.push_back({"Value", &value, TYPE_INT});
-            objectName = "BLF_Number";
+            objectName = "BLF_Element<int>";
         }
-        BLF_Number(const Element<int>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Element<int>(const Element<int>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_INT});
-            objectName = "BLF_Number";
+            objectName = "BLF_Element<int>";
         }
 };
 
-class BLF_Decimal : public BLF_Element
+template <>
+class BLF_Element<double> : public BLF_ElementBase
 {
     public:
         double value;
-        BLF_Decimal() 
+        BLF_Element<double>() 
         {
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
-            objectName = "BLF_Decimal";
+            objectName = "BLF_Element<double>";
         }
-        BLF_Decimal(const Element<double>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Element<double>(const Element<double>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
-            objectName = "BLF_Decimal";
+            objectName = "BLF_Element<double>";
         }
 };
 
-class BLF_Text : public BLF_Element
+template <>
+class BLF_Element<std::string> : public BLF_ElementBase
 {
     public:
         blf::String value;
-        BLF_Text() 
+        BLF_Element<std::string>() 
         {
             attributeMap.push_back({"Value", &value, TYPE_STRING});
-            objectName = "BLF_Text";
+            objectName = "BLF_Element<std::string>";
         }
-        BLF_Text(const Element<std::string>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Element<std::string>(const Element<std::string>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = blf::String(element->getValue());
             attributeMap.push_back({"Value", &value, TYPE_STRING});
-            objectName = "BLF_Text";
+            objectName = "BLF_Element<std::string>";
         }
 };
 
-class BLF_Select : public BLF_Element
+template <>
+class BLF_Element<SelectContainer> : public BLF_ElementBase
 {
     private:
         std::vector<int*> m_selectionPointers = 
@@ -669,16 +677,16 @@ class BLF_Select : public BLF_Element
         int selection_18 = -1;
         int selection_19 = -1;
 
-        BLF_Select() 
+        BLF_Element<SelectContainer>() 
         {
             for (size_t i = 0; i < m_selectionPointers.size(); i++)
             {
                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
             }
 
-            objectName = "BLF_Select";
+            objectName = "BLF_Element<SelectContainer>";
         }
-        BLF_Select(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Element<SelectContainer>(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             const std::set<size_t>& selection = element->getValue().getSelection();
         
@@ -694,7 +702,7 @@ class BLF_Select : public BLF_Element
                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
             }
 
-            objectName = "BLF_Select";
+            objectName = "BLF_Element<SelectContainer>";
         }
           
         std::set<size_t> getSelection()
@@ -717,7 +725,8 @@ class BLF_Select : public BLF_Element
         }
 };
 
-class BLF_Weekday : public BLF_Element
+template <>
+class BLF_Element<WeekdayContainer> : public BLF_ElementBase
 {
     private:
         std::vector<int*> m_selectionPointers = 
@@ -731,16 +740,16 @@ class BLF_Weekday : public BLF_Element
             &selection_6,
         };
     public:
-        BLF_Weekday() 
+        BLF_Element<WeekdayContainer>() 
         {
             for (size_t i = 0; i < m_selectionPointers.size(); i++)
             {
                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
             }
 
-            objectName = "BLF_Weekday";
+            objectName = "BLF_Element<WeekdayContainer>";
         }
-        BLF_Weekday(const Element<WeekdayContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Element<WeekdayContainer>(const Element<WeekdayContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             const std::set<size_t>& selection = element->getValue().getSelection();
         
@@ -756,7 +765,7 @@ class BLF_Weekday : public BLF_Element
                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
             }
 
-            objectName = "BLF_Weekday";
+            objectName = "BLF_Element<WeekdayContainer>";
         }
 
     public:
@@ -788,41 +797,43 @@ class BLF_Weekday : public BLF_Element
         }
 };
 
-class BLF_Time : public BLF_Element
+template <>
+class BLF_Element<TimeContainer> : public BLF_ElementBase
 {
     public:
         int hours;
         int minutes;
-        BLF_Time() 
+        BLF_Element<TimeContainer>() 
         {
             attributeMap.push_back({"Hours", &hours, TYPE_INT});
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
-            objectName = "BLF_Time";
+            objectName = "BLF_Element<TimeContainer>";
         }
-        BLF_Time(const Element<TimeContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Element<TimeContainer>(const Element<TimeContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             hours = element->getValue().getHours();
             minutes = element->getValue().getMinutes();
             attributeMap.push_back({"Hours", &hours, TYPE_INT});
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
-            objectName = "BLF_Time";
+            objectName = "BLF_Element<TimeContainer>";
         }
 };
 
-class BLF_Date : public BLF_Element
+template <>
+class BLF_Element<DateContainer> : public BLF_ElementBase
 {
     public:
         int year;
         int month;
         int mday;
-        BLF_Date() 
+        BLF_Element<DateContainer>() 
         {
             attributeMap.push_back({"Year", &year, TYPE_INT});
             attributeMap.push_back({"Month", &month, TYPE_INT});
             attributeMap.push_back({"Mday", &mday, TYPE_INT});
-            objectName = "BLF_Date";
+            objectName = "BLF_Element<DateContainer>";
         }
-        BLF_Date(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_Element(element, columnIndex)
+        BLF_Element<DateContainer>(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             tm dateTime = element->getValue().getTime();
             year = dateTime.tm_year;
@@ -831,7 +842,7 @@ class BLF_Date : public BLF_Element
             attributeMap.push_back({"Year", &year, TYPE_INT});
             attributeMap.push_back({"Month", &month, TYPE_INT});
             attributeMap.push_back({"Mday", &mday, TYPE_INT});
-            objectName = "BLF_Date";
+            objectName = "BLF_Element<DateContainer>";
         }
 };
 
@@ -839,10 +850,29 @@ class DataConverter
 {
     private:
         ObjectTable m_objects;
-        tm getElementCreationTime(BLF_Element* element);
+        tm getElementCreationTime(BLF_ElementBase* element);
     public:
         void setupObjectTable();
 
+        // Adds the Column (and its elements, filters, etc to the provided DataTable), assuming that the Columns (and their elements, filters) are of the provided type.
+        template <typename T>
+        void addColumnToData(DataTable& data, const Column& column, size_t columnIndex)
+        {
+            data.addObject(new BLF_Column(&column, columnIndex));
+
+            auto filters = column.getFiltersConst();
+            for (size_t f = 0; f < column.getFilterCount(); f++)
+            {
+                Filter<T>* filter = (Filter<T>*)filters.at(f).get();
+                data.addObject(new BLF_Filter<T>(filter, column.type, columnIndex, f));
+            }
+            
+            for (size_t r = 0; r < column.rows.size(); r++)
+            {
+                const Element<T>* element = (Element<T>*)column.rows[r];
+                data.addObject(new BLF_Element<T>(element, columnIndex));
+            }
+        }
         // Write the Columns of a Schedule to a file at the given path.
         int writeSchedule(const char* path, const std::vector<Column>&);
         // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The function creates a copy of the provided vector, but modifies the argument directly. If the function fails at any point, it will be reset to the copy created at the start.
