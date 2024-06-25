@@ -22,7 +22,9 @@ enum class Comparison
     Is,
     Contains,
     IsRelativeToToday,
-    ContainsToday
+    ContainsToday,
+    // TEMP
+    ContainsTodayOrIsEmpty
 };
 
 namespace schedule_consts
@@ -71,7 +73,7 @@ namespace filter_consts
         { SCH_DECIMAL,  { Comparison::Is } },
         { SCH_TEXT,     { Comparison::Is } },
         { SCH_SELECT,   { Comparison::Is, Comparison::Contains } },
-        { SCH_WEEKDAY,  { Comparison::Is, Comparison::Contains, Comparison::ContainsToday } },
+        { SCH_WEEKDAY,  { Comparison::Is, Comparison::Contains, Comparison::ContainsToday, Comparison::ContainsTodayOrIsEmpty } },
         { SCH_TIME,     { Comparison::Is } },
         { SCH_DATE,     { Comparison::Is, Comparison::IsRelativeToToday } },
     };
@@ -82,6 +84,7 @@ namespace filter_consts
         { Comparison::Contains, "contains" },
         { Comparison::IsRelativeToToday, "is relative to today" },
         { Comparison::ContainsToday, "contains today" },
+        { Comparison::ContainsTodayOrIsEmpty, "contains today or is empty" },
     };
 
     TypeComparisonInfo getComparisonInfo(SCHEDULE_TYPE type);

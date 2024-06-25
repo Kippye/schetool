@@ -69,6 +69,10 @@ inline bool Filter<WeekdayContainer>::checkPasses(const ElementBase* element) co
         {
             return (value.contains(WeekdayContainer::getCurrentSystemWeekday()));
         }
+        case Comparison::ContainsTodayOrIsEmpty:
+        {
+            return (value.contains(WeekdayContainer::getCurrentSystemWeekday()) || value.getSelection().size() == 0);
+        }
         default: isComparisonValidForElement(element); return false;
     }
 }
