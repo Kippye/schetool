@@ -57,18 +57,18 @@ template <>
 class BLF_Filter<bool> : public BLF_FilterBase
 {
     public:
-        bool value;
+        bool passValue;
 
         BLF_Filter<bool>()
         {
-            attributeMap.push_back({"Value", &value, TYPE_BOOL});
+            attributeMap.push_back({"PassValue", &passValue, TYPE_BOOL});
             objectName = "BLF_Filter_Bool";
         }
 
         BLF_Filter<bool>(const Filter<bool>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
-            value = filter->getPassValue();
-            attributeMap.push_back({"Value", &value, TYPE_BOOL});
+            passValue = filter->getPassValue();
+            attributeMap.push_back({"PassValue", &passValue, TYPE_BOOL});
             objectName = "BLF_Filter_Bool";
         }
 };
@@ -77,18 +77,18 @@ template <>
 class BLF_Filter<int> : public BLF_FilterBase
 {
     public:
-        int value;
+        int passValue;
 
         BLF_Filter<int>()
         {
-            attributeMap.push_back({"Value", &value, TYPE_INT});
+            attributeMap.push_back({"PassValue", &passValue, TYPE_INT});
             objectName = "BLF_Filter_Number";
         }
 
         BLF_Filter<int>(const Filter<int>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
-            value = filter->getPassValue();
-            attributeMap.push_back({"Value", &value, TYPE_INT});
+            passValue = filter->getPassValue();
+            attributeMap.push_back({"PassValue", &passValue, TYPE_INT});
             objectName = "BLF_Filter_Number";
         }
 };
@@ -97,19 +97,19 @@ template <>
 class BLF_Filter<double> : public BLF_FilterBase
 {
     public:
-        double value;
+        double passValue;
 
         BLF_Filter<double>()
         {
-            attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
+            attributeMap.push_back({"PassValue", &passValue, TYPE_DOUBLE});
             objectName = "BLF_Filter_Decimal";
         }
 
         BLF_Filter<double>(const Filter<double>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
-            value = filter->getPassValue();
-            attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
-            objectName = "BLF_Decimal";
+            passValue = filter->getPassValue();
+            attributeMap.push_back({"PassValue", &passValue, TYPE_DOUBLE});
+            objectName = "BLF_Filter_Decimal";
         }
 };
 
@@ -117,18 +117,18 @@ template <>
 class BLF_Filter<std::string> : public BLF_FilterBase
 {
     public:
-        std::string value;
+        std::string passValue;
 
         BLF_Filter<std::string>()
         {
-            attributeMap.push_back({"Value", &value, TYPE_STRING});
+            attributeMap.push_back({"PassValue", &passValue, TYPE_STRING});
             objectName = "BLF_Filter_Text";
         }
 
         BLF_Filter<std::string>(const Filter<std::string>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
-            value = filter->getPassValue();
-            attributeMap.push_back({"Value", &value, TYPE_STRING});
+            passValue = filter->getPassValue();
+            attributeMap.push_back({"PassValue", &passValue, TYPE_STRING});
             objectName = "BLF_Filter_Text";
         }
 };
@@ -564,13 +564,13 @@ class BLF_Element<bool> : public BLF_ElementBase
         BLF_Element<bool>() 
         {
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
-            objectName = "BLF_Element<bool>";
+            objectName = "BLF_Element_bool";
         }
         BLF_Element<bool>(const Element<bool>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
-            objectName = "BLF_Element<bool>";
+            objectName = "BLF_Element_bool";
         }
 };
 
@@ -582,13 +582,13 @@ class BLF_Element<int> : public BLF_ElementBase
         BLF_Element<int>() 
         {
             attributeMap.push_back({"Value", &value, TYPE_INT});
-            objectName = "BLF_Element<int>";
+            objectName = "BLF_Element_int";
         }
         BLF_Element<int>(const Element<int>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_INT});
-            objectName = "BLF_Element<int>";
+            objectName = "BLF_Element_int";
         }
 };
 
@@ -600,13 +600,13 @@ class BLF_Element<double> : public BLF_ElementBase
         BLF_Element<double>() 
         {
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
-            objectName = "BLF_Element<double>";
+            objectName = "BLF_Element_double";
         }
         BLF_Element<double>(const Element<double>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
-            objectName = "BLF_Element<double>";
+            objectName = "BLF_Element_double";
         }
 };
 
@@ -618,13 +618,13 @@ class BLF_Element<std::string> : public BLF_ElementBase
         BLF_Element<std::string>() 
         {
             attributeMap.push_back({"Value", &value, TYPE_STRING});
-            objectName = "BLF_Element<std::string>";
+            objectName = "BLF_Element_string";
         }
         BLF_Element<std::string>(const Element<std::string>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = blf::String(element->getValue());
             attributeMap.push_back({"Value", &value, TYPE_STRING});
-            objectName = "BLF_Element<std::string>";
+            objectName = "BLF_Element_string";
         }
 };
 
@@ -684,7 +684,7 @@ class BLF_Element<SelectContainer> : public BLF_ElementBase
                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
             }
 
-            objectName = "BLF_Element<SelectContainer>";
+            objectName = "BLF_Element_SelectContainer";
         }
         BLF_Element<SelectContainer>(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
@@ -702,7 +702,7 @@ class BLF_Element<SelectContainer> : public BLF_ElementBase
                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
             }
 
-            objectName = "BLF_Element<SelectContainer>";
+            objectName = "BLF_Element_SelectContainer";
         }
           
         std::set<size_t> getSelection()
@@ -747,7 +747,7 @@ class BLF_Element<WeekdayContainer> : public BLF_ElementBase
                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
             }
 
-            objectName = "BLF_Element<WeekdayContainer>";
+            objectName = "BLF_Element_WeekdayContainer";
         }
         BLF_Element<WeekdayContainer>(const Element<WeekdayContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
@@ -765,7 +765,7 @@ class BLF_Element<WeekdayContainer> : public BLF_ElementBase
                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
             }
 
-            objectName = "BLF_Element<WeekdayContainer>";
+            objectName = "BLF_Element_WeekdayContainer";
         }
 
     public:
@@ -807,7 +807,7 @@ class BLF_Element<TimeContainer> : public BLF_ElementBase
         {
             attributeMap.push_back({"Hours", &hours, TYPE_INT});
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
-            objectName = "BLF_Element<TimeContainer>";
+            objectName = "BLF_Element_TimeContainer";
         }
         BLF_Element<TimeContainer>(const Element<TimeContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
@@ -815,7 +815,7 @@ class BLF_Element<TimeContainer> : public BLF_ElementBase
             minutes = element->getValue().getMinutes();
             attributeMap.push_back({"Hours", &hours, TYPE_INT});
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
-            objectName = "BLF_Element<TimeContainer>";
+            objectName = "BLF_Element_TimeContainer";
         }
 };
 
@@ -831,7 +831,7 @@ class BLF_Element<DateContainer> : public BLF_ElementBase
             attributeMap.push_back({"Year", &year, TYPE_INT});
             attributeMap.push_back({"Month", &month, TYPE_INT});
             attributeMap.push_back({"Mday", &mday, TYPE_INT});
-            objectName = "BLF_Element<DateContainer>";
+            objectName = "BLF_Element_DateContainer";
         }
         BLF_Element<DateContainer>(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
@@ -842,7 +842,7 @@ class BLF_Element<DateContainer> : public BLF_ElementBase
             attributeMap.push_back({"Year", &year, TYPE_INT});
             attributeMap.push_back({"Month", &month, TYPE_INT});
             attributeMap.push_back({"Mday", &mday, TYPE_INT});
-            objectName = "BLF_Element<DateContainer>";
+            objectName = "BLF_Element_DateContainer";
         }
 };
 

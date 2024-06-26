@@ -21,6 +21,7 @@ void DataConverter::setupObjectTable()
 {
     m_objects =
     {
+        createDefinition<BLF_FilterBase>(),
         createDefinition<BLF_Filter<bool>>(),
         createDefinition<BLF_Filter<int>>(),
         createDefinition<BLF_Filter<double>>(),
@@ -141,7 +142,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 {
                     if (filter->columnIndex == c)
                     {
-                        auto specialFilter = Filter<bool>(filter->value);
+                        auto specialFilter = Filter<bool>(filter->passValue);
                         specialFilter.setComparison((Comparison)filter->comparison);
                         column.addFilter(specialFilter);
                         dataPointers.push_back(filter);
@@ -155,7 +156,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 {
                     if (filter->columnIndex == c)
                     {
-                        auto specialFilter = Filter<int>(filter->value);
+                        auto specialFilter = Filter<int>(filter->passValue);
                         specialFilter.setComparison((Comparison)filter->comparison);
                         column.addFilter(specialFilter);
                         dataPointers.push_back(filter);
@@ -169,7 +170,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 {
                     if (filter->columnIndex == c)
                     {
-                        auto specialFilter = Filter<double>(filter->value);
+                        auto specialFilter = Filter<double>(filter->passValue);
                         specialFilter.setComparison((Comparison)filter->comparison);
                         column.addFilter(specialFilter);
                         dataPointers.push_back(filter);
@@ -183,7 +184,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                 {
                     if (filter->columnIndex == c)
                     {
-                        auto specialFilter = Filter<std::string>(filter->value);
+                        auto specialFilter = Filter<std::string>(filter->passValue);
                         specialFilter.setComparison((Comparison)filter->comparison);
                         column.addFilter(specialFilter);
                         dataPointers.push_back(filter);
