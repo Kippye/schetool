@@ -36,8 +36,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
 
     tm timeIn = tm{0, 0, 0, 1, (int)viewedMonth, (int)viewedYear};
     time_t timeTemp = std::mktime(&timeIn);
-    tm firstOfTheMonth;
-    localtime_r(&timeTemp, &firstOfTheMonth);
+    tm firstOfTheMonth = *localtime(&timeTemp);
 
     // day of the week converted from Sun-Sat to Mon-Sun
     int dayOfTheWeekFirst = firstOfTheMonth.tm_wday == 0 ? 6 : firstOfTheMonth.tm_wday - 1;
@@ -45,7 +44,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     timeIn = tm{0, 0, 0, (int)daysInMonth, (int)viewedMonth, (int)viewedYear};
     timeTemp = std::mktime(&timeIn);
     tm lastOfTheMonth;
-    localtime_r(&timeTemp, &lastOfTheMonth);
+    lastOfTheMonth = *localtime(&timeTemp);
 
     // day of the week converted from Sun-Sat to Mon-Sun
     int dayOfTheWeekLast = lastOfTheMonth.tm_wday == 0 ? 6 : lastOfTheMonth.tm_wday - 1;

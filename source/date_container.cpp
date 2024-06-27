@@ -137,9 +137,8 @@ int DateContainer::convertToValidYear(int year, bool hasBeenSubtracted, bool sub
 
 // STATIC
 DateContainer DateContainer::getCurrentSystemDate()
-{
-    tm now;
+{ 
     time_t time = std::time(0);
-    localtime_r(&time, &now);
+    tm now = *localtime(&time);
     return DateContainer(now);
 }

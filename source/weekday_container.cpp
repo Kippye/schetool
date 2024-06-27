@@ -14,9 +14,8 @@ const std::set<size_t> WeekdayContainer::getSelection() const
 // STATIC
 WeekdayContainer WeekdayContainer::getCurrentSystemWeekday()
 {
-    tm now;
     time_t time = std::time(0);
-    localtime_r(&time, &now);
+    tm now = *localtime(&time);
     WeekdayContainer currentWeekday;
     currentWeekday.setSelected(now.tm_wday == 0 ? 6 : now.tm_wday - 1, true);
     return currentWeekday;
