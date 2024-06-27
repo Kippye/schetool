@@ -140,6 +140,6 @@ DateContainer DateContainer::getCurrentSystemDate()
 {
     tm now;
     time_t time = std::time(0);
-    localtime_s(&now, &time);
+    localtime_r(&time, &now);
     return DateContainer(now);
 }
