@@ -10,8 +10,8 @@ class EditHistoryGui : public Gui
     public:
         EditHistoryGui(const char* ID) : Gui(ID) { }
 
-        GuiEvent<> undoEvent;
-        GuiEvent<> redoEvent;
+        Event<> undoEvent;
+        Event<> redoEvent;
 
         void draw(Window& window, Input& input) override;
         void passScheduleEditHistory(const ScheduleEditHistory*);

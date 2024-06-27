@@ -20,8 +20,8 @@ class ScheduleNameModalSubGui : public Gui
     public:
         ScheduleNameModalSubGui(const char* ID) : Gui(ID) {}
 
-        GuiEvent<std::string> createNewScheduleEvent;
-        GuiEvent<std::string, bool> renameScheduleEvent;
+        Event<std::string> createNewScheduleEvent;
+        Event<std::string, bool> renameScheduleEvent;
 
         void draw(Window& window, Input& input) override;
         void setPromptReason(NAME_PROMPT_REASON);
@@ -36,7 +36,7 @@ class ScheduleDeleteModalSubGui : public Gui
     public:
         ScheduleDeleteModalSubGui(const char* ID) : Gui(ID) {}
 
-        GuiEvent<std::string> deleteScheduleEvent;
+        Event<std::string> deleteScheduleEvent;
 
         void draw(Window& window, Input& input) override;
         void setAffectedScheduleName(const std::string& name);
@@ -55,10 +55,10 @@ class MainMenuBarGui : public Gui
     public:
         MainMenuBarGui(const char* ID);
 
-        GuiEvent<std::string> openScheduleFileEvent;
-        GuiEvent<> undoEvent;
-        GuiEvent<> redoEvent;
-        GuiEvent<> saveEvent;
+        Event<std::string> openScheduleFileEvent;
+        Event<> undoEvent;
+        Event<> redoEvent;
+        Event<> saveEvent;
 
         void draw(Window& window, Input& input) override;
         void openScheduleNameModal(NAME_PROMPT_REASON reason);

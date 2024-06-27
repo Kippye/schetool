@@ -17,10 +17,17 @@ void Schedule::init(Input& input, Interface& interface)
 {
     if (auto scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui"))
     {
-        scheduleGui->setScheduleCore(m_core);
+        scheduleGui->passScheduleComponents(m_core, m_scheduleEvents);
         if (auto elementEditorSubGui = scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
         {
             elementEditorSubGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener); 
+        }
+
+        if (auto filterEditorSubGui = scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+        {
+            filterEditorSubGui->addColumnFilter.addListener(addFilterListener); 
+            filterEditorSubGui->editColumnFilter.addListener(editFilterListener);
+            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener); 
         }
         
         scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
@@ -28,6 +35,7 @@ void Schedule::init(Input& input, Interface& interface)
         scheduleGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
         scheduleGui->setElementValueText.addListener(setElementValueListenerText);
         scheduleGui->setElementValueSelect.addListener(setElementValueListenerSelect);
+        scheduleGui->setElementValueWeekday.addListener(setElementValueListenerWeekday);
         scheduleGui->setElementValueTime.addListener(setElementValueListenerTime);
         scheduleGui->setElementValueDate.addListener(setElementValueListenerDate);
 
@@ -84,6 +92,11 @@ const ScheduleEditHistory& Schedule::getEditHistory()
 ScheduleEditHistory& Schedule::getEditHistoryMutable()
 {
     return m_editHistory;
+}
+
+ScheduleEvents& Schedule::getScheduleEvents()
+{
+    return m_scheduleEvents;
 }
 
 void Schedule::undo()
@@ -155,6 +168,8 @@ void Schedule::addColumn(size_t index, const Column& column, bool addToHistory)
     m_core.addColumn(index, column);
 
     m_editHistory.setEditedSinceWrite(true);
+
+    m_scheduleEvents.columnAdded.invoke(index);
 }
 
 void Schedule::addDefaultColumn(size_t index, bool addToHistory)
@@ -171,6 +186,8 @@ void Schedule::addDefaultColumn(size_t index, bool addToHistory)
     }
 
     m_editHistory.setEditedSinceWrite(true);
+
+    m_scheduleEvents.columnAdded.invoke(index);
 }
 
 void Schedule::removeColumn(size_t column, bool addToHistory)
@@ -190,6 +207,8 @@ void Schedule::removeColumn(size_t column, bool addToHistory)
         }
 
         m_editHistory.setEditedSinceWrite(true);
+
+        m_scheduleEvents.columnRemoved.invoke(column);
     }
 }
 

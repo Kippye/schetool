@@ -9,7 +9,7 @@
 #include "imgui/include/imgui_impl_glfw.h"
 #include "imgui/include/imgui_impl_glfw.h"
 #include "imgui/include/imgui_impl_opengl3.h"
-#include "gui_event.h"
+#include "event.h"
 #include "window.h"
 #include "input.h"
 
@@ -17,17 +17,19 @@ class Gui
 {
     protected:
         std::string m_ID;
+        bool m_visible = true;
     public:
         Gui();
         Gui(const char* ID);
 
         glm::vec2 position;
         glm::vec2 size;
-        bool visible = true;
         float opacity = 1.0f;
         std::map<std::string, std::shared_ptr<Gui>> subGuis = {};
 
-        std::string getID();
+        std::string getID() const;
+        bool getVisible() const;
+        void setVisible(bool visible);
         virtual void draw(Window& window, Input& input);
         void addSubGui(const std::string& ID, Gui* subGui);
         template <typename T>

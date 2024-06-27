@@ -1,9 +1,10 @@
 #pragma once
 
-#include <element_base.h>
-#include <select_container.h>
 #include <string>
 #include <type_traits>
+#include "element_base.h"
+#include "select_container.h"
+#include "weekday_container.h"
 
 template <typename T>
 class Element : public ElementBase
@@ -17,13 +18,23 @@ class Element : public ElementBase
             m_value = value;
         }
 
+        bool operator==(const Element<T>& other) const
+        {
+            return m_value == other.m_value;
+        }
+
+        bool operator!=(const Element<T>& other) const
+        {
+            return m_value != other.m_value;
+        }
+
         std::string getString() const override
         {
             if constexpr(std::is_same_v<T, TimeContainer> || std::is_same_v<T, DateContainer>)
             {
                 return m_value.getString();
             }
-            else if constexpr(std::is_same_v<T, SelectContainer>)
+            else if constexpr(std::is_same_v<T, SelectContainer> || std::is_same_v<T, WeekdayContainer>)
             {
                 return "";
             }

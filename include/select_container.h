@@ -25,11 +25,22 @@ struct SelectOptionChange
 
 struct SelectContainer
 {
-    private:
+    protected:
         std::set<size_t> m_selection = {};
         // updated from SelectOptions each update
         size_t m_optionCount = 0;
     public:
+        // NOTE: Still passes if the SelectContainers are associated with different SelectOptions
+        bool operator==(const SelectContainer& other)
+        {
+            return m_selection == other.getSelection();
+        }
+
+        bool operator!=(const SelectContainer& other)
+        {
+            return m_selection != other.getSelection();
+        }
+
         friend bool operator<(const SelectContainer& left, const SelectContainer& right)
         {
             if (left.m_selection.size() == 0)
@@ -100,4 +111,5 @@ struct SelectContainer
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
         void update(const SelectOptionChange& change, size_t optionCount);
+        bool contains(const SelectContainer& other) const;
 };

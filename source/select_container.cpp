@@ -35,6 +35,7 @@ void SelectContainer::setSelected(size_t index, bool select)
 
 void SelectContainer::replaceSelection(const std::set<size_t>& selection)
 {
+    // TODO: Check if the new selection is valid
     m_selection = selection;
 }
 
@@ -121,4 +122,16 @@ void SelectContainer::update(const SelectOptionChange& lastChange, size_t option
             break;
         }
     }
+}
+
+bool SelectContainer::contains(const SelectContainer& other) const
+{
+    for (size_t otherSelected : other.getSelection())
+    {
+        if (m_selection.find(otherSelected) == m_selection.end())
+        {
+            return false;
+        }
+    }
+    return true;
 }

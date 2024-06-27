@@ -2,16 +2,19 @@
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
+#include "test_filter_editor_subgui.h"
 #include "schedule_gui.h"
 
 TEST_CASE("ScheduleGui", "[gui]")
 {
     ScheduleCore scheduleCore = ScheduleCore();
+    ScheduleEvents scheduleEvents = ScheduleEvents();
     ScheduleGui scheduleGui = ScheduleGui("ScheduleGui");
-    scheduleGui.setScheduleCore(scheduleCore);
+    scheduleGui.passScheduleComponents(scheduleCore, scheduleEvents);
 
-    SECTION("has ElementEditorSubGui")
+    SECTION("has subguis")
     {
         CHECK(scheduleGui.getSubGui<ElementEditorSubGui>("ElementEditorSubGui"));
+        CHECK(scheduleGui.getSubGui<FilterEditorSubGui>("FilterEditorSubGui"));
     }
 }

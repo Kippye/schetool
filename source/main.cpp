@@ -1,5 +1,6 @@
 #include "main.h"
 #include <GLFW/glfw3.h>
+#include <memory>
 
 // Windows Release build
 #if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))

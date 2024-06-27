@@ -5,31 +5,40 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 #include "main.h"
 
+#include "test_date_container.h" // must be tested before filters since filters use it
+#include "test_filter.h"
 #include "test_schedule_gui.h"
 
 Program program = Program();
 
-class testProgramSetupListener : public Catch::EventListenerBase 
+class testListener : public Catch::EventListenerBase 
 {
     public:
         using Catch::EventListenerBase::EventListenerBase;
 
         void testRunStarting(Catch::TestRunInfo const&) override 
         {
-            //program = Program();
-            std::cout << program.windowManager.getTitle() << std::endl;
+        }
+
+        void testRunEnded(Catch::TestRunStats const& test) override
+        {
+            program.loop();
         }
 };
 
-CATCH_REGISTER_LISTENER(testProgramSetupListener)
+CATCH_REGISTER_LISTENER(testListener)
 
 TEST_CASE("Input system", "[input]") 
 {
-    std::function<void ()> invalidListener = std::function<void()>(nullptr);
-    program.input.addEventListener(INPUT_EVENT_SC_RENAME, invalidListener);
-    CHECK(program.input.getEventListenerCount(INPUT_EVENT_SC_RENAME) == 0);
-    std::function<void ()> listener = std::function<void()>([]{});
-    program.input.addEventListener(INPUT_EVENT_SC_RENAME, listener);
-    CHECK(program.input.getEventListenerCount(INPUT_EVENT_SC_RENAME) == 1);
-    program.input.invokeEvent(INPUT_EVENT_SC_RENAME);
+    TextureLoader textureLoader;
+    Window windowManager; // dummy window manager, not initalised, should do nothing with glfw.
+    Input input;
+    input.init(&windowManager); // init because input sets up its event map in init()
+    std::function<void()> invalidListener = std::function<void()>(nullptr);
+    input.addEventListener(INPUT_EVENT_SC_RENAME, invalidListener);
+    CHECK(input.getEventListenerCount(INPUT_EVENT_SC_RENAME) == 0);
+    std::function<void()> listener = std::function<void()>([]{});
+    input.addEventListener(INPUT_EVENT_SC_RENAME, listener);
+    CHECK(input.getEventListenerCount(INPUT_EVENT_SC_RENAME) == 1);
+    input.invokeEvent(INPUT_EVENT_SC_RENAME);
 }

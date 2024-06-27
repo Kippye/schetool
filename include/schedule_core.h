@@ -2,10 +2,11 @@
 
 #include <vector>
 #include <string>
-#include <schedule_column.h>
-#include <schedule_constants.h>
-#include <element.h>
-#include <select_options.h>
+#include "filter.h"
+#include "schedule_column.h"
+#include "schedule_constants.h"
+#include "element.h"
+#include "select_options.h"
 
 const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
 const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
@@ -36,6 +37,8 @@ class ScheduleCore
 
         // COLUMNS
         size_t getColumnCount() const;
+        bool existsColumnAtIndex(size_t index) const;
+
         void addColumn(size_t index, const Column& column);
         void addDefaultColumn(size_t index);
         bool removeColumn(size_t column);
@@ -49,11 +52,30 @@ class ScheduleCore
         const SelectOptions& getColumnSelectOptions(size_t column) const;
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
+        template <typename T>
+        bool addColumnFilter(size_t column, const Filter<T>& filter)
+        {
+            if (existsColumnAtIndex(column) == false) { return false; }
+
+            getMutableColumn(column)->addFilter(filter);
+            return true;
+        }
+        template <typename T>
+        bool replaceColumnFilter(size_t column, size_t index, const Filter<T>& filter)
+        {
+            if (existsColumnAtIndex(column) == false) { return false; }
+            
+            getMutableColumn(column)->replaceFilter(index, filter);
+            return true;
+        }
+        bool removeColumnFilter(size_t column, size_t index);
         // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 
         // ROWS
         size_t getRowCount() const;
+        bool existsRowAtIndex(size_t index) const;
+
         void addRow(size_t index);
         bool removeRow(size_t index);
         // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
@@ -160,6 +182,11 @@ class ScheduleCore
                         getElementAsSpecial<SelectContainer>(column, row)->setValue(((Element<SelectContainer>*)other)->getValue());
                         break;
                     }
+                    case(SCH_WEEKDAY):
+                    {
+                        getElementAsSpecial<WeekdayContainer>(column, row)->setValue(((Element<WeekdayContainer>*)other)->getValue());
+                        break;
+                    }
                     case(SCH_TIME):
                     {
                         getElementAsSpecial<TimeContainer>(column, row)->setValue(((Element<TimeContainer>*)other)->getValue());
@@ -210,7 +237,7 @@ class ScheduleCore
             const Column* elementColumn = getColumn(column);
             if (elementColumn == nullptr || elementColumn->hasElement(row) == false)
             {
-                printf("ScheduleCore::getElementValueConst could not return value at %zu; %zu\n", column, row);
+                printf("ScheduleCore::getElementValueConstRef could not return value at %zu; %zu\n", column, row);
                 return *(new T()); // memory leak ON PURPOSE
             }
             return getValueConstRef<T>(elementColumn->rows[row]);

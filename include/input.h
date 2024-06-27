@@ -49,7 +49,7 @@ class Input
 		std::vector<InputShortcut> m_shortcuts =
 		{
 			InputShortcut{INPUT_EVENT_SC_RENAME, GLFW_KEY_F2, true},
-			InputShortcut{INPUT_EVENT_SC_NEW, GLFW_KEY_S, true},
+			InputShortcut{INPUT_EVENT_SC_NEW, GLFW_KEY_N, true},
 			InputShortcut{INPUT_EVENT_SC_SAVE, GLFW_KEY_S, true},
 			InputShortcut{INPUT_EVENT_SC_OPEN, GLFW_KEY_O, true},
 			InputShortcut{INPUT_EVENT_SC_UNDO, GLFW_KEY_Z, true},

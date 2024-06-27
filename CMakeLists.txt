@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(schetool VERSION 0.5.0)
+project(schetool VERSION 0.6.2)
 
 set(PROGRAM_NAME ${PROJECT_NAME})
 
@@ -98,7 +98,11 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/date_container.cpp"
     "${SCHETOOL_SRC}/edit_history_gui.cpp"
     "${SCHETOOL_SRC}/element_base.cpp"
+    "${SCHETOOL_SRC}/element_editor_subgui.cpp"
+    "${SCHETOOL_SRC}/filter_base.cpp"
+    "${SCHETOOL_SRC}/filter_editor_subgui.cpp"
     "${SCHETOOL_SRC}/gui.cpp"
+    "${SCHETOOL_SRC}/gui_templates.cpp"
     #"${SCHETOOL_SRC}/imgui_demo.cpp"
     "${SCHETOOL_SRC}/input.cpp"
     "${SCHETOOL_SRC}/interface.cpp"
@@ -106,6 +110,8 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/main_menu_bar_gui.cpp"
     "${SCHETOOL_SRC}/main.cpp"
     "${SCHETOOL_SRC}/render.cpp"
+    "${SCHETOOL_SRC}/schedule_column.cpp"
+    "${SCHETOOL_SRC}/schedule_constants.cpp"
     "${SCHETOOL_SRC}/schedule_core.cpp"
     "${SCHETOOL_SRC}/schedule_edit_history.cpp"
     "${SCHETOOL_SRC}/schedule_edit.cpp"
@@ -115,6 +121,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/select_options.cpp"
     "${SCHETOOL_SRC}/textures.cpp"
     "${SCHETOOL_SRC}/time_container.cpp"
+    "${SCHETOOL_SRC}/weekday_container.cpp"
     "${SCHETOOL_SRC}/window.cpp"
 )
 
