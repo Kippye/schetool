@@ -6,7 +6,7 @@ IF (ENABLE_TESTING)
     # package libraries
     #find_package(Catch2 3)
     # TEMP
-    add_subdirectory(../include/catch2 ../catch2)
+    add_subdirectory(../libs/catch2 ../catch2)
     #IF (Catch2_FOUND)
         #message(CHECK_PASS "found")
         add_executable(${TEST_MAIN} ${TEST_SOURCES})

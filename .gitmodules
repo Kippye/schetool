@@ -1,6 +1,6 @@
-[submodule "include/blf"]
-	path = include/blf
+[submodule "libs/blf"]
+	path = libs/blf
 	url = https://github.com/Functionable/BlurLevelFormat.git
-[submodule "include/catch2"]
-	path = include/catch2
+[submodule "libs/catch2"]
+	path = libs/catch2
 	url = https://github.com/catchorg/Catch2.git

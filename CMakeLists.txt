@@ -51,11 +51,14 @@ message(STATUS "~~ Finished setting compile flags")
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
-# local source-compiled libraries
-add_subdirectory("include/blf")
-add_subdirectory("include/glad")
+set(LIBRARY_DIR "libs")
 
-add_subdirectory("include/imgui")
+# local source-compiled libraries
+add_subdirectory("${LIBRARY_DIR}/blf")
+add_subdirectory("${LIBRARY_DIR}/glad")
+add_subdirectory("${LIBRARY_DIR}/stb")
+
+add_subdirectory("${LIBRARY_DIR}/imgui") # imgui 1.90.4
 target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
 
 
@@ -93,36 +96,43 @@ ENDIF (ENABLE_TESTING)
 target_include_directories(${PROGRAM_NAME} PUBLIC "include" PUBLIC "include/generated")
 
 set(SCHETOOL_SRC "source")
+set(CONSTANTS_DIR "${SCHETOOL_SRC}/constants")
+set(CONTAINERS_DIR "${SCHETOOL_SRC}/containers")
+set(HANDLERS_DIR "${SCHETOOL_SRC}/handlers")
+set(INTERFACE_DIR "${SCHETOOL_SRC}/interface")
+set(IO_DIR "${SCHETOOL_SRC}/io")
+set(SCHEDULE_DIR "${SCHETOOL_SRC}/schedule")
+
 target_sources(${PROGRAM_NAME} PRIVATE
-    "${SCHETOOL_SRC}/data_converter.cpp"
-    "${SCHETOOL_SRC}/date_container.cpp"
-    "${SCHETOOL_SRC}/edit_history_gui.cpp"
-    "${SCHETOOL_SRC}/element_base.cpp"
-    "${SCHETOOL_SRC}/element_editor_subgui.cpp"
-    "${SCHETOOL_SRC}/filter_base.cpp"
-    "${SCHETOOL_SRC}/filter_editor_subgui.cpp"
-    "${SCHETOOL_SRC}/gui.cpp"
-    "${SCHETOOL_SRC}/gui_templates.cpp"
-    #"${SCHETOOL_SRC}/imgui_demo.cpp"
-    "${SCHETOOL_SRC}/input.cpp"
-    "${SCHETOOL_SRC}/interface.cpp"
-    "${SCHETOOL_SRC}/io_handler.cpp"
-    "${SCHETOOL_SRC}/main_menu_bar_gui.cpp"
     "${SCHETOOL_SRC}/main.cpp"
-    "${SCHETOOL_SRC}/render.cpp"
-    "${SCHETOOL_SRC}/schedule_column.cpp"
-    "${SCHETOOL_SRC}/schedule_constants.cpp"
-    "${SCHETOOL_SRC}/schedule_core.cpp"
-    "${SCHETOOL_SRC}/schedule_edit_history.cpp"
-    "${SCHETOOL_SRC}/schedule_edit.cpp"
-    "${SCHETOOL_SRC}/schedule_gui.cpp"
-    "${SCHETOOL_SRC}/schedule.cpp"
-    "${SCHETOOL_SRC}/select_container.cpp"
-    "${SCHETOOL_SRC}/select_options.cpp"
-    "${SCHETOOL_SRC}/textures.cpp"
-    "${SCHETOOL_SRC}/time_container.cpp"
-    "${SCHETOOL_SRC}/weekday_container.cpp"
-    "${SCHETOOL_SRC}/window.cpp"
+    "${CONSTANTS_DIR}/schedule_constants.cpp"
+    "${CONTAINERS_DIR}/select_container.cpp"
+    "${CONTAINERS_DIR}/date_container.cpp"
+    "${CONTAINERS_DIR}/select_options.cpp"
+    "${CONTAINERS_DIR}/weekday_container.cpp"
+    "${CONTAINERS_DIR}/time_container.cpp"
+    "${HANDLERS_DIR}/textures.cpp"
+    "${HANDLERS_DIR}/window.cpp"
+    "${HANDLERS_DIR}/input.cpp"
+    "${HANDLERS_DIR}/render.cpp"
+    "${INTERFACE_DIR}/element_editor_subgui.cpp"
+    "${INTERFACE_DIR}/filter_editor_subgui.cpp"
+    "${INTERFACE_DIR}/gui_templates.cpp"
+    "${INTERFACE_DIR}/gui.cpp"
+    "${INTERFACE_DIR}/interface.cpp"
+    "${INTERFACE_DIR}/main_menu_bar_gui.cpp"
+    "${INTERFACE_DIR}/schedule_gui.cpp"
+    "${IO_DIR}/data_converter.cpp"
+    "${IO_DIR}/io_handler.cpp"
+    "${SCHEDULE_DIR}/edit_history_gui.cpp"
+    "${SCHEDULE_DIR}/element_base.cpp"
+    "${SCHEDULE_DIR}/filter_base.cpp"
+    "${SCHEDULE_DIR}/schedule_column.cpp"
+    "${SCHEDULE_DIR}/schedule_core.cpp"
+    "${SCHEDULE_DIR}/schedule_edit_history.cpp"
+    "${SCHEDULE_DIR}/schedule_edit.cpp"
+    "${SCHEDULE_DIR}/schedule.cpp"
+    #"${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
 )
 
 target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags 
