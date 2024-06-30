@@ -211,12 +211,13 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     {
                                         // if editing this text element, use this TextWrapped as a preview, the value will actually only be applied if the editor's input is applied
                                         displayedValue = elementEditor->getEditorValue(displayedValue);
-                                        std::cout << displayedValue << std::endl;
                                     }
                                 }
                                 // element to display the value as a wrapped, multiline text
                                 ImGui::TextWrapped("%s", displayedValue.c_str());
-                                if (ImGui::IsItemClicked())
+                                // open text editor if clicked while hovering the current column & row (note: hovered row has an offset removed to account for the filter and header rows)
+                                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() - 2 == row)
+                                // if (ImGui::IsItemClicked())
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
