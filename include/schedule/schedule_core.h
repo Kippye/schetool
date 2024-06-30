@@ -8,9 +8,6 @@
 #include "element.h"
 #include "select_options.h"
 
-const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
-const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
-
 class ScheduleCore
 {
     private:

@@ -20,11 +20,13 @@ class ElementEditorSubGui : public Gui
         int m_editorRow = -1;
         unsigned int m_viewedYear = 0;
         unsigned int m_viewedMonth = 0;
+        std::string m_editorText;
         TimeContainer m_editorTime;
         DateContainer m_editorDate;
         SelectContainer m_editorSelect;
         WeekdayContainer m_editorWeekday;
         ImRect m_avoidRect;
+        ImVec2 m_textInputBoxSize = ImVec2(0, 0);
     public:
         ElementEditorSubGui(const char* ID, const ScheduleCore* scheduleCore);
 
@@ -36,6 +38,11 @@ class ElementEditorSubGui : public Gui
         // Update the element editor before editing a new Element.
         // NOTE: Sets m_madeEdits = false
         void open(size_t column, size_t row, SCHEDULE_TYPE type, const ImRect& avoidRect);
+        void setTextInputBoxSize(ImVec2 size);
+        void setEditorValue(const std::string& value)
+        {
+            m_editorText = value;
+        }
         void setEditorValue(const TimeContainer& value)
         {
             m_editorTime = value;
@@ -54,6 +61,10 @@ class ElementEditorSubGui : public Gui
         void setEditorValue(const WeekdayContainer& value)
         {
             m_editorWeekday = value;
+        }
+        std::string getEditorValue(const std::string& _typeValueUnused) const
+        {
+            return m_editorText;
         }
         const TimeContainer& getEditorValue(const TimeContainer& _typeValueUnused) const
         {

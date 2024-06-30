@@ -28,6 +28,15 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 		
 		switch(m_editedType)
 		{
+            case(SCH_TEXT):
+            {
+                if (gui_templates::TextEditor(m_editorText, m_textInputBoxSize, m_openLastFrame == false))
+                {
+                    m_madeEdits = true;
+                    ImGui::CloseCurrentPopup();
+                }
+                break;
+            }
 			case(SCH_TIME):
 			{
                 if (gui_templates::TimeEditor(m_editorTime))
@@ -78,10 +87,10 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
 				{
 					std::string str;
-					str.reserve(SELECT_OPTION_NAME_MAX_LENGTH);
+					str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
 					char* buf = str.data();
 					//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
-					if (ImGui::InputText("##EditorOptionInput", buf, SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+					if (ImGui::InputText("##EditorOptionInput", buf, schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
 					{
 						if (std::string(buf).empty() == false)
 						{
@@ -220,6 +229,11 @@ void ElementEditorSubGui::open(size_t column, size_t row, SCHEDULE_TYPE type, co
 	m_madeEdits = false;
 
 	ImGui::OpenPopup("Editor");
+}
+
+void ElementEditorSubGui::setTextInputBoxSize(ImVec2 size)
+{
+    m_textInputBoxSize = size;
 }
 
 bool ElementEditorSubGui::getOpenThisFrame() const

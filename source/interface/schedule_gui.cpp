@@ -202,22 +202,42 @@ void ScheduleGui::draw(Window& window, Input& input)
 							case(SCH_TEXT):
 							{
                                 std::string value = m_scheduleCore->getElementValueConstRef<std::string>(column, row);
-                                value.reserve(ELEMENT_TEXT_MAX_LENGTH);
-                                char* buf = value.data();
-                                //ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
-                                if (ImGui::InputTextMultiline(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+                                std::string displayedValue = value;
+
+                                if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                 {
-                                    setElementValueText.invoke(column, row, std::string(buf));
+                                    auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                                    if (elementEditor->getOpenThisFrame() && (column == editorColumn && row == editorRow))
+                                    {
+                                        // if editing this text element, use this TextWrapped as a preview, the value will actually only be applied if the editor's input is applied
+                                        displayedValue = elementEditor->getEditorValue(displayedValue);
+                                        std::cout << displayedValue << std::endl;
+                                    }
                                 }
-                                // ImVec2 textSize = ImGui::CalcTextSize(buf);
-                                // if (textSize.x == 106 && textSize.y == 16)
-                                // {
-                                // 	ImGuiInputTextState* state = ImGui::GetInputTextState(ImGui::GetItemID());
-                                // 	std::cout << "newline" << std::endl;
-                                // 	state->OnKeyPressed((int)'\n');
-                                // 	std::cout << buf << std::endl;
-                                // }
-                                // std::cout << textSize.x << "; " << textSize.y << std::endl;
+                                // element to display the value as a wrapped, multiline text
+                                ImGui::TextWrapped("%s", displayedValue.c_str());
+                                if (ImGui::IsItemClicked())
+                                {
+                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                    {
+                                        elementEditor->setEditorValue(value);
+                                        elementEditor->setTextInputBoxSize(ImVec2(ImGui::GetColumnWidth(column), 0));
+                                        elementEditor->open(column, row, SCH_TEXT, ImRect(ImGui::GetItemRectMin(), ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column).Max));
+                                    }
+                                }
+                                if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                {
+                                    auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                                    if (column == editorColumn && row == editorRow)
+                                    {
+                                        elementEditor->draw(window, input);
+                                        // was editing this Element, made edits and just closed the editor. apply the edits
+                                        if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                                        {
+                                            setElementValueText.invoke(column, row, elementEditor->getEditorValue(value));
+                                        }
+                                    }
+                                }
 								break;
 							}
 							case(SCH_SELECT):

@@ -1,5 +1,22 @@
 #include <regex>
+#include "imgui_stdlib.h"
 #include "gui_templates.h"
+#include "schedule_constants.h"
+
+bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, bool captureKeyboardFocus)
+{
+    if (captureKeyboardFocus)
+    {
+        ImGui::SetKeyboardFocusHere();
+    }
+
+    if (ImGui::InputTextMultiline("##editorTextInput", &editorText, inputBoxSize, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+    {
+        return true;
+    }
+
+    return false;
+}
 
 bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate)
 {

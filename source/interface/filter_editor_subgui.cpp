@@ -186,7 +186,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 
                 std::string value = m_filterState.getFilter<std::string>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<std::string>(); 
-                value.reserve(ELEMENT_TEXT_MAX_LENGTH);
+                value.reserve(schedule_consts::ELEMENT_TEXT_MAX_LENGTH);
                 char* buf = value.data();
                 //ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
                 if (ImGui::InputTextMultiline(std::string("##filterEditor").append(std::to_string(m_editorColumn)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
