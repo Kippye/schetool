@@ -19,8 +19,8 @@ class IO_Handler
         DataConverter m_converter;
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::string m_openScheduleFilename;
-        std::string makeRelativePathFromName(const char* name);
         double m_timeSinceAutosave = 0.0;
+        const char* m_autosaveSuffix = "_auto";
 
         // input listeners
         std::function<void()> saveListener = std::function<void()>([&]()
@@ -38,6 +38,7 @@ class IO_Handler
         });
         std::function<void(std::string)> createNewListener = std::function<void(std::string)>([&](std::string name)
         {
+            closeCurrentFile();
             if (createNewSchedule(name.c_str()))
             {
                 m_mainMenuBarGui->closeScheduleNameModal();
@@ -52,17 +53,26 @@ class IO_Handler
         // MainMenuBarGui
         std::function<void(std::string)> openListener = std::function<void(std::string)>([&](std::string name)
         {
+            closeCurrentFile();
             readSchedule(name.c_str());
         });
+
+        bool isAutosave(const std::string& fileName);
+        std::string getFileAutosaveName(const char* fileName);
+        std::string makeRelativePathFromName(const char* name);
+        bool applyAutosaveToFile(const char* name);
 
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
         void init(Schedule* schedule, Window* window, Input& input, Interface& interface);
+        // Does any necessary procedures between when a file is "closed" and the program closed or a new one opened
+        void closeCurrentFile();
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);
         bool deleteSchedule(const char* name);
+        bool createAutosave();
         void addToAutosaveTimer(double delta);
         std::string getOpenScheduleFilename();
         // Rename the currently open file to the provided name.

@@ -6,9 +6,62 @@
 
 namespace fs = std::filesystem;
 
+bool IO_Handler::isAutosave(const std::string& name)
+{
+    return name.rfind(m_autosaveSuffix) != std::string::npos;
+}
+
+std::string IO_Handler::getFileAutosaveName(const char* name)
+{
+    return std::string(name).append(m_autosaveSuffix);
+}
+
 std::string IO_Handler::makeRelativePathFromName(const char* name)
 {
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
+}
+
+bool IO_Handler::applyAutosaveToFile(const char* fileName)
+{
+    fs::path pathToFile = fs::path(makeRelativePathFromName(fileName));
+    fs::path pathToAutosaveFile = fs::path(makeRelativePathFromName(getFileAutosaveName(fileName).c_str()));
+
+    // A Schedule file with this path does not exist. stop.
+    if (fs::exists(pathToFile) == false)
+    {
+        printf("IO_Handler::applyAutosaveToFile(%s): Base file not found at path %s\n", fileName, pathToFile.string().c_str());
+        return false;
+    }
+    if (fs::exists(pathToAutosaveFile) == false)
+    {
+        printf("IO_Handler::applyAutosaveToFile(%s): Autosave file not found at path %s\n", fileName, pathToAutosaveFile.string().c_str());
+        return false;
+    }
+
+    // NOTE: It seems std::filesystem::copy_file cannot actually overwrite existing files (on windows?)
+    // But i don't want to create OS-specific things here so i will simply delete the existing file, copy the autosave and then delete the autosave.
+    // Probably many more opportunities for errors, but eh.
+    // TODO: To minimise the risk of losing data, i could rename the old file instead, only deleting it once everything else is done successfully
+
+    // Delete the base file
+    fs::remove(pathToFile);
+    try
+    {
+        if (fs::copy_file(pathToAutosaveFile, pathToFile, fs::copy_options::update_existing))
+        {
+            // The file was successfully copied, which means the autosave can be removed
+            fs::remove(pathToAutosaveFile);
+            return true;
+        }
+    }
+    // Failed to copy
+    catch (fs::filesystem_error& e)
+    {
+        printf("Could not copy autosave %s to file %s: %s\n", pathToAutosaveFile.string().c_str(), pathToFile.string().c_str(), e.what());
+        return false;
+    }
+
+    return false;
 }
 
 void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interface& interface)
@@ -29,6 +82,12 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
 
     m_converter = DataConverter();
     m_converter.setupObjectTable();
+}
+
+void IO_Handler::closeCurrentFile()
+{
+    createAutosave();
+    applyAutosaveToFile(m_openScheduleFilename.c_str());
 }
 
 bool IO_Handler::writeSchedule(const char* name)
@@ -98,9 +157,23 @@ bool IO_Handler::deleteSchedule(const char* name)
         return false;
     }
 
-    fs::remove(relativePath);
-    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-    return true;
+    if (fs::remove(relativePath) )
+    {
+        m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+        return true;
+    }
+
+    return false;
+}
+
+bool IO_Handler::createAutosave()
+{
+    if (writeSchedule(getFileAutosaveName(m_openScheduleFilename.c_str()).c_str()))
+    {
+        return true;
+    }
+
+    return false;
 }
 
 void IO_Handler::addToAutosaveTimer(double delta)
@@ -111,7 +184,7 @@ void IO_Handler::addToAutosaveTimer(double delta)
     {
         if (m_schedule->getEditHistory().getEditedSinceWrite() == true)
         {
-            writeSchedule(m_openScheduleFilename.c_str());
+            createAutosave();
         }
         m_timeSinceAutosave = 0;
     }
