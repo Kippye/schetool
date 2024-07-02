@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <chrono>
-#include <filesystem>
 #include <limits>
 #include <io_handler.h>
 
@@ -172,7 +171,14 @@ void IO_Handler::openMostRecentFile()
         // show autosave prompt popup
         if (isAutosave(lastEditedScheduleName))
         {
-            m_autosavePopupGui->open();
+            std::string fileBaseName = getFileBaseName(lastEditedScheduleName.c_str());
+
+            m_autosavePopupGui->open(
+                fileBaseName.c_str(),
+                lastEditedScheduleName,
+                getFileEditTimeString(fs::path(makeRelativePathFromName(fileBaseName.c_str()))),
+                getFileEditTimeString(fs::path(makeRelativePathFromName(lastEditedScheduleName.c_str())))
+            );
         }
         // the most recent file is a normal file, read it
         else
@@ -233,6 +239,27 @@ std::string IO_Handler::getFileBaseName(const char* autosaveName)
     }
 
     return autosaveString.substr(0, autosaveString.rfind(m_autosaveSuffix));
+}
+
+long long IO_Handler::getFileEditTime(fs::path path)
+{
+    if (fs::exists(path) == false) { printf("IO_Handler::getFileEditTime(%s): No file exists at the path\n", path.string().c_str()); return 0; }
+
+    return fs::last_write_time(path).time_since_epoch().count();
+}
+
+std::string IO_Handler::getFileEditTimeString(fs::path path)
+{
+    if (fs::exists(path) == false) { printf("IO_Handler::getFileEditTimeString(%s): No file exists at the path\n", path.string().c_str()); return std::string(""); }
+
+    const auto fileEditTime = fs::last_write_time(path);
+    const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileEditTime);
+    const time_t time = std::chrono::system_clock::to_time_t(systemTime);
+    char buf[128];
+    tm timeStruct = *localtime(&time);
+    strftime(buf, 128, "%x %X", &timeStruct);
+
+    return std::string(buf);
 }
 
 std::string IO_Handler::getOpenScheduleFilename()
@@ -313,7 +340,7 @@ std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime()
     for (const auto& entry: fs::directory_iterator(schedulesPath))
     {
         filenames.push_back(entry.path().stem().string());
-        filenamesEditTimes.insert({entry.path().stem().string(), fs::last_write_time(entry).time_since_epoch().count()}); 
+        filenamesEditTimes.insert({entry.path().stem().string(), getFileEditTime(entry)}); 
     }
 
     std::sort(filenames.begin(), filenames.end(), [&](std::string fs1, std::string fs2){ return filenamesEditTimes.at(fs1) > filenamesEditTimes.at(fs2); });

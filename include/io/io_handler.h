@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <filesystem>
 #include <string>
 #include "data_converter.h"
 #include "schedule.h"
@@ -95,6 +96,8 @@ class IO_Handler
         bool isAutosave(const std::string& fileName);
         std::string getFileAutosaveName(const char* fileName);
         std::string getFileBaseName(const char* autosaveName);
+        long long getFileEditTime(std::filesystem::path filePath);
+        std::string getFileEditTimeString(std::filesystem::path filePath);
         std::string getOpenScheduleFilename();
         // Rename the currently open file to the provided name.
         // Cancelled if a file with that name already exists.
