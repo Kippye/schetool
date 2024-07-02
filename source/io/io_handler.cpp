@@ -6,16 +6,6 @@
 
 namespace fs = std::filesystem;
 
-bool IO_Handler::isAutosave(const std::string& name)
-{
-    return name.rfind(m_autosaveSuffix) != std::string::npos;
-}
-
-std::string IO_Handler::getFileAutosaveName(const char* name)
-{
-    return std::string(name).append(m_autosaveSuffix);
-}
-
 std::string IO_Handler::makeRelativePathFromName(const char* name)
 {
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
@@ -79,6 +69,8 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     m_mainMenuBarGui->openScheduleFileEvent.addListener(openListener);
     m_mainMenuBarGui->saveEvent.addListener(saveListener);
     m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+
+    m_autosavePopupGui = interface.getGuiByID<AutosavePopupGui>("AutosavePopupGui");
 
     m_converter = DataConverter();
     m_converter.setupObjectTable();
@@ -166,9 +158,38 @@ bool IO_Handler::deleteSchedule(const char* name)
     return false;
 }
 
+void IO_Handler::openMostRecentFile()
+{
+    // There are pre-existing Schedules. Open the most recently edited one.
+	if (getScheduleStemNames().size() > 0)
+	{
+        std::string lastEditedScheduleName = getLastEditedScheduleStemName();
+
+        // the most recently edited file is an autosave, the program might not have been closed correctly.
+        // show autosave prompt popup
+        if (isAutosave(lastEditedScheduleName))
+        {
+            m_autosavePopupGui->open();
+        }
+        // the most recent file is a normal file, read it
+        else
+        {
+		    readSchedule(getLastEditedScheduleStemName().c_str());
+        }
+	}
+	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
+	else
+	{
+		m_mainMenuBarGui->openScheduleNameModal(NAME_PROMPT_NEW);
+	}
+}
+
 bool IO_Handler::createAutosave()
 {
-    if (writeSchedule(getFileAutosaveName(m_openScheduleFilename.c_str()).c_str()))
+    // save to open file name if the open file is itself an autosave, otherwise get the autosave name from the base file name
+    std::string autosaveName = isAutosave(m_openScheduleFilename) ? m_openScheduleFilename : getFileAutosaveName(m_openScheduleFilename.c_str());
+
+    if (writeSchedule(autosaveName.c_str()))
     {
         return true;
     }
@@ -188,6 +209,27 @@ void IO_Handler::addToAutosaveTimer(double delta)
         }
         m_timeSinceAutosave = 0;
     }
+}
+
+bool IO_Handler::isAutosave(const std::string& name)
+{
+    return name.rfind(m_autosaveSuffix) != std::string::npos;
+}
+
+std::string IO_Handler::getFileAutosaveName(const char* name)
+{
+    return std::string(name).append(m_autosaveSuffix);
+}
+
+std::string IO_Handler::getFileBaseName(const char* autosaveName)
+{
+    std::string autosaveString = std::string(autosaveName);
+    if (isAutosave(autosaveString) == false)
+    {
+        printf("IO_Handler::getFileBaseName(%s): File name is not an autosave\n", autosaveName);
+    }
+
+    return autosaveString.substr(0, autosaveString.rfind(m_autosaveSuffix));
 }
 
 std::string IO_Handler::getOpenScheduleFilename()

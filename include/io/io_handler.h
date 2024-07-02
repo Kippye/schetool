@@ -7,6 +7,7 @@
 #include "window.h"
 #include "input.h"
 #include "main_menu_bar_gui.h"
+#include "autosave_popup_gui.h"
 #include "interface.h"
 
 const unsigned int AUTOSAVE_DELAY_SECONDS = 2 * 60;
@@ -18,6 +19,7 @@ class IO_Handler
         Window* m_windowManager = NULL;
         DataConverter m_converter;
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
+        std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = NULL;
         std::string m_openScheduleFilename;
         double m_timeSinceAutosave = 0.0;
         const char* m_autosaveSuffix = "_auto";
@@ -56,24 +58,25 @@ class IO_Handler
             closeCurrentFile();
             readSchedule(name.c_str());
         });
-
-        bool isAutosave(const std::string& fileName);
-        std::string getFileAutosaveName(const char* fileName);
         std::string makeRelativePathFromName(const char* name);
         bool applyAutosaveToFile(const char* name);
-
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
         void init(Schedule* schedule, Window* window, Input& input, Interface& interface);
+
         // Does any necessary procedures between when a file is "closed" and the program closed or a new one opened
         void closeCurrentFile();
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);
         bool deleteSchedule(const char* name);
+        void openMostRecentFile();
         bool createAutosave();
         void addToAutosaveTimer(double delta);
+        bool isAutosave(const std::string& fileName);
+        std::string getFileAutosaveName(const char* fileName);
+        std::string getFileBaseName(const char* autosaveName);
         std::string getOpenScheduleFilename();
         // Rename the currently open file to the provided name.
         // Cancelled if a file with that name already exists.

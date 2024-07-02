@@ -31,17 +31,7 @@ Program::Program()
 
 	schedule.createDefaultSchedule();
 
-	// There are pre-existing Schedules. Open the most recently edited one.
-	if (ioHandler.getScheduleStemNames().size() > 0)
-	{
-		// std::cout << "reading.." << ioHandler.getLastEditedScheduleStemName() << std::endl;
-		ioHandler.readSchedule(ioHandler.getLastEditedScheduleStemName().c_str());
-	}
-	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
-	else
-	{
-		interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")->openScheduleNameModal(NAME_PROMPT_NEW);
-	}
+    ioHandler.openMostRecentFile();
 }
 
 void Program::loop()

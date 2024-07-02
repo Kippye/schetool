@@ -1,8 +1,9 @@
 #include <iostream>
-#include <interface.h>
-#include <schedule_gui.h>
-#include <main_menu_bar_gui.h>
-#include <edit_history_gui.h>
+#include "interface.h"
+#include "schedule_gui.h"
+#include "main_menu_bar_gui.h"
+#include "edit_history_gui.h"
+#include "autosave_popup_gui.h"
 
 void Interface::init(Window* windowManager, Input* input)
 {
@@ -22,6 +23,8 @@ void Interface::init(Window* windowManager, Input* input)
 	
 	addGui(std::shared_ptr<MainMenuBarGui>(new MainMenuBarGui("MainMenuBarGui")));
     addGui(std::shared_ptr<ScheduleGui>(new ScheduleGui("ScheduleGui")));
+    // simple popups
+    addGui(std::shared_ptr<AutosavePopupGui>(new AutosavePopupGui("AutosavePopupGui")));
 	#if DEBUG
 	addGui(std::shared_ptr<EditHistoryGui>(new EditHistoryGui("EditHistoryGui")));
 	#endif
