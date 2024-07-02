@@ -71,6 +71,9 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
 
     m_autosavePopupGui = interface.getGuiByID<AutosavePopupGui>("AutosavePopupGui");
+    m_autosavePopupGui->applyAutosaveOpenFileEvent.addListener(applyAutosaveOpenFileListener);
+    m_autosavePopupGui->openAutosaveEvent.addListener(openAutosaveListener);
+    m_autosavePopupGui->ignoreAutosaveOpenFileEvent.addListener(ignoreAutosaveOpenFileEvent);
 
     m_converter = DataConverter();
     m_converter.setupObjectTable();
