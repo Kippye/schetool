@@ -23,7 +23,7 @@ void AutosavePopupGui::draw(Window& window, Input& input)
             }
             if (ImGui::BeginItemTooltip())
             {
-                ImGui::Text("Note: You should only use the autosave this way temporarily, then open the actual file again.");
+                ImGui::Text("Note: Autosaves autosave to the same file.\nRename them and remove the suffix to change this.");
                 ImGui::EndTooltip();
             }
             ImGui::NextColumn();

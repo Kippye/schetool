@@ -299,6 +299,13 @@ bool IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFil
         {
             fs::rename(pathToOpenFile, pathToRenamedFile);
         }
+        // Rename the autosave as well, if it exists
+        fs::path pathToAutosave = fs::path(makeRelativePathFromName(getFileAutosaveName(pathToOpenFile.stem().string().c_str()).c_str()));
+        fs::path pathToRenamedAutosave = fs::path(makeRelativePathFromName(getFileAutosaveName(name.c_str()).c_str()));
+        if (fs::exists(pathToAutosave))
+        {
+            fs::rename(pathToAutosave, pathToRenamedAutosave);
+        }
     }
 
     m_openScheduleFilename = name;
