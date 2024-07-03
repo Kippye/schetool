@@ -71,7 +71,6 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
 
     m_autosavePopupGui = interface.getGuiByID<AutosavePopupGui>("AutosavePopupGui");
-    m_autosavePopupGui->applyAutosaveOpenFileEvent.addListener(applyAutosaveOpenFileListener);
     m_autosavePopupGui->openAutosaveEvent.addListener(openAutosaveListener);
     m_autosavePopupGui->ignoreAutosaveOpenFileEvent.addListener(ignoreAutosaveOpenFileEvent);
 
@@ -153,6 +152,14 @@ bool IO_Handler::deleteSchedule(const char* name)
     {
         std::cout << "Tried to delete non-existant Schedule:" << name << std::endl;
         return false;
+    }
+
+    std::string autosavePath = makeRelativePathFromName(getFileAutosaveName(name).c_str());
+
+    // delete the file's autosave if it exists
+    if (fs::exists(autosavePath))
+    {
+        fs::remove(autosavePath);
     }
 
     if (fs::remove(relativePath) )

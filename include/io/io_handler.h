@@ -71,12 +71,6 @@ class IO_Handler
         {
             readSchedule(getLastEditedScheduleStemName().c_str());
         });
-        std::function<void()> applyAutosaveOpenFileListener = std::function<void()>([&]()
-        {
-            std::string autosaveName = getLastEditedScheduleStemName();
-            applyAutosaveToFile(getFileBaseName(autosaveName.c_str()).c_str());
-            readSchedule(getFileBaseName(autosaveName.c_str()).c_str());
-        });
         std::function<void()> ignoreAutosaveOpenFileEvent = std::function<void()>([&]()
         {
             readSchedule(getFileBaseName(getLastEditedScheduleStemName().c_str()).c_str());

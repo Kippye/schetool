@@ -20,7 +20,6 @@ class AutosavePopupGui : public Gui
         AutosavePopupGui(const char* ID) : Gui(ID) {}
 
         Event<> openAutosaveEvent;
-        Event<> applyAutosaveOpenFileEvent;
         Event<> ignoreAutosaveOpenFileEvent;
 
         void draw(Window& window, Input& input) override;
