@@ -30,6 +30,11 @@ class IO_Handler
         {
             writeSchedule(m_openScheduleFilename.c_str());
         });
+        // window event listeners
+        std::function<void()> windowCloseListener = std::function<void()>([&]()
+        {
+            closeCurrentFile();
+        });
         // gui listeners
         // ScheduleNameModalSubGui
         std::function<void(std::string, bool)> renameListener = std::function<void(std::string, bool)>([&](std::string name, bool renameFile)

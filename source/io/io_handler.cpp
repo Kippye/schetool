@@ -57,6 +57,7 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
 {
     m_schedule = schedule;
     m_windowManager = window;
+    window->windowCloseEvent.addListener(windowCloseListener);
     input.addEventListener(INPUT_EVENT_SC_SAVE, saveListener);
 
     m_mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
@@ -81,7 +82,10 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
 void IO_Handler::closeCurrentFile()
 {
     createAutosave();
-    applyAutosaveToFile(m_openScheduleFilename.c_str());
+    if (isAutosave(m_openScheduleFilename) == false)
+    {
+        applyAutosaveToFile(m_openScheduleFilename.c_str());
+    }
 }
 
 bool IO_Handler::writeSchedule(const char* name)

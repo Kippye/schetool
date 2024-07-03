@@ -12,7 +12,8 @@ extern "C" {
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
-#include <textures.h>
+#include "textures.h"
+#include "event.h"
 
 enum CURSOR_TYPE
 {
@@ -26,6 +27,10 @@ class Window
 		TextureLoader* m_textureLoader;
 		std::string m_titleBase = "";
 		std::string m_title = "";
+        // window events
+        std::function<void(Window*, int, int)> framebuffer_size_callback;
+        std::function<void(Window*, int)> window_focus_callback;
+        std::function<void(Window*)> window_close_callback;
 	public:
 		GLFWwindow* window;
 		CURSOR_TYPE cursor = NORMAL;
@@ -37,22 +42,19 @@ class Window
 		bool firstMouseMovement = true;
 		bool hasFocus = true;
 		bool shouldClose = false;
-	// window functions
-	void setCursor(CURSOR_TYPE _cursor);
-	void setTitle(const std::string& title);
-	void setTitleSuffix(const std::string& suffix);
-	std::string getTitle();
-	// lifecycle functions
-	void init(TextureLoader*);
-	void terminate();
+        Event<> windowCloseEvent;
+        // window functions
+        void setCursor(CURSOR_TYPE _cursor);
+        void setTitle(const std::string& title);
+        void setTitleSuffix(const std::string& suffix);
+        std::string getTitle();
+        // lifecycle functions
+        void init(TextureLoader*);
+        void terminate();
 
-	// window events
-	std::function<void(Window*, int, int)> framebuffer_size_callback;
-	std::function<void(Window*, int)> window_focus_callback;
-	std::function<void(Window*)> window_close_callback;
-	// input events
-	std::function<void(Window*, int, int, int, int)> key_callback;
-	std::function<void(Window*, int, int, int)> mouse_button_callback;
-	std::function<void(Window*, double, double)> scroll_callback;
-	std::function<void(Window*, double, double)> cursor_pos_callback;
+        // input events
+        std::function<void(Window*, int, int, int, int)> key_callback;
+        std::function<void(Window*, int, int, int)> mouse_button_callback;
+        std::function<void(Window*, double, double)> scroll_callback;
+        std::function<void(Window*, double, double)> cursor_pos_callback;
 };
