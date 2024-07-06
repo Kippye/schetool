@@ -1,5 +1,6 @@
 #include <iostream>
 #include "interface.h"
+#include "start_page_gui.h"
 #include "schedule_gui.h"
 #include "main_menu_bar_gui.h"
 #include "edit_history_gui.h"
@@ -20,7 +21,7 @@ void Interface::init(Window* windowManager, Input* input)
 	imGuiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// ADD GUIS
-	
+    addGui(std::shared_ptr<StartPageGui>(new StartPageGui("StartPageGui")));
 	addGui(std::shared_ptr<MainMenuBarGui>(new MainMenuBarGui("MainMenuBarGui")));
     addGui(std::shared_ptr<ScheduleGui>(new ScheduleGui("ScheduleGui")));
     // simple popups

@@ -47,6 +47,7 @@ class MainMenuBarGui : public Gui
     private:
         bool m_openScheduleNameModal = false;
         bool m_openDeleteConfirmationModal = false;
+        bool m_haveFileOpen = false;
         std::vector<std::string> m_fileNames = {};
 
         void renameSchedule();
@@ -64,4 +65,5 @@ class MainMenuBarGui : public Gui
         void openScheduleNameModal(NAME_PROMPT_REASON reason);
         void closeScheduleNameModal();
         void passFileNames(const std::vector<std::string>& fileNames);
+        void passHaveFileOpen(bool haveFileOpen);
 };

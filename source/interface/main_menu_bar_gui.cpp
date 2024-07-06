@@ -124,10 +124,18 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 	{
 		if (ImGui::BeginMenu("File"))
 		{
+            if (m_haveFileOpen == false)
+            {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            }
 			if (ImGui::MenuItem("Rename", "CTRL+F2"))
 			{
 				renameSchedule();
 			}
+            if (m_haveFileOpen == false)
+            {
+                ImGui::PopItemFlag();
+            }
 			if (ImGui::MenuItem("New", "CTRL+N")) 
 			{
 				newSchedule();
@@ -136,10 +144,18 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 			{
 				displayScheduleList();
 			}
+            if (m_haveFileOpen == false)
+            {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            }
 			if (ImGui::MenuItem("Save", "CTRL+S"))
 			{
 				saveEvent.invoke();
 			}
+            if (m_haveFileOpen == false)
+            {
+                ImGui::PopItemFlag();
+            }
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Edit"))
@@ -222,8 +238,6 @@ void MainMenuBarGui::openScheduleNameModal(NAME_PROMPT_REASON reason)
 	m_openScheduleNameModal = true;
 }
 
-#include <iostream>
-
 void MainMenuBarGui::closeScheduleNameModal()
 {
 	ImGui::CloseCurrentPopup();
@@ -232,4 +246,9 @@ void MainMenuBarGui::closeScheduleNameModal()
 void MainMenuBarGui::passFileNames(const std::vector<std::string>& fileNames)
 {
 	m_fileNames = fileNames;
+}
+
+void MainMenuBarGui::passHaveFileOpen(bool haveFileOpen)
+{
+    m_haveFileOpen = haveFileOpen;
 }

@@ -135,6 +135,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/interface.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/start_page_gui.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/io_handler.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/element_base.cpp"

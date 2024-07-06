@@ -7,6 +7,7 @@
 #include "schedule.h"
 #include "window.h"
 #include "input.h"
+#include "start_page_gui.h"
 #include "main_menu_bar_gui.h"
 #include "autosave_popup_gui.h"
 #include "interface.h"
@@ -19,8 +20,10 @@ class IO_Handler
         Schedule* m_schedule = NULL;
         Window* m_windowManager = NULL;
         DataConverter m_converter;
+        std::shared_ptr<StartPageGui> m_startPageGui = NULL;
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = NULL;
+        bool m_haveFileOpen = false;
         std::string m_openScheduleFilename;
         double m_timeSinceAutosave = 0.0;
         const char* m_autosaveSuffix = "_auto";
@@ -28,6 +31,7 @@ class IO_Handler
         // input listeners
         std::function<void()> saveListener = std::function<void()>([&]()
         {
+            if (m_haveFileOpen == false) { return; }
             writeSchedule(m_openScheduleFilename.c_str());
         });
         // window event listeners

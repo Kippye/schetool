@@ -60,6 +60,8 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     window->windowCloseEvent.addListener(windowCloseListener);
     input.addEventListener(INPUT_EVENT_SC_SAVE, saveListener);
 
+    m_startPageGui = interface.getGuiByID<StartPageGui>("StartPageGui");
+
     m_mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
     m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->renameScheduleEvent.addListener(renameListener);
     m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
@@ -80,6 +82,8 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
 
 void IO_Handler::closeCurrentFile()
 {
+    if (m_haveFileOpen == false) { return; }
+
     createAutosave();
     if (isAutosave(m_openScheduleFilename) == false)
     {
@@ -126,6 +130,8 @@ bool IO_Handler::readSchedule(const char* name)
     }
     m_schedule->sortColumns();
     setOpenScheduleFilename(std::string(name));
+    m_haveFileOpen = true;
+    m_startPageGui->setVisible(false);
     m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
     return true;
 }
@@ -137,6 +143,8 @@ bool IO_Handler::createNewSchedule(const char* name)
     if (writeSchedule(name)) // passes new list of file names to gui
     {
         setOpenScheduleFilename(std::string(name));
+        m_haveFileOpen = true;
+        m_startPageGui->setVisible(false);
         return true;
     }
     return false;
@@ -146,6 +154,8 @@ bool IO_Handler::createNewSchedule(const char* name)
 // NOTE: This can delete the currently open file. Is this the correct behaviour?
 bool IO_Handler::deleteSchedule(const char* name)
 {
+    if (m_haveFileOpen == false) { return false; }
+
     std::string relativePath = makeRelativePathFromName(name);
 
     if (fs::exists(relativePath) == false)
@@ -165,6 +175,13 @@ bool IO_Handler::deleteSchedule(const char* name)
     if (fs::remove(relativePath) )
     {
         m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+        // deleted the file that was open
+        if (m_openScheduleFilename == name)
+        {
+            m_openScheduleFilename = "";
+            m_haveFileOpen = false;
+            m_startPageGui->setVisible(true);
+        }
         return true;
     }
 
@@ -197,15 +214,17 @@ void IO_Handler::openMostRecentFile()
 		    readSchedule(getLastEditedScheduleStemName().c_str());
         }
 	}
-	// There are no Schedule files. Ask Interface to ask the MainMenuBarGui to start the process for creating a new Schedule file. Yes. This is stupid.
+	// There are no Schedule files. Open the Start Page so the user can create one from there or File->New.
 	else
 	{
-		m_mainMenuBarGui->openScheduleNameModal(NAME_PROMPT_NEW);
+		m_startPageGui->setVisible(true);
 	}
 }
 
 bool IO_Handler::createAutosave()
 {
+    if (m_haveFileOpen == false) { return false; }
+
     // save to open file name if the open file is itself an autosave, otherwise get the autosave name from the base file name
     std::string autosaveName = isAutosave(m_openScheduleFilename) ? m_openScheduleFilename : getFileAutosaveName(m_openScheduleFilename.c_str());
 
@@ -282,6 +301,8 @@ bool IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFil
 {
     if (renameFile)
     {
+        if (m_haveFileOpen == false) { return false; }
+
         fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
         fs::path pathToOpenFile = fs::path(makeRelativePathFromName(m_openScheduleFilename.c_str()));
         fs::path pathToRenamedFile = fs::path(makeRelativePathFromName(name.c_str()));
