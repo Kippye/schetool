@@ -84,6 +84,7 @@ class IO_Handler
 
         std::string makeRelativePathFromName(const char* name);
         bool applyAutosaveToFile(const char* name);
+        void passFileNamesToGui();
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";

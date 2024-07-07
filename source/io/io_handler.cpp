@@ -5,9 +5,46 @@
 
 namespace fs = std::filesystem;
 
+void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interface& interface)
+{
+    m_schedule = schedule;
+    m_windowManager = window;
+    window->windowCloseEvent.addListener(windowCloseListener);
+    input.addEventListener(INPUT_EVENT_SC_SAVE, saveListener);
+
+    m_startPageGui = interface.getGuiByID<StartPageGui>("StartPageGui");
+    m_startPageGui->getSubGui<StartPageNewNameModalSubGui>("StartPageNewNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
+    m_startPageGui->openScheduleFileEvent.addListener(openListener);
+
+    m_scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui");
+
+    m_mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
+    m_mainMenuBarGui->getSubGui<RenameModalSubGui>("RenameModalSubGui")->renameScheduleEvent.addListener(renameListener);
+    m_mainMenuBarGui->getSubGui<NewNameModalSubGui>("NewNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
+    m_mainMenuBarGui->getSubGui<DeleteModalSubGui>("DeleteModalSubGui")->deleteScheduleEvent.addListener(deleteListener);
+
+    m_mainMenuBarGui->openScheduleFileEvent.addListener(openListener);
+    m_mainMenuBarGui->saveEvent.addListener(saveListener);
+
+    m_autosavePopupGui = interface.getGuiByID<AutosavePopupGui>("AutosavePopupGui");
+    m_autosavePopupGui->openAutosaveEvent.addListener(openAutosaveListener);
+    m_autosavePopupGui->ignoreAutosaveOpenFileEvent.addListener(ignoreAutosaveOpenFileEvent);
+
+    passFileNamesToGui();
+
+    m_converter = DataConverter();
+    m_converter.setupObjectTable();
+}
+
 std::string IO_Handler::makeRelativePathFromName(const char* name)
 {
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
+}
+
+void IO_Handler::passFileNamesToGui()
+{
+    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
 }
 
 bool IO_Handler::applyAutosaveToFile(const char* fileName)
@@ -40,6 +77,7 @@ bool IO_Handler::applyAutosaveToFile(const char* fileName)
         {
             // The file was successfully copied, which means the autosave can be removed
             fs::remove(pathToAutosaveFile);
+            passFileNamesToGui();
             return true;
         }
     }
@@ -49,39 +87,9 @@ bool IO_Handler::applyAutosaveToFile(const char* fileName)
         printf("Could not copy autosave %s to file %s: %s\n", pathToAutosaveFile.string().c_str(), pathToFile.string().c_str(), e.what());
         return false;
     }
+    passFileNamesToGui();
 
     return false;
-}
-
-void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interface& interface)
-{
-    m_schedule = schedule;
-    m_windowManager = window;
-    window->windowCloseEvent.addListener(windowCloseListener);
-    input.addEventListener(INPUT_EVENT_SC_SAVE, saveListener);
-
-    m_startPageGui = interface.getGuiByID<StartPageGui>("StartPageGui");
-    m_startPageGui->getSubGui<StartPageNewNameModalSubGui>("StartPageNewNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
-    m_startPageGui->openScheduleFileEvent.addListener(openListener);
-    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-
-    m_scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui");
-
-    m_mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
-    m_mainMenuBarGui->getSubGui<RenameModalSubGui>("RenameModalSubGui")->renameScheduleEvent.addListener(renameListener);
-    m_mainMenuBarGui->getSubGui<NewNameModalSubGui>("NewNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
-    m_mainMenuBarGui->getSubGui<DeleteModalSubGui>("DeleteModalSubGui")->deleteScheduleEvent.addListener(deleteListener);
-
-    m_mainMenuBarGui->openScheduleFileEvent.addListener(openListener);
-    m_mainMenuBarGui->saveEvent.addListener(saveListener);
-    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-
-    m_autosavePopupGui = interface.getGuiByID<AutosavePopupGui>("AutosavePopupGui");
-    m_autosavePopupGui->openAutosaveEvent.addListener(openAutosaveListener);
-    m_autosavePopupGui->ignoreAutosaveOpenFileEvent.addListener(ignoreAutosaveOpenFileEvent);
-
-    m_converter = DataConverter();
-    m_converter.setupObjectTable();
 }
 
 void IO_Handler::closeCurrentFile()
@@ -112,8 +120,7 @@ bool IO_Handler::writeSchedule(const char* name)
     }
     // TODO: make some event that the Schedule can listen to?
     m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
-    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+    passFileNamesToGui();
     return true;
 }
 
@@ -150,8 +157,7 @@ bool IO_Handler::createNewSchedule(const char* name)
     if (writeSchedule(name)) // passes new list of file names to gui
     {
         setCurrentFileName(std::string(name));
-        m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-        m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+        passFileNamesToGui();
         m_haveFileOpen = true;
         m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
         m_startPageGui->setVisible(false);
@@ -185,8 +191,7 @@ bool IO_Handler::deleteSchedule(const char* name)
 
     if (fs::remove(relativePath) )
     {
-        m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-        m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+        passFileNamesToGui();
         // deleted the file that was open
         if (m_currentFileName == name)
         {
@@ -242,8 +247,7 @@ bool IO_Handler::renameCurrentFile(const std::string& newName)
         fs::rename(pathToAutosave, pathToRenamedAutosave);
     }
 
-    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+    passFileNamesToGui();
 
     setCurrentFileName(newName);
 

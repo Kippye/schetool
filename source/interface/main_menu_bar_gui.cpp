@@ -168,7 +168,7 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 	ImGui::EndMainMenuBar();
 
 	// check shortcuts (dunno if this is the best place for this? TODO )
-	if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) { renameSchedule(); }
+	if (m_haveFileOpen && input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) { renameSchedule(); }
 	if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) { newSchedule(); }
 
 	if (auto newNameModalSubGui = getSubGui<NewNameModalSubGui>("NewNameModalSubGui"))
@@ -210,7 +210,6 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 
 void MainMenuBarGui::newSchedule()
 {
-    std::cout << "openfunc" << std::endl;
     m_openNewNameModal = true;
 }
 
