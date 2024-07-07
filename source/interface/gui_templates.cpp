@@ -187,3 +187,16 @@ int gui_callbacks::filterNumbers(ImGuiInputTextCallbackData* data)
 		return 0;
 	return 1;
 }
+
+int gui_callbacks::filterAlphanumerics(ImGuiInputTextCallbackData* data)
+{
+	if (
+		(data->EventChar >= 97 && data->EventChar <= 122) // lowercase letters in english alphabet
+		|| (data->EventChar >= 60 && data->EventChar <= 90 && data->EventChar != 63) // capital letters in english alphabet MINUS some other things such as "?"
+		|| (data->EventChar >= 48 && data->EventChar <= 57) // numbers
+		|| data->EventChar == 32) // space
+	{
+		return 0;
+	}
+	return 1;
+}

@@ -25,6 +25,8 @@ void ScheduleGui::passScheduleComponents(const ScheduleCore& scheduleCore, Sched
 
 void ScheduleGui::draw(Window& window, Input& input)
 {
+    if (m_visible == false) { return; }
+
     const float FILTER_SPACE_VERTICAL = 0.0f; // 48.0f;
     const float SCHEDULE_OFFSET = 32.0f; // highestFilterCount * FILTER_SPACE_VERTICAL;
     const float ADD_ROW_BUTTON_HEIGHT = 32.0f;

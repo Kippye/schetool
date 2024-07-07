@@ -8,6 +8,7 @@
 #include "window.h"
 #include "input.h"
 #include "start_page_gui.h"
+#include "schedule_gui.h"
 #include "main_menu_bar_gui.h"
 #include "autosave_popup_gui.h"
 #include "interface.h"
@@ -23,8 +24,9 @@ class IO_Handler
         std::shared_ptr<StartPageGui> m_startPageGui = NULL;
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = NULL;
+        std::shared_ptr<ScheduleGui> m_scheduleGui = NULL;
         bool m_haveFileOpen = false;
-        std::string m_openScheduleFilename;
+        std::string m_currentFileName;
         double m_timeSinceAutosave = 0.0;
         const char* m_autosaveSuffix = "_auto";
 
@@ -32,7 +34,7 @@ class IO_Handler
         std::function<void()> saveListener = std::function<void()>([&]()
         {
             if (m_haveFileOpen == false) { return; }
-            writeSchedule(m_openScheduleFilename.c_str());
+            writeSchedule(m_currentFileName.c_str());
         });
         // window event listeners
         std::function<void()> windowCloseListener = std::function<void()>([&]()
@@ -41,11 +43,11 @@ class IO_Handler
         });
         // gui listeners
         // ScheduleNameModalSubGui
-        std::function<void(std::string, bool)> renameListener = std::function<void(std::string, bool)>([&](std::string name, bool renameFile)
+        std::function<void(std::string)> renameListener = std::function<void(std::string)>([&](std::string name)
         {
-            if (setOpenScheduleFilename(name, renameFile))
+            if (renameCurrentFile(name))
             {
-                m_mainMenuBarGui->closeScheduleNameModal();
+                m_mainMenuBarGui->closeModal();
             }
         });
         std::function<void(std::string)> createNewListener = std::function<void(std::string)>([&](std::string name)
@@ -53,10 +55,10 @@ class IO_Handler
             closeCurrentFile();
             if (createNewSchedule(name.c_str()))
             {
-                m_mainMenuBarGui->closeScheduleNameModal();
+                m_mainMenuBarGui->closeModal();
             }
         });
-        // ScheduleDeleteModalSubGui
+        // DeleteModalSubGui
         std::function<void(std::string)> deleteListener = std::function<void(std::string)>([&](std::string name)
         {
             deleteSchedule(name.c_str());
@@ -93,6 +95,11 @@ class IO_Handler
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);
         bool deleteSchedule(const char* name);
+        // Rename the currently open file to the provided name.
+        // Cancelled if a file with that name already exists.
+        // If the open file doesn't exist, write a file with the new name.
+        // If the open file exists, rename it to the new name.
+        bool renameCurrentFile(const std::string& newName);
         void openMostRecentFile();
         bool createAutosave();
         void addToAutosaveTimer(double delta);
@@ -102,11 +109,9 @@ class IO_Handler
         long long getFileEditTime(std::filesystem::path filePath);
         std::string getFileEditTimeString(std::filesystem::path filePath);
         std::string getOpenScheduleFilename();
-        // Rename the currently open file to the provided name.
-        // Cancelled if a file with that name already exists.
-        // If the open file doesn't exist, write a file with the new name.
-        // If the open file exists, rename it to the new name.
-        bool setOpenScheduleFilename(const std::string& name, bool renameFile = false);
+        // Change m_currentFileName to name
+        // Update the name in Schedule and the window's title
+        void setCurrentFileName(const std::string& name);
         std::vector<std::string> getScheduleStemNames();
         std::vector<std::string> getScheduleStemNamesSortedByEditTime();
         std::string getLastEditedScheduleStemName();

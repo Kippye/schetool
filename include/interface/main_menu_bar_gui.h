@@ -1,40 +1,53 @@
 #pragma once
 
-#include <imgui.h>
-#include <gui.h>
-#include <window.h>
-#include <input.h>
+#include "imgui.h"
+#include "gui.h"
+#include "window.h"
+#include "input.h"
 
-enum NAME_PROMPT_REASON
-{
-    NAME_PROMPT_NEW,
-    NAME_PROMPT_RENAME
-};
-
-class ScheduleNameModalSubGui : public Gui
+class TextInputModalSubGui : public Gui
 {
     private:
-        std::string m_scheduleNameBuffer = "";
-        NAME_PROMPT_REASON m_promptReason = NAME_PROMPT_RENAME;
-
+        std::string m_textBuffer = "";
+        size_t m_textMaxLength;
+        const char* m_popupName;
+        std::string m_acceptButtonText;
+        bool m_showCloseButton;
     public:
-        ScheduleNameModalSubGui(const char* ID) : Gui(ID) {}
+        TextInputModalSubGui(const char* ID, const char* popupName = "Text input", const char* acceptButtonText = "Accept", size_t textMaxLength = 48, bool showCloseButton = true);
 
-        Event<std::string> createNewScheduleEvent;
-        Event<std::string, bool> renameScheduleEvent;
-
-        void draw(Window& window, Input& input) override;
-        void setPromptReason(NAME_PROMPT_REASON);
-        static int filterAlphanumerics(ImGuiInputTextCallbackData* data);
+        void draw(Window& window, Input& input) override; 
+        void open();
+        virtual void invokeEvent(const std::string& text);
 };
 
-class ScheduleDeleteModalSubGui : public Gui
+class NewNameModalSubGui : public TextInputModalSubGui
+{
+    public:
+        NewNameModalSubGui(const char* ID) : TextInputModalSubGui(ID, "Enter name", "Create schedule") {}
+
+        Event<std::string> createNewScheduleEvent;
+
+        void invokeEvent(const std::string& text) override;
+};
+
+class RenameModalSubGui : public TextInputModalSubGui
+{
+    public:
+        RenameModalSubGui(const char* ID) : TextInputModalSubGui(ID, "Enter new name") {}
+
+        Event<std::string> renameScheduleEvent;
+        
+        void invokeEvent(const std::string& text) override;
+};
+
+class DeleteModalSubGui : public Gui
 {
     private:
         std::string m_deleteConfirmationScheduleName = "";
 
     public:
-        ScheduleDeleteModalSubGui(const char* ID) : Gui(ID) {}
+        DeleteModalSubGui(const char* ID) : Gui(ID) {}
 
         Event<std::string> deleteScheduleEvent;
 
@@ -45,7 +58,8 @@ class ScheduleDeleteModalSubGui : public Gui
 class MainMenuBarGui : public Gui
 {
     private:
-        bool m_openScheduleNameModal = false;
+        bool m_openNewNameModal = false;
+        bool m_openRenameModal = false;
         bool m_openDeleteConfirmationModal = false;
         bool m_haveFileOpen = false;
         std::vector<std::string> m_fileNames = {};
@@ -62,8 +76,7 @@ class MainMenuBarGui : public Gui
         Event<> saveEvent;
 
         void draw(Window& window, Input& input) override;
-        void openScheduleNameModal(NAME_PROMPT_REASON reason);
-        void closeScheduleNameModal();
+        void closeModal();
         void passFileNames(const std::vector<std::string>& fileNames);
         void passHaveFileOpen(bool haveFileOpen);
 };

@@ -61,12 +61,16 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     input.addEventListener(INPUT_EVENT_SC_SAVE, saveListener);
 
     m_startPageGui = interface.getGuiByID<StartPageGui>("StartPageGui");
+    m_startPageGui->getSubGui<StartPageNewNameModalSubGui>("StartPageNewNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
+    m_startPageGui->openScheduleFileEvent.addListener(openListener);
+    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+
+    m_scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui");
 
     m_mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
-    m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->renameScheduleEvent.addListener(renameListener);
-    m_mainMenuBarGui->getSubGui<ScheduleNameModalSubGui>("ScheduleNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
-
-    m_mainMenuBarGui->getSubGui<ScheduleDeleteModalSubGui>("ScheduleDeleteModalSubGui")->deleteScheduleEvent.addListener(deleteListener);
+    m_mainMenuBarGui->getSubGui<RenameModalSubGui>("RenameModalSubGui")->renameScheduleEvent.addListener(renameListener);
+    m_mainMenuBarGui->getSubGui<NewNameModalSubGui>("NewNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);
+    m_mainMenuBarGui->getSubGui<DeleteModalSubGui>("DeleteModalSubGui")->deleteScheduleEvent.addListener(deleteListener);
 
     m_mainMenuBarGui->openScheduleFileEvent.addListener(openListener);
     m_mainMenuBarGui->saveEvent.addListener(saveListener);
@@ -85,9 +89,9 @@ void IO_Handler::closeCurrentFile()
     if (m_haveFileOpen == false) { return; }
 
     createAutosave();
-    if (isAutosave(m_openScheduleFilename) == false)
+    if (isAutosave(m_currentFileName) == false)
     {
-        applyAutosaveToFile(m_openScheduleFilename.c_str());
+        applyAutosaveToFile(m_currentFileName.c_str());
     }
 }
 
@@ -109,6 +113,7 @@ bool IO_Handler::writeSchedule(const char* name)
     // TODO: make some event that the Schedule can listen to?
     m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
     m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
     return true;
 }
 
@@ -129,9 +134,11 @@ bool IO_Handler::readSchedule(const char* name)
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
     }
     m_schedule->sortColumns();
-    setOpenScheduleFilename(std::string(name));
+    setCurrentFileName(std::string(name));
     m_haveFileOpen = true;
+    m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
     m_startPageGui->setVisible(false);
+    m_scheduleGui->setVisible(true);
     m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
     return true;
 }
@@ -142,9 +149,13 @@ bool IO_Handler::createNewSchedule(const char* name)
 
     if (writeSchedule(name)) // passes new list of file names to gui
     {
-        setOpenScheduleFilename(std::string(name));
+        setCurrentFileName(std::string(name));
+        m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+        m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
         m_haveFileOpen = true;
+        m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
         m_startPageGui->setVisible(false);
+        m_scheduleGui->setVisible(true);
         return true;
     }
     return false;
@@ -175,17 +186,68 @@ bool IO_Handler::deleteSchedule(const char* name)
     if (fs::remove(relativePath) )
     {
         m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+        m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
         // deleted the file that was open
-        if (m_openScheduleFilename == name)
+        if (m_currentFileName == name)
         {
-            m_openScheduleFilename = "";
+            setCurrentFileName("");
             m_haveFileOpen = false;
+            m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
+            m_scheduleGui->setVisible(false);
             m_startPageGui->setVisible(true);
         }
         return true;
     }
 
     return false;
+}
+
+bool IO_Handler::renameCurrentFile(const std::string& newName)
+{
+    if (m_haveFileOpen == false) { return false; }
+
+    fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
+    fs::path pathToOpenFile = fs::path(makeRelativePathFromName(m_currentFileName.c_str()));
+    fs::path pathToRenamedFile = fs::path(makeRelativePathFromName(newName.c_str()));
+    bool schedulesDirWasCreated = false;
+
+    // Write-operation: Create schedules directory if it doesn't exist.
+    if (fs::exists(schedulesPath) == false)
+    {
+        std::cout << "Tried to rename a Schedule but the schedules directory did not exist. Created a schedules directory." << std::endl;
+        fs::create_directory(schedulesPath);
+        schedulesDirWasCreated = true;
+    }
+    //  A Schedule file with this name already exists, don't overwrite it. Just stop.
+    if (fs::exists(pathToRenamedFile))
+    {
+        return false;
+    }
+    // If the file to rename doesn't exist, just write the Schedule to the file with the provided new name
+    if (schedulesDirWasCreated || fs::exists(pathToOpenFile) == false)
+    {
+        std::cout << "Tried to change the name of the Schedule file, but the file was not found at its previous path:" << pathToOpenFile.string() << std::endl;
+        writeSchedule(newName.c_str());
+        std::cout << "Wrote current file to renamed path:" << pathToRenamedFile.string() << std::endl;
+    }
+    else // All is fine, rename the file
+    {
+        fs::rename(pathToOpenFile, pathToRenamedFile);
+    }
+    // Rename the autosave as well, if it exists
+    fs::path pathToAutosave = fs::path(makeRelativePathFromName(getFileAutosaveName(pathToOpenFile.stem().string().c_str()).c_str()));
+    fs::path pathToRenamedAutosave = fs::path(makeRelativePathFromName(getFileAutosaveName(newName.c_str()).c_str()));
+    if (fs::exists(pathToAutosave))
+    {
+        fs::rename(pathToAutosave, pathToRenamedAutosave);
+    }
+
+    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+
+    setCurrentFileName(newName);
+
+    return true;
 }
 
 void IO_Handler::openMostRecentFile()
@@ -217,6 +279,7 @@ void IO_Handler::openMostRecentFile()
 	// There are no Schedule files. Open the Start Page so the user can create one from there or File->New.
 	else
 	{
+        m_scheduleGui->setVisible(false);
 		m_startPageGui->setVisible(true);
 	}
 }
@@ -226,7 +289,7 @@ bool IO_Handler::createAutosave()
     if (m_haveFileOpen == false) { return false; }
 
     // save to open file name if the open file is itself an autosave, otherwise get the autosave name from the base file name
-    std::string autosaveName = isAutosave(m_openScheduleFilename) ? m_openScheduleFilename : getFileAutosaveName(m_openScheduleFilename.c_str());
+    std::string autosaveName = isAutosave(m_currentFileName) ? m_currentFileName : getFileAutosaveName(m_currentFileName.c_str());
 
     if (writeSchedule(autosaveName.c_str()))
     {
@@ -294,57 +357,14 @@ std::string IO_Handler::getFileEditTimeString(fs::path path)
 
 std::string IO_Handler::getOpenScheduleFilename()
 {
-    return m_openScheduleFilename;
+    return m_currentFileName;
 }
 
-bool IO_Handler::setOpenScheduleFilename(const std::string& name, bool renameFile)
+void IO_Handler::setCurrentFileName(const std::string& name)
 {
-    if (renameFile)
-    {
-        if (m_haveFileOpen == false) { return false; }
-
-        fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
-        fs::path pathToOpenFile = fs::path(makeRelativePathFromName(m_openScheduleFilename.c_str()));
-        fs::path pathToRenamedFile = fs::path(makeRelativePathFromName(name.c_str()));
-        bool schedulesDirWasCreated = false;
-
-        // Write-operation: Create schedules directory if it doesn't exist.
-        if (fs::exists(schedulesPath) == false)
-        {
-            std::cout << "Tried to rename a Schedule but the schedules directory did not exist. Created a schedules directory." << std::endl;
-            fs::create_directory(schedulesPath);
-            schedulesDirWasCreated = true;
-        }
-        //  A Schedule file with this name already exists, don't overwrite it. Just stop.
-        if (fs::exists(pathToRenamedFile))
-        {
-            return false;
-        }
-        // If the file to rename doesn't exist, just write the Schedule to the file with the provided new name
-        if (schedulesDirWasCreated || fs::exists(pathToOpenFile) == false)
-        {
-            std::cout << "Tried to change the name of the Schedule file, but the file was not found at its previous path:" << pathToOpenFile.string() << std::endl;
-            writeSchedule(name.c_str());
-            std::cout << "Wrote current file to renamed path:" << pathToRenamedFile.string() << std::endl;
-        }
-        else // All is fine, rename the file
-        {
-            fs::rename(pathToOpenFile, pathToRenamedFile);
-        }
-        // Rename the autosave as well, if it exists
-        fs::path pathToAutosave = fs::path(makeRelativePathFromName(getFileAutosaveName(pathToOpenFile.stem().string().c_str()).c_str()));
-        fs::path pathToRenamedAutosave = fs::path(makeRelativePathFromName(getFileAutosaveName(name.c_str()).c_str()));
-        if (fs::exists(pathToAutosave))
-        {
-            fs::rename(pathToAutosave, pathToRenamedAutosave);
-        }
-    }
-
-    m_openScheduleFilename = name;
+    m_currentFileName = name;
     m_schedule->setName(name);
     m_windowManager->setTitleSuffix(std::string(" - ").append(m_schedule->getName()).c_str());
-    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-    return true;
 }
 
 std::vector<std::string> IO_Handler::getScheduleStemNames()
