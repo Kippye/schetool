@@ -84,14 +84,18 @@ class IO_Handler
 
         std::string makeRelativePathFromName(const char* name);
         bool applyAutosaveToFile(const char* name);
+        void setHaveFileOpen(bool haveFileOpen);
         void passFileNamesToGui();
+        // Cleans everything about the currently open file (clears the schedule, edit history, etc)
+        void unloadCurrentFile();
+        // Mostly just creates and applies an autosave of the file before it is unloaded by calling unloadCurrentFile().
+        void closeCurrentFile();
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
         void init(Schedule* schedule, Window* window, Input& input, Interface& interface);
 
         // Does any necessary procedures between when a file is "closed" and the program closed or a new one opened
-        void closeCurrentFile();
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);
@@ -110,7 +114,7 @@ class IO_Handler
         long long getFileEditTime(std::filesystem::path filePath);
         std::string getFileEditTimeString(std::filesystem::path filePath);
         std::string getOpenScheduleFilename();
-        // Change m_currentFileName to name
+        // Change m_currentFileName to name.
         // Update the name in Schedule and the window's title
         void setCurrentFileName(const std::string& name);
         std::vector<std::string> getScheduleStemNames();

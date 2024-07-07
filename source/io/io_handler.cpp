@@ -41,10 +41,37 @@ std::string IO_Handler::makeRelativePathFromName(const char* name)
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
 }
 
+void IO_Handler::setHaveFileOpen(bool haveFileOpen)
+{
+    m_haveFileOpen = haveFileOpen;
+    m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
+}
+
 void IO_Handler::passFileNamesToGui()
 {
     m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
     m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+}
+
+void IO_Handler::unloadCurrentFile()
+{
+    m_schedule->clearSchedule();
+    m_schedule->getEditHistoryMutable().clearEditHistory();
+    setCurrentFileName("");
+    setHaveFileOpen(false);
+}
+
+void IO_Handler::closeCurrentFile()
+{
+    if (m_haveFileOpen == false) { return; }
+
+    createAutosave();
+    if (isAutosave(m_currentFileName) == false)
+    {
+        applyAutosaveToFile(m_currentFileName.c_str());
+    }
+
+    unloadCurrentFile();
 }
 
 bool IO_Handler::applyAutosaveToFile(const char* fileName)
@@ -92,17 +119,6 @@ bool IO_Handler::applyAutosaveToFile(const char* fileName)
     return false;
 }
 
-void IO_Handler::closeCurrentFile()
-{
-    if (m_haveFileOpen == false) { return; }
-
-    createAutosave();
-    if (isAutosave(m_currentFileName) == false)
-    {
-        applyAutosaveToFile(m_currentFileName.c_str());
-    }
-}
-
 bool IO_Handler::writeSchedule(const char* name)
 {
     fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
@@ -142,8 +158,7 @@ bool IO_Handler::readSchedule(const char* name)
     }
     m_schedule->sortColumns();
     setCurrentFileName(std::string(name));
-    m_haveFileOpen = true;
-    m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
+    setHaveFileOpen(true);
     m_startPageGui->setVisible(false);
     m_scheduleGui->setVisible(true);
     m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
@@ -158,8 +173,7 @@ bool IO_Handler::createNewSchedule(const char* name)
     {
         setCurrentFileName(std::string(name));
         passFileNamesToGui();
-        m_haveFileOpen = true;
-        m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
+        setHaveFileOpen(true);
         m_startPageGui->setVisible(false);
         m_scheduleGui->setVisible(true);
         return true;
@@ -195,9 +209,7 @@ bool IO_Handler::deleteSchedule(const char* name)
         // deleted the file that was open
         if (m_currentFileName == name)
         {
-            setCurrentFileName("");
-            m_haveFileOpen = false;
-            m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
+            unloadCurrentFile();
             m_scheduleGui->setVisible(false);
             m_startPageGui->setVisible(true);
         }
