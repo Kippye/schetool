@@ -23,7 +23,7 @@ bool Gui::getVisible() const
 // NOTE: Guis should not modify m_visible themselves. So this is the main way to make them visible / hidden
 void Gui::setVisible(bool visible)
 {
-    m_visible = true;
+    m_visible = visible;
 }
 
 void Gui::draw(Window& window, Input& input)

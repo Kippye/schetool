@@ -13,22 +13,22 @@ void Input::init(Window* windowManager)
 		m_eventLastFrameStates.insert({(INPUT_EVENT)i, false});
 	}
 
-	m_windowManager->key_callback = [=](auto self, int key, int scancode, int action, int mods)
+	m_windowManager->key_callback = [this](auto self, int key, int scancode, int action, int mods)
 	{
 		this->key_event(self->window, key, scancode, action, mods);
 	};
 
-	m_windowManager->mouse_button_callback = [=](auto self, int button, int action, int mods)
+	m_windowManager->mouse_button_callback = [this](auto self, int button, int action, int mods)
 	{
 		this->mouse_button_event(self->window, button, action, mods);
 	};
 
-	m_windowManager->cursor_pos_callback = [=](auto self, double xPos, double yPos)
+	m_windowManager->cursor_pos_callback = [this](auto self, double xPos, double yPos)
 	{
 		this->cursor_pos_event(self->window, xPos, yPos);
 	};
 
-	m_windowManager->scroll_callback = [=](auto self, double xOffset, double yOffset)
+	m_windowManager->scroll_callback = [this](auto self, double xOffset, double yOffset)
 	{
 		this->scroll_event(self->window, xOffset, yOffset);
 	};

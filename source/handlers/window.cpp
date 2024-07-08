@@ -114,6 +114,7 @@ void Window::init(TextureLoader* textureLoader)
 	this->window_close_callback = [](auto self)
 	{
 		self->shouldClose = true;
+        self->windowCloseEvent.invoke();
 		std::cout << "Program close requested." << std::endl;
 	};
 }

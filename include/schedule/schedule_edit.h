@@ -71,7 +71,7 @@ class ElementEdit : public ElementEditBase
         T m_previousValue;
         T m_newValue;
     public:
-        ElementEdit<T>(size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(column, row, elementType) 
+        ElementEdit(size_t column, size_t row, SCHEDULE_TYPE elementType, const T& previousValue, const T& newValue) : ElementEditBase(column, row, elementType) 
         {
             m_previousValue = previousValue;
             m_newValue = newValue;
@@ -211,7 +211,7 @@ class FilterEdit : public FilterAddOrRemoveEditBase
     private:
         Filter<T> m_filterData = Filter<T>(T());
     public:
-        FilterEdit<T>(bool isRemove, size_t column, size_t filterIndex, const Filter<T>& filterData) : FilterAddOrRemoveEditBase(isRemove, column, filterIndex) 
+        FilterEdit(bool isRemove, size_t column, size_t filterIndex, const Filter<T>& filterData) : FilterAddOrRemoveEditBase(isRemove, column, filterIndex) 
         {
             m_filterData = filterData;
         }
@@ -257,7 +257,7 @@ class FilterChangeEdit : public FilterEditBase
         Filter<T> m_previousValue = Filter<T>(T());
         Filter<T> m_newValue = Filter<T>(T());
     public:
-        FilterChangeEdit<T>(size_t column, size_t filterIndex, SCHEDULE_TYPE valueType, const Filter<T>& previousValue, const Filter<T>& newValue) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterChange) 
+        FilterChangeEdit(size_t column, size_t filterIndex, SCHEDULE_TYPE valueType, const Filter<T>& previousValue, const Filter<T>& newValue) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterChange) 
         {
             m_valueType = valueType;
             m_previousValue = previousValue;

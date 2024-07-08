@@ -4,6 +4,8 @@ project(schetool VERSION 0.6.2)
 
 set(PROGRAM_NAME ${PROJECT_NAME})
 
+set(CPP_VERSION "c++20")
+
 # enable testing by default for debug makefile builds (can't check for configuration with msvc)
 IF ((CMAKE_GENERATOR STREQUAL "Unix Makefiles") AND ("${CMAKE_BUILD_TYPE}" STREQUAL Debug))
     option(ENABLE_TESTING "Unit testing build" ON)
@@ -25,7 +27,7 @@ target_compile_options(compiler_flags INTERFACE ${PRESET_ADD_COMPILE_OPTIONS})
 message(STATUS "~~ Setting compile and link flags for ${CMAKE_GENERATOR}")
 IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
     IF ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS)) 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=c++17 -lstdc++")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=${CPP_VERSION} -lstdc++")
         message(STATUS "~~ Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
         # keep console for debug builds and hide it for release builds
         # /ENTRY:mainCRTStartup keeps the same "main" function instead of requiring "WinMain"
@@ -39,11 +41,11 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
             message(STATUS "~~ Added Windows Release linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
         ENDIF()
     ELSE()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CPP_VERSION} -lstdc++")
         message(STATUS "~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
     ENDIF()
 ELSEIF (CMAKE_GENERATOR MATCHES "Visual Studio")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:${CPP_VERSION}")
     message(STATUS "~~ Set Visual Studio compile flags to: ${CMAKE_CXX_FLAGS}")
 ENDIF()
 message(STATUS "~~ Finished setting compile flags")
@@ -124,6 +126,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/window.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/autosave_popup_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/edit_history_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/element_editor_subgui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/filter_editor_subgui.cpp"
@@ -132,6 +135,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/interface.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/start_page_gui.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/io_handler.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/element_base.cpp"

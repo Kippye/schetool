@@ -22,6 +22,7 @@ namespace gui_templates
 namespace gui_callbacks
 {
     int filterNumbers(ImGuiInputTextCallbackData* data);
+    int filterAlphanumerics(ImGuiInputTextCallbackData* data);
 }
 
 namespace gui_colors

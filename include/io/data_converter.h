@@ -59,13 +59,13 @@ class BLF_Filter<bool> : public BLF_FilterBase
     public:
         bool passValue;
 
-        BLF_Filter<bool>()
+        BLF_Filter()
         {
             attributeMap.push_back({"PassValue", &passValue, TYPE_BOOL});
             objectName = "BLF_Filter_Bool";
         }
 
-        BLF_Filter<bool>(const Filter<bool>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        BLF_Filter(const Filter<bool>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
             passValue = filter->getPassValue();
             attributeMap.push_back({"PassValue", &passValue, TYPE_BOOL});
@@ -79,13 +79,13 @@ class BLF_Filter<int> : public BLF_FilterBase
     public:
         int passValue;
 
-        BLF_Filter<int>()
+        BLF_Filter()
         {
             attributeMap.push_back({"PassValue", &passValue, TYPE_INT});
             objectName = "BLF_Filter_Number";
         }
 
-        BLF_Filter<int>(const Filter<int>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        BLF_Filter(const Filter<int>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
             passValue = filter->getPassValue();
             attributeMap.push_back({"PassValue", &passValue, TYPE_INT});
@@ -99,13 +99,13 @@ class BLF_Filter<double> : public BLF_FilterBase
     public:
         double passValue;
 
-        BLF_Filter<double>()
+        BLF_Filter()
         {
             attributeMap.push_back({"PassValue", &passValue, TYPE_DOUBLE});
             objectName = "BLF_Filter_Decimal";
         }
 
-        BLF_Filter<double>(const Filter<double>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        BLF_Filter(const Filter<double>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
             passValue = filter->getPassValue();
             attributeMap.push_back({"PassValue", &passValue, TYPE_DOUBLE});
@@ -119,13 +119,13 @@ class BLF_Filter<std::string> : public BLF_FilterBase
     public:
         std::string passValue;
 
-        BLF_Filter<std::string>()
+        BLF_Filter()
         {
             attributeMap.push_back({"PassValue", &passValue, TYPE_STRING});
             objectName = "BLF_Filter_Text";
         }
 
-        BLF_Filter<std::string>(const Filter<std::string>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        BLF_Filter(const Filter<std::string>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
             passValue = filter->getPassValue();
             attributeMap.push_back({"PassValue", &passValue, TYPE_STRING});
@@ -182,7 +182,7 @@ class BLF_Filter<SelectContainer> : public BLF_FilterBase
         int selection_18 = -1;
         int selection_19 = -1;
 
-        BLF_Filter<SelectContainer>() 
+        BLF_Filter() 
         {
             for (size_t i = 0; i < m_selectionPointers.size(); i++)
             {
@@ -191,7 +191,7 @@ class BLF_Filter<SelectContainer> : public BLF_FilterBase
 
             objectName = "BLF_Filter_Select";
         }
-        BLF_Filter<SelectContainer>(const Filter<SelectContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        BLF_Filter(const Filter<SelectContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
             const std::set<size_t>& selection = filter->getPassValue().getSelection();
         
@@ -247,7 +247,7 @@ class BLF_Filter<WeekdayContainer> : public BLF_FilterBase
             &selection_6,
         };
     public:
-        BLF_Filter<WeekdayContainer>() 
+        BLF_Filter() 
         {
             for (size_t i = 0; i < m_selectionPointers.size(); i++)
             {
@@ -256,7 +256,7 @@ class BLF_Filter<WeekdayContainer> : public BLF_FilterBase
 
             objectName = "BLF_Filter_Weekday";
         }
-        BLF_Filter<WeekdayContainer>(const Filter<WeekdayContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0 ) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        BLF_Filter(const Filter<WeekdayContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0 ) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
             const std::set<size_t>& selection = filter->getPassValue().getSelection();
         
@@ -312,13 +312,13 @@ class BLF_Filter<TimeContainer> : public BLF_FilterBase
     public:
         int hours;
         int minutes;
-        BLF_Filter<TimeContainer>() 
+        BLF_Filter() 
         {
             attributeMap.push_back({"Hours", &hours, TYPE_INT});
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
             objectName = "BLF_Filter_Time";
         }
-        BLF_Filter<TimeContainer>(const Filter<TimeContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        BLF_Filter(const Filter<TimeContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
             hours = filter->getPassValue().getHours();
             minutes = filter->getPassValue().getMinutes();
@@ -340,14 +340,14 @@ class BLF_Filter<DateContainer> : public BLF_FilterBase
         int year;
         int month;
         int mday;
-        BLF_Filter<DateContainer>() 
+        BLF_Filter() 
         {
             attributeMap.push_back({"Year", &year, TYPE_INT});
             attributeMap.push_back({"Month", &month, TYPE_INT});
             attributeMap.push_back({"Mday", &mday, TYPE_INT});
             objectName = "BLF_Filter_Date";
         }
-        BLF_Filter<DateContainer>(const Filter<DateContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
+        BLF_Filter(const Filter<DateContainer>* filter, SCHEDULE_TYPE type, size_t columnIndex = 0, size_t filterIndex = 0) : BLF_FilterBase(filter->getComparison(), type, columnIndex, filterIndex)
         {
             tm dateTime = filter->getPassValue().getTime();
             year = dateTime.tm_year;
@@ -561,12 +561,12 @@ class BLF_Element<bool> : public BLF_ElementBase
 {
     public:
         bool value;
-        BLF_Element<bool>() 
+        BLF_Element() 
         {
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
             objectName = "BLF_Element_bool";
         }
-        BLF_Element<bool>(const Element<bool>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+        BLF_Element(const Element<bool>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_BOOL});
@@ -579,12 +579,12 @@ class BLF_Element<int> : public BLF_ElementBase
 {
     public:
         int value;
-        BLF_Element<int>() 
+        BLF_Element() 
         {
             attributeMap.push_back({"Value", &value, TYPE_INT});
             objectName = "BLF_Element_int";
         }
-        BLF_Element<int>(const Element<int>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+        BLF_Element(const Element<int>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_INT});
@@ -597,12 +597,12 @@ class BLF_Element<double> : public BLF_ElementBase
 {
     public:
         double value;
-        BLF_Element<double>() 
+        BLF_Element() 
         {
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
             objectName = "BLF_Element_double";
         }
-        BLF_Element<double>(const Element<double>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+        BLF_Element(const Element<double>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = element->getValue();
             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
@@ -615,12 +615,12 @@ class BLF_Element<std::string> : public BLF_ElementBase
 {
     public:
         blf::String value;
-        BLF_Element<std::string>() 
+        BLF_Element() 
         {
             attributeMap.push_back({"Value", &value, TYPE_STRING});
             objectName = "BLF_Element_string";
         }
-        BLF_Element<std::string>(const Element<std::string>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+        BLF_Element(const Element<std::string>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             value = blf::String(element->getValue());
             attributeMap.push_back({"Value", &value, TYPE_STRING});
@@ -677,7 +677,7 @@ class BLF_Element<SelectContainer> : public BLF_ElementBase
         int selection_18 = -1;
         int selection_19 = -1;
 
-        BLF_Element<SelectContainer>() 
+        BLF_Element() 
         {
             for (size_t i = 0; i < m_selectionPointers.size(); i++)
             {
@@ -686,7 +686,7 @@ class BLF_Element<SelectContainer> : public BLF_ElementBase
 
             objectName = "BLF_Element_SelectContainer";
         }
-        BLF_Element<SelectContainer>(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+        BLF_Element(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             const std::set<size_t>& selection = element->getValue().getSelection();
         
@@ -740,7 +740,7 @@ class BLF_Element<WeekdayContainer> : public BLF_ElementBase
             &selection_6,
         };
     public:
-        BLF_Element<WeekdayContainer>() 
+        BLF_Element() 
         {
             for (size_t i = 0; i < m_selectionPointers.size(); i++)
             {
@@ -749,7 +749,7 @@ class BLF_Element<WeekdayContainer> : public BLF_ElementBase
 
             objectName = "BLF_Element_WeekdayContainer";
         }
-        BLF_Element<WeekdayContainer>(const Element<WeekdayContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+        BLF_Element(const Element<WeekdayContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             const std::set<size_t>& selection = element->getValue().getSelection();
         
@@ -803,13 +803,13 @@ class BLF_Element<TimeContainer> : public BLF_ElementBase
     public:
         int hours;
         int minutes;
-        BLF_Element<TimeContainer>() 
+        BLF_Element() 
         {
             attributeMap.push_back({"Hours", &hours, TYPE_INT});
             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
             objectName = "BLF_Element_TimeContainer";
         }
-        BLF_Element<TimeContainer>(const Element<TimeContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+        BLF_Element(const Element<TimeContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             hours = element->getValue().getHours();
             minutes = element->getValue().getMinutes();
@@ -826,14 +826,14 @@ class BLF_Element<DateContainer> : public BLF_ElementBase
         int year;
         int month;
         int mday;
-        BLF_Element<DateContainer>() 
+        BLF_Element() 
         {
             attributeMap.push_back({"Year", &year, TYPE_INT});
             attributeMap.push_back({"Month", &month, TYPE_INT});
             attributeMap.push_back({"Mday", &mday, TYPE_INT});
             objectName = "BLF_Element_DateContainer";
         }
-        BLF_Element<DateContainer>(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+        BLF_Element(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
         {
             tm dateTime = element->getValue().getTime();
             year = dateTime.tm_year;
