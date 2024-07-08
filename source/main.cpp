@@ -1,6 +1,6 @@
 #include "main.h"
 #include <GLFW/glfw3.h>
-#include <memory>
+#include <locale>
 
 // Windows Release build
 #if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))
@@ -19,6 +19,9 @@
 
 Program::Program()
 {
+    // use user-preferred locale from OS
+    std::setlocale(LC_ALL, ""); 
+
 	// TODO: load user preferences here!
 
 	// setup and initialize components
