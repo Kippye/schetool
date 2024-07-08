@@ -362,8 +362,17 @@ std::string IO_Handler::getFileEditTimeString(fs::path path)
     if (fs::exists(path) == false) { printf("IO_Handler::getFileEditTimeString(%s): No file exists at the path\n", path.string().c_str()); return std::string(""); }
 
     const auto fileEditTime = fs::last_write_time(path);
+    time_t time;
+
+    #ifdef WIN32 // windows implementation using clock_cast
     const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileEditTime);
-    const time_t time = std::chrono::system_clock::to_time_t(systemTime);
+    time = std::chrono::system_clock::to_time_t(systemTime);
+    #else // workaround without clock_cast
+    auto systemNow = std::chrono::system_clock::now();
+    auto fileNow = std::chrono::file_clock::now();
+    auto systemTime = std::chrono::time_point_cast<std::chrono::system_clock::duration>(fileEditTime - fileNow + systemNow);
+    time = std::chrono::system_clock::to_time_t(systemTime);
+    #endif
     char buf[128];
     tm timeStruct = *localtime(&time);
     strftime(buf, 128, "%x %X", &timeStruct);
