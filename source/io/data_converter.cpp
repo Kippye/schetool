@@ -29,9 +29,13 @@ void DataConverter::setupObjectTable()
     addObjectDefinition<BLF_Base>();
     addObjectDefinition<BLF_ElementInfo>();
     addObjectDefinition<BLF_Element<bool>>();
-
-
+    addObjectDefinition<BLF_Element<int>>();
+    addObjectDefinition<BLF_Element<double>>();
+    addObjectDefinition<BLF_Element<std::string>>();
     addObjectDefinition<BLF_Element<SelectContainer>>();
+    addObjectDefinition<BLF_Element<WeekdayContainer>>();
+    addObjectDefinition<BLF_Element<TimeContainer>>();
+    addObjectDefinition<BLF_Element<DateContainer>>();
 //     m_objects =
 //     {
 //         createDefinition<BLF_FilterBase>(),
