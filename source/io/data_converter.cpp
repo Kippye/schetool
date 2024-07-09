@@ -4,35 +4,39 @@
 
 using namespace blf::file;
 
-// tm DataConverter::getElementCreationTime(BLF_ElementBase* element)
-// {
-//     return tm {
-//         0,
-//         (int)element->creationMinutes,
-//         (int)element->creationHours,
-//         (int)element->creationMday,
-//         (int)element->creationMonth,
-//         (int)element->creationYear,
-//         0,
-//         0,
-//         0
-//     };
-// }
+LocalObjectTable& ObjectDefinitions::getObjectTable()
+{
+    return m_objectTable;
+}
+
+tm DataConverter::getElementCreationTime(BLF_ElementInfo* element)
+{
+    return tm {
+        0,
+        (int)element->creationMinutes,
+        (int)element->creationHours,
+        (int)element->creationMday,
+        (int)element->creationMonth,
+        (int)element->creationYear,
+        0,
+        0,
+        0
+    };
+}
 
 struct SimpleObject
 {
     int a;
     int b;
     int c;
+    std::string d;
 };
 
 void DataConverter::setupObjectTable()
 {
-    addObjectDefinition<SimpleObject>("SimpleObject",
-        arg("a", &SimpleObject::a),
-        arg("b", &SimpleObject::b),
-        arg("c", &SimpleObject::c)
-    );
+    addObjectDefinition<BLF_Base>();
+    addObjectDefinition<BLF_ElementInfo>();
+    addObjectDefinition<BLF_Element<bool>>();
 //     m_objects =
 //     {
 //         createDefinition<BLF_FilterBase>(),
@@ -45,7 +49,7 @@ void DataConverter::setupObjectTable()
 //         createDefinition<BLF_Filter<TimeContainer>>(),
 //         createDefinition<BLF_Filter<DateContainer>>(),
 //         createDefinition<BLF_Column>(),
-//         createDefinition<BLF_ElementBase>(),
+//         createDefinition<BLF_ElementInfo>(),
 //         createDefinition<BLF_Element<bool>>(),
 //         createDefinition<BLF_Element<int>>(),
 //         createDefinition<BLF_Element<double>>(),
@@ -61,17 +65,17 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
 {
     FileWriteStream stream(path);
 
-    SimpleObject obj1 = { 1, 2, 3 };
-    SimpleObject obj2 = { 69, 420, 1337 };
+    BLF_ElementInfo obj1 = { new ElementBase(SCH_NUMBER, DateContainer(), TimeContainer()), 69 };
+    BLF_ElementInfo obj2 = { new ElementBase(SCH_TEXT, DateContainer(), TimeContainer()), 420 };
+    BLF_Element<bool> elementBool = { new Element<bool>(SCH_BOOL, true, DateContainer(), TimeContainer()), 52 };
 
     DataTable data;
 
-    data.insert(getObjectDefinition<SimpleObject>("SimpleObject").serialize(obj1));
-    data.insert(getObjectDefinition<SimpleObject>("SimpleObject").serialize(obj2));
+    data.insert(getObjectDefinition<BLF_ElementInfo>().serialize(obj1));
+    data.insert(getObjectDefinition<BLF_ElementInfo>().serialize(obj2));
+    data.insert(getObjectDefinition<BLF_Element<bool>>().serialize(elementBool));
 
-    File file(data, m_objectTable, {blf::CompressionType::None, blf::EncryptionType::None});
-
-    file.addFlag("supercooltopsecretfiledontread", "ijklmnopqrstuvwxyz");
+    File file(data, m_definitions.getObjectTable(), {blf::CompressionType::None, blf::EncryptionType::None});
 
     file.serialize(stream);
 
@@ -136,13 +140,16 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 
     auto file = File::fromData(stream);
 
-    // std::cout << file.getStringFlagOrDefault("super cool top secret file dont read", "FAIL") << std::endl;
+    auto fileBody = file.deserializeBody(m_definitions.getObjectTable());
 
-    auto fileBody = file.deserializeBody(m_objectTable);
-
-    for (const SimpleObject& obj : fileBody.data.groupby(getObjectDefinition<SimpleObject>("SimpleObject")))
+    for (const BLF_ElementInfo& obj : fileBody.data.groupby(getObjectDefinition<BLF_ElementInfo>()))
     {
-        std::cout << obj.a << " " << obj.b << " " << obj.c << std::endl;
+        std::cout << obj.objectName << " " << obj.type << " " << obj.columnIndex << std::endl;
+    }
+
+    for (const BLF_Element<bool>& obj : fileBody.data.groupby(getObjectDefinition<BLF_Element<bool>>()))
+    {
+        std::cout << obj.objectName << " " << obj.value << " " << obj.base.type << " " << obj.base.columnIndex << std::endl;
     }
 
     // std::vector<Column> scheduleCopy = schedule;

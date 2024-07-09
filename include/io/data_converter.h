@@ -11,6 +11,40 @@
 #include "element.h"
 using namespace blf;
 
+class BLF_Base;
+
+class ObjectDefinitions
+{
+    private:
+        std::map<std::string, const std::shared_ptr<ObjectDefinition>> m_localObjectDefinitions = {};
+        LocalObjectTable m_objectTable;
+    public:
+        LocalObjectTable& getObjectTable();
+
+        template <typename T>
+        void add(LocalObjectDefinition<T>& definition)
+        {
+            static_assert(std::is_base_of_v<BLF_Base, T> == true);
+            m_localObjectDefinitions.insert({definition.getName(), std::make_shared<LocalObjectDefinition<T>>(definition)});
+        }
+        template <typename T>
+        const LocalObjectDefinition<T>& get()
+        {
+            static_assert(std::is_base_of_v<BLF_Base, T> == true);
+            return *std::dynamic_pointer_cast<LocalObjectDefinition<T>>(m_localObjectDefinitions.at(T::objectName));
+        }
+};
+
+class BLF_Base
+{
+    public:
+        inline static const char* objectName = "BLF_Base";
+        virtual void addDefinition(ObjectDefinitions& objectTable)
+        {
+            objectTable.add(objectTable.getObjectTable().define<BLF_Base>(objectName));
+        }
+};
+
 // class BLF_FilterBase : public TemplateObject
 // {
 //     protected:
@@ -507,76 +541,72 @@ using namespace blf;
 //     }
 // };
 
-// class BLF_ElementBase : public TemplateObject
-// {
-//     protected:
-//         const char* objectName = "BLF_ElementBase";
-//         std::vector<ObjectAttribute> attributeMap = 
-//         {
-//             {"ColumnIndex", &columnIndex, TYPE_INT},
-//             {"Type", &type, TYPE_INT},
-//             {"CreationYear", &creationYear, TYPE_INT},
-//             {"CreationMonth", &creationMonth, TYPE_INT},
-//             {"CreationMday", &creationMday, TYPE_INT},
-//             {"CreationHours", &creationHours, TYPE_INT},
-//             {"CreationMinutes", &creationMinutes, TYPE_INT},
-//         };
-//     public:
-//         int columnIndex;
-//         int type;
-//         int creationYear;
-//         int creationMonth;
-//         int creationMday;
-//         int creationHours;
-//         int creationMinutes;
+class BLF_ElementInfo : public BLF_Base
+{
+    public:
+        inline static const char* objectName = "BLF_ElementInfo";
+        int columnIndex;
+        int type;
+        int creationYear;
+        int creationMonth;
+        int creationMday;
+        int creationHours;
+        int creationMinutes;
 
-//     BLF_ElementBase() {}
+    BLF_ElementInfo() {}
+    BLF_ElementInfo(const ElementBase* element, size_t columnIndex = 0)
+    {
+        this->columnIndex = columnIndex;
+        this->type = element->getType();
+        this->creationYear = element->getCreationDate().getTime().tm_year;
+        this->creationMonth = element->getCreationDate().getTime().tm_mon;
+        this->creationMday = element->getCreationDate().getTime().tm_mday;
+        this->creationHours = element->getCreationTime().hours;
+        this->creationMinutes = element->getCreationTime().minutes;
+    }
 
-//     BLF_ElementBase(const ElementBase* element, size_t columnIndex = 0)
-//     {
-//         this->columnIndex = columnIndex;
-//         this->type = element->getType();
-//         this->creationYear = element->getCreationDate().getTime().tm_year;
-//         this->creationMonth = element->getCreationDate().getTime().tm_mon;
-//         this->creationMday = element->getCreationDate().getTime().tm_mday;
-//         this->creationHours = element->getCreationTime().hours;
-//         this->creationMinutes = element->getCreationTime().minutes;
-//     }
+    void addDefinition(ObjectDefinitions& definitions) override
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_ElementInfo>(objectName, 
+            arg("columnIndex", &BLF_ElementInfo::columnIndex),
+            arg("type", &BLF_ElementInfo::type),
+            arg("creationYear", &BLF_ElementInfo::creationYear),
+            arg("creationMonth", &BLF_ElementInfo::creationMonth),
+            arg("creationMday", &BLF_ElementInfo::creationMday),
+            arg("creationHours", &BLF_ElementInfo::creationHours),
+            arg("creationMinutes", &BLF_ElementInfo::creationMinutes)
+        ));
+    }
+};
 
-//     const char* getObjectName() const override
-//     {
-//         return objectName;
-//     }
+template <typename T>
+class BLF_Element : BLF_Base {};
 
-//     std::vector<ObjectAttribute> getAttributeMap() override
-//     {
-//         return attributeMap;
-//     }
-// };
+template <>
+class BLF_Element<bool> : BLF_Base
+{
+    public:
+        inline static const char* objectName = "BLF_Element_bool";
+        BLF_ElementInfo base;
+        bool value;
 
-// template <typename T>
-// class BLF_Element : public BLF_ElementBase {};
+        BLF_Element() {}
+        BLF_Element(const Element<bool>* element, size_t columnIndex = 0) : base(element, columnIndex)
+        {
+            value = element->getValue();
+        }
 
-// template <>
-// class BLF_Element<bool> : public BLF_ElementBase
-// {
-//     public:
-//         bool value;
-//         BLF_Element() 
-//         {
-//             attributeMap.push_back({"Value", &value, TYPE_BOOL});
-//             objectName = "BLF_Element_bool";
-//         }
-//         BLF_Element(const Element<bool>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
-//         {
-//             value = element->getValue();
-//             attributeMap.push_back({"Value", &value, TYPE_BOOL});
-//             objectName = "BLF_Element_bool";
-//         }
-// };
+        void addDefinition(ObjectDefinitions& definitions) override
+        {
+            definitions.add(definitions.getObjectTable().define<BLF_Element<bool>>(objectName,
+                arg("base", &BLF_Element<bool>::base, definitions.get<BLF_ElementInfo>()),
+                arg("value", &BLF_Element<bool>::value)
+            ));
+        }
+};
 
 // template <>
-// class BLF_Element<int> : public BLF_ElementBase
+// class BLF_Element<int> : public BLF_ElementInfo
 // {
 //     public:
 //         int value;
@@ -585,7 +615,7 @@ using namespace blf;
 //             attributeMap.push_back({"Value", &value, TYPE_INT});
 //             objectName = "BLF_Element_int";
 //         }
-//         BLF_Element(const Element<int>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+//         BLF_Element(const Element<int>* element, size_t columnIndex = 0) : BLF_ElementInfo(element, columnIndex)
 //         {
 //             value = element->getValue();
 //             attributeMap.push_back({"Value", &value, TYPE_INT});
@@ -594,7 +624,7 @@ using namespace blf;
 // };
 
 // template <>
-// class BLF_Element<double> : public BLF_ElementBase
+// class BLF_Element<double> : public BLF_ElementInfo
 // {
 //     public:
 //         double value;
@@ -603,7 +633,7 @@ using namespace blf;
 //             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
 //             objectName = "BLF_Element_double";
 //         }
-//         BLF_Element(const Element<double>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+//         BLF_Element(const Element<double>* element, size_t columnIndex = 0) : BLF_ElementInfo(element, columnIndex)
 //         {
 //             value = element->getValue();
 //             attributeMap.push_back({"Value", &value, TYPE_DOUBLE});
@@ -612,7 +642,7 @@ using namespace blf;
 // };
 
 // template <>
-// class BLF_Element<std::string> : public BLF_ElementBase
+// class BLF_Element<std::string> : public BLF_ElementInfo
 // {
 //     public:
 //         blf::String value;
@@ -621,7 +651,7 @@ using namespace blf;
 //             attributeMap.push_back({"Value", &value, TYPE_STRING});
 //             objectName = "BLF_Element_string";
 //         }
-//         BLF_Element(const Element<std::string>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+//         BLF_Element(const Element<std::string>* element, size_t columnIndex = 0) : BLF_ElementInfo(element, columnIndex)
 //         {
 //             value = blf::String(element->getValue());
 //             attributeMap.push_back({"Value", &value, TYPE_STRING});
@@ -630,7 +660,7 @@ using namespace blf;
 // };
 
 // template <>
-// class BLF_Element<SelectContainer> : public BLF_ElementBase
+// class BLF_Element<SelectContainer> : public BLF_ElementInfo
 // {
 //     private:
 //         std::vector<int*> m_selectionPointers = 
@@ -687,7 +717,7 @@ using namespace blf;
 
 //             objectName = "BLF_Element_SelectContainer";
 //         }
-//         BLF_Element(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+//         BLF_Element(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_ElementInfo(element, columnIndex)
 //         {
 //             const std::set<size_t>& selection = element->getValue().getSelection();
         
@@ -727,7 +757,7 @@ using namespace blf;
 // };
 
 // template <>
-// class BLF_Element<WeekdayContainer> : public BLF_ElementBase
+// class BLF_Element<WeekdayContainer> : public BLF_ElementInfo
 // {
 //     private:
 //         std::vector<int*> m_selectionPointers = 
@@ -750,7 +780,7 @@ using namespace blf;
 
 //             objectName = "BLF_Element_WeekdayContainer";
 //         }
-//         BLF_Element(const Element<WeekdayContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+//         BLF_Element(const Element<WeekdayContainer>* element, size_t columnIndex = 0) : BLF_ElementInfo(element, columnIndex)
 //         {
 //             const std::set<size_t>& selection = element->getValue().getSelection();
         
@@ -799,7 +829,7 @@ using namespace blf;
 // };
 
 // template <>
-// class BLF_Element<TimeContainer> : public BLF_ElementBase
+// class BLF_Element<TimeContainer> : public BLF_ElementInfo
 // {
 //     public:
 //         int hours;
@@ -810,7 +840,7 @@ using namespace blf;
 //             attributeMap.push_back({"Minutes", &minutes, TYPE_INT});
 //             objectName = "BLF_Element_TimeContainer";
 //         }
-//         BLF_Element(const Element<TimeContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+//         BLF_Element(const Element<TimeContainer>* element, size_t columnIndex = 0) : BLF_ElementInfo(element, columnIndex)
 //         {
 //             hours = element->getValue().getHours();
 //             minutes = element->getValue().getMinutes();
@@ -821,7 +851,7 @@ using namespace blf;
 // };
 
 // template <>
-// class BLF_Element<DateContainer> : public BLF_ElementBase
+// class BLF_Element<DateContainer> : public BLF_ElementInfo
 // {
 //     public:
 //         int year;
@@ -834,7 +864,7 @@ using namespace blf;
 //             attributeMap.push_back({"Mday", &mday, TYPE_INT});
 //             objectName = "BLF_Element_DateContainer";
 //         }
-//         BLF_Element(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_ElementBase(element, columnIndex)
+//         BLF_Element(const Element<DateContainer>* element, size_t columnIndex = 0) : BLF_ElementInfo(element, columnIndex)
 //         {
 //             tm dateTime = element->getValue().getTime();
 //             year = dateTime.tm_year;
@@ -847,33 +877,26 @@ using namespace blf;
 //         }
 // };
 
+template <typename T>
+concept DerivedBlfBase = std::is_base_of<BLF_Base, T>::value;
+
 class DataConverter
 {
     private:
-        LocalObjectTable m_objectTable;
-        std::map<std::string, const std::shared_ptr<ObjectDefinition>> m_localObjectDefinitions = {};
+        ObjectDefinitions m_definitions;
         
-        template<typename Class, typename... Args>
-        void addObjectDefinition(const std::string& name, Args&&... args)
+        template <DerivedBlfBase BlfClass>
+        void addObjectDefinition()
         {
-            m_localObjectDefinitions.insert({name, std::make_shared<LocalObjectDefinition<Class>>(m_objectTable.define<Class>(name, args...))});
+            BlfClass instance;
+            instance.addDefinition(m_definitions);
         }
         template <typename T>
-        const LocalObjectDefinition<T>& getObjectDefinition(const std::string& name)
+        const LocalObjectDefinition<T>& getObjectDefinition()
         {
-            return *std::dynamic_pointer_cast<LocalObjectDefinition<T>>(m_localObjectDefinitions.at(name));
+            return m_definitions.get<T>();
         }
-        // template <typename T>
-        // const LocalObjectDefinition<T>& getDefinition()
-        // {
-        //     T comparisonInstance;
-
-        //     for (auto& objectDef : m_localObjectDefinitions)
-        //     {
-        //         if (objectDef.n)
-        //     }
-        // }
-        // tm getElementCreationTime(BLF_ElementBase* element);
+        tm getElementCreationTime(BLF_ElementInfo* element);
     public:
         void setupObjectTable();
 
