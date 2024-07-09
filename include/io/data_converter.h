@@ -10,6 +10,7 @@
 #include "schedule_column.h"
 #include "element.h"
 using namespace blf;
+using namespace blf::file;
 
 class BLF_Base;
 
@@ -400,147 +401,6 @@ class BLF_Base
 //         }
 // };
 
-
-// class BLF_Column : public TemplateObject
-// {
-//     private:
-//     protected:
-//         const char* objectName = "BLF_Column";
-//         std::vector<ObjectAttribute> attributeMap = 
-//         {
-//             {"Index", &index, TYPE_INT},
-//             {"Type", &type, TYPE_INT},
-//             {"Name", &name, TYPE_STRING},
-//             {"Permanent", &permanent, TYPE_BOOL},
-//             {"Flags", &flags, TYPE_INT},
-//             {"Sort", &sort, TYPE_INT},
-//             {"SelectOptionsMutable", &selectOptionsMutable, TYPE_BOOL},
-//             {"Option0", &option_0, TYPE_STRING},
-//             {"Option1", &option_1, TYPE_STRING},
-//             {"Option2", &option_2, TYPE_STRING},
-//             {"Option3", &option_3, TYPE_STRING},
-//             {"Option4", &option_4, TYPE_STRING},
-//             {"Option5", &option_5, TYPE_STRING},
-//             {"Option6", &option_6, TYPE_STRING},
-//             {"Option7", &option_7, TYPE_STRING},
-//             {"Option8", &option_8, TYPE_STRING},
-//             {"Option9", &option_9, TYPE_STRING},
-//             {"Option10", &option_10, TYPE_STRING},
-//             {"Option11", &option_11, TYPE_STRING},
-//             {"Option12", &option_12, TYPE_STRING},
-//             {"Option13", &option_13, TYPE_STRING},
-//             {"Option14", &option_14, TYPE_STRING},
-//             {"Option15", &option_15, TYPE_STRING},
-//             {"Option16", &option_16, TYPE_STRING},
-//             {"Option17", &option_17, TYPE_STRING},
-//             {"Option18", &option_18, TYPE_STRING},
-//             {"Option19", &option_19, TYPE_STRING},
-//         };
-//     public:
-//         int index;
-//         int type;
-//         blf::String name;
-//         bool permanent;
-//         int flags;
-//         int sort;
-//         bool selectOptionsMutable;
-//         blf::String option_0;
-//         blf::String option_1;
-//         blf::String option_2;
-//         blf::String option_3;
-//         blf::String option_4;
-//         blf::String option_5;
-//         blf::String option_6;
-//         blf::String option_7;
-//         blf::String option_8;
-//         blf::String option_9;
-//         blf::String option_10;
-//         blf::String option_11;
-//         blf::String option_12;
-//         blf::String option_13;
-//         blf::String option_14;
-//         blf::String option_15;
-//         blf::String option_16;
-//         blf::String option_17;
-//         blf::String option_18;
-//         blf::String option_19;
-
-//     private:
-//         std::vector<blf::String*> m_optionPointers = 
-//         {
-//             &option_0,
-//             &option_1,
-//             &option_2,
-//             &option_3,
-//             &option_4,
-//             &option_5,
-//             &option_6,
-//             &option_7,
-//             &option_8,
-//             &option_9,
-//             &option_10,
-//             &option_11,
-//             &option_12,
-//             &option_13,
-//             &option_14,
-//             &option_15,
-//             &option_16,
-//             &option_17,
-//             &option_18,
-//             &option_19,
-//         };
-
-//     public:
-//     BLF_Column() {}
-
-//     BLF_Column(const Column* column, size_t index)
-//     {
-//         this->index = (int)index;
-//         this->type = (int)column->type;
-//         this->name = column->name;
-//         this->permanent = column->permanent;
-//         this->flags = column->flags;
-//         this->sort = (int)column->sort;
-//         this->selectOptionsMutable = column->selectOptions.getIsMutable();
-
-//         const std::vector<std::string>& selectOptions = column->selectOptions.getOptions();
-        
-//         for (size_t i = 0; i < selectOptions.size(); i++)
-//         {
-//             *this->m_optionPointers[i] = blf::String(selectOptions[i]);
-//         }
-//     }
-
-//     std::vector<std::string> getSelectOptions()
-//     {
-//         std::vector<std::string> options = {};
-
-//         for (size_t i = 0; i < std::size(m_optionPointers); i++)
-//         {
-//             if (m_optionPointers[i]->getLength() > 0)
-//             {
-//                 options.push_back(std::string(m_optionPointers[i]->getBuffer()));
-//             }
-//             else
-//             {
-//                 break;
-//             }
-//         }
-
-//         return options;
-//     }
-
-//     const char* getObjectName() const override
-//     {
-//         return objectName;
-//     }
-
-//     std::vector<ObjectAttribute> getAttributeMap() override
-//     {
-//         return attributeMap;
-//     }
-// };
-
 class BLF_ElementInfo : BLF_Base
 {
     public:
@@ -564,6 +424,8 @@ class BLF_ElementInfo : BLF_Base
         creationHours = element->getCreationTime().hours;
         creationMinutes = element->getCreationTime().minutes;
     }
+
+    tm getCreationTime() const;
 
     static void addDefinition(ObjectDefinitions& definitions)
     {
@@ -595,6 +457,12 @@ class BLF_Element<bool> : BLF_Base
         {
             value = element->getValue();
         }
+         
+        Element<bool> getElement() const
+        {
+            tm creationTime = info.getCreationTime();
+            return Element<bool>((SCHEDULE_TYPE)info.type, value, DateContainer(creationTime), TimeContainer(creationTime));
+        }
 
         static void addDefinition(ObjectDefinitions& definitions)
         {
@@ -617,6 +485,12 @@ class BLF_Element<int> : BLF_Base
         BLF_Element(const Element<int>* element, size_t columnIndex = 0) : info(element, columnIndex)
         {
             value = element->getValue();
+        }
+
+        Element<int> getElement() const
+        {
+            tm creationTime = info.getCreationTime();
+            return Element<int>((SCHEDULE_TYPE)info.type, value, DateContainer(creationTime), TimeContainer(creationTime));
         }
 
         static void addDefinition(ObjectDefinitions& definitions)
@@ -642,6 +516,12 @@ class BLF_Element<double> : BLF_Base
             value = element->getValue();
         }
 
+        Element<double> getElement() const
+        {
+            tm creationTime = info.getCreationTime();
+            return Element<double>((SCHEDULE_TYPE)info.type, value, DateContainer(creationTime), TimeContainer(creationTime));
+        }
+
         static void addDefinition(ObjectDefinitions& definitions)
         {
             definitions.add(definitions.getObjectTable().define<BLF_Element<double>>(objectName,
@@ -663,6 +543,12 @@ class BLF_Element<std::string> : BLF_Base
         BLF_Element(const Element<std::string>* element, size_t columnIndex = 0) : info(element, columnIndex)
         {
             value = element->getValue();
+        }
+
+        Element<std::string> getElement() const
+        {
+            tm creationTime = info.getCreationTime();
+            return Element<std::string>((SCHEDULE_TYPE)info.type, value, DateContainer(creationTime), TimeContainer(creationTime));
         }
         
         static void addDefinition(ObjectDefinitions& definitions)
@@ -703,6 +589,14 @@ class BLF_Element<SelectContainer> : BLF_Base
             }
 
             return selection;
+        }
+
+        Element<SelectContainer> getElement() const
+        {
+            tm creationTime = info.getCreationTime();
+            Element<SelectContainer> select = Element<SelectContainer>((SCHEDULE_TYPE)info.type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+            select.getValueReference().replaceSelection(getSelection());
+            return select;
         }
 
         static void addDefinition(ObjectDefinitions& definitions)
@@ -749,6 +643,14 @@ class BLF_Element<WeekdayContainer> : BLF_Base
             return selection;
         }
 
+        Element<WeekdayContainer> getElement() const
+        {
+            tm creationTime = info.getCreationTime();
+            Element<WeekdayContainer> weekday = Element<WeekdayContainer>((SCHEDULE_TYPE)info.type, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+            weekday.getValueReference().replaceSelection(getSelection());
+            return weekday;
+        }
+
         static void addDefinition(ObjectDefinitions& definitions)
         {
             definitions.add(definitions.getObjectTable().define<BLF_Element<WeekdayContainer>>(objectName,
@@ -772,6 +674,12 @@ class BLF_Element<TimeContainer> : BLF_Base
         {
             hours = element->getValue().getHours();
             minutes = element->getValue().getMinutes();
+        }
+
+        Element<TimeContainer> getElement() const
+        {
+            tm creationTime = info.getCreationTime(); 
+            return Element<TimeContainer>((SCHEDULE_TYPE)info.type, TimeContainer(hours, minutes), DateContainer(creationTime), TimeContainer(creationTime));
         }
 
         static void addDefinition(ObjectDefinitions& definitions)
@@ -803,6 +711,16 @@ class BLF_Element<DateContainer> : BLF_Base
             mday = dateTime.tm_mday;
         }
 
+        Element<DateContainer> getElement() const
+        {
+            tm creationTime = info.getCreationTime();
+            tm dateTime;
+            dateTime.tm_year = year;
+            dateTime.tm_mon = month;
+            dateTime.tm_mday = mday;
+            return Element<DateContainer>((SCHEDULE_TYPE)info.type, DateContainer(dateTime), DateContainer(creationTime), TimeContainer(creationTime));
+        }
+
         static void addDefinition(ObjectDefinitions& definitions)
         {
             definitions.add(definitions.getObjectTable().define<BLF_Element<DateContainer>>(objectName,
@@ -813,6 +731,134 @@ class BLF_Element<DateContainer> : BLF_Base
             ));
         }
 };
+
+template <typename T>
+class BLF_Column : BLF_Base
+{
+    private:
+        static constexpr const char* getName()
+        {
+            return "BLF_Column";
+        }
+    public:
+        inline static const char* objectName = getName();
+        int index;
+        int type;
+        std::string name;
+        bool permanent;
+        int flags;
+        int sort;
+        bool selectOptionsMutable;
+        std::vector<std::string> selectOptions = {};
+        std::vector<BLF_Element<T>> elements = {};
+    BLF_Column() {}
+
+    BLF_Column(const Column* column, size_t index)
+    {
+        this->index = (int)index;
+        this->type = (int)column->type;
+        this->name = column->name;
+        this->permanent = column->permanent;
+        this->flags = column->flags;
+        this->sort = (int)column->sort;
+        this->selectOptionsMutable = column->selectOptions.getIsMutable();
+ 
+        selectOptions = column->selectOptions.getOptions();
+
+        for (ElementBase* elementBase: column->rows)
+        {
+            elements.push_back(BLF_Element<T>((Element<T>*)elementBase));
+        }
+    }
+
+    Column getColumn() const
+    {
+        std::vector<ElementBase*> rows = {};
+
+        for (const BLF_Element<T>& blfElement : elements)
+        {
+            Element<T> element = blfElement.getElement();
+            // TODO: add SelectContainer to column's selectoptions listeners
+            rows.push_back(new Element<T>(element));
+        }
+
+        Column col = Column(
+            rows,
+            (SCHEDULE_TYPE)type,
+            name,
+            permanent,
+            (ScheduleColumnFlags)flags,
+            (COLUMN_SORT)sort,
+            selectOptions
+        );
+
+        return col;
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        std::cout << objectName << std::endl;
+        definitions.add(definitions.getObjectTable().define<BLF_Column<T>>(objectName,
+            arg("index", &BLF_Column<T>::index),
+            arg("type", &BLF_Column<T>::type),
+            arg("name", &BLF_Column<T>::name),
+            arg("permanent", &BLF_Column<T>::permanent),
+            arg("flags", &BLF_Column<T>::flags),
+            arg("sort", &BLF_Column<T>::sort),
+            arg("selectOptionsMutable", &BLF_Column<T>::selectOptionsMutable),
+            arg("selectOptions", &BLF_Column<T>::selectOptions),
+            arg("elements", &BLF_Column<T>::elements, definitions.get<BLF_Element<T>>())
+        ));
+    }
+};
+
+template <>
+constexpr const char* BLF_Column<bool>::getName()
+{
+    return "BLF_Column_bool";
+}
+
+template <>
+constexpr const char* BLF_Column<int>::getName()
+{
+    return "BLF_Column_int";
+}
+
+template <>
+constexpr const char* BLF_Column<double>::getName()
+{
+    return "BLF_Column_double";
+}
+
+template <>
+constexpr const char* BLF_Column<std::string>::getName()
+{
+    return "BLF_Column_string";
+}
+
+template <>
+constexpr const char* BLF_Column<SelectContainer>::getName()
+{
+    return "BLF_Column_SelectContainer";
+}
+
+template <>
+constexpr const char* BLF_Column<WeekdayContainer>::getName()
+{
+    return "BLF_Column_WeekdayContainer";
+}
+
+template <>
+constexpr const char* BLF_Column<TimeContainer>::getName()
+{
+    return "BLF_Column_TimeContainer";
+}
+
+template <>
+constexpr const char* BLF_Column<DateContainer>::getName()
+{
+    return "BLF_Column_DateContainer";
+}
 
 template <typename T>
 concept DerivedBlfBase = std::is_base_of<BLF_Base, T>::value;
@@ -832,29 +878,16 @@ class DataConverter
         {
             return m_definitions.get<T>();
         }
-        tm getElementCreationTime(BLF_ElementInfo* element);
     public:
         void setupObjectTable();
 
         // Adds the Column (and its elements, filters, etc to the provided DataTable), assuming that the Columns (and their elements, filters) are of the provided type.
-        // template <typename T>
-        // void addColumnToData(DataTable& data, const Column& column, size_t columnIndex)
-        // {
-        //     data.addObject(new BLF_Column(&column, columnIndex));
-
-        //     auto filters = column.getFiltersConst();
-        //     for (size_t f = 0; f < column.getFilterCount(); f++)
-        //     {
-        //         Filter<T>* filter = (Filter<T>*)filters.at(f).get();
-        //         data.addObject(new BLF_Filter<T>(filter, column.type, columnIndex, f));
-        //     }
-            
-        //     for (size_t r = 0; r < column.rows.size(); r++)
-        //     {
-        //         const Element<T>* element = (Element<T>*)column.rows[r];
-        //         data.addObject(new BLF_Element<T>(element, columnIndex));
-        //     }
-        // }
+        template <typename T>
+        void addColumnToData(DataTable& data, const Column& column, size_t columnIndex)
+        {
+            BLF_Column<T> blfColumn = BLF_Column<T>(&column, columnIndex);
+            data.insert(getObjectDefinition<BLF_Column<T>>().serialize(blfColumn));
+        }
         // Write the Columns of a Schedule to a file at the given path.
         int writeSchedule(const char* path, const std::vector<Column>&);
         // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The function creates a copy of the provided vector, but modifies the argument directly. If the function fails at any point, it will be reset to the copy created at the start.
