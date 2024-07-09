@@ -141,9 +141,7 @@ bool SelectOptions::getIsMutable() const
 }
 
 bool SelectOptions::addOption(const std::string& option)
-{
-    if (m_options.size() == SELECT_OPTION_COUNT_MAX) { return false; }
-    
+{    
     m_options.push_back(option);
     return true;
 }

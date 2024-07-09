@@ -24,19 +24,14 @@ tm DataConverter::getElementCreationTime(BLF_ElementInfo* element)
     };
 }
 
-struct SimpleObject
-{
-    int a;
-    int b;
-    int c;
-    std::string d;
-};
-
 void DataConverter::setupObjectTable()
 {
     addObjectDefinition<BLF_Base>();
     addObjectDefinition<BLF_ElementInfo>();
     addObjectDefinition<BLF_Element<bool>>();
+
+
+    addObjectDefinition<BLF_Element<SelectContainer>>();
 //     m_objects =
 //     {
 //         createDefinition<BLF_FilterBase>(),
@@ -69,11 +64,19 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
     BLF_ElementInfo obj2 = { new ElementBase(SCH_TEXT, DateContainer(), TimeContainer()), 420 };
     BLF_Element<bool> elementBool = { new Element<bool>(SCH_BOOL, true, DateContainer(), TimeContainer()), 52 };
 
+    SelectContainer select;
+    SelectOptionChange optionChange;
+    optionChange.replace(OPTION_MODIFICATION_ADD, 0, 0);
+    select.update(optionChange, 10);
+    select.replaceSelection(std::set<size_t>{2, 3, 5, 9});
+    BLF_Element<SelectContainer> elementSelect = { new Element<SelectContainer>(SCH_SELECT, select, DateContainer(), TimeContainer()), 2 };
+
     DataTable data;
 
     data.insert(getObjectDefinition<BLF_ElementInfo>().serialize(obj1));
     data.insert(getObjectDefinition<BLF_ElementInfo>().serialize(obj2));
     data.insert(getObjectDefinition<BLF_Element<bool>>().serialize(elementBool));
+    data.insert(getObjectDefinition<BLF_Element<SelectContainer>>().serialize(elementSelect));
 
     File file(data, m_definitions.getObjectTable(), {blf::CompressionType::None, blf::EncryptionType::None});
 
@@ -149,7 +152,17 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 
     for (const BLF_Element<bool>& obj : fileBody.data.groupby(getObjectDefinition<BLF_Element<bool>>()))
     {
-        std::cout << obj.objectName << " " << obj.value << " " << obj.base.type << " " << obj.base.columnIndex << std::endl;
+        std::cout << obj.objectName << " " << obj.value << " " << obj.info.type << " " << obj.info.columnIndex << std::endl;
+    }
+
+    for (const BLF_Element<SelectContainer>& obj : fileBody.data.groupby(getObjectDefinition<BLF_Element<SelectContainer>>()))
+    {
+        std::cout << obj.objectName << " Selection: { ";
+        for (size_t i: obj.getSelection())
+        {
+            std::cout << i << " ";
+        }
+        std::cout << "} " << obj.info.type << " " << obj.info.columnIndex << std::endl;
     }
 
     // std::vector<Column> scheduleCopy = schedule;

@@ -39,7 +39,7 @@ class BLF_Base
 {
     public:
         inline static const char* objectName = "BLF_Base";
-        virtual void addDefinition(ObjectDefinitions& objectTable)
+        static void addDefinition(ObjectDefinitions& objectTable)
         {
             objectTable.add(objectTable.getObjectTable().define<BLF_Base>(objectName));
         }
@@ -541,7 +541,7 @@ class BLF_Base
 //     }
 // };
 
-class BLF_ElementInfo : public BLF_Base
+class BLF_ElementInfo : BLF_Base
 {
     public:
         inline static const char* objectName = "BLF_ElementInfo";
@@ -565,7 +565,7 @@ class BLF_ElementInfo : public BLF_Base
         this->creationMinutes = element->getCreationTime().minutes;
     }
 
-    void addDefinition(ObjectDefinitions& definitions) override
+    static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_ElementInfo>(objectName, 
             arg("columnIndex", &BLF_ElementInfo::columnIndex),
@@ -587,19 +587,19 @@ class BLF_Element<bool> : BLF_Base
 {
     public:
         inline static const char* objectName = "BLF_Element_bool";
-        BLF_ElementInfo base;
+        BLF_ElementInfo info;
         bool value;
 
         BLF_Element() {}
-        BLF_Element(const Element<bool>* element, size_t columnIndex = 0) : base(element, columnIndex)
+        BLF_Element(const Element<bool>* element, size_t columnIndex = 0) : info(element, columnIndex)
         {
             value = element->getValue();
         }
 
-        void addDefinition(ObjectDefinitions& definitions) override
+        static void addDefinition(ObjectDefinitions& definitions)
         {
             definitions.add(definitions.getObjectTable().define<BLF_Element<bool>>(objectName,
-                arg("base", &BLF_Element<bool>::base, definitions.get<BLF_ElementInfo>()),
+                arg("info", &BLF_Element<bool>::info, definitions.get<BLF_ElementInfo>()),
                 arg("value", &BLF_Element<bool>::value)
             ));
         }
@@ -659,102 +659,45 @@ class BLF_Element<bool> : BLF_Base
 //         }
 // };
 
-// template <>
-// class BLF_Element<SelectContainer> : public BLF_ElementInfo
-// {
-//     private:
-//         std::vector<int*> m_selectionPointers = 
-//         {
-//             &selection_0,
-//             &selection_1,
-//             &selection_2,
-//             &selection_3,
-//             &selection_4,
-//             &selection_5,
-//             &selection_6,
-//             &selection_7,
-//             &selection_8,
-//             &selection_9,
-//             &selection_10,
-//             &selection_11,
-//             &selection_12,
-//             &selection_13,
-//             &selection_14,
-//             &selection_15,
-//             &selection_16,
-//             &selection_17,
-//             &selection_18,
-//             &selection_19,
-//         };
-//     public:
-//         int selection_0 = -1;
-//         int selection_1 = -1;
-//         int selection_2 = -1;
-//         int selection_3 = -1;
-//         int selection_4 = -1;
-//         int selection_5 = -1;
-//         int selection_6 = -1;
-//         int selection_7 = -1;
-//         int selection_8 = -1;
-//         int selection_9 = -1;
-//         int selection_10 = -1;
-//         int selection_11 = -1;
-//         int selection_12 = -1;
-//         int selection_13 = -1;
-//         int selection_14 = -1;
-//         int selection_15 = -1;
-//         int selection_16 = -1;
-//         int selection_17 = -1;
-//         int selection_18 = -1;
-//         int selection_19 = -1;
+template <>
+class BLF_Element<SelectContainer> : BLF_Base
+{
+    public:
+        inline static const char* objectName = "BLF_Element_SelectContainer";
+        BLF_ElementInfo info;
+        std::vector<size_t> selectionIndices = {};
 
-//         BLF_Element() 
-//         {
-//             for (size_t i = 0; i < m_selectionPointers.size(); i++)
-//             {
-//                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
-//             }
-
-//             objectName = "BLF_Element_SelectContainer";
-//         }
-//         BLF_Element(const Element<SelectContainer>* element, size_t columnIndex = 0) : BLF_ElementInfo(element, columnIndex)
-//         {
-//             const std::set<size_t>& selection = element->getValue().getSelection();
+        BLF_Element() {}
+        BLF_Element(const Element<SelectContainer>* element, size_t columnIndex = 0) : info(element, columnIndex)
+        {
+            const std::set<size_t>& selection = element->getValue().getSelection();
         
-//             size_t i = 0;
-//             for (size_t s: selection)
-//             {
-//                 *this->m_selectionPointers[i] = (int)s;
-//                 i++;
-//             }
-
-//             for (i = 0; i < m_selectionPointers.size(); i++)
-//             {
-//                 attributeMap.push_back({std::string("Selection").append(std::to_string(i)).c_str(), m_selectionPointers[i], TYPE_INT});
-//             }
-
-//             objectName = "BLF_Element_SelectContainer";
-//         }
+            for (size_t s: selection)
+            {
+                selectionIndices.push_back(s);
+            }
+        }
           
-//         std::set<size_t> getSelection()
-//         {
-//             std::set<size_t> selection = {};
+        std::set<size_t> getSelection() const
+        {
+            std::set<size_t> selection = {};
 
-//             for (size_t i = 0; i < std::size(m_selectionPointers); i++)
-//             {
-//                 if (*m_selectionPointers[i] != -1)
-//                 {
-//                     selection.insert(*m_selectionPointers[i]);
-//                 }
-//                 else
-//                 {
-//                     break;
-//                 }
-//             }
+            for (size_t i: selectionIndices)
+            {
+                selection.insert(i);
+            }
 
-//             return selection;
-//         }
-// };
+            return selection;
+        }
+
+        static void addDefinition(ObjectDefinitions& definitions)
+        {
+            definitions.add(definitions.getObjectTable().define<BLF_Element<SelectContainer>>(objectName,
+                arg("info", &BLF_Element<SelectContainer>::info, definitions.get<BLF_ElementInfo>()),
+                arg("selectionIndices", &BLF_Element<SelectContainer>::selectionIndices)
+            ));
+        }
+};
 
 // template <>
 // class BLF_Element<WeekdayContainer> : public BLF_ElementInfo
@@ -888,8 +831,7 @@ class DataConverter
         template <DerivedBlfBase BlfClass>
         void addObjectDefinition()
         {
-            BlfClass instance;
-            instance.addDefinition(m_definitions);
+            BlfClass::addDefinition(m_definitions);
         }
         template <typename T>
         const LocalObjectDefinition<T>& getObjectDefinition()
