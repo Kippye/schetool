@@ -315,13 +315,6 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
         }
     }
 
-    // // load and create Columns first
-    // DataGroup<BLF_Column> loadedColumns = file.data.get<BLF_Column>();
-    // // sort in ASCENDING order 
-    // //std::sort(columns.begin(), columns.end(), [](BLF_Column* a, BLF_Column* b) {return a->index > b->index; });
-
-    // std::vector<TemplateObject*> dataPointers = {};
-
     // // loop through the BLF_Columns and add them to the schedule as Columns
     // for (size_t c = 0; c < loadedColumns.getSize(); c++)
     // {
