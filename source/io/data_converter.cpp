@@ -189,7 +189,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             default:
             {
-                printf("DataConverter::readSchedule(%s, schedule): Reading elements with type %d has not been implemented\n", path, type);
+                printf("DataConverter::readSchedule(%s, schedule): Inserting type of BLF_Column<T> with type %d has not been implemented\n", path, type);
             }
         }
     }
@@ -257,6 +257,13 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
                     if (column.index == columnIndex) 
                     {
                         schedule.push_back(column.getColumn());
+
+                        // Add SelectContainers as listeners to the Column's SelectOptions!!
+                        Column& scheduleColumn = schedule.back();
+                        for (size_t row = 0; row < scheduleColumn.rows.size(); row++)
+                        {
+                            scheduleColumn.selectOptions.addListener(row, ((Element<SelectContainer>*)scheduleColumn.getElement(row))->getValueReference());
+                        }
                     }
                 }  
                 break;
@@ -296,148 +303,10 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
             default:
             {
-                printf("DataConverter::readSchedule(%s, schedule): Reading elements with type %d has not been implemented\n", path, type);
+                printf("DataConverter::readSchedule(%s, schedule): Converting from BLF_Column<T> with type %d has not been implemented\n", path, type);
             }
         }
     }
-
-    // // loop through the BLF_Columns and add them to the schedule as Columns
-    // for (size_t c = 0; c < loadedColumns.getSize(); c++)
-    // {
-    //     Column column = Column(
-    //         std::vector<ElementBase*>{}, 
-    //         (SCHEDULE_TYPE)loadedColumns[c]->type, 
-    //         std::string(loadedColumns[c]->name.getBuffer()),
-    //         loadedColumns[c]->permanent,
-    //         (ScheduleColumnFlags)loadedColumns[c]->flags,
-    //         (COLUMN_SORT)loadedColumns[c]->sort,
-    //         SelectOptions(loadedColumns[c]->getSelectOptions())
-    //     );
-
-    //     column.selectOptions.setIsMutable(loadedColumns[c]->selectOptionsMutable);
-
-    //     SCHEDULE_TYPE columnType = (SCHEDULE_TYPE)loadedColumns[c]->type;
-
-    //     // TEMP get filters
-    //     switch(columnType)
-    //     {
-    //         case(SCH_BOOL):
-    //         {
-    //             for (BLF_Filter<bool>* filter: file.data.get<BLF_Filter<bool>>())
-    //             {
-    //                 if (filter->columnIndex == c)
-    //                 {
-    //                     auto specialFilter = Filter<bool>(filter->passValue);
-    //                     specialFilter.setComparison((Comparison)filter->comparison);
-    //                     column.addFilter(specialFilter);
-    //                     dataPointers.push_back(filter);
-    //                 }
-    //             }
-    //             break;
-    //         }
-    //         case(SCH_NUMBER):
-    //         {
-    //             for (BLF_Filter<int>* filter: file.data.get<BLF_Filter<int>>())
-    //             {
-    //                 if (filter->columnIndex == c)
-    //                 {
-    //                     auto specialFilter = Filter<int>(filter->passValue);
-    //                     specialFilter.setComparison((Comparison)filter->comparison);
-    //                     column.addFilter(specialFilter);
-    //                     dataPointers.push_back(filter);
-    //                 }
-    //             }
-    //             break;
-    //         }
-    //         case(SCH_DECIMAL):
-    //         {
-    //             for (BLF_Filter<double>* filter: file.data.get<BLF_Filter<double>>())
-    //             {
-    //                 if (filter->columnIndex == c)
-    //                 {
-    //                     auto specialFilter = Filter<double>(filter->passValue);
-    //                     specialFilter.setComparison((Comparison)filter->comparison);
-    //                     column.addFilter(specialFilter);
-    //                     dataPointers.push_back(filter);
-    //                 }
-    //             }    
-    //             break;
-    //         }
-    //         case(SCH_TEXT):
-    //         {
-    //             for (BLF_Filter<std::string>* filter: file.data.get<BLF_Filter<std::string>>())
-    //             {
-    //                 if (filter->columnIndex == c)
-    //                 {
-    //                     auto specialFilter = Filter<std::string>(filter->passValue);
-    //                     specialFilter.setComparison((Comparison)filter->comparison);
-    //                     column.addFilter(specialFilter);
-    //                     dataPointers.push_back(filter);
-    //                 }
-    //             }                 
-    //             break;
-    //         }
-    //         case(SCH_SELECT):
-    //         { 
-    //             for (BLF_Filter<SelectContainer>* filter: file.data.get<BLF_Filter<SelectContainer>>())
-    //             {
-    //                 if (filter->columnIndex == c)
-    //                 {
-    //                     auto specialFilter = Filter<SelectContainer>(filter->getValue());
-    //                     specialFilter.setComparison((Comparison)filter->comparison);
-    //                     column.addFilter(specialFilter);
-    //                     dataPointers.push_back(filter);
-    //                 }
-    //             }        
-    //             break;
-    //         }
-    //         case(SCH_WEEKDAY):
-    //         { 
-    //             for (BLF_Filter<WeekdayContainer>* filter: file.data.get<BLF_Filter<WeekdayContainer>>())
-    //             {
-    //                 if (filter->columnIndex == c)
-    //                 {
-    //                     auto specialFilter = Filter<WeekdayContainer>(filter->getValue());
-    //                     specialFilter.setComparison((Comparison)filter->comparison);
-    //                     column.addFilter(specialFilter);
-    //                     dataPointers.push_back(filter);
-    //                 }
-    //             }     
-    //             break;
-    //         }
-    //         case(SCH_TIME):
-    //         { 
-    //             for (BLF_Filter<TimeContainer>* filter: file.data.get<BLF_Filter<TimeContainer>>())
-    //             {
-    //                 if (filter->columnIndex == c)
-    //                 {
-    //                     auto specialFilter = Filter<TimeContainer>(filter->getValue());
-    //                     specialFilter.setComparison((Comparison)filter->comparison);
-    //                     column.addFilter(specialFilter);
-    //                     dataPointers.push_back(filter);
-    //                 }
-    //             }                     
-    //             break;
-    //         }
-    //         case(SCH_DATE):
-    //         { 
-    //             for (BLF_Filter<DateContainer>* filter: file.data.get<BLF_Filter<DateContainer>>())
-    //             {
-    //                 if (filter->columnIndex == c)
-    //                 {
-    //                     auto specialFilter = Filter<DateContainer>(filter->getValue());
-    //                     specialFilter.setComparison((Comparison)filter->comparison);
-    //                     column.addFilter(specialFilter);
-    //                     dataPointers.push_back(filter);
-    //                 }
-    //             }                   
-    //             break;
-    //         }
-    //         default:
-    //         {
-    //             printf("DataConverter::readSchedule(%s, schedule): Reading filter of type %d has not been implemented\n", path, columnType);
-    //         }
-    //     }
 
     return 0;
 }

@@ -386,12 +386,12 @@ class BLF_Filter : BLF_Base
 
     BLF_Filter() {}
 
-    BLF_Filter(SCHEDULE_TYPE type, T passValue, Comparison comparison)
+    BLF_Filter(SCHEDULE_TYPE type, const Filter<T>& filter)
     {
-        Element<T> element = Element<T>(type, passValue, DateContainer(), TimeContainer());
+        Element<T> element = Element<T>(type, filter.getPassValue(), DateContainer(), TimeContainer());
         passValueElement = BLF_Element<T>(&element);
 
-        this->comparison = (int)comparison;
+        comparison = (int)filter.getComparison();
     }
 
     Filter<T> getFilter() const
@@ -477,6 +477,7 @@ class BLF_Column : BLF_Base
         bool selectOptionsMutable;
         std::vector<std::string> selectOptions = {};
         std::vector<BLF_Element<T>> elements = {};
+        std::vector<BLF_Filter<T>> filters = {};
     BLF_Column() {}
 
     BLF_Column(const Column* column, size_t index)
@@ -495,17 +496,26 @@ class BLF_Column : BLF_Base
         {
             elements.push_back(BLF_Element<T>((Element<T>*)elementBase));
         }
+
+        for (auto filterBase : column->getFiltersConst())
+        {
+            filters.push_back(BLF_Filter<T>(column->type, *std::dynamic_pointer_cast<Filter<T>>(filterBase)));
+        }
     }
 
     Column getColumn() const
     {
         std::vector<ElementBase*> rows = {};
 
-        for (const BLF_Element<T>& blfElement : elements)
+        // set up SelectOptions
+        SelectOptions columnSelectOptions = SelectOptions(selectOptions);
+        columnSelectOptions.setIsMutable(selectOptionsMutable);
+
+        // add elements to rows
+        for (size_t row = 0; row < elements.size(); row++)
         {
-            Element<T> element = blfElement.getElement();
-            // TODO: add SelectContainer to column's selectoptions listeners
-            rows.push_back(new Element<T>(element));
+            Element<T>* element = new Element<T>(elements[row].getElement());
+            rows.push_back(element);
         }
 
         Column col = Column(
@@ -515,8 +525,14 @@ class BLF_Column : BLF_Base
             permanent,
             (ScheduleColumnFlags)flags,
             (COLUMN_SORT)sort,
-            selectOptions
+            columnSelectOptions
         );
+
+        // add filters to the column
+        for (const BLF_Filter<T>& filter: filters)
+        {
+            col.addFilter<T>(filter.getFilter());
+        }
 
         return col;
     }
@@ -532,7 +548,8 @@ class BLF_Column : BLF_Base
             arg("sort", &BLF_Column<T>::sort),
             arg("selectOptionsMutable", &BLF_Column<T>::selectOptionsMutable),
             arg("selectOptions", &BLF_Column<T>::selectOptions),
-            arg("elements", &BLF_Column<T>::elements, definitions.get<BLF_Element<T>>())
+            arg("elements", &BLF_Column<T>::elements, definitions.get<BLF_Element<T>>()),
+            arg("filters", &BLF_Column<T>::filters, definitions.get<BLF_Filter<T>>())
         ));
     }
 };
