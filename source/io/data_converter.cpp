@@ -34,6 +34,14 @@ void DataConverter::setupObjectTable()
     addObjectDefinition<BLF_Element<WeekdayContainer>>();
     addObjectDefinition<BLF_Element<TimeContainer>>();
     addObjectDefinition<BLF_Element<DateContainer>>();
+    addObjectDefinition<BLF_Filter<bool>>();
+    addObjectDefinition<BLF_Filter<int>>();
+    addObjectDefinition<BLF_Filter<double>>();
+    addObjectDefinition<BLF_Filter<std::string>>();
+    addObjectDefinition<BLF_Filter<SelectContainer>>();
+    addObjectDefinition<BLF_Filter<WeekdayContainer>>();
+    addObjectDefinition<BLF_Filter<TimeContainer>>();
+    addObjectDefinition<BLF_Filter<DateContainer>>();
     addObjectDefinition<BLF_Column<bool>>();
     addObjectDefinition<BLF_Column<int>>();
     addObjectDefinition<BLF_Column<double>>();
@@ -42,28 +50,6 @@ void DataConverter::setupObjectTable()
     addObjectDefinition<BLF_Column<WeekdayContainer>>();
     addObjectDefinition<BLF_Column<TimeContainer>>();
     addObjectDefinition<BLF_Column<DateContainer>>();
-//     m_objects =
-//     {
-//         createDefinition<BLF_FilterBase>(),
-//         createDefinition<BLF_Filter<bool>>(),
-//         createDefinition<BLF_Filter<int>>(),
-//         createDefinition<BLF_Filter<double>>(),
-//         createDefinition<BLF_Filter<std::string>>(),
-//         createDefinition<BLF_Filter<SelectContainer>>(),
-//         createDefinition<BLF_Filter<WeekdayContainer>>(),
-//         createDefinition<BLF_Filter<TimeContainer>>(),
-//         createDefinition<BLF_Filter<DateContainer>>(),
-//         createDefinition<BLF_Column>(),
-//         createDefinition<BLF_ElementInfo>(),
-//         createDefinition<BLF_Element<bool>>(),
-//         createDefinition<BLF_Element<int>>(),
-//         createDefinition<BLF_Element<double>>(),
-//         createDefinition<BLF_Element<std::string>>(),
-//         createDefinition<BLF_Element<SelectContainer>>(),
-//         createDefinition<BLF_Element<WeekdayContainer>>(),
-//         createDefinition<BLF_Element<TimeContainer>>(),
-//         createDefinition<BLF_Element<DateContainer>>(),
-//     };
 }
 
 int DataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule)
