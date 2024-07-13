@@ -155,7 +155,10 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
     if (ImGui::InputText("##TimeEditorHours", hourBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
     {
         int hourValue = 0;
-        if (std::regex_match(hourBuf, std::regex("[0-9]+")))
+
+        std::string hourStr = std::string(hourBuf);
+
+        if (hourStr.find_first_not_of("0123456789") == std::string::npos)
         {
             hourValue = std::stoi(hourBuf);
         }
@@ -170,7 +173,10 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
     if (ImGui::InputText("##TimeEditorMinutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
     {
         int minValue = 0;
-        if (std::regex_match(minBuf, std::regex("[0-9]+")))
+
+        std::string minStr = std::string(minBuf);
+
+        if (minStr.find_first_not_of("0123456789") == std::string::npos)
         {
             minValue = std::stoi(minBuf);
         }
