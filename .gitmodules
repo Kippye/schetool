@@ -1,6 +1,7 @@
 [submodule "blf"]
 	path = libs/blf
 	url = https://github.com/Functionable/BlurLevelFormat.git
+	branch = 2.0
 [submodule "catch2"]
 	path = libs/catch2
 	url = https://github.com/catchorg/Catch2.git

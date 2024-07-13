@@ -1,16 +1,21 @@
-#include <data_converter.h>
-#include <element_base.h>
-#include <element.h>
+#include "data_converter.h"
+#include "element_base.h"
+#include "element.h"
 
-tm DataConverter::getElementCreationTime(BLF_ElementBase* element)
+LocalObjectTable& ObjectDefinitions::getObjectTable()
+{
+    return m_objectTable;
+}
+
+tm BLF_ElementInfo::getCreationTime() const
 {
     return tm {
         0,
-        (int)element->creationMinutes,
-        (int)element->creationHours,
-        (int)element->creationMday,
-        (int)element->creationMonth,
-        (int)element->creationYear,
+        (int)creationMinutes,
+        (int)creationHours,
+        (int)creationMday,
+        (int)creationMonth,
+        (int)creationYear,
         0,
         0,
         0
@@ -19,32 +24,38 @@ tm DataConverter::getElementCreationTime(BLF_ElementBase* element)
 
 void DataConverter::setupObjectTable()
 {
-    m_objects =
-    {
-        createDefinition<BLF_FilterBase>(),
-        createDefinition<BLF_Filter<bool>>(),
-        createDefinition<BLF_Filter<int>>(),
-        createDefinition<BLF_Filter<double>>(),
-        createDefinition<BLF_Filter<std::string>>(),
-        createDefinition<BLF_Filter<SelectContainer>>(),
-        createDefinition<BLF_Filter<WeekdayContainer>>(),
-        createDefinition<BLF_Filter<TimeContainer>>(),
-        createDefinition<BLF_Filter<DateContainer>>(),
-        createDefinition<BLF_Column>(),
-        createDefinition<BLF_ElementBase>(),
-        createDefinition<BLF_Element<bool>>(),
-        createDefinition<BLF_Element<int>>(),
-        createDefinition<BLF_Element<double>>(),
-        createDefinition<BLF_Element<std::string>>(),
-        createDefinition<BLF_Element<SelectContainer>>(),
-        createDefinition<BLF_Element<WeekdayContainer>>(),
-        createDefinition<BLF_Element<TimeContainer>>(),
-        createDefinition<BLF_Element<DateContainer>>(),
-    };
+    addObjectDefinition<BLF_Base>();
+    addObjectDefinition<BLF_ElementInfo>();
+    addObjectDefinition<BLF_Element<bool>>();
+    addObjectDefinition<BLF_Element<int>>();
+    addObjectDefinition<BLF_Element<double>>();
+    addObjectDefinition<BLF_Element<std::string>>();
+    addObjectDefinition<BLF_Element<SelectContainer>>();
+    addObjectDefinition<BLF_Element<WeekdayContainer>>();
+    addObjectDefinition<BLF_Element<TimeContainer>>();
+    addObjectDefinition<BLF_Element<DateContainer>>();
+    addObjectDefinition<BLF_Filter<bool>>();
+    addObjectDefinition<BLF_Filter<int>>();
+    addObjectDefinition<BLF_Filter<double>>();
+    addObjectDefinition<BLF_Filter<std::string>>();
+    addObjectDefinition<BLF_Filter<SelectContainer>>();
+    addObjectDefinition<BLF_Filter<WeekdayContainer>>();
+    addObjectDefinition<BLF_Filter<TimeContainer>>();
+    addObjectDefinition<BLF_Filter<DateContainer>>();
+    addObjectDefinition<BLF_Column<bool>>();
+    addObjectDefinition<BLF_Column<int>>();
+    addObjectDefinition<BLF_Column<double>>();
+    addObjectDefinition<BLF_Column<std::string>>();
+    addObjectDefinition<BLF_Column<SelectContainer>>();
+    addObjectDefinition<BLF_Column<WeekdayContainer>>();
+    addObjectDefinition<BLF_Column<TimeContainer>>();
+    addObjectDefinition<BLF_Column<DateContainer>>();
 }
 
 int DataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule)
 {
+    FileWriteStream stream(path);
+
     DataTable data;
 
     for (size_t c = 0; c < schedule.size(); c++)
@@ -82,20 +93,9 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
         }
     }
 
-    writeFile(path, m_objects, data);
+    File file(data, m_definitions.getObjectTable(), {blf::CompressionType::None, blf::EncryptionType::None});
 
-    // clean data to seal memory leak
-    std::vector<TemplateObject*> dataPointers = {};
-
-    for (auto d: data)
-    {
-        dataPointers.push_back(d);
-    }
-
-    for (size_t i = dataPointers.size() - 1; i > 0; i--)
-    {
-        delete dataPointers[i];
-    }
+    file.serialize(stream);
 
     return 0;
 }
@@ -103,163 +103,20 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
 int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 {
     std::vector<Column> scheduleCopy = schedule;
-
-    BLFFile file = readFile(path, m_objects);
-
     // clear the provided copy just in case
     schedule.clear();
+    
+    FileReadStream stream(path);
 
-    // load and create Columns first
-    DataGroup<BLF_Column> loadedColumns = file.data.get<BLF_Column>();
-    // sort in ASCENDING order 
-    //std::sort(columns.begin(), columns.end(), [](BLF_Column* a, BLF_Column* b) {return a->index > b->index; });
+    auto file = File::fromData(stream);
 
-    std::vector<TemplateObject*> dataPointers = {};
+    auto fileBody = file.deserializeBody(m_definitions.getObjectTable());
 
-    // loop through the BLF_Columns and add them to the schedule as Columns
-    for (size_t c = 0; c < loadedColumns.getSize(); c++)
-    {
-        Column column = Column(
-            std::vector<ElementBase*>{}, 
-            (SCHEDULE_TYPE)loadedColumns[c]->type, 
-            std::string(loadedColumns[c]->name.getBuffer()),
-            loadedColumns[c]->permanent,
-            (ScheduleColumnFlags)loadedColumns[c]->flags,
-            (COLUMN_SORT)loadedColumns[c]->sort,
-            SelectOptions(loadedColumns[c]->getSelectOptions())
-        );
+    std::cout << "Deserialized" << std::endl;
 
-        column.selectOptions.setIsMutable(loadedColumns[c]->selectOptionsMutable);
+    std::map<size_t, SCHEDULE_TYPE> columnTypes = {};
 
-        SCHEDULE_TYPE columnType = (SCHEDULE_TYPE)loadedColumns[c]->type;
-
-        // TEMP get filters
-        switch(columnType)
-        {
-            case(SCH_BOOL):
-            {
-                for (BLF_Filter<bool>* filter: file.data.get<BLF_Filter<bool>>())
-                {
-                    if (filter->columnIndex == c)
-                    {
-                        auto specialFilter = Filter<bool>(filter->passValue);
-                        specialFilter.setComparison((Comparison)filter->comparison);
-                        column.addFilter(specialFilter);
-                        dataPointers.push_back(filter);
-                    }
-                }
-                break;
-            }
-            case(SCH_NUMBER):
-            {
-                for (BLF_Filter<int>* filter: file.data.get<BLF_Filter<int>>())
-                {
-                    if (filter->columnIndex == c)
-                    {
-                        auto specialFilter = Filter<int>(filter->passValue);
-                        specialFilter.setComparison((Comparison)filter->comparison);
-                        column.addFilter(specialFilter);
-                        dataPointers.push_back(filter);
-                    }
-                }
-                break;
-            }
-            case(SCH_DECIMAL):
-            {
-                for (BLF_Filter<double>* filter: file.data.get<BLF_Filter<double>>())
-                {
-                    if (filter->columnIndex == c)
-                    {
-                        auto specialFilter = Filter<double>(filter->passValue);
-                        specialFilter.setComparison((Comparison)filter->comparison);
-                        column.addFilter(specialFilter);
-                        dataPointers.push_back(filter);
-                    }
-                }    
-                break;
-            }
-            case(SCH_TEXT):
-            {
-                for (BLF_Filter<std::string>* filter: file.data.get<BLF_Filter<std::string>>())
-                {
-                    if (filter->columnIndex == c)
-                    {
-                        auto specialFilter = Filter<std::string>(filter->passValue);
-                        specialFilter.setComparison((Comparison)filter->comparison);
-                        column.addFilter(specialFilter);
-                        dataPointers.push_back(filter);
-                    }
-                }                 
-                break;
-            }
-            case(SCH_SELECT):
-            { 
-                for (BLF_Filter<SelectContainer>* filter: file.data.get<BLF_Filter<SelectContainer>>())
-                {
-                    if (filter->columnIndex == c)
-                    {
-                        auto specialFilter = Filter<SelectContainer>(filter->getValue());
-                        specialFilter.setComparison((Comparison)filter->comparison);
-                        column.addFilter(specialFilter);
-                        dataPointers.push_back(filter);
-                    }
-                }        
-                break;
-            }
-            case(SCH_WEEKDAY):
-            { 
-                for (BLF_Filter<WeekdayContainer>* filter: file.data.get<BLF_Filter<WeekdayContainer>>())
-                {
-                    if (filter->columnIndex == c)
-                    {
-                        auto specialFilter = Filter<WeekdayContainer>(filter->getValue());
-                        specialFilter.setComparison((Comparison)filter->comparison);
-                        column.addFilter(specialFilter);
-                        dataPointers.push_back(filter);
-                    }
-                }     
-                break;
-            }
-            case(SCH_TIME):
-            { 
-                for (BLF_Filter<TimeContainer>* filter: file.data.get<BLF_Filter<TimeContainer>>())
-                {
-                    if (filter->columnIndex == c)
-                    {
-                        auto specialFilter = Filter<TimeContainer>(filter->getValue());
-                        specialFilter.setComparison((Comparison)filter->comparison);
-                        column.addFilter(specialFilter);
-                        dataPointers.push_back(filter);
-                    }
-                }                     
-                break;
-            }
-            case(SCH_DATE):
-            { 
-                for (BLF_Filter<DateContainer>* filter: file.data.get<BLF_Filter<DateContainer>>())
-                {
-                    if (filter->columnIndex == c)
-                    {
-                        auto specialFilter = Filter<DateContainer>(filter->getValue());
-                        specialFilter.setComparison((Comparison)filter->comparison);
-                        column.addFilter(specialFilter);
-                        dataPointers.push_back(filter);
-                    }
-                }                   
-                break;
-            }
-            default:
-            {
-                printf("DataConverter::readSchedule(%s, schedule): Reading filter of type %d has not been implemented\n", path, columnType);
-            }
-        }
-
-        schedule.push_back(column);
-
-        dataPointers.push_back(loadedColumns[c]);
-    }
-
-
+    // go through columns by type (they contain all their data so dont need to get anything else)
     for (size_t t = 0; t < (size_t)SCH_LAST; t++)
     {
         SCHEDULE_TYPE type = (SCHEDULE_TYPE)t;
@@ -268,106 +125,187 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
         {
             case(SCH_BOOL):
             {
-                for (BLF_Element<bool>* element: file.data.get<BLF_Element<bool>>())
+                for (const BLF_Column<bool>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<bool>>()))
                 {
-                    tm creationTime = getElementCreationTime(element);
-                    schedule[element->columnIndex].rows.push_back(new Element<bool>(type, element->value, DateContainer(creationTime), TimeContainer(creationTime)));
-                    dataPointers.push_back(element);
+                    columnTypes.insert({column.index, type});
                 }
                 break;
             }
             case(SCH_NUMBER):
             {
-                for (BLF_Element<int>* element: file.data.get<BLF_Element<int>>())
+                for (const BLF_Column<int>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<int>>()))
                 {
-                    tm creationTime = getElementCreationTime(element);
-                    schedule[element->columnIndex].rows.push_back(new Element<int>(type, element->value, DateContainer(creationTime), TimeContainer(creationTime)));
-                    dataPointers.push_back(element);
-                }                
+                    columnTypes.insert({column.index, type});
+                }              
                 break;
             }
             case(SCH_DECIMAL):
             {
-                for (BLF_Element<double>* element: file.data.get<BLF_Element<double>>())
+                for (const BLF_Column<double>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<double>>()))
                 {
-                    tm creationTime = getElementCreationTime(element);
-                    schedule[element->columnIndex].rows.push_back(new Element<double>(type, element->value, DateContainer(creationTime), TimeContainer(creationTime)));
-                    dataPointers.push_back(element);
-                }        
+                    columnTypes.insert({column.index, type});
+                }  
                 break;
             }
             case(SCH_TEXT):
             {
-                for (BLF_Element<std::string>* element: file.data.get<BLF_Element<std::string>>())
+                for (const BLF_Column<std::string>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<std::string>>()))
                 {
-                    tm creationTime = getElementCreationTime(element);
-                    schedule[element->columnIndex].rows.push_back(new Element<std::string>(type, element->value.getBuffer(), DateContainer(creationTime), TimeContainer(creationTime)));
-                    dataPointers.push_back(element);
-                }                      
+                    columnTypes.insert({column.index, type});
+                }                
                 break;
             }
             case(SCH_SELECT):
             { 
-                for (BLF_Element<SelectContainer>* element: file.data.get<BLF_Element<SelectContainer>>())
+                for (const BLF_Column<SelectContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<SelectContainer>>()))
                 {
-                    tm creationTime = getElementCreationTime(element);
-                    Element<SelectContainer>* select = new Element<SelectContainer>(type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
-                    
-                    select->getValueReference().replaceSelection(element->getSelection());
-                    schedule[element->columnIndex].rows.push_back(select);
-                    schedule[element->columnIndex].selectOptions.addListener(schedule[element->columnIndex].rows.size() - 1, select->getValueReference());
-                    dataPointers.push_back(element);
-                }        
+                    columnTypes.insert({column.index, type});
+                }  
                 break;
             }
             case(SCH_WEEKDAY):
             { 
-                for (BLF_Element<WeekdayContainer>* element: file.data.get<BLF_Element<WeekdayContainer>>())
+                for (const BLF_Column<WeekdayContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<WeekdayContainer>>()))
                 {
-                    tm creationTime = getElementCreationTime(element);
-                    Element<WeekdayContainer>* weekday = new Element<WeekdayContainer>(type, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
-                    
-                    weekday->getValueReference().replaceSelection(element->getSelection());
-                    schedule[element->columnIndex].rows.push_back(weekday);
-                    dataPointers.push_back(element);
-                }        
+                    columnTypes.insert({column.index, type});
+                }
                 break;
             }
             case(SCH_TIME):
             { 
-                for (BLF_Element<TimeContainer>* element: file.data.get<BLF_Element<TimeContainer>>())
+                 for (const BLF_Column<TimeContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<TimeContainer>>()))
                 {
-                    tm creationTime = getElementCreationTime(element);
-                    schedule[element->columnIndex].rows.push_back(new Element<TimeContainer>(type, TimeContainer(element->hours, element->minutes), DateContainer(creationTime), TimeContainer(creationTime)));
-                    dataPointers.push_back(element);
-                }                      
+                    columnTypes.insert({column.index, type});
+                }                 
                 break;
             }
             case(SCH_DATE):
             { 
-                for (BLF_Element<DateContainer>* element: file.data.get<BLF_Element<DateContainer>>())
+                for (const BLF_Column<DateContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<DateContainer>>()))
                 {
-                    tm creationTime = getElementCreationTime(element);
-                    tm dateTime;
-                    dateTime.tm_year = element->year;
-                    dateTime.tm_mon = element->month;
-                    dateTime.tm_mday = element->mday;
-                    schedule[element->columnIndex].rows.push_back(new Element<DateContainer>(type, DateContainer(dateTime), DateContainer(creationTime), TimeContainer(creationTime)));
-                    dataPointers.push_back(element);
-                }                      
+                    columnTypes.insert({column.index, type});
+                }                  
                 break;
             }
             default:
             {
-                printf("DataConverter::readSchedule(%s, schedule): Reading elements with type %d has not been implemented\n", path, type);
+                printf("DataConverter::readSchedule(%s, schedule): Inserting type of BLF_Column<T> with type %d has not been implemented\n", path, type);
             }
         }
     }
 
-    // clean loaded data pointers to seal a memory leak
-    for (size_t i = dataPointers.size() - 1; i > 0; i--)
+    std::cout << "Mapped indices to types" << std::endl;
+
+    for (size_t columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
     {
-        delete dataPointers[i];
+        if (columnTypes.find(columnIndex) == columnTypes.end())
+        {
+            continue;
+        }
+        SCHEDULE_TYPE type = columnTypes.at(columnIndex);
+
+        switch(type)
+        {
+            case(SCH_BOOL):
+            {
+                for (const BLF_Column<bool>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<bool>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn());
+                    }
+                }
+                break;
+            }
+            case(SCH_NUMBER):
+            {
+                for (const BLF_Column<int>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<int>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn()); 
+                    }
+                }              
+                break;
+            }
+            case(SCH_DECIMAL):
+            {
+                for (const BLF_Column<double>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<double>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn());
+                    }
+                }  
+                break;
+            }
+            case(SCH_TEXT):
+            {
+                for (const BLF_Column<std::string>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<std::string>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn());
+                    }
+                }                
+                break;
+            }
+            case(SCH_SELECT):
+            { 
+                for (const BLF_Column<SelectContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<SelectContainer>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn());
+
+                        // Add SelectContainers as listeners to the Column's SelectOptions!!
+                        Column& scheduleColumn = schedule.back();
+                        for (size_t row = 0; row < scheduleColumn.rows.size(); row++)
+                        {
+                            scheduleColumn.selectOptions.addListener(row, ((Element<SelectContainer>*)scheduleColumn.getElement(row))->getValueReference());
+                        }
+                    }
+                }  
+                break;
+            }
+            case(SCH_WEEKDAY):
+            { 
+                for (const BLF_Column<WeekdayContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<WeekdayContainer>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn());
+                    }
+                }
+                break;
+            }
+            case(SCH_TIME):
+            { 
+                 for (const BLF_Column<TimeContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<TimeContainer>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn());
+                    }
+                }                 
+                break;
+            }
+            case(SCH_DATE):
+            { 
+                for (const BLF_Column<DateContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<DateContainer>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn());
+                    }
+                }                  
+                break;
+            }
+            default:
+            {
+                printf("DataConverter::readSchedule(%s, schedule): Converting from BLF_Column<T> with type %d has not been implemented\n", path, type);
+            }
+        }
     }
 
     return 0;

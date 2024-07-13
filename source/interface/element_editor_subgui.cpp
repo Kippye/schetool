@@ -84,7 +84,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				}
 
 				// add new options
-				if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable() && optionNames.size() < SELECT_OPTION_COUNT_MAX)
+				if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable())
 				{
 					std::string str;
 					str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);

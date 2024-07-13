@@ -4,8 +4,6 @@
 #include <string>
 #include <select_container.h>
 
-const size_t SELECT_OPTION_COUNT_MAX = 20;
-
 class SelectOptionsModification
 {
     private:
