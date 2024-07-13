@@ -141,8 +141,10 @@ bool SelectOptions::getIsMutable() const
 }
 
 bool SelectOptions::addOption(const std::string& option)
-{    
+{   
+    m_lastModification.replace(OPTION_MODIFICATION_ADD, m_options.size(), m_options.size());
     m_options.push_back(option);
+    updateListeners();
     return true;
 }
 
