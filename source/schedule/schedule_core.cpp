@@ -419,7 +419,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<DateContainer>(type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<DateContainer>(type, DateContainer(), DateContainer(creationTime), TimeContainer(creationTime)), false);
             }
             break;
         }
@@ -501,7 +501,7 @@ void ScheduleCore::addRow(size_t index)
             }
             case(SCH_DATE):
             { 
-                columnValues.insert(columnValues.begin() + index, new Element<DateContainer>(column.type, DateContainer(creationTime), DateContainer(creationTime), TimeContainer(creationTime)));      
+                columnValues.insert(columnValues.begin() + index, new Element<DateContainer>(column.type, DateContainer(), DateContainer(creationTime), TimeContainer(creationTime)));      
                 break;
             }
             default:
