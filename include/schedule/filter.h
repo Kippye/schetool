@@ -19,7 +19,18 @@ class Filter : public FilterBase
         {
             if (isComparisonValidForElement(element) == false) { return false; }
             // TODO: Check if the provided ElementBase is of the correct type.
-            return (((const Element<T>*)element)->getValue() == m_passValue);
+            switch (m_comparison)
+            {
+                case Comparison::Is:
+                {
+                    return (((const Element<T>*)element)->getValue() == m_passValue);
+                }
+                case Comparison::IsNot:
+                {
+                    return (((const Element<T>*)element)->getValue() != m_passValue);
+                }
+                default: isComparisonValidForElement(element); return false;
+            }
         }
         T getPassValue() const
         {
@@ -42,6 +53,10 @@ inline bool Filter<SelectContainer>::checkPasses(const ElementBase* element) con
         {
             return (value == m_passValue);
         }
+        case Comparison::IsNot:
+        {
+            return (value != m_passValue);
+        }
         case Comparison::Contains:
         {
             return (value.contains(m_passValue));
@@ -60,6 +75,10 @@ inline bool Filter<WeekdayContainer>::checkPasses(const ElementBase* element) co
         case Comparison::Is:
         {
             return (value == m_passValue);
+        }
+        case Comparison::IsNot:
+        {
+            return (value != m_passValue);
         }
         case Comparison::Contains:
         {
@@ -87,6 +106,10 @@ inline bool Filter<DateContainer>::checkPasses(const ElementBase* element) const
         case Comparison::Is:
         {
             return (value == m_passValue);
+        }
+        case Comparison::IsNot:
+        {
+            return (value != m_passValue);
         }
         case Comparison::IsRelativeToToday:
         {

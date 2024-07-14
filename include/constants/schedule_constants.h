@@ -20,6 +20,7 @@ enum SCHEDULE_TYPE
 enum class Comparison
 {
     Is,
+    IsNot,
     Contains,
     IsRelativeToToday,
     ContainsToday,
@@ -70,19 +71,20 @@ namespace filter_consts
 
     const std::map<SCHEDULE_TYPE, std::vector<Comparison>> typeComparisons =
     {
-        { SCH_BOOL,     { Comparison::Is } },
-        { SCH_NUMBER,   { Comparison::Is } },
-        { SCH_DECIMAL,  { Comparison::Is } },
-        { SCH_TEXT,     { Comparison::Is } },
-        { SCH_SELECT,   { Comparison::Is, Comparison::Contains } },
-        { SCH_WEEKDAY,  { Comparison::Is, Comparison::Contains, Comparison::ContainsToday, Comparison::ContainsTodayOrIsEmpty } },
-        { SCH_TIME,     { Comparison::Is } },
-        { SCH_DATE,     { Comparison::Is, Comparison::IsRelativeToToday } },
+        { SCH_BOOL,     { Comparison::Is, Comparison::IsNot } },
+        { SCH_NUMBER,   { Comparison::Is, Comparison::IsNot } },
+        { SCH_DECIMAL,  { Comparison::Is, Comparison::IsNot } },
+        { SCH_TEXT,     { Comparison::Is, Comparison::IsNot } },
+        { SCH_SELECT,   { Comparison::Is, Comparison::IsNot, Comparison::Contains } },
+        { SCH_WEEKDAY,  { Comparison::Is, Comparison::IsNot, Comparison::Contains, Comparison::ContainsToday, Comparison::ContainsTodayOrIsEmpty } },
+        { SCH_TIME,     { Comparison::Is, Comparison::IsNot } },
+        { SCH_DATE,     { Comparison::Is, Comparison::IsNot, Comparison::IsRelativeToToday } },
     };
 
     const std::map<Comparison, const char*> comparisonStrings =
     {
         { Comparison::Is, "is" },
+        { Comparison::IsNot, "is not" },
         { Comparison::Contains, "contains" },
         { Comparison::IsRelativeToToday, "is relative to today" },
         { Comparison::ContainsToday, "contains today" },
