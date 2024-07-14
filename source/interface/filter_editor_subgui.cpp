@@ -115,6 +115,8 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
             return { selectionChanged, m_filterState.getFilterBase()->getComparison() };
         };
+
+        bool hasRemoveButton = false;
     
         // LAMBDA
         auto displayRemoveFilterButton = [&]() 
@@ -124,6 +126,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 removeColumnFilter.invoke(m_editorColumn, m_editorFilterIndex);
                 ImGui::CloseCurrentPopup();
             }
+            hasRemoveButton = true;
         };
 
         gui_templates::TextWithBackground("%s", m_scheduleCore->getColumn(m_editorColumn)->name.c_str());
@@ -183,6 +186,12 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             case(SCH_TEXT):
             {
                 displayComparisonCombo(SCH_TEXT);
+
+                if (m_editing == true)
+                {
+                    ImGui::SameLine();
+                    displayRemoveFilterButton();
+                }
 
                 std::string value = m_filterState.getFilter<std::string>()->getPassValue();
                 auto prevFilter = *m_filterState.getFilter<std::string>(); 
@@ -348,9 +357,8 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
 		}
 
-        std::set<SCHEDULE_TYPE> typesWithCustomRemovePosition = { SCH_SELECT, SCH_WEEKDAY, SCH_DATE };
-
-        if (m_editing == true && typesWithCustomRemovePosition.find(m_filterState.getType()) == typesWithCustomRemovePosition.end())
+        // editing and a remove button hasn't been added before
+        if (m_editing == true && hasRemoveButton == false)
         {
             ImGui::SameLine();
             displayRemoveFilterButton();
