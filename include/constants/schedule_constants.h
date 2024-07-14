@@ -23,6 +23,7 @@ enum class Comparison
     IsNot,
     Contains,
     IsRelativeToToday,
+    IsEmpty,
     ContainsToday,
     // TEMP
     ContainsTodayOrIsEmpty
@@ -78,7 +79,7 @@ namespace filter_consts
         { SCH_SELECT,   { Comparison::Is, Comparison::IsNot, Comparison::Contains } },
         { SCH_WEEKDAY,  { Comparison::Is, Comparison::IsNot, Comparison::Contains, Comparison::ContainsToday, Comparison::ContainsTodayOrIsEmpty } },
         { SCH_TIME,     { Comparison::Is, Comparison::IsNot } },
-        { SCH_DATE,     { Comparison::Is, Comparison::IsNot, Comparison::IsRelativeToToday } },
+        { SCH_DATE,     { Comparison::Is, Comparison::IsNot, Comparison::IsEmpty, Comparison::IsRelativeToToday } },
     };
 
     const std::map<Comparison, const char*> comparisonStrings =
@@ -87,6 +88,7 @@ namespace filter_consts
         { Comparison::IsNot, "is not" },
         { Comparison::Contains, "contains" },
         { Comparison::IsRelativeToToday, "is relative to today" },
+        { Comparison::IsEmpty, "is empty" },
         { Comparison::ContainsToday, "contains today" },
         { Comparison::ContainsTodayOrIsEmpty, "contains today or is empty" },
     };

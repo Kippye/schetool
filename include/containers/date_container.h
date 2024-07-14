@@ -7,6 +7,7 @@ struct DateContainer
 {
     private:
         tm time;
+        bool m_empty = true;
         bool m_isRelative = false;
         int m_relativeOffset = 0;
     public:
@@ -14,6 +15,8 @@ struct DateContainer
         DateContainer(const tm& t, bool isRelative = false, int relativeOffset = 0);
         std::string getString() const;
         tm getTime() const;
+        bool getIsEmpty() const;
+        void clear();
         bool getIsRelative() const;
         size_t getRelativeOffset() const;
         void setTime(const tm& time);

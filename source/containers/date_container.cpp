@@ -1,16 +1,25 @@
 #include <date_container.h>
 #include "util.h"
 
-DateContainer::DateContainer() {}
+DateContainer::DateContainer() 
+{
+    m_empty = true;
+}
 DateContainer::DateContainer(const tm& t, bool isRelative, int relativeOffset)
 {
     time = t;
     m_isRelative = isRelative;
     m_relativeOffset = relativeOffset;
+    m_empty = false;
 }
 
 std::string DateContainer::getString() const
 {
+    if (m_empty == true)
+    {
+        return std::string("");
+    }
+
     char output[1024];
 
     if (m_isRelative == false)
@@ -50,6 +59,16 @@ tm DateContainer::getTime() const
     return time;
 }
 
+bool DateContainer::getIsEmpty() const
+{
+    return m_empty;
+}
+
+void DateContainer::clear()
+{
+    m_empty = true;
+}
+
 bool DateContainer::getIsRelative() const
 {
     return m_isRelative;
@@ -63,12 +82,14 @@ size_t DateContainer::getRelativeOffset() const
 void DateContainer::setTime(const tm& time)
 {
     this->time = tm(time);
+    m_empty = false;
 }
 
 // NOTE: If the day provided is more than the days in the current month, the day will be clamped to it
 void DateContainer::setMonthDay(unsigned int day)
 {
     time.tm_mday = std::min(day, mytime::get_month_day_count(time));
+    m_empty = false;
 }
 
 // Add 1 to the month day. If it reaches the amount of days in the month, the month day will be set to 1 and month will be incremented, too.
@@ -87,6 +108,7 @@ void DateContainer::incrementMonthDay()
 void DateContainer::setMonth(int month)
 {
     time.tm_mon = month < 0 ? 11 : (month > 11 ? 0 : month);
+    m_empty = false;
 }
 
 // Add 1 to the month. If it reaches 12 (0-indexed), the month will be set to 0 and year will be incremented, too.
@@ -107,6 +129,7 @@ void DateContainer::setYear(int year, bool convert)
 {
     year = convertToValidYear(year, !convert, convert);
     time.tm_year = year;
+    m_empty = false;
 }
 
 void DateContainer::incrementYear()

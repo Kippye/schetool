@@ -487,7 +487,8 @@ void ScheduleGui::draw(Window& window, Input& input)
                                 auto value = m_scheduleCore->getElementValueConstRef<DateContainer>(column, row);
                             
                                 // Button displaying the date of the current Date element
-                                if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(),
+                                    value.getIsEmpty() ? gui_sizes::emptyDateButtonSize : ImVec2(0, 0))) // Set minimum width for empty Date buttons 
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {

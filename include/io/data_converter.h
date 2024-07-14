@@ -337,6 +337,7 @@ class BLF_Element<DateContainer> : BLF_Base
     public:
         inline static const char* objectName = "BLF_Element_DateContainer";
         BLF_ElementInfo info;
+        bool empty;
         int year;
         int month;
         int mday;
@@ -345,6 +346,7 @@ class BLF_Element<DateContainer> : BLF_Base
         BLF_Element(const Element<DateContainer>* element) : info(element)
         {
             tm dateTime = element->getValue().getTime();
+            empty = element->getValue().getIsEmpty();
             year = dateTime.tm_year;
             month = dateTime.tm_mon;
             mday = dateTime.tm_mday;
@@ -357,13 +359,19 @@ class BLF_Element<DateContainer> : BLF_Base
             dateTime.tm_year = year;
             dateTime.tm_mon = month;
             dateTime.tm_mday = mday;
-            return Element<DateContainer>(SCH_DATE, DateContainer(dateTime), DateContainer(creationTime), TimeContainer(creationTime));
+            DateContainer dateContainer = DateContainer(dateTime);
+            if (empty)
+            {
+                dateContainer.clear();
+            }
+            return Element<DateContainer>(SCH_DATE, dateContainer, DateContainer(creationTime), TimeContainer(creationTime));
         }
 
         static void addDefinition(ObjectDefinitions& definitions)
         {
             definitions.add(definitions.getObjectTable().define<BLF_Element<DateContainer>>(objectName,
                 arg("info", &BLF_Element<DateContainer>::info, definitions.get<BLF_ElementInfo>()),
+                arg("empty", &BLF_Element<DateContainer>::empty),
                 arg("year", &BLF_Element<DateContainer>::year),
                 arg("month", &BLF_Element<DateContainer>::month),
                 arg("mday", &BLF_Element<DateContainer>::mday)

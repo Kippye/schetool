@@ -314,8 +314,15 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 // !!! update value, might have been modified above
                 value = m_filterState.getFilter<DateContainer>()->getPassValue();
 
-                // Display the date of the current Date element
-                gui_templates::TextWithBackground("%s##filterEditor%zu", newComparison == Comparison::IsRelativeToToday ? "Today" : value.getString().c_str(), m_editorColumn);
+                // Display the date of the current Date element, UNLESS the comparison is IsEmpty
+                if (newComparison != Comparison::IsEmpty)
+                {
+                    gui_templates::TextWithBackground("%s##filterEditor%zu", newComparison == Comparison::IsRelativeToToday ? "Today" : value.getString().c_str(), m_editorColumn);
+                }
+                else
+                {
+                    ImGui::NewLine();
+                }
 
                 // If editing, display the remove filter button here, before the Date editor 
                 if (m_editing == true)
@@ -324,7 +331,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     displayRemoveFilterButton();
                 }
 
-                if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth, false))
+                if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth, false, false))
                 {
                     m_filterState.getFilter<DateContainer>()->setComparison(Comparison::Is);
                     // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false

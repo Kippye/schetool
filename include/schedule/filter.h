@@ -111,6 +111,10 @@ inline bool Filter<DateContainer>::checkPasses(const ElementBase* element) const
         {
             return (value != m_passValue);
         }
+        case Comparison::IsEmpty:
+        {
+            return (value.getIsEmpty());
+        }
         case Comparison::IsRelativeToToday:
         {
             // TODO: Handle offsets as well, maybe.
