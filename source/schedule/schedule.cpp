@@ -8,7 +8,7 @@
 #include <edit_history_gui.h>
 #include <time.h>
 
-#include <schedule_gui.h>
+#include "schedule_gui.h"
 
 // TEMP
 #include <iostream>

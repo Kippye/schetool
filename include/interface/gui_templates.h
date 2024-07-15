@@ -41,5 +41,5 @@ namespace gui_colors
 
 namespace gui_sizes
 {
-    const ImVec2 emptyDateButtonSize = ImVec2(64, 0);
+    const ImVec2 emptyLabelSize = ImVec2(64, 0);
 }

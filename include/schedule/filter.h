@@ -32,6 +32,17 @@ class Filter : public FilterBase
                 default: isComparisonValidForElement(element); return false;
             }
         }
+        std::string getString() const override
+        {
+            Element<T> valueElement = Element<T>();
+            valueElement.setValue(m_passValue);
+            std::string filterString = std::string(filter_consts::comparisonStrings.at(m_comparison));
+            if (m_comparison != Comparison::IsEmpty && m_comparison != Comparison::ContainsToday && m_comparison != Comparison::ContainsTodayOrIsEmpty)
+            {
+                filterString.append(" ").append(valueElement.getString());
+            }
+            return filterString;
+        }
         T getPassValue() const
         {
             return m_passValue; 

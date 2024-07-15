@@ -10,6 +10,7 @@ class FilterBase
     public:
         bool isComparisonValidForElement(const ElementBase* element, bool printInvalidWarning = true) const;
         virtual bool checkPasses(const ElementBase* element) const;
+        virtual std::string getString() const;
         Comparison getComparison() const;
         void setComparison(Comparison comparison);
 };

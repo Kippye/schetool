@@ -24,7 +24,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     if (displayDate)
     {
         // Display the date, with a minimum width for empty dates
-        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyDateButtonSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getString().c_str(), viewedYear, viewedMonth);
+        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getString().c_str(), viewedYear, viewedMonth);
     }
     if (displayClearButton && ImGui::Button("Clear"))
     {

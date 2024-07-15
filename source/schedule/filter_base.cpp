@@ -32,6 +32,11 @@ Comparison FilterBase::getComparison() const
     return m_comparison;
 }
 
+std::string FilterBase::getString() const
+{
+    return std::string(filter_consts::comparisonStrings.at(m_comparison)).append(" any");
+}
+
 void FilterBase::setComparison(Comparison comparison)
 {
     m_comparison = comparison;

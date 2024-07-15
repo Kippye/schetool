@@ -5,13 +5,13 @@
 #include <string>
 #include <cstdio>
 #include <algorithm>
-#include <schedule_constants.h>
-#include <schedule_gui.h>
-#include <util.h>
-#include <element.h>
-#include <element_base.h>
+#include "schedule_constants.h"
+#include "schedule_gui.h"
+#include "util.h"
+#include "element.h"
+#include "element_base.h"
 #include "filter.h"
-#include <schedule.h>
+#include "schedule.h"
 #include "gui_templates.h"
 #include <iostream>
 
@@ -80,13 +80,14 @@ void ScheduleGui::draw(Window& window, Input& input)
                     }
 
                     const Column* currentColumn = m_scheduleCore->getColumn(column);
+                    const auto& columnFilters = currentColumn->getFiltersConst();
 
                     ImGui::SameLine();
 
                     for (size_t i = 0; i < currentColumn->getFilterCount(); i++)
                     {
                         float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterCount();
-                        if (ImGui::Button(std::string(m_scheduleCore->getColumn(column)->name).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
+                        if (ImGui::Button(std::string(columnFilters.at(i)->getString()).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
                         {
                             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                             {
@@ -488,7 +489,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                             
                                 // Button displaying the date of the current Date element
                                 if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(),
-                                    value.getIsEmpty() ? gui_sizes::emptyDateButtonSize : ImVec2(0, 0))) // Set minimum width for empty Date buttons 
+                                    value.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0))) // Set minimum width for empty Date buttons 
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
