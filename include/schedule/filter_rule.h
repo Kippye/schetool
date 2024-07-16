@@ -1,16 +1,16 @@
 #pragma once
 
-#include "filter_base.h"
+#include "filter_rule_base.h"
 #include "element.h"
 
 template <typename T>
-class Filter : public FilterBase
+class FilterRule : public FilterRuleBase
 {
     private:
         T m_passValue;
     public:
-        Filter() = delete;
-        Filter(const T& passValue)
+        FilterRule() = delete;
+        FilterRule(const T& passValue)
         {
             m_passValue = passValue;
         }
@@ -54,7 +54,7 @@ class Filter : public FilterBase
 };
 
 template <>
-inline bool Filter<SelectContainer>::checkPasses(const ElementBase* element) const
+inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element) const
 {
     SelectContainer value = ((const Element<SelectContainer>*)element)->getValue();
 
@@ -77,7 +77,7 @@ inline bool Filter<SelectContainer>::checkPasses(const ElementBase* element) con
 }
 
 template <>
-inline bool Filter<WeekdayContainer>::checkPasses(const ElementBase* element) const
+inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element) const
 {
     WeekdayContainer value = ((const Element<WeekdayContainer>*)element)->getValue();
 
@@ -108,7 +108,7 @@ inline bool Filter<WeekdayContainer>::checkPasses(const ElementBase* element) co
 }
 
 template <>
-inline bool Filter<DateContainer>::checkPasses(const ElementBase* element) const
+inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element) const
 {
     DateContainer value = ((const Element<DateContainer>*)element)->getValue();
 

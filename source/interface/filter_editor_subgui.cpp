@@ -4,12 +4,12 @@
 
 using filter_consts::TypeComparisonInfo;
 
-void EditorFilterState::setFilter(const std::shared_ptr<FilterBase>& filter)
+void EditorFilterState::setFilter(const std::shared_ptr<FilterRuleBase>& filter)
 {
     m_filter = filter;
 }
 
-std::shared_ptr<FilterBase> EditorFilterState::getFilterBase()
+std::shared_ptr<FilterRuleBase> EditorFilterState::getFilterBase()
 {
     return m_filter;
 }
@@ -47,7 +47,7 @@ FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* sched
 
 void FilterEditorSubGui::draw(Window& window, Input& input)
 {
-	if (ImGui::BeginPopupEx(ImGui::GetID("Filter Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupEx(ImGui::GetID("FilterRule Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
 	{
         if (m_scheduleCore->existsColumnAtIndex(m_editorColumn) == false)
         {
@@ -390,7 +390,7 @@ void FilterEditorSubGui::open_edit(size_t column, size_t filterIndex, const ImRe
     m_filterState.setType(m_scheduleCore->getColumn(column)->type);
     m_filterState.setFilter(m_scheduleCore->getColumn(column)->getFiltersConst().at(filterIndex));
 
-	ImGui::OpenPopup("Filter Editor");
+	ImGui::OpenPopup("FilterRule Editor");
 }
 
 void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
@@ -413,43 +413,43 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
     {
         case(SCH_BOOL):
         {
-            m_filterState.setFilter(std::make_shared<Filter<bool>>(false));
+            m_filterState.setFilter(std::make_shared<FilterRule<bool>>(false));
             break;
         }
         case(SCH_NUMBER):
         {
-            m_filterState.setFilter(std::make_shared<Filter<int>>(0));
+            m_filterState.setFilter(std::make_shared<FilterRule<int>>(0));
             break;
         }
         case(SCH_DECIMAL):
         {
-            m_filterState.setFilter(std::make_shared<Filter<double>>(0.0));
+            m_filterState.setFilter(std::make_shared<FilterRule<double>>(0.0));
             break;
         }
         case(SCH_TEXT):
         {
-            m_filterState.setFilter(std::make_shared<Filter<std::string>>(std::string("")));
+            m_filterState.setFilter(std::make_shared<FilterRule<std::string>>(std::string("")));
             break;
         }
         case(SCH_SELECT):
         {
-            m_filterState.setFilter(std::make_shared<Filter<SelectContainer>>(SelectContainer()));
+            m_filterState.setFilter(std::make_shared<FilterRule<SelectContainer>>(SelectContainer()));
             break;
         }
         case(SCH_WEEKDAY):
         {
-            m_filterState.setFilter(std::make_shared<Filter<WeekdayContainer>>(WeekdayContainer()));
+            m_filterState.setFilter(std::make_shared<FilterRule<WeekdayContainer>>(WeekdayContainer()));
             break;
         }
         case(SCH_TIME):
         {
-            m_filterState.setFilter(std::make_shared<Filter<TimeContainer>>(TimeContainer(0, 0)));
+            m_filterState.setFilter(std::make_shared<FilterRule<TimeContainer>>(TimeContainer(0, 0)));
             break;
         }
         case(SCH_DATE):
         {
             // default date mode to relative
-            m_filterState.setFilter(std::make_shared<Filter<DateContainer>>(DateContainer::getCurrentSystemDate()));
+            m_filterState.setFilter(std::make_shared<FilterRule<DateContainer>>(DateContainer::getCurrentSystemDate()));
             m_filterState.getFilter<DateContainer>()->setComparison(Comparison::IsRelativeToToday);
             break;
         }
@@ -460,12 +460,12 @@ void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
         }
     }
 
-	ImGui::OpenPopup("Filter Editor");
+	ImGui::OpenPopup("FilterRule Editor");
 }
 
 void FilterEditorSubGui::close()
 {
-    if (ImGui::IsPopupOpen("Filter Editor"))
+    if (ImGui::IsPopupOpen("FilterRule Editor"))
     {
         ImGui::CloseCurrentPopup();
     }

@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <string>
-#include "filter.h"
+#include "filter_rule.h"
 #include "schedule_column.h"
 #include "schedule_constants.h"
 #include "element.h"
@@ -50,7 +50,7 @@ class ScheduleCore
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
         template <typename T>
-        bool addColumnFilter(size_t column, const Filter<T>& filter)
+        bool addColumnFilter(size_t column, const FilterRule<T>& filter)
         {
             if (existsColumnAtIndex(column) == false) { return false; }
 
@@ -58,7 +58,7 @@ class ScheduleCore
             return true;
         }
         template <typename T>
-        bool replaceColumnFilter(size_t column, size_t index, const Filter<T>& filter)
+        bool replaceColumnFilter(size_t column, size_t index, const FilterRule<T>& filter)
         {
             if (existsColumnAtIndex(column) == false) { return false; }
             

@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
-#include "filter.h"
+#include "filter_rule.h"
 #include "element_base.h"
 #include "element.h"
 #include "select_container.h"
@@ -39,7 +39,7 @@ struct Column
 {
     private:
         void setupFiltersPerType();
-        std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterBase>>> m_filtersPerType = {};
+        std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterRuleBase>>> m_filtersPerType = {};
     public:
         std::vector<ElementBase*> rows = {};
         SCHEDULE_TYPE type;
@@ -99,26 +99,26 @@ struct Column
 
         const ElementBase* getElementConst(size_t index) const;
 
-        const std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterBase>>>& getFiltersPerType() const;
-        std::vector<std::shared_ptr<FilterBase>>& getFilters();
-        const std::vector<std::shared_ptr<FilterBase>>& getFiltersConst() const;
+        const std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterRuleBase>>>& getFiltersPerType() const;
+        std::vector<std::shared_ptr<FilterRuleBase>>& getFilters();
+        const std::vector<std::shared_ptr<FilterRuleBase>>& getFiltersConst() const;
         size_t getFilterCount() const;
 
         template <typename T>
-        void addFilter(const Filter<T>& filter)
+        void addFilter(const FilterRule<T>& filter)
         {
             if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::addFilter(filter): There is no filters vector for the Column %s's type %d\n", name.c_str(), type); return; }
 
-            m_filtersPerType.at(type).push_back(std::make_shared<Filter<T>>(filter));
+            m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<T>>(filter));
         }
 
         template <typename T>
-        void replaceFilter(size_t index, const Filter<T>& filter)
+        void replaceFilter(size_t index, const FilterRule<T>& filter)
         {
             if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::replaceFilter(%zu, filter): There is no filters vector for the Column %s's type %d\n", index, name.c_str(), type); return; }
-            if (index >= m_filtersPerType.at(type).size())  { printf("Column::replaceFilter(%zu): Filter index out of range\n", index); return; }
+            if (index >= m_filtersPerType.at(type).size())  { printf("Column::replaceFilter(%zu): FilterRule index out of range\n", index); return; }
 
-            *std::dynamic_pointer_cast<Filter<T>>(m_filtersPerType.at(type).at(index)) = filter;
+            *std::dynamic_pointer_cast<FilterRule<T>>(m_filtersPerType.at(type).at(index)) = filter;
         }
 
         void removeFilter(size_t index);

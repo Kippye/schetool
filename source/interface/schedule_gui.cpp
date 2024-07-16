@@ -10,7 +10,7 @@
 #include "util.h"
 #include "element.h"
 #include "element_base.h"
-#include "filter.h"
+#include "filter_rule.h"
 #include "schedule.h"
 #include "gui_templates.h"
 #include <iostream>
@@ -64,7 +64,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 
                     if (ImGui::SmallButton(std::string("+##addFilter").append(std::to_string(column)).c_str()))
                     {
-                        // display the Filter editor to add a filter to this Column
+                        // display the FilterRule editor to add a filter to this Column
                         if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                         {
                             filterEditor->open_create(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));

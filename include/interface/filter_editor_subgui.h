@@ -2,7 +2,7 @@
 
 #include <map>
 #include "gui.h"
-#include "filter.h"
+#include "filter_rule.h"
 #include "select_container.h"
 #include "time_container.h"
 #include "date_container.h"
@@ -13,22 +13,22 @@
 class EditorFilterState
 {
     private:
-        std::shared_ptr<FilterBase> m_filter = NULL;
+        std::shared_ptr<FilterRuleBase> m_filter = NULL;
         SCHEDULE_TYPE m_type = SCH_LAST;
     public:
-        void setFilter(const std::shared_ptr<FilterBase>& filter);
+        void setFilter(const std::shared_ptr<FilterRuleBase>& filter);
         template <typename T>
-        std::shared_ptr<Filter<T>> getFilter()
+        std::shared_ptr<FilterRule<T>> getFilter()
         {
             if (hasValidFilter() == false) 
             { 
                 printf("EditorFilterState::getFilter(): Can't cast invalid filter pointer! Returning dummy shared_ptr\n"); 
-                auto errorReturn = std::make_shared<Filter<T>>(Filter<T>(T()));
+                auto errorReturn = std::make_shared<FilterRule<T>>(FilterRule<T>(T()));
                 return errorReturn; 
             }
-            return std::dynamic_pointer_cast<Filter<T>>(getFilterBase());
+            return std::dynamic_pointer_cast<FilterRule<T>>(getFilterBase());
         }
-        std::shared_ptr<FilterBase> getFilterBase();
+        std::shared_ptr<FilterRuleBase> getFilterBase();
         void setType(SCHEDULE_TYPE type);
         SCHEDULE_TYPE getType() const;
         // only checks if the filter shared pointer is valid (so not NULL i guess?)
@@ -65,24 +65,24 @@ class FilterEditorSubGui : public Gui
         FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
-        Event<size_t, std::shared_ptr<FilterBase>> addColumnFilter;
-        Event<size_t, size_t, std::shared_ptr<FilterBase>, std::shared_ptr<FilterBase>> editColumnFilter;
+        Event<size_t, std::shared_ptr<FilterRuleBase>> addColumnFilter;
+        Event<size_t, size_t, std::shared_ptr<FilterRuleBase>, std::shared_ptr<FilterRuleBase>> editColumnFilter;
         Event<size_t, size_t> removeColumnFilter;
 
         void draw(Window& window, Input& input) override;
-        // open the editor to edit a pre-existing Filter
+        // open the editor to edit a pre-existing FilterRule
         void open_edit(size_t column, size_t filterIndex, const ImRect& avoidRect);
-        // open the editor to add a new Filter to a Column
+        // open the editor to add a new FilterRule to a Column
         void open_create(size_t column, const ImRect& avoidRect);
         // close the filter editor popup if it is open
         void close();
 
         template <typename T>
-        void invokeFilterEditEvent(Filter<T> previousValue, Filter<T> newValue)
+        void invokeFilterEditEvent(FilterRule<T> previousValue, FilterRule<T> newValue)
         {
             if (m_editing)
             {
-                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, std::make_shared<Filter<T>>(previousValue), std::make_shared<Filter<T>>(newValue));
+                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, std::make_shared<FilterRule<T>>(previousValue), std::make_shared<FilterRule<T>>(newValue));
             }
         };
 

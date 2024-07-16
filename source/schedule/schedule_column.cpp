@@ -47,28 +47,28 @@ Column::Column(const Column& other)
         switch(type)
         {
             case SCH_BOOL:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<bool>>(*std::dynamic_pointer_cast<Filter<bool>>(otherFilter)));
+                m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<bool>>(*std::dynamic_pointer_cast<FilterRule<bool>>(otherFilter)));
             break;
             case SCH_NUMBER:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<int>>(*std::dynamic_pointer_cast<Filter<int>>(otherFilter)));
+                m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<int>>(*std::dynamic_pointer_cast<FilterRule<int>>(otherFilter)));
             break;
             case SCH_DECIMAL:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<double>>(*std::dynamic_pointer_cast<Filter<double>>(otherFilter)));
+                m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<double>>(*std::dynamic_pointer_cast<FilterRule<double>>(otherFilter)));
             break;
             case SCH_TEXT:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<std::string>>(*std::dynamic_pointer_cast<Filter<std::string>>(otherFilter)));
+                m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<std::string>>(*std::dynamic_pointer_cast<FilterRule<std::string>>(otherFilter)));
             break;
             case SCH_SELECT:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<SelectContainer>>(*std::dynamic_pointer_cast<Filter<SelectContainer>>(otherFilter)));
+                m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<SelectContainer>>(*std::dynamic_pointer_cast<FilterRule<SelectContainer>>(otherFilter)));
             break;
             case SCH_WEEKDAY:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<WeekdayContainer>>(*std::dynamic_pointer_cast<Filter<WeekdayContainer>>(otherFilter)));
+                m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<WeekdayContainer>>(*std::dynamic_pointer_cast<FilterRule<WeekdayContainer>>(otherFilter)));
             break;
             case SCH_TIME:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<TimeContainer>>(*std::dynamic_pointer_cast<Filter<TimeContainer>>(otherFilter)));
+                m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<TimeContainer>>(*std::dynamic_pointer_cast<FilterRule<TimeContainer>>(otherFilter)));
             break;
             case SCH_DATE:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<DateContainer>>(*std::dynamic_pointer_cast<Filter<DateContainer>>(otherFilter)));
+                m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<DateContainer>>(*std::dynamic_pointer_cast<FilterRule<DateContainer>>(otherFilter)));
             break;
             default:
             
@@ -93,7 +93,7 @@ void Column::setupFiltersPerType()
 {
     for (int i = 0; i < SCH_LAST; i++)
     {
-        m_filtersPerType.insert_or_assign<std::vector<std::shared_ptr<FilterBase>>>((SCHEDULE_TYPE)i, {});
+        m_filtersPerType.insert_or_assign<std::vector<std::shared_ptr<FilterRuleBase>>>((SCHEDULE_TYPE)i, {});
     }
 }
 
@@ -122,12 +122,12 @@ const ElementBase* Column::getElementConst(size_t index) const
     return rows[index];
 }
 
-const std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterBase>>>& Column::getFiltersPerType() const
+const std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterRuleBase>>>& Column::getFiltersPerType() const
 {
     return m_filtersPerType;
 }
 
-std::vector<std::shared_ptr<FilterBase>>& Column::getFilters()
+std::vector<std::shared_ptr<FilterRuleBase>>& Column::getFilters()
 {
     if (m_filtersPerType.find(type) == m_filtersPerType.end()) 
     { 
@@ -137,7 +137,7 @@ std::vector<std::shared_ptr<FilterBase>>& Column::getFilters()
     return m_filtersPerType.at(type);
 }
 
-const std::vector<std::shared_ptr<FilterBase>>& Column::getFiltersConst() const
+const std::vector<std::shared_ptr<FilterRuleBase>>& Column::getFiltersConst() const
 {
     if (m_filtersPerType.find(type) == m_filtersPerType.end()) 
     { 
@@ -157,7 +157,7 @@ size_t Column::getFilterCount() const
 void Column::removeFilter(size_t index)
 {
     if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::removeFilter(%zu): There is no filters vector for the Column %s's type %d\n", index, name.c_str(), type); return; }
-    if (index >= m_filtersPerType.at(type).size()) { printf("Column::removeFilter(%zu): Filter index out of range\n", index); return; }
+    if (index >= m_filtersPerType.at(type).size()) { printf("Column::removeFilter(%zu): FilterRule index out of range\n", index); return; }
 
     m_filtersPerType.at(type).erase(m_filtersPerType.at(type).begin() + index);
 }

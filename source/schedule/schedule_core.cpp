@@ -5,7 +5,7 @@
 #include <vector>
 #include <ctime>
 #include <numeric>
-#include "filter.h"
+#include "filter_rule.h"
 #include "weekday_container.h"
 #include <schedule_core.h>
 #include <element_base.h>
@@ -321,9 +321,9 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
     
     if (m_schedule.at(column).type == SCH_SELECT)
     {
-        for (std::shared_ptr<FilterBase> filter: m_schedule.at(column).getFilters())
+        for (std::shared_ptr<FilterRuleBase> filter: m_schedule.at(column).getFilters())
         {
-            std::shared_ptr<Filter<SelectContainer>> filterPtr = std::dynamic_pointer_cast<Filter<SelectContainer>>(filter); 
+            std::shared_ptr<FilterRule<SelectContainer>> filterPtr = std::dynamic_pointer_cast<FilterRule<SelectContainer>>(filter); 
             SelectContainer updatedValue = filterPtr->getPassValue();
             updatedValue.update(getColumnSelectOptions(column).getLastChange(), getColumnSelectOptions(column).getOptionCount());
             filterPtr->setPassValue(updatedValue);

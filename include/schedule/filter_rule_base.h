@@ -3,7 +3,7 @@
 #include "element.h"
 #include "schedule_constants.h"
 
-class FilterBase
+class FilterRuleBase
 {
     protected:
         Comparison m_comparison = Comparison::Is;

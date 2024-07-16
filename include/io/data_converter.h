@@ -394,7 +394,7 @@ class BLF_Filter : BLF_Base
 
     BLF_Filter() {}
 
-    BLF_Filter(SCHEDULE_TYPE type, const Filter<T>& filter)
+    BLF_Filter(SCHEDULE_TYPE type, const FilterRule<T>& filter)
     {
         Element<T> element = Element<T>(type, filter.getPassValue(), DateContainer(), TimeContainer());
         passValueElement = BLF_Element<T>(&element);
@@ -402,9 +402,9 @@ class BLF_Filter : BLF_Base
         comparison = (int)filter.getComparison();
     }
 
-    Filter<T> getFilter() const
+    FilterRule<T> getFilter() const
     {
-        Filter<T> filter = Filter<T>(passValueElement.getElement().getValue());
+        FilterRule<T> filter = FilterRule<T>(passValueElement.getElement().getValue());
         filter.setComparison((Comparison)comparison);
         return filter;
     }
@@ -507,7 +507,7 @@ class BLF_Column : BLF_Base
 
         for (auto filterBase : column->getFiltersConst())
         {
-            filters.push_back(BLF_Filter<T>(column->type, *std::dynamic_pointer_cast<Filter<T>>(filterBase)));
+            filters.push_back(BLF_Filter<T>(column->type, *std::dynamic_pointer_cast<FilterRule<T>>(filterBase)));
         }
     }
 

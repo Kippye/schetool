@@ -1,7 +1,7 @@
-#include "filter_base.h"
+#include "filter_rule_base.h"
 #include <cstring>
 
-bool FilterBase::isComparisonValidForElement(const ElementBase* element, bool printInvalidWarning) const
+bool FilterRuleBase::isComparisonValidForElement(const ElementBase* element, bool printInvalidWarning) const
 {
     bool validComparison = false;
     for (Comparison comparison : filter_consts::getComparisonInfo(element->getType()).comparisons)
@@ -15,29 +15,29 @@ bool FilterBase::isComparisonValidForElement(const ElementBase* element, bool pr
 
     if (validComparison == false && printInvalidWarning)
     {
-        printf("FilterBase::isComparisonValidForElement(): Comparison %s is not valid for element type %d\n", filter_consts::comparisonStrings.at(m_comparison), element->getType());
+        printf("FilterRuleBase::isComparisonValidForElement(): Comparison %s is not valid for element type %d\n", filter_consts::comparisonStrings.at(m_comparison), element->getType());
     }
 
     return validComparison;
 }
 
-bool FilterBase::checkPasses(const ElementBase* element) const
+bool FilterRuleBase::checkPasses(const ElementBase* element) const
 {
     if (isComparisonValidForElement(element) == false) { return false; }
     return true;
 }
  
-Comparison FilterBase::getComparison() const
+Comparison FilterRuleBase::getComparison() const
 {
     return m_comparison;
 }
 
-std::string FilterBase::getString() const
+std::string FilterRuleBase::getString() const
 {
     return std::string(filter_consts::comparisonStrings.at(m_comparison)).append(" any");
 }
 
-void FilterBase::setComparison(Comparison comparison)
+void FilterRuleBase::setComparison(Comparison comparison)
 {
     m_comparison = comparison;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "filter.h"
+#include "filter_rule.h"
 #include "element_base.h"
 #include "element.h"
 #include "schedule_column.h"
@@ -209,9 +209,9 @@ template <typename T>
 class FilterEdit : public FilterAddOrRemoveEditBase
 {
     private:
-        Filter<T> m_filterData = Filter<T>(T());
+        FilterRule<T> m_filterData = FilterRule<T>(T());
     public:
-        FilterEdit(bool isRemove, size_t column, size_t filterIndex, const Filter<T>& filterData) : FilterAddOrRemoveEditBase(isRemove, column, filterIndex) 
+        FilterEdit(bool isRemove, size_t column, size_t filterIndex, const FilterRule<T>& filterData) : FilterAddOrRemoveEditBase(isRemove, column, filterIndex) 
         {
             m_filterData = filterData;
         }
@@ -254,10 +254,10 @@ class FilterChangeEdit : public FilterEditBase
 {
     private:
         SCHEDULE_TYPE m_valueType;
-        Filter<T> m_previousValue = Filter<T>(T());
-        Filter<T> m_newValue = Filter<T>(T());
+        FilterRule<T> m_previousValue = FilterRule<T>(T());
+        FilterRule<T> m_newValue = FilterRule<T>(T());
     public:
-        FilterChangeEdit(size_t column, size_t filterIndex, SCHEDULE_TYPE valueType, const Filter<T>& previousValue, const Filter<T>& newValue) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterChange) 
+        FilterChangeEdit(size_t column, size_t filterIndex, SCHEDULE_TYPE valueType, const FilterRule<T>& previousValue, const FilterRule<T>& newValue) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterChange) 
         {
             m_valueType = valueType;
             m_previousValue = previousValue;
@@ -266,14 +266,14 @@ class FilterChangeEdit : public FilterEditBase
 
         void revert(ScheduleCore* const scheduleCore) override
         {
-            // std::shared_ptr<Filter<T>> ptr = std::make_shared<Filter<T>>(m_previousValue);
+            // std::shared_ptr<FilterRule<T>> ptr = std::make_shared<FilterRule<T>>(m_previousValue);
             scheduleCore->replaceColumnFilter(m_column, m_filterIndex, m_previousValue);
             m_isReverted = true;
         }
 
         void apply(ScheduleCore* const scheduleCore) override
         {
-            // std::shared_ptr<Filter<T>> ptr = std::make_shared<Filter<T>>(m_newValue);
+            // std::shared_ptr<FilterRule<T>> ptr = std::make_shared<FilterRule<T>>(m_newValue);
             scheduleCore->replaceColumnFilter(m_column, m_filterIndex, m_newValue);
             m_isReverted = false;
         }
