@@ -139,6 +139,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${IO_DIR}/data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/io_handler.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/element_base.cpp"
+    "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filter.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filter_rule_base.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_column.cpp"

@@ -29,6 +29,23 @@ enum class Comparison
     ContainsTodayOrIsEmpty
 };
 
+enum class LogicalOperatorEnum 
+{
+    And,
+    Or
+};
+
+class LogicalOperator
+{
+    private:
+        LogicalOperatorEnum m_operatorType = LogicalOperatorEnum::And;    
+    public:
+        LogicalOperator() = default;
+        LogicalOperator(LogicalOperatorEnum type);
+        
+        bool apply(bool a, bool b) const;
+};
+
 namespace schedule_consts
 {
     const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
