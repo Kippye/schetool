@@ -144,12 +144,12 @@ TEST_CASE("Filter")
             filter.addRule(failRule);
             SECTION("'And' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::And);
+                filter.setOperator(LogicalOperatorEnum::And);
                 CHECK(filter.checkPasses(&element) == false);
             }
             SECTION("'Or' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::Or);
+                filter.setOperator(LogicalOperatorEnum::Or);
                 CHECK(filter.checkPasses(&element) == false);
             }
         }
@@ -158,12 +158,12 @@ TEST_CASE("Filter")
             filter.addRule(passRule);
             SECTION("'And' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::And);
+                filter.setOperator(LogicalOperatorEnum::And);
                 CHECK(filter.checkPasses(&element) == true);
             }
             SECTION("'Or' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::Or);
+                filter.setOperator(LogicalOperatorEnum::Or);
                 CHECK(filter.checkPasses(&element) == true);
             }
         }
@@ -173,12 +173,12 @@ TEST_CASE("Filter")
             filter.addRule(passRule);
             SECTION("'And' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::And);
+                filter.setOperator(LogicalOperatorEnum::And);
                 CHECK(filter.checkPasses(&element) == false);
             }
             SECTION("'Or' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::Or);
+                filter.setOperator(LogicalOperatorEnum::Or);
                 CHECK(filter.checkPasses(&element) == true);
             }
         }
@@ -188,12 +188,12 @@ TEST_CASE("Filter")
             filter.addRule(failRule);
             SECTION("'And' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::And);
+                filter.setOperator(LogicalOperatorEnum::And);
                 CHECK(filter.checkPasses(&element) == false);
             }
             SECTION("'Or' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::Or);
+                filter.setOperator(LogicalOperatorEnum::Or);
                 CHECK(filter.checkPasses(&element) == false);
             }
         }
@@ -203,12 +203,12 @@ TEST_CASE("Filter")
             filter.addRule(passRule);
             SECTION("'And' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::And);
+                filter.setOperator(LogicalOperatorEnum::And);
                 CHECK(filter.checkPasses(&element) == true);
             }
             SECTION("'Or' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::Or);
+                filter.setOperator(LogicalOperatorEnum::Or);
                 CHECK(filter.checkPasses(&element) == true);
             }
         }
@@ -219,12 +219,12 @@ TEST_CASE("Filter")
             filter.addRule(passRule);
             SECTION("'And' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::And);
+                filter.setOperator(LogicalOperatorEnum::And);
                 CHECK(filter.checkPasses(&element) == false);
             }
             SECTION("'Or' operator")
             {
-                filter.setOperator(BinaryOperatorEnum::Or);
+                filter.setOperator(LogicalOperatorEnum::Or);
                 CHECK(filter.checkPasses(&element) == true);
             }
         }

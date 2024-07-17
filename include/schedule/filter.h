@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <memory>
 #include "schedule_constants.h"
 #include "element_base.h"
 #include "filter_rule_container.h"
@@ -12,6 +11,9 @@ class Filter
         std::vector<FilterRuleContainer> m_rules = {};
         LogicalOperator m_operator = LogicalOperatorEnum::And;
     public:
+        Filter() = default;
+        Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::And);
+
         bool checkPasses(const ElementBase* element) const;
         FilterRuleContainer getRule(size_t index);
         std::vector<FilterRuleContainer>& getRules();

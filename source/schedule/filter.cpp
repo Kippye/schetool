@@ -1,5 +1,9 @@
 #include "filter.h"
 
+Filter::Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator)
+: m_rules(rules), m_operator(logicalOperator)
+{}
+
 bool Filter::checkPasses(const ElementBase* element) const
 {
     bool passes = true; // true by default so having 0 rules returns true
