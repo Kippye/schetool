@@ -84,9 +84,9 @@ void ScheduleGui::draw(Window& window, Input& input)
 
                     ImGui::SameLine();
 
-                    for (size_t i = 0; i < currentColumn->getFilterCount(); i++)
+                    for (size_t i = 0; i < currentColumn->getFilterGroupCount(); i++)
                     {
-                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterCount();
+                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterGroupCount();
                         if (ImGui::Button(std::string(columnFilters.at(i)->getString()).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
                         {
                             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
@@ -95,7 +95,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                             }
                         }
 
-                        if (i < currentColumn->getFilterCount() - 1)
+                        if (i < currentColumn->getFilterGroupCount() - 1)
                         {
                             ImGui::SameLine();
                         }

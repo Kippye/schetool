@@ -258,7 +258,7 @@ class Schedule
             {
                 if (addToHistory)
                 {
-                    m_editHistory.addEdit(new FilterEdit(false, column, m_core.getColumn(column)->getFilterCount() - 1, filter));
+                    m_editHistory.addEdit(new FilterEdit(false, column, m_core.getColumn(column)->getFilterGroupCount() - 1, filter));
                 }
             }
         }

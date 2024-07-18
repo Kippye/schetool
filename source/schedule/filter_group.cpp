@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "filter_group.h"
 
 FilterGroup::FilterGroup(const std::vector<Filter>& filters, LogicalOperatorEnum logicalOperator) 
@@ -18,12 +19,17 @@ bool FilterGroup::checkPasses(const ElementBase* element) const
     return passes;
 }
 
-Filter FilterGroup::getFilter(size_t index)
+bool FilterGroup::hasFilterAt(size_t index) const
+{
+    return index < m_filters.size();
+}
+
+Filter& FilterGroup::getFilter(size_t index)
 {
     if (index < m_filters.size() == false) 
     { 
         printf("FilterGroup::getFilter(%zu): Index out of range(size %zu)\n", index, m_filters.size());
-        return Filter();
+        throw std::out_of_range("Index out of range in reference getter.");
     }
 
     return m_filters.at(index);

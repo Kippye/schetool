@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
-#include "filter_rule.h"
+#include "filter_group.h"
 #include "element_base.h"
 #include "element.h"
 #include "select_container.h"
@@ -39,7 +39,7 @@ struct Column
 {
     private:
         void setupFiltersPerType();
-        std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterRuleBase>>> m_filtersPerType = {};
+        std::map<SCHEDULE_TYPE, std::vector<FilterGroup>> m_filterGroupsPerType = {};
     public:
         std::vector<ElementBase*> rows = {};
         SCHEDULE_TYPE type;
@@ -66,7 +66,7 @@ struct Column
         { 
             if (this != &other)
             {
-                m_filtersPerType = other.getFiltersPerType();
+                m_filterGroupsPerType = other.getFilterGroupsPerType();
                 type = other.type;
                 name = other.name;
                 permanent = other.permanent;
@@ -99,29 +99,41 @@ struct Column
 
         const ElementBase* getElementConst(size_t index) const;
 
-        const std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterRuleBase>>>& getFiltersPerType() const;
-        std::vector<std::shared_ptr<FilterRuleBase>>& getFilters();
-        const std::vector<std::shared_ptr<FilterRuleBase>>& getFiltersConst() const;
+        const std::map<SCHEDULE_TYPE, std::vector<FilterGroup>>& getFilterGroupsPerType() const;
+        std::vector<FilterGroup>& getFilterGroups();
+        const std::vector<FilterGroup>& getFilterGroupsConst() const;
+        size_t getFilterGroupCount() const;
         size_t getFilterCount() const;
+        size_t getFilterRuleCount() const;
+
+        bool hasFilterGroupAt(size_t index) const;
+        bool hasFilterAt(size_t groupIndex, size_t filterIndex) const;
+
+        void addFilterGroup(const FilterGroup& filter);
+        void removeFilterGroup(size_t index);
+
+        void addFilter(size_t groupIndex, const Filter& filter);
+        void removeFilter(size_t groupIndex, size_t filterIndex);
 
         template <typename T>
-        void addFilter(const FilterRule<T>& filter)
+        void addFilterRule(size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule)
         {
-            if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::addFilter(filter): There is no filters vector for the Column %s's type %d\n", name.c_str(), type); return; }
+            if (hasFilterGroupAt(groupIndex) == false) { printf("Column::addFilterRule(%zu, %zu, filterRule): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return; }
+            if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::addFilterRule(%zu, %zu, filterRule): There is no Filter at the given indices\n", groupIndex, filterIndex); return; }
 
-            m_filtersPerType.at(type).push_back(std::make_shared<FilterRule<T>>(filter));
+            m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).addRule(filterRule);
         }
 
         template <typename T>
-        void replaceFilter(size_t index, const FilterRule<T>& filter)
+        void replaceFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filter)
         {
-            if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::replaceFilter(%zu, filter): There is no filters vector for the Column %s's type %d\n", index, name.c_str(), type); return; }
-            if (index >= m_filtersPerType.at(type).size())  { printf("Column::replaceFilter(%zu): FilterRule index out of range\n", index); return; }
+            if (hasFilterGroupAt(groupIndex) == false) { printf("Column::replaceFilterRule(%zu, %zu, filterRule): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return; }
+            if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::replaceFilterRule(%zu, %zu, filterRule): There is no Filter at the given indices\n", groupIndex, filterIndex); return; }
 
-            *std::dynamic_pointer_cast<FilterRule<T>>(m_filtersPerType.at(type).at(index)) = filter;
+            m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).replaceRule(ruleIndex, filter);
         }
 
-        void removeFilter(size_t index);
+        void removeFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex);
 };
 
 struct ColumnSortComparison 
