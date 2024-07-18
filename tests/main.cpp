@@ -19,10 +19,12 @@ class testListener : public Catch::EventListenerBase
 
         void testRunStarting(Catch::TestRunInfo const&) override 
         {
+            std::cout << "TESTS BEGIN" << std::endl;
         }
 
         void testRunEnded(Catch::TestRunStats const& test) override
         {
+            std::cout << "TESTS END" << std::endl;
             program.loop();
         }
 };

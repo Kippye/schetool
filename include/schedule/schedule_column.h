@@ -106,34 +106,43 @@ struct Column
         size_t getFilterCount() const;
         size_t getFilterRuleCount() const;
 
+        // Uses the index to get the element itself (safer since it's more likely an element of the same type).
+        // Returns false if no element exists at the index.
+        // Returns true if the element passes all FilterGroups.
+        bool checkElementPassesFilters(size_t elementIndex) const;
+        // Returns true if the element passes all FilterGroups.
+        bool checkElementPassesFilters(const ElementBase* elementIndex) const;
+
         bool hasFilterGroupAt(size_t index) const;
         bool hasFilterAt(size_t groupIndex, size_t filterIndex) const;
 
-        void addFilterGroup(const FilterGroup& filter);
-        void removeFilterGroup(size_t index);
+        bool addFilterGroup(const FilterGroup& filterGroup);
+        bool removeFilterGroup(size_t index);
 
-        void addFilter(size_t groupIndex, const Filter& filter);
-        void removeFilter(size_t groupIndex, size_t filterIndex);
+        bool addFilter(size_t groupIndex, const Filter& filter);
+        bool removeFilter(size_t groupIndex, size_t filterIndex);
 
         template <typename T>
-        void addFilterRule(size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule)
+        bool addFilterRule(size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule)
         {
-            if (hasFilterGroupAt(groupIndex) == false) { printf("Column::addFilterRule(%zu, %zu, filterRule): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return; }
-            if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::addFilterRule(%zu, %zu, filterRule): There is no Filter at the given indices\n", groupIndex, filterIndex); return; }
+            if (hasFilterGroupAt(groupIndex) == false) { printf("Column::addFilterRule(%zu, %zu, filterRule): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return false; }
+            if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::addFilterRule(%zu, %zu, filterRule): There is no Filter at the given indices\n", groupIndex, filterIndex); return false; }
 
             m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).addRule(filterRule);
+            return true;
         }
 
         template <typename T>
-        void replaceFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filter)
+        bool replaceFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filter)
         {
-            if (hasFilterGroupAt(groupIndex) == false) { printf("Column::replaceFilterRule(%zu, %zu, filterRule): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return; }
-            if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::replaceFilterRule(%zu, %zu, filterRule): There is no Filter at the given indices\n", groupIndex, filterIndex); return; }
+            if (hasFilterGroupAt(groupIndex) == false) { printf("Column::replaceFilterRule(%zu, %zu, filterRule): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return false; }
+            if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::replaceFilterRule(%zu, %zu, filterRule): There is no Filter at the given indices\n", groupIndex, filterIndex); return false; }
 
             m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).replaceRule(ruleIndex, filter);
+            return true;
         }
 
-        void removeFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex);
+        bool removeFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex);
 };
 
 struct ColumnSortComparison 

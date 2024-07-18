@@ -84,4 +84,24 @@ class FilterRuleContainer
             }
             return *std::dynamic_pointer_cast<FilterRule<T>>(m_filterRule);
         }
+        template <typename T>
+        void setPassValue(T passValue)
+        {
+            if (isEmpty()) 
+            { 
+                printf("FilterRuleContainer::setPassValue(): Container is empty!\n"); 
+                return;
+            }
+            std::dynamic_pointer_cast<FilterRule<T>>(m_filterRule)->setPassValue(passValue);
+        }
+        template <typename T>
+        T getPassValue()
+        {
+            if (isEmpty()) 
+            { 
+                printf("FilterRuleContainer::setPassValue(): Container is empty!\n"); 
+                return T();
+            }
+            return std::dynamic_pointer_cast<FilterRule<T>>(m_filterRule)->getPassValue();
+        }
 };

@@ -49,22 +49,10 @@ class ScheduleCore
         const SelectOptions& getColumnSelectOptions(size_t column) const;
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
-        bool addColumnFilterGroup(size_t column, const FilterGroup& filterGroup)
-        {
-            if (existsColumnAtIndex(column) == false) { return false; }
-
-            getMutableColumn(column)->addFilterGroup(filterGroup);
-            return true;
-        }
+        bool addColumnFilterGroup(size_t column, const FilterGroup& filterGroup);
         bool removeColumnFilterGroup(size_t column, size_t groupIndex);
 
-        bool addColumnFilter(size_t column, size_t groupIndex, const Filter& filter)
-        {
-            if (existsColumnAtIndex(column) == false) { return false; }
-
-            getMutableColumn(column)->addFilter(groupIndex, filter);
-            return true;
-        }
+        bool addColumnFilter(size_t column, size_t groupIndex, const Filter& filter);
         bool removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex);
 
         template <typename T>

@@ -169,10 +169,64 @@ size_t Column::getFilterGroupCount() const
     return m_filterGroupsPerType.at(type).size();
 }
 
-void Column::removeFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex)
+bool Column::checkElementPassesFilters(const ElementBase* element) const
 {
-    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::removeFilterRule(%zu, %zu, %zu): There is no FilterGroup vector at the given index\n", groupIndex, filterIndex, ruleIndex); return; }
-    if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::removeFilterRule(%zu, %zu, %zu): Filter index out of range\n", groupIndex, filterIndex, ruleIndex); return; }
+    bool passes = true;
+
+    for (const auto& filterGroup: m_filterGroupsPerType.at(type))
+    {
+        passes = passes && filterGroup.checkPasses(element);
+    }
+
+    return passes;
+}
+
+bool Column::checkElementPassesFilters(size_t index) const
+{
+    if (hasElement(index) == false) { return false; }
+
+    return checkElementPassesFilters(getElementConst(index));
+}
+
+bool Column::addFilterGroup(const FilterGroup& filterGroup)
+{
+    if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) { printf("Column::addFilterGroup(%zu): No m_filterGroupsPerType entry for type %d\n", type); return false; }
+
+    m_filterGroupsPerType.at(type).push_back(filterGroup);
+    return true;
+}
+
+bool Column::removeFilterGroup(size_t groupIndex)
+{
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::removeFilterGroup(%zu): There is no FilterGroup at the given index\n", groupIndex); return false; }
+
+    m_filterGroupsPerType.at(type).at(groupIndex).removeFilter(groupIndex);
+    return true;
+}
+
+bool Column::addFilter(size_t groupIndex, const Filter& filter)
+{
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::addFilter(%zu, filter): No FilterGroup at given index\n", groupIndex); return false; }
+
+    m_filterGroupsPerType.at(type).at(groupIndex).addFilter(filter);
+    return true;
+}
+
+bool Column::removeFilter(size_t groupIndex, size_t filterIndex)
+{
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::removeFilter(%zu, %zu): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return false; }
+    if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::removeFilter(%zu, %zu): Filter index out of range\n", groupIndex, filterIndex); return false; }
+
+    m_filterGroupsPerType.at(type).at(groupIndex).removeFilter(filterIndex);
+    return true;
+}
+
+bool Column::removeFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex)
+{
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::removeFilterRule(%zu, %zu, %zu): There is no FilterGroup at the given index\n", groupIndex, filterIndex, ruleIndex); return false; }
+    if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::removeFilterRule(%zu, %zu, %zu): Filter index out of range\n", groupIndex, filterIndex, ruleIndex); return false; }
+    if (ruleIndex < m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).getRules().size() == false) { printf("Column::removeFilterRule(%zu, %zu, %zu): FilterRule index out of range\n", groupIndex, filterIndex, ruleIndex); return false; }
 
     m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).removeRule(ruleIndex);
+    return true;
 }

@@ -10,7 +10,7 @@ TEST_CASE("FilterGroup")
 
     SECTION("FilterGroup filters modification")
     {
-        CHECK(filterGroup.getFilter(13).getRules().size() == 0); // index out of range
+        CHECK_THROWS_AS(filterGroup.getFilter(13), std::out_of_range); // index out of range
         Filter filter = Filter();
         filterGroup.addFilter(filter);
         CHECK(filterGroup.getFilters().size() == 1); // increased size

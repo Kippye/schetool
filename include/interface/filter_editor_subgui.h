@@ -10,39 +10,51 @@
 #include "schedule_events.h"
 #include "schedule_core.h"
 
-class EditorFilterState
+class FilterGroupEditorState
 {
     private:
-        std::shared_ptr<FilterRuleBase> m_filter = NULL;
+        bool m_isValid = false;
         SCHEDULE_TYPE m_type = SCH_LAST;
+        FilterGroup m_filterGroup = FilterGroup();
     public:
-        void setFilter(const std::shared_ptr<FilterRuleBase>& filter);
-        template <typename T>
-        std::shared_ptr<FilterRule<T>> getFilter()
-        {
-            if (hasValidFilter() == false) 
-            { 
-                printf("EditorFilterState::getFilter(): Can't cast invalid filter pointer! Returning dummy shared_ptr\n"); 
-                auto errorReturn = std::make_shared<FilterRule<T>>(FilterRule<T>(T()));
-                return errorReturn; 
-            }
-            return std::dynamic_pointer_cast<FilterRule<T>>(getFilterBase());
-        }
-        std::shared_ptr<FilterRuleBase> getFilterBase();
-        void setType(SCHEDULE_TYPE type);
+        void setup(SCHEDULE_TYPE type, FilterGroup filterGroup);
         SCHEDULE_TYPE getType() const;
-        // only checks if the filter shared pointer is valid (so not NULL i guess?)
-        bool hasValidFilter() const;
+        FilterGroup& getFilterGroup(); 
+        bool getIsValid() const;
+};
+
+class FilterRuleEditorState
+{
+    private:
+        bool m_isValid = false;
+        size_t m_filterIndex = 0;
+        size_t m_filterRuleIndex = 0;
+        SCHEDULE_TYPE m_type = SCH_LAST;
+        FilterRuleContainer m_filterRule;
+    public:
+        template <typename T>
+        void setup(SCHEDULE_TYPE type, size_t filterIndex, size_t filterRuleIndex, FilterRule<T> filterRule)
+        {
+            m_type = type;
+            m_filterIndex = filterIndex;
+            m_filterRuleIndex = filterRuleIndex;
+            m_filterRule = FilterRuleContainer().fill(filterRule);
+        }
+        SCHEDULE_TYPE getType() const;
+        std::pair<size_t, size_t> getIndices() const;
+        FilterRuleContainer& getFilterRule(); 
+        bool getIsValid() const;
 };
 
 class FilterEditorSubGui : public Gui
 {
     private:
         const ScheduleCore* m_scheduleCore = NULL;
-        EditorFilterState m_filterState;
+        FilterGroupEditorState m_filterGroupState;
+        FilterRuleEditorState m_filterRuleState;
         bool m_editing = false;
         size_t m_editorColumn = 0;
-        size_t m_editorFilterIndex = 0;
+        size_t m_editorFilterGroupIndex = 0;
         unsigned int m_viewedYear = 0;
         unsigned int m_viewedMonth = 0;
         ImRect m_avoidRect;
@@ -76,22 +88,23 @@ class FilterEditorSubGui : public Gui
         Event<size_t, size_t, size_t, size_t> removeColumnFilterRule;
 
         void draw(Window& window, Input& input) override;
-        // open the editor to edit a pre-existing FilterRule
-        void open_edit(size_t column, size_t filterIndex, const ImRect& avoidRect);
-        // open the editor to add a new FilterRule to a Column
+        void drawRuleEditor();
+        // open the editor to edit a pre-existing FilterGroup
+        void open_edit(size_t column, size_t filterGroupIndex, const ImRect& avoidRect);
+        // open the editor to add a new FilterGroup to a Column
         void open_create(size_t column, const ImRect& avoidRect);
         // close the filter editor popup if it is open
         void close();
 
         template <typename T>
-        void invokeFilterEditEvent(FilterRule<T> previousValue, FilterRule<T> newValue)
+        void invokeFilterEditEvent(size_t filterIndex, size_t filterRuleIndex, FilterRule<T> previousValue, FilterRule<T> newValue)
         {
             if (m_editing)
             {
-                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, std::make_shared<FilterRule<T>>(previousValue), std::make_shared<FilterRule<T>>(newValue));
+                editColumnFilterRule.invoke(m_editorColumn, m_editorFilterGroupIndex, filterIndex, filterRuleIndex, FilterRuleContainer().fill(previousValue), FilterRuleContainer().fill(newValue));
             }
         };
 
         bool getMadeEdits() const;
-        size_t getFilterColumn() const;
+        size_t getColumn() const;
 };
