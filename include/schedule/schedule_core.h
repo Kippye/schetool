@@ -49,23 +49,41 @@ class ScheduleCore
         const SelectOptions& getColumnSelectOptions(size_t column) const;
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
-        template <typename T>
-        bool addColumnFilter(size_t column, const FilterRule<T>& filter)
+        bool addColumnFilterGroup(size_t column, const FilterGroup& filterGroup)
         {
             if (existsColumnAtIndex(column) == false) { return false; }
 
-            getMutableColumn(column)->addFilter(filter);
+            getMutableColumn(column)->addFilterGroup(filterGroup);
+            return true;
+        }
+        bool removeColumnFilterGroup(size_t column, size_t groupIndex);
+
+        bool addColumnFilter(size_t column, size_t groupIndex, const Filter& filter)
+        {
+            if (existsColumnAtIndex(column) == false) { return false; }
+
+            getMutableColumn(column)->addFilter(groupIndex, filter);
+            return true;
+        }
+        bool removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex);
+
+        template <typename T>
+        bool addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule)
+        {
+            if (existsColumnAtIndex(column) == false) { return false; }
+
+            getMutableColumn(column)->addFilterRule(groupIndex, filterIndex, filterRule);
             return true;
         }
         template <typename T>
-        bool replaceColumnFilter(size_t column, size_t index, const FilterRule<T>& filter)
+        bool replaceColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filterRule)
         {
             if (existsColumnAtIndex(column) == false) { return false; }
             
-            getMutableColumn(column)->replaceFilter(index, filter);
+            getMutableColumn(column)->replaceFilterRule(groupIndex, filterIndex, ruleIndex, filterRule);
             return true;
         }
-        bool removeColumnFilter(size_t column, size_t index);
+        bool removeColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex);
         // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 

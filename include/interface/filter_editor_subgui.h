@@ -65,9 +65,15 @@ class FilterEditorSubGui : public Gui
         FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
-        Event<size_t, std::shared_ptr<FilterRuleBase>> addColumnFilter;
-        Event<size_t, size_t, std::shared_ptr<FilterRuleBase>, std::shared_ptr<FilterRuleBase>> editColumnFilter;
-        Event<size_t, size_t> removeColumnFilter;
+        Event<size_t, FilterGroup> addColumnFilterGroup;
+        Event<size_t, size_t> removeColumnFilterGroup;
+
+        Event<size_t, size_t, Filter> addColumnFilter;
+        Event<size_t, size_t, size_t> removeColumnFilter;
+
+        Event<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
+        Event<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
+        Event<size_t, size_t, size_t, size_t> removeColumnFilterRule;
 
         void draw(Window& window, Input& input) override;
         // open the editor to edit a pre-existing FilterRule

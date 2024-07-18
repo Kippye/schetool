@@ -221,12 +221,12 @@ class FilterEdit : public FilterAddOrRemoveEditBase
             // reverting a removal means adding the filter
             if (m_isRemove)
             {
-                scheduleCore->addColumnFilter(m_column, m_filterData);
+                // scheduleCore->addColumnFilter(m_column, m_filterData);
             }
             // reverting an addition means removing the filter
             else
             {
-                scheduleCore->removeColumnFilter(m_column, m_filterIndex);
+                // scheduleCore->removeColumnFilter(m_column, m_filterIndex);
             }
 
             m_isReverted = true;
@@ -237,12 +237,12 @@ class FilterEdit : public FilterAddOrRemoveEditBase
             // applying a removal means removing the filter
             if (m_isRemove)
             {
-                scheduleCore->removeColumnFilter(m_column, m_filterIndex);
+                // scheduleCore->removeColumnFilter(m_column, m_filterIndex);
             }
             // applying an addition means adding the filter
             else
             {
-                scheduleCore->addColumnFilter(m_column, m_filterData);
+                // scheduleCore->addColumnFilter(m_column, m_filterData);
             }
 
             m_isReverted = false;
@@ -267,14 +267,15 @@ class FilterChangeEdit : public FilterEditBase
         void revert(ScheduleCore* const scheduleCore) override
         {
             // std::shared_ptr<FilterRule<T>> ptr = std::make_shared<FilterRule<T>>(m_previousValue);
-            scheduleCore->replaceColumnFilter(m_column, m_filterIndex, m_previousValue);
+            // TODO: FILTER EDIT RULE
+            // scheduleCore->replaceColumnFilter(m_column, m_filterIndex, m_previousValue);
             m_isReverted = true;
         }
 
         void apply(ScheduleCore* const scheduleCore) override
         {
             // std::shared_ptr<FilterRule<T>> ptr = std::make_shared<FilterRule<T>>(m_newValue);
-            scheduleCore->replaceColumnFilter(m_column, m_filterIndex, m_newValue);
+            // scheduleCore->replaceColumnFilter(m_column, m_filterIndex, m_newValue);
             m_isReverted = false;
         }
 

@@ -505,9 +505,10 @@ class BLF_Column : BLF_Base
             elements.push_back(BLF_Element<T>((Element<T>*)elementBase));
         }
 
-        for (auto filterBase : column->getFiltersConst())
+        for (auto filterGroup : column->getFilterGroupsConst())
         {
-            filters.push_back(BLF_Filter<T>(column->type, *std::dynamic_pointer_cast<FilterRule<T>>(filterBase)));
+            // TODO: FILTERGROUP IO
+            // filters.push_back(BLF_Filter<T>(column->type, *std::dynamic_pointer_cast<FilterRule<T>>(filterBase)));
         }
     }
 
@@ -539,7 +540,8 @@ class BLF_Column : BLF_Base
         // add filters to the column
         for (const BLF_Filter<T>& filter: filters)
         {
-            col.addFilter<T>(filter.getFilter());
+            // TODO: FILTERGROUP IO
+            // col.addFilter<T>(filter.getFilter());
         }
 
         return col;

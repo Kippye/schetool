@@ -25,9 +25,13 @@ void Schedule::init(Input& input, Interface& interface)
 
         if (auto filterEditorSubGui = scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
         {
-            filterEditorSubGui->addColumnFilter.addListener(addFilterListener); 
-            filterEditorSubGui->editColumnFilter.addListener(editFilterListener);
-            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener); 
+            filterEditorSubGui->addColumnFilter.addListener(addFilterListener);
+            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener);
+            filterEditorSubGui->addColumnFilterGroup.addListener(addFilterGroupListener);
+            filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
+            filterEditorSubGui->addColumnFilterRule.addListener(addFilterRuleListener); 
+            filterEditorSubGui->editColumnFilterRule.addListener(editFilterRuleListener);
+            filterEditorSubGui->removeColumnFilterRule.addListener(removeFilterRuleListener); 
         }
         
         scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
@@ -281,6 +285,50 @@ void Schedule::modifyColumnSelectOptions(size_t column, const SelectOptionsModif
         }
     
         m_editHistory.setEditedSinceWrite(true);
+    }
+}
+
+void Schedule::addColumnFilterGroup(size_t column, FilterGroup filterGroup, bool addToHistory)
+{
+    if (m_core.addColumnFilterGroup(column, filterGroup)) 
+    {
+        if (addToHistory)
+        {
+            // TODO: FILTER EDIT GROUP
+        }
+    }
+}
+
+void Schedule::removeColumnFilterGroup(size_t column, size_t groupIndex, bool addToHistory)
+{
+    if (m_core.removeColumnFilterGroup(column, groupIndex)) 
+    {
+        if (addToHistory)
+        {
+            // TODO: FILTER EDIT GROUP
+        }
+    }
+}
+
+void Schedule::addColumnFilter(size_t column, size_t groupIndex, Filter filter, bool addToHistory)
+{
+    if (m_core.addColumnFilter(column, groupIndex, filter))
+    {
+        if (addToHistory)
+        {
+            // TODO: FILTER EDIT FILTER
+        }
+    }
+}
+
+void Schedule::removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, bool addToHistory)
+{
+    if (m_core.removeColumnFilter(column, groupIndex, filterIndex))
+    {
+        if (addToHistory)
+        {
+            // TODO: FILTER EDIT FILTER
+        }
     }
 }
 
