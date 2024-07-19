@@ -77,16 +77,6 @@ class FilterRuleEditorSubGui : public Gui
         void close();
 
         bool getMadeEdits() const;
-
-        // Invokes the editColumnFilterRule event.
-        // template <typename T>
-        // void invokeFilterRuleEditEvent(size_t filterIndex, size_t filterRuleIndex, FilterRule<T> previousValue, FilterRule<T> newValue)
-        // {
-        //     if (m_editing)
-        //     {
-        //         editColumnFilterRule.invoke(m_editorColumn, m_editorFilterGroupIndex, filterIndex, filterRuleIndex, FilterRuleContainer().fill(previousValue), FilterRuleContainer().fill(newValue));
-        //     }
-        // };
 };
 
 class FilterEditorSubGui : public Gui
