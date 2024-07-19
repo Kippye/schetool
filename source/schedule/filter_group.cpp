@@ -40,9 +40,19 @@ std::vector<Filter>& FilterGroup::getFilters()
     return m_filters;
 }
 
+size_t FilterGroup::getFilterCount() const
+{
+    return m_filters.size();
+}
+
 void FilterGroup::setOperator(LogicalOperatorEnum newOperator)
 {
     m_operator = newOperator; // implicitly convert enum to operator
+}
+
+LogicalOperatorEnum FilterGroup::getOperatorType() const
+{
+    return m_operator.getOperatorType();
 }
 
 void FilterGroup::addFilter(const Filter& filter)

@@ -15,9 +15,13 @@ class Filter
         Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::And);
 
         bool checkPasses(const ElementBase* element) const;
+
         FilterRuleContainer getRule(size_t index);
         std::vector<FilterRuleContainer>& getRules();
+        size_t getRuleCount() const;
+
         void setOperator(LogicalOperatorEnum newOperator);
+        LogicalOperatorEnum getOperatorType() const;
 
         template <typename T>
         void addRule(const FilterRule<T>& filterRule)

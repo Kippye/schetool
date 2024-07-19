@@ -13,18 +13,18 @@ TEST_CASE("FilterGroup")
         CHECK_THROWS_AS(filterGroup.getFilter(13), std::out_of_range); // index out of range
         Filter filter = Filter();
         filterGroup.addFilter(filter);
-        CHECK(filterGroup.getFilters().size() == 1); // increased size
+        CHECK(filterGroup.getFilterCount() == 1); // increased size
         filterGroup.addFilter(filter);
-        CHECK(filterGroup.getFilters().size() == 2); // increased size
+        CHECK(filterGroup.getFilterCount() == 2); // increased size
         Filter filterWithRule = Filter();
         // filterWithRule.addRule(FilterRule<int>(52));
         // filter.replaceRule(1, thirdRule);
         // value replaced
         // CHECK(filterGroup.getFilter(1).getRule(0).getAsType<int>().getPassValue() == filterWithRule.getRule(0).getAsType<int>().getPassValue());
         filterGroup.removeFilter(0);
-        CHECK(filterGroup.getFilters().size() == 1); // size reduced
+        CHECK(filterGroup.getFilterCount() == 1); // size reduced
         filterGroup.removeFilter(100); // remove at invalid index should do nothing
-        CHECK(filterGroup.getFilters().size() == 1); // size stays the same
+        CHECK(filterGroup.getFilterCount() == 1); // size stays the same
     }
     SECTION("FilterGroup operators")
     {

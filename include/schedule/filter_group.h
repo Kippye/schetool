@@ -15,9 +15,13 @@ class FilterGroup
         FilterGroup(const std::vector<Filter>& filters, LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::And);
         bool checkPasses(const ElementBase* element) const;
         bool hasFilterAt(size_t index) const;
+
         Filter& getFilter(size_t index);
         std::vector<Filter>& getFilters();
+        size_t getFilterCount() const;
+
         void setOperator(LogicalOperatorEnum newOperator);
+        LogicalOperatorEnum getOperatorType() const;
 
         void addFilter(const Filter& filter);
 

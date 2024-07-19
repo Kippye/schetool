@@ -43,6 +43,8 @@ class LogicalOperator
         LogicalOperator() = default;
         LogicalOperator(LogicalOperatorEnum type);
         
+        LogicalOperatorEnum getOperatorType() const;
+
         bool apply(bool a, bool b) const;
 };
 
@@ -70,6 +72,11 @@ namespace schedule_consts
         "Friday",
         "Saturday",
         "Sunday",
+    };
+    const std::map<LogicalOperatorEnum, const char*> logicalOperatorStrings  =
+    {
+        { LogicalOperatorEnum::And, "AND" },
+        { LogicalOperatorEnum::Or, "OR" }
     };
 }
 

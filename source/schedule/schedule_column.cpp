@@ -127,6 +127,24 @@ const std::map<SCHEDULE_TYPE, std::vector<FilterGroup>>& Column::getFilterGroups
     return m_filterGroupsPerType;
 }
 
+FilterGroup& Column::getFilterGroup(size_t index)
+{
+    auto& filterGroups = getFilterGroups();
+
+    if (index < filterGroups.size() == false) { throw std::out_of_range("Column::getFilterGroup(): Index out of range"); }
+
+    return filterGroups.at(index);
+}
+
+const FilterGroup& Column::getFilterGroupConst(size_t index) const
+{
+    const auto& filterGroups = getFilterGroupsConst();
+
+    if (index < filterGroups.size() == false) { throw std::out_of_range("Column::getFilterGroupConst(): Index out of range"); }
+
+    return filterGroups.at(index);
+}
+
 std::vector<FilterGroup>& Column::getFilterGroups()
 {
     if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) 

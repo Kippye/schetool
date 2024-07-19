@@ -34,9 +34,19 @@ std::vector<FilterRuleContainer>& Filter::getRules()
     return m_rules;
 }
 
+size_t Filter::getRuleCount() const
+{
+    return m_rules.size();
+}
+
 void Filter::setOperator(LogicalOperatorEnum newOperator)
 {
     m_operator = newOperator; // implicitly convert enum to operator
+}
+
+LogicalOperatorEnum Filter::getOperatorType() const
+{
+    return m_operator.getOperatorType();
 }
 
 void Filter::removeRule(size_t index)

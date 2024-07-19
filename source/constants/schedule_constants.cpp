@@ -22,6 +22,11 @@ bool LogicalOperator::apply(bool a, bool b) const
     }
 }
 
+LogicalOperatorEnum LogicalOperator::getOperatorType() const
+{
+    return m_operatorType;
+}
+
 using filter_consts::TypeComparisonInfo;
 
 TypeComparisonInfo filter_consts::getComparisonInfo(SCHEDULE_TYPE type)

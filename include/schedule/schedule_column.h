@@ -100,8 +100,13 @@ struct Column
         const ElementBase* getElementConst(size_t index) const;
 
         const std::map<SCHEDULE_TYPE, std::vector<FilterGroup>>& getFilterGroupsPerType() const;
+        // Gets the FilterGroup at the given index.
+        FilterGroup& getFilterGroup(size_t index);
+        // Gets the FilterGroup at the given index.
+        const FilterGroup& getFilterGroupConst(size_t index) const;
         std::vector<FilterGroup>& getFilterGroups();
         const std::vector<FilterGroup>& getFilterGroupsConst() const;
+
         size_t getFilterGroupCount() const;
         size_t getFilterCount() const;
         size_t getFilterRuleCount() const;

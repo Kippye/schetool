@@ -67,7 +67,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                         // display the FilterRule editor to add a filter to this Column
                         if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                         {
-                            filterEditor->open_create(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                            filterEditor->openGroupCreate(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                         }
                     }
                         
@@ -93,7 +93,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                         {
                             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                             {
-                                filterEditor->open_edit(column, i, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                filterEditor->openGroupEdit(column, i, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                             }
                         }
 

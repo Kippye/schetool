@@ -120,18 +120,18 @@ TEST_CASE("Filter")
         CHECK(filter.getRule(13).isEmpty()); // index out of range
         FilterRule<int> filterRule = FilterRule<int>(52);
         filter.addRule(filterRule);
-        CHECK(filter.getRules().size() == 1); // increased size
+        CHECK(filter.getRuleCount() == 1); // increased size
         FilterRule<int> secondRule = FilterRule<int>(100);
         filter.addRule(secondRule);
-        CHECK(filter.getRules().size() == 2); // increased size
+        CHECK(filter.getRuleCount() == 2); // increased size
         FilterRule<int> thirdRule = FilterRule<int>(19);
         filter.replaceRule(1, thirdRule);
         // value replaced
         CHECK(filter.getRule(1).getAsType<int>().getPassValue() == thirdRule.getPassValue());
         filter.removeRule(0);
-        CHECK(filter.getRules().size() == 1); // size reduced
+        CHECK(filter.getRuleCount() == 1); // size reduced
         filter.removeRule(100); // remove at invalid index should do nothing
-        CHECK(filter.getRules().size() == 1); // size stays the same
+        CHECK(filter.getRuleCount() == 1); // size stays the same
     }
     SECTION("Filter operators")
     {

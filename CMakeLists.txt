@@ -147,7 +147,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_core.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit_history.cpp"
-    #"${SCHETOOL_SRC}/${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
+    # "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
 )
 
 target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags 
