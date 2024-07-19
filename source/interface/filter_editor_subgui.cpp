@@ -182,6 +182,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
 
                 if (ImGui::InputInt("##filterRuleEditor", &newValue, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
                 {
+                    m_filterRuleState.getFilterRule().setPassValue(newValue);
                     if (m_editing == true)
                     {
                         filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<int>());
@@ -484,7 +485,7 @@ void FilterRuleEditorSubGui::openEdit(SCHEDULE_TYPE type, const std::string& col
         }
     }
 
-	ImGui::OpenPopup("FilterRule Editor");
+    m_openNextFrame = true;
 }
 
 void FilterRuleEditorSubGui::openCreate(SCHEDULE_TYPE type, const std::string& columnName, size_t filterIndex, const ImRect& avoidRect)
@@ -630,7 +631,19 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
             if (ImGui::Button(std::format("{}##{};{}", filter.getRule(ruleIndex).getString(), filterIndex, ruleIndex).c_str()))
             {
-                // TODO: Open correct FilterRule Editor
+                // Open the filter rule editor to edit this rule
+                if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
+                {
+                    // TODO: Pass correct avoid rect
+                    filterRuleEditor->openEdit(m_filterGroupState.getType(), m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->name, filterIndex, ruleIndex, m_avoidRect);
+                }
+            }
+            ImGui::SameLine();
+            // Remove FilterRule button
+            if (ImGui::Button(std::format("X##RemoveFilterRule{};{}", filterIndex, ruleIndex).c_str()))
+            {
+                m_filterGroupState.getFilterGroup().getFilter(filterIndex).removeRule(ruleIndex);
+                removeColumnFilterRule.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), filterIndex, ruleIndex);
             }
         };
 
@@ -673,6 +686,14 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                         // TODO: Pass correct avoid rect
                         filterRuleEditor->openCreate(m_filterGroupState.getType(), m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->name, f, m_avoidRect);
                     }
+                }
+
+                ImGui::SameLine(ImGui::GetWindowWidth() - 30);
+                // Remove filter button
+                if (ImGui::Button(std::format("X##RemoveFilter{}", f).c_str()))
+                {
+                    m_filterGroupState.getFilterGroup().removeFilter(f);
+                    removeColumnFilter.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), f);
                 }
             }
             ImGui::EndChild();
