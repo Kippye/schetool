@@ -218,7 +218,7 @@ bool Column::removeFilterGroup(size_t groupIndex)
 {
     if (hasFilterGroupAt(groupIndex) == false) { printf("Column::removeFilterGroup(%zu): There is no FilterGroup at the given index\n", groupIndex); return false; }
 
-    m_filterGroupsPerType.at(type).at(groupIndex).removeFilter(groupIndex);
+    m_filterGroupsPerType.at(type).erase(m_filterGroupsPerType.at(type).begin() + groupIndex);
     return true;
 }
 

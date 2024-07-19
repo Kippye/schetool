@@ -29,9 +29,12 @@ void Schedule::init(Input& input, Interface& interface)
             filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener);
             filterEditorSubGui->addColumnFilterGroup.addListener(addFilterGroupListener);
             filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
-            filterEditorSubGui->addColumnFilterRule.addListener(addFilterRuleListener); 
-            filterEditorSubGui->editColumnFilterRule.addListener(editFilterRuleListener);
-            filterEditorSubGui->removeColumnFilterRule.addListener(removeFilterRuleListener); 
+            filterEditorSubGui->removeColumnFilterRule.addListener(removeFilterRuleListener);
+            if (auto filterRuleEditorSubGui = filterEditorSubGui->getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
+            {
+                filterRuleEditorSubGui->addColumnFilterRule.addListener(addFilterRuleListener); 
+                filterRuleEditorSubGui->editColumnFilterRule.addListener(editFilterRuleListener);
+            }
         }
         
         scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);

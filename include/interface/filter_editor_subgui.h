@@ -38,11 +38,15 @@ class FilterGroupEditorState
 {
     private:
         bool m_isValid = false;
+        size_t m_columnIndex = 0;
+        size_t m_filterGroupIndex = 0;
         SCHEDULE_TYPE m_type = SCH_LAST;
         FilterGroup m_filterGroup = FilterGroup();
     public:
-        void setup(SCHEDULE_TYPE type, FilterGroup filterGroup);
+        void setup(SCHEDULE_TYPE type, size_t columnIndex, size_t filterGroupIndex, FilterGroup filterGroup);
         SCHEDULE_TYPE getType() const;
+        size_t getColumnIndex() const;
+        size_t getFilterGroupIndex() const;
         FilterGroup& getFilterGroup(); 
         bool getIsValid() const;
 };
@@ -58,12 +62,11 @@ class FilterRuleEditorSubGui : public Gui
         unsigned int m_viewedMonth = 0;
         bool m_openNextFrame = false;
         ImRect m_avoidRect;
-        // PRIVATE Events only for FilterEditorSubGui
-        Event<size_t, size_t, FilterRuleContainer> filterRuleAdded;
-        Event<size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> filterRuleEdited;
-        Event<size_t, size_t, size_t> filterRuleRemoved;
     public:
         FilterRuleEditorSubGui(const char* ID, FilterGroupEditorState& filterGroupState);
+        
+        Event<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
+        Event<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
 
         void draw(Window& window, Input& input) override;
         // open the editor to edit a pre-existing FilterRule
@@ -91,21 +94,18 @@ class FilterEditorSubGui : public Gui
     private:
         const ScheduleCore* m_scheduleCore = NULL;
         FilterGroupEditorState m_filterGroupState;
-        bool m_editing = false;
-        size_t m_editorColumn = 0;
-        size_t m_editorFilterGroupIndex = 0;
         ImRect m_avoidRect;
 
         std::function<void(size_t)> columnAddedListener = std::function<void(size_t)>([&](size_t column)
         {
-            if (column <= m_editorColumn)
+            if (column <= m_filterGroupState.getColumnIndex())
             {
                 close();
             }
         });
         std::function<void(size_t)> columnRemovedListener = std::function<void(size_t)>([&](size_t column)
         {
-            if (column <= m_editorColumn)
+            if (column <= m_filterGroupState.getColumnIndex())
             {
                 close();
             }
@@ -120,16 +120,14 @@ class FilterEditorSubGui : public Gui
         Event<size_t, size_t, Filter> addColumnFilter;
         Event<size_t, size_t, size_t> removeColumnFilter;
 
-        Event<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
-        Event<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
         Event<size_t, size_t, size_t, size_t> removeColumnFilterRule;
 
         void draw(Window& window, Input& input) override;
         void drawRuleEditor();
         // open the editor to edit a pre-existing FilterGroup
         void openGroupEdit(size_t column, size_t filterGroupIndex, const ImRect& avoidRect);
-        // open the editor to add a new FilterGroup to a Column
-        void openGroupCreate(size_t column, const ImRect& avoidRect);
+        // quickly create a new FilterGroup for a Column and then run openGroupEdit() to edit it.
+        void createGroupAndEdit(size_t column, const ImRect& avoidRect);
         // close the filter editor popup if it is open
         void close();
 
