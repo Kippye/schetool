@@ -353,6 +353,15 @@ bool ScheduleCore::removeColumnFilterGroup(size_t column, size_t groupIndex)
     return getMutableColumn(column)->removeFilterGroup(groupIndex);
 }
 
+bool ScheduleCore::setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) { return false; }
+
+    getMutableColumn(column)->getFilterGroup(groupIndex).setName(name);
+    return true;
+}
+
 bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, const Filter& filter)
 {
     if (existsColumnAtIndex(column) == false) { return false; }

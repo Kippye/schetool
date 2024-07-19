@@ -1,8 +1,8 @@
 #include <stdexcept>
 #include "filter_group.h"
 
-FilterGroup::FilterGroup(const std::vector<Filter>& filters, LogicalOperatorEnum logicalOperator) 
-: m_filters(filters), m_operator(logicalOperator)
+FilterGroup::FilterGroup(const std::vector<Filter>& filters, const std::string& name, LogicalOperatorEnum logicalOperator) 
+: m_filters(filters), m_name(name), m_operator(logicalOperator)
 {}
 
 bool FilterGroup::checkPasses(const ElementBase* element) const
@@ -43,6 +43,16 @@ std::vector<Filter>& FilterGroup::getFilters()
 size_t FilterGroup::getFilterCount() const
 {
     return m_filters.size();
+}
+
+void FilterGroup::setName(const std::string& name)
+{
+    m_name = name;
+}
+
+std::string FilterGroup::getName() const
+{
+    return m_name;
 }
 
 void FilterGroup::setOperator(LogicalOperatorEnum newOperator)

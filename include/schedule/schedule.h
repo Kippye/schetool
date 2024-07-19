@@ -48,6 +48,10 @@ class Schedule
         {
             addColumnFilterGroup(col, filterGroup);
         };
+        std::function<void(size_t, size_t, std::string)> setFilterGroupNameListener = [&](size_t col, size_t groupIndex, std::string name)
+        {
+            setColumnFilterGroupName(col, groupIndex, name);
+        };
         std::function<void(size_t, size_t)> removeFilterGroupListener = [&](size_t col, size_t groupIndex)
         {
             removeColumnFilterGroup(col, groupIndex);
@@ -269,8 +273,10 @@ class Schedule
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory = true);
+
         void addColumnFilterGroup(size_t column, FilterGroup filterGroup, bool addToHistory = true);
         void removeColumnFilterGroup(size_t column, size_t groupIndex, bool addToHistory = true);
+        void setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name, bool addToHistory = true);
 
         void addColumnFilter(size_t column, size_t groupIndex, Filter filter, bool addToHistory = true);
         void removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, bool addToHistory = true);

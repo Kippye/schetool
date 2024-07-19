@@ -115,6 +115,7 @@ class FilterEditorSubGui : public Gui
 
         // Events
         Event<size_t, FilterGroup> addColumnFilterGroup;
+        Event<size_t, size_t, std::string> setColumnFilterGroupName;
         Event<size_t, size_t> removeColumnFilterGroup;
 
         Event<size_t, size_t, Filter> addColumnFilter;

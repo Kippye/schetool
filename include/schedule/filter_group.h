@@ -9,16 +9,20 @@ class FilterGroup
 {
     private:
         std::vector<Filter> m_filters = {};
+        std::string m_name = "Filter Group";
         LogicalOperator m_operator = LogicalOperatorEnum::And;
     public:
         FilterGroup() = default;
-        FilterGroup(const std::vector<Filter>& filters, LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::And);
+        FilterGroup(const std::vector<Filter>& filters, const std::string& name = "Filter Group", LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::And);
         bool checkPasses(const ElementBase* element) const;
         bool hasFilterAt(size_t index) const;
 
         Filter& getFilter(size_t index);
         std::vector<Filter>& getFilters();
         size_t getFilterCount() const;
+
+        void setName(const std::string& name);
+        std::string getName() const;
 
         void setOperator(LogicalOperatorEnum newOperator);
         LogicalOperatorEnum getOperatorType() const;

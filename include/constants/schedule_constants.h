@@ -52,6 +52,7 @@ namespace schedule_consts
 {
     const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
     const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
+    const size_t FILTER_GROUP_NAME_MAX_LENGTH = 30;
     const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
     {
         {SCH_BOOL, "Checkbox"},

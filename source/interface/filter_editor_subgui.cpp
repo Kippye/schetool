@@ -612,10 +612,13 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		bool isPermanentColumn = m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->permanent;
 		tm formatTime;
 
-        char buf[64];
-        if (ImGui::InputText("##FilterGroupNameInput", buf, 64))
+        std::string groupName = m_filterGroupState.getFilterGroup().getName();
+        groupName.reserve(schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
+        char* buf = groupName.data();
+        if (ImGui::InputText("##FilterGroupNameInput", buf, schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH))
         {
-            // TODO: Implement
+            m_filterGroupState.getFilterGroup().setName(buf);
+            setColumnFilterGroupName.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), std::string(buf)); 
         }
 
         ImGui::SameLine();

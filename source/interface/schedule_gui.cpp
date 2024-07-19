@@ -62,9 +62,9 @@ void ScheduleGui::draw(Window& window, Input& input)
                 {
                     ImGui::TableSetColumnIndex(column);
 
-                    if (ImGui::SmallButton(std::string("+##addFilter").append(std::to_string(column)).c_str()))
+                    if (ImGui::SmallButton(std::string("+##addFilterGroup").append(std::to_string(column)).c_str()))
                     {
-                        // display the FilterRule editor to add a filter to this Column
+                        // display the FilterGroup editor to add a filter group to this Column
                         if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                         {
                             filterEditor->createGroupAndEdit(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
@@ -89,7 +89,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                         float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterGroupCount();
                         // TODO: Display FilterGroup name?
                         // if (ImGui::Button(std::string(columnFilterGroups.at(i)->getString()).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
-                        if (ImGui::Button(std::string(currentColumn->name).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
+                        if (ImGui::Button(currentColumn->getFilterGroupConst(i).getName().append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
                         {
                             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                             {

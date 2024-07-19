@@ -25,10 +25,11 @@ void Schedule::init(Input& input, Interface& interface)
 
         if (auto filterEditorSubGui = scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
         {
-            filterEditorSubGui->addColumnFilter.addListener(addFilterListener);
-            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener);
             filterEditorSubGui->addColumnFilterGroup.addListener(addFilterGroupListener);
             filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
+            filterEditorSubGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
+            filterEditorSubGui->addColumnFilter.addListener(addFilterListener);
+            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener);
             filterEditorSubGui->removeColumnFilterRule.addListener(removeFilterRuleListener);
             if (auto filterRuleEditorSubGui = filterEditorSubGui->getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
             {
@@ -309,6 +310,17 @@ void Schedule::removeColumnFilterGroup(size_t column, size_t groupIndex, bool ad
         if (addToHistory)
         {
             // TODO: FILTER EDIT GROUP
+        }
+    }
+}
+
+void Schedule::setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name, bool addToHistory)
+{
+    if (m_core.setColumnFilterGroupName(column, groupIndex, name))
+    {
+        if (addToHistory)
+        {
+            // TODO: FILTER EDIT GROUP NAME
         }
     }
 }
