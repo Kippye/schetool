@@ -37,7 +37,7 @@ class FilterRule : public FilterRuleBase
             Element<T> valueElement = Element<T>();
             valueElement.setValue(m_passValue);
             std::string filterString = std::string(filter_consts::comparisonStrings.at(m_comparison));
-            if (m_comparison != Comparison::IsEmpty && m_comparison != Comparison::ContainsToday && m_comparison != Comparison::ContainsTodayOrIsEmpty)
+            if (m_comparison != Comparison::IsEmpty && m_comparison != Comparison::ContainsToday)
             {
                 filterString.append(" ").append(valueElement.getString());
             }
@@ -68,6 +68,10 @@ inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element)
         {
             return (value != m_passValue);
         }
+        case Comparison::IsEmpty:
+        {
+            return (value.getSelection().empty());
+        }
         case Comparison::Contains:
         {
             return (value.contains(m_passValue));
@@ -91,6 +95,10 @@ inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element
         {
             return (value != m_passValue);
         }
+        case Comparison::IsEmpty:
+        {
+            return (value.getSelection().empty());
+        }
         case Comparison::Contains:
         {
             return (value.contains(m_passValue));
@@ -98,10 +106,6 @@ inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element
         case Comparison::ContainsToday:
         {
             return (value.contains(WeekdayContainer::getCurrentSystemWeekday()));
-        }
-        case Comparison::ContainsTodayOrIsEmpty:
-        {
-            return (value.contains(WeekdayContainer::getCurrentSystemWeekday()) || value.getSelection().size() == 0);
         }
         default: isComparisonValidForElement(element); return false;
     }
