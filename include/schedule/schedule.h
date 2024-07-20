@@ -52,6 +52,10 @@ class Schedule
         {
             setColumnFilterGroupName(col, groupIndex, name);
         };
+        std::function<void(size_t, size_t, LogicalOperatorEnum)> setFilterGroupOperatorListener = [&](size_t col, size_t groupIndex, LogicalOperatorEnum logicalOperator)
+        {
+            setColumnFilterGroupOperator(col, groupIndex, logicalOperator);
+        };
         std::function<void(size_t, size_t)> removeFilterGroupListener = [&](size_t col, size_t groupIndex)
         {
             removeColumnFilterGroup(col, groupIndex);
@@ -60,6 +64,10 @@ class Schedule
         std::function<void(size_t, size_t, Filter)> addFilterListener = [&](size_t col, size_t groupIndex, Filter filter)
         {
             addColumnFilter(col, groupIndex, filter);
+        };
+        std::function<void(size_t, size_t, size_t, LogicalOperatorEnum)> setFilterOperatorListener = [&](size_t col, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator)
+        {
+            setColumnFilterOperator(col, groupIndex, filterIndex, logicalOperator);
         };
         std::function<void(size_t, size_t, size_t)> removeFilterListener = [&](size_t col, size_t groupIndex, size_t filterIndex)
         {
@@ -277,9 +285,11 @@ class Schedule
         void addColumnFilterGroup(size_t column, FilterGroup filterGroup, bool addToHistory = true);
         void removeColumnFilterGroup(size_t column, size_t groupIndex, bool addToHistory = true);
         void setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name, bool addToHistory = true);
+        void setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator, bool addToHistory = true);
 
         void addColumnFilter(size_t column, size_t groupIndex, Filter filter, bool addToHistory = true);
         void removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, bool addToHistory = true);
+        void setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator, bool addToHistory = true);
 
         template <typename T>
         void addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, FilterRule<T> filterRule, bool addToHistory = true)

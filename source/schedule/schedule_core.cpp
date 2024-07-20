@@ -362,11 +362,29 @@ bool ScheduleCore::setColumnFilterGroupName(size_t column, size_t groupIndex, co
     return true;
 }
 
+bool ScheduleCore::setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) { return false; }
+
+    getMutableColumn(column)->getFilterGroup(groupIndex).setOperator(logicalOperator);
+    return true;
+}
+
 bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, const Filter& filter)
 {
     if (existsColumnAtIndex(column) == false) { return false; }
 
     return getMutableColumn(column)->addFilter(groupIndex, filter);
+}
+
+bool ScheduleCore::setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterAt(groupIndex, filterIndex) == false) { return false; }
+
+    getMutableColumn(column)->getFilterGroup(groupIndex).getFilter(filterIndex).setOperator(logicalOperator);
+    return true;
 }
 
 bool ScheduleCore::removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex)

@@ -53,8 +53,10 @@ class ScheduleCore
         bool addColumnFilterGroup(size_t column, const FilterGroup& filterGroup);
         bool removeColumnFilterGroup(size_t column, size_t groupIndex);
         bool setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name);
+        bool setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator);
 
         bool addColumnFilter(size_t column, size_t groupIndex, const Filter& filter);
+        bool setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator);
         bool removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex);
 
         template <typename T>

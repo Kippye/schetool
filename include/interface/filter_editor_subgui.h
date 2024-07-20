@@ -106,9 +106,11 @@ class FilterEditorSubGui : public Gui
         // Events
         Event<size_t, FilterGroup> addColumnFilterGroup;
         Event<size_t, size_t, std::string> setColumnFilterGroupName;
+        Event<size_t, size_t, LogicalOperatorEnum> setColumnFilterGroupOperator;
         Event<size_t, size_t> removeColumnFilterGroup;
 
         Event<size_t, size_t, Filter> addColumnFilter;
+        Event<size_t, size_t, size_t, LogicalOperatorEnum> setColumnFilterOperator;
         Event<size_t, size_t, size_t> removeColumnFilter;
 
         Event<size_t, size_t, size_t, size_t> removeColumnFilterRule;

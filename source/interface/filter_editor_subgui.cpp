@@ -652,6 +652,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                                 if (ImGui::Selectable(operatorString, isSelected))
                                 {
                                     filter.setOperator(logicalOperator);
+                                    setColumnFilterOperator.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), f, logicalOperator);
                                 }
                             }
 
@@ -690,6 +691,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                         if (ImGui::Selectable(operatorString, isSelected))
                         {
                             m_filterGroupState.getFilterGroup().setOperator(logicalOperator);
+                            setColumnFilterGroupOperator.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), logicalOperator);
                         }
                     }
 

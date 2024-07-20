@@ -28,7 +28,9 @@ void Schedule::init(Input& input, Interface& interface)
             filterEditorSubGui->addColumnFilterGroup.addListener(addFilterGroupListener);
             filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
             filterEditorSubGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
+            filterEditorSubGui->setColumnFilterGroupOperator.addListener(setFilterGroupOperatorListener);
             filterEditorSubGui->addColumnFilter.addListener(addFilterListener);
+            filterEditorSubGui->setColumnFilterOperator.addListener(setFilterOperatorListener);
             filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener);
             filterEditorSubGui->removeColumnFilterRule.addListener(removeFilterRuleListener);
             if (auto filterRuleEditorSubGui = filterEditorSubGui->getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
@@ -325,6 +327,17 @@ void Schedule::setColumnFilterGroupName(size_t column, size_t groupIndex, const 
     }
 }
 
+void Schedule::setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator, bool addToHistory)
+{
+    if (m_core.setColumnFilterGroupOperator(column, groupIndex, logicalOperator))
+    {
+        if (addToHistory)
+        {
+            // TODO: FILTER EDIT GROUP OPERATOR
+        }
+    }
+}
+
 void Schedule::addColumnFilter(size_t column, size_t groupIndex, Filter filter, bool addToHistory)
 {
     if (m_core.addColumnFilter(column, groupIndex, filter))
@@ -332,6 +345,17 @@ void Schedule::addColumnFilter(size_t column, size_t groupIndex, Filter filter, 
         if (addToHistory)
         {
             // TODO: FILTER EDIT FILTER
+        }
+    }
+}
+
+void Schedule::setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator, bool addToHistory)
+{
+    if (m_core.setColumnFilterOperator(column, groupIndex, filterIndex, logicalOperator))
+    {
+        if (addToHistory)
+        {
+            // TODO: FILTER EDIT GROUP OPERATOR
         }
     }
 }
