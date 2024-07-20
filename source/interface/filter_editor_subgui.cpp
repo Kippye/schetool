@@ -62,7 +62,7 @@ bool FilterGroupEditorState::getIsValid() const
 }
 
 
-FilterRuleEditorSubGui::FilterRuleEditorSubGui(const char* ID, FilterGroupEditorState& filterGroupState) : Gui(ID), m_filterGroupState(filterGroupState)
+FilterRuleEditorSubGui::FilterRuleEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, FilterGroupEditorState& filterGroupState) : Gui(ID), m_scheduleCore(scheduleCore), m_filterGroupState(filterGroupState)
 {
 
 }
@@ -229,35 +229,49 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
 				SelectContainer value = m_filterRuleState.getFilterRule().getPassValue<SelectContainer>();
                 auto prevFilter = m_filterRuleState.getFilterRule().getAsType<SelectContainer>(); 
 
-                bool comparisonChanged = displayComparisonCombo(SCH_SELECT).first;
+                auto [comparisonChanged, newComparison] = displayComparisonCombo(SCH_SELECT);
 
-                auto selection = value.getSelection();
-                // TODO: Get select options somehow
-				// const std::vector<std::string>& optionNames = m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptions();
+                if (comparisonChanged && m_editing == true)
+                {
+                    filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<SelectContainer>());
+                    invokeEditFilterRuleEvent(FilterRuleContainer().fill(prevFilter));
+                }
 
-                // Options
-				// for (size_t i = 0; i < optionNames.size(); i++)
-				// {
-				// 	bool selected = selection.find(i) != selection.end();
+                if (newComparison != Comparison::IsEmpty)
+                {
+                    auto selection = value.getSelection();
+                    const std::vector<std::string>& optionNames = m_scheduleCore->getColumnSelectOptions(m_filterGroupState.getColumnIndex()).getOptions();
+                    // Options
+                    for (size_t i = 0; i < optionNames.size(); i++)
+                    {
+                        bool selected = selection.find(i) != selection.end();
 
-                //     if (ImGui::Checkbox(std::string("##SelectFilterEditorCheck").append(std::to_string(i)).c_str(), &selected))
-                //     {
-                //         value.setSelected(i, selected);
-                //         m_filterRuleState.getFilterRule().getAsType<SelectContainer>()->setPassValue(value);
-                //         invokeFilterEditEvent<SelectContainer>(prevFilter, *m_filterRuleState.getFilterRule().getAsType<SelectContainer>());
-                //     }
+                        auto setCurrentOptionSelected = [&](bool newSelected)
+                        {
+                            value.setSelected(i, newSelected);
+                            m_filterRuleState.getFilterRule().setPassValue(value);
+                            if (m_editing == true)
+                            {
+                                filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<SelectContainer>());
+                                invokeEditFilterRuleEvent(FilterRuleContainer().fill(prevFilter));
+                            }
+                        };
 
-                //     ImGui::SameLine();
+                        if (ImGui::Checkbox(std::string("##SelectFilterEditorCheck").append(std::to_string(i)).c_str(), &selected))
+                        {
+                            setCurrentOptionSelected(selected);
+                        }
 
-				// 	std::string optionName = std::string(optionNames[i]);
+                        ImGui::SameLine();
 
-				// 	if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
-				// 	{
-				// 		value.setSelected(i, selected);
-                //         m_filterRuleState.getFilterRule().getAsType<SelectContainer>()->setPassValue(value);
-                //         invokeFilterEditEvent<SelectContainer>(prevFilter, *m_filterRuleState.getFilterRule().getAsType<SelectContainer>());
-				// 	}
-				// }
+                        std::string optionName = std::string(optionNames[i]);
+
+                        if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
+                        {
+                            setCurrentOptionSelected(selected);
+                        }
+                    }
+                }
                 break;
             }
             case(SCH_WEEKDAY):
@@ -555,7 +569,7 @@ FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* sched
 	m_scheduleCore = scheduleCore;
     scheduleEvents.columnAdded.addListener(columnAddedListener);
     scheduleEvents.columnRemoved.addListener(columnRemovedListener);
-	addSubGui("FilterRuleEditorSubGui", new FilterRuleEditorSubGui("FilterRuleEditorSubGui", m_filterGroupState));
+	addSubGui("FilterRuleEditorSubGui", new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, m_filterGroupState));
 }
 
 void FilterEditorSubGui::draw(Window& window, Input& input)

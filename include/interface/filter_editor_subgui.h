@@ -54,6 +54,7 @@ class FilterGroupEditorState
 class FilterRuleEditorSubGui : public Gui
 {
     private:
+        const ScheduleCore* m_scheduleCore = NULL;
         FilterRuleEditorState m_filterRuleState;
         FilterGroupEditorState& m_filterGroupState;
         bool m_editing = false;
@@ -63,7 +64,7 @@ class FilterRuleEditorSubGui : public Gui
         bool m_openNextFrame = false;
         ImRect m_avoidRect;
     public:
-        FilterRuleEditorSubGui(const char* ID, FilterGroupEditorState& filterGroupState);
+        FilterRuleEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, FilterGroupEditorState& filterGroupState);
         
         Event<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
         Event<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
