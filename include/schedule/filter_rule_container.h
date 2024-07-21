@@ -75,7 +75,7 @@ class FilterRuleContainer
             return *this;
         }
         template <typename T>
-        FilterRule<T> getAsType()
+        FilterRule<T> getAsType() const
         {
             if (isEmpty()) 
             { 
@@ -95,7 +95,7 @@ class FilterRuleContainer
             std::dynamic_pointer_cast<FilterRule<T>>(m_filterRule)->setPassValue(passValue);
         }
         template <typename T>
-        T getPassValue()
+        T getPassValue() const
         {
             if (isEmpty()) 
             { 

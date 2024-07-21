@@ -235,14 +235,17 @@ std::string ColumnPropertyEdit::getColumnName() const
 
 
 // FilterEditBase
-FilterEditBase::FilterEditBase(size_t column, size_t filterIndex, ScheduleEditType editType) : ScheduleEdit(editType)
+FilterEditBase::FilterEditBase(ScheduleEditType editType, size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex) : ScheduleEdit(editType)
 {
-    m_column = column;
+    m_columnIndex = column;
+    m_filterGroupIndex = filterGroupIndex;
     m_filterIndex = filterIndex;
+    m_filterRuleIndex = filterRuleIndex;
 }
 
-// FilterAddOrRemoveEditBase
-FilterAddOrRemoveEditBase::FilterAddOrRemoveEditBase(bool isRemove, size_t column, size_t filterIndex) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterAddOrRemove) 
+// FilterRuleAddOrRemoveEditBase
+FilterRuleAddOrRemoveEditBase::FilterRuleAddOrRemoveEditBase(bool isRemove, size_t columnIndex, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex) 
+: FilterEditBase(ScheduleEditType::FilterRuleAddOrRemove, columnIndex, filterGroupIndex, filterIndex, filterRuleIndex) 
 {
     m_isRemove = isRemove;
 }

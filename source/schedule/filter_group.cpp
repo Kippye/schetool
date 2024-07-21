@@ -34,6 +34,17 @@ Filter& FilterGroup::getFilter(size_t index)
 
     return m_filters.at(index);
 }
+  
+const Filter& FilterGroup::getFilterConst(size_t index) const
+{
+    if (index < m_filters.size() == false) 
+    { 
+        printf("FilterGroup::getFilterConst(%zu): Index out of range(size %zu)\n", index, m_filters.size());
+        throw std::out_of_range("Index out of range in reference getter.");
+    }
+
+    return m_filters.at(index);
+}
 
 std::vector<Filter>& FilterGroup::getFilters()
 {

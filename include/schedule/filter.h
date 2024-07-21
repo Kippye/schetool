@@ -17,6 +17,7 @@ class Filter
         bool checkPasses(const ElementBase* element) const;
 
         FilterRuleContainer getRule(size_t index);
+        const FilterRuleContainer& getRuleConst(size_t index) const;
         std::vector<FilterRuleContainer>& getRules();
         size_t getRuleCount() const;
 

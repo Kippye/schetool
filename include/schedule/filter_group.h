@@ -18,6 +18,7 @@ class FilterGroup
         bool hasFilterAt(size_t index) const;
 
         Filter& getFilter(size_t index);
+        const Filter& getFilterConst(size_t index) const;
         std::vector<Filter>& getFilters();
         size_t getFilterCount() const;
 

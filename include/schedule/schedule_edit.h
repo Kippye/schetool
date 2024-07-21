@@ -12,8 +12,8 @@ enum class ScheduleEditType
     RowAddOrRemove,
     ColumnAddOrRemove,
     ColumnPropertyChange,
-    FilterAddOrRemove,
-    FilterChange
+    FilterRuleAddOrRemove,
+    FilterRuleChange
 };
 
 enum COLUMN_PROPERTY
@@ -176,28 +176,40 @@ class ColumnPropertyEdit : public ScheduleEdit
 class FilterEditBase : public ScheduleEdit
 {
     protected:
-        size_t m_column;
-        size_t m_filterIndex;
+        size_t m_columnIndex = 0;
+        size_t m_filterGroupIndex = 0;
+        size_t m_filterIndex = 0;
+        size_t m_filterRuleIndex = 0;
     public:
-        FilterEditBase(size_t column, size_t filterIndex, ScheduleEditType editType);
+        FilterEditBase(ScheduleEditType editType, size_t columnIndex, size_t filterGroupIndex, size_t filterIndex = 0, size_t filterRuleIndex = 0);
 
-        size_t getColumn() const
+        size_t getColumnIndex() const
         {
-            return m_column;
+            return m_columnIndex;
         }
+
+        size_t getFilterGroupIndex() const
+        {
+            return m_filterGroupIndex;
+        }
+};
+
+class FilterRuleAddOrRemoveEditBase : public FilterEditBase
+{
+    protected:
+        bool m_isRemove = false;
+    public:
+        FilterRuleAddOrRemoveEditBase(bool isRemove, size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex);
 
         size_t getFilterIndex() const
         {
             return m_filterIndex;
         }
-};
 
-class FilterAddOrRemoveEditBase : public FilterEditBase
-{
-    protected:
-        bool m_isRemove = false;
-    public:
-        FilterAddOrRemoveEditBase(bool isRemove, size_t column, size_t filterIndex);
+        size_t getFilterRuleIndex() const
+        {
+            return m_filterRuleIndex;
+        }
 
         bool getIsRemove() const
         {
@@ -206,27 +218,28 @@ class FilterAddOrRemoveEditBase : public FilterEditBase
 };
 
 template <typename T>
-class FilterEdit : public FilterAddOrRemoveEditBase
+class FilterRuleAddOrRemoveEdit : public FilterRuleAddOrRemoveEditBase
 {
     private:
-        FilterRule<T> m_filterData = FilterRule<T>(T());
+        FilterRule<T> m_filterRule = FilterRule<T>(T());
     public:
-        FilterEdit(bool isRemove, size_t column, size_t filterIndex, const FilterRule<T>& filterData) : FilterAddOrRemoveEditBase(isRemove, column, filterIndex) 
+        FilterRuleAddOrRemoveEdit(bool isRemove, size_t columnIndex, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex, const FilterRule<T>& filterRule) 
+        : FilterRuleAddOrRemoveEditBase(isRemove, columnIndex, filterGroupIndex, filterIndex, filterRuleIndex) 
         {
-            m_filterData = filterData;
+            m_filterRule = filterRule;
         }
 
         void revert(ScheduleCore* const scheduleCore) override
         {
-            // reverting a removal means adding the filter
+            // reverting a removal means adding the rule
             if (m_isRemove)
             {
-                // scheduleCore->addColumnFilter(m_column, m_filterData);
+                scheduleCore->addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRule);
             }
-            // reverting an addition means removing the filter
+            // reverting an addition means removing the rule
             else
             {
-                // scheduleCore->removeColumnFilter(m_column, m_filterIndex);
+                scheduleCore->removeColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex);
             }
 
             m_isReverted = true;
@@ -237,12 +250,12 @@ class FilterEdit : public FilterAddOrRemoveEditBase
             // applying a removal means removing the filter
             if (m_isRemove)
             {
-                // scheduleCore->removeColumnFilter(m_column, m_filterIndex);
+                scheduleCore->removeColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex);
             }
             // applying an addition means adding the filter
             else
             {
-                // scheduleCore->addColumnFilter(m_column, m_filterData);
+                scheduleCore->addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRule);
             }
 
             m_isReverted = false;
@@ -257,7 +270,7 @@ class FilterChangeEdit : public FilterEditBase
         FilterRule<T> m_previousValue = FilterRule<T>(T());
         FilterRule<T> m_newValue = FilterRule<T>(T());
     public:
-        FilterChangeEdit(size_t column, size_t filterIndex, SCHEDULE_TYPE valueType, const FilterRule<T>& previousValue, const FilterRule<T>& newValue) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterChange) 
+        FilterChangeEdit(size_t column, size_t filterIndex, SCHEDULE_TYPE valueType, const FilterRule<T>& previousValue, const FilterRule<T>& newValue) : FilterEditBase(ScheduleEditType::FilterRuleChange, column, 0, 0, filterIndex) 
         {
             m_valueType = valueType;
             m_previousValue = previousValue;

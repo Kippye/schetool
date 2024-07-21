@@ -298,8 +298,8 @@ class Schedule
             {
                 if (addToHistory)
                 {
-                    // TODO: FILTER EDIT RULE
-                    // m_editHistory.addEdit(new FilterEdit(false, column, m_core.getColumn(column)->getFilterGroupCount() - 1, filter));
+                    size_t filterRuleIndex = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount() - 1;
+                    m_editHistory.addEdit(new FilterRuleAddOrRemoveEdit(false, column, groupIndex, filterIndex, filterRuleIndex, filterRule));
                 }
             }
         }
@@ -318,14 +318,13 @@ class Schedule
         template <typename T>
         void removeColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, bool addToHistory = true)  
         {
-            // TODO: FILTER EDIT RULE
-            // FilterRule<T> filterRule = *std::dynamic_pointer_cast<FilterRule<T>>(m_core.getColumn(column)->getFiltersConst().at(index));
+            FilterRule<T> filterRule = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleConst(ruleIndex).getAsType<T>();
 
             if (m_core.removeColumnFilterRule(column, groupIndex, filterIndex, ruleIndex))
             {
                 if (addToHistory)
                 {
-                    // m_editHistory.addEdit(new FilterEdit(true, column, index, filterData));
+                    m_editHistory.addEdit(new FilterRuleAddOrRemoveEdit(true, column, groupIndex, filterIndex, ruleIndex, filterRule));
                 }
             }
         }

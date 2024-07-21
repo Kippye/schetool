@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "filter.h"
 
 Filter::Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator)
@@ -24,6 +25,17 @@ FilterRuleContainer Filter::getRule(size_t index)
     { 
         printf("Filter::getRule(%zu): Index out of range(size %zu)\n", index, m_rules.size());
         return FilterRuleContainer();
+    }
+
+    return m_rules.at(index);
+}
+
+const FilterRuleContainer& Filter::getRuleConst(size_t index) const
+{
+    if (index < m_rules.size() == false) 
+    { 
+        printf("Filter::getRuleConst(%zu): Index out of range(size %zu)\n", index, m_rules.size());
+        throw std::out_of_range("Index out of range in reference getter.");
     }
 
     return m_rules.at(index);
