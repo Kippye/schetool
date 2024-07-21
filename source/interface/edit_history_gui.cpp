@@ -61,7 +61,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 case (ScheduleEditType::FilterRuleAddOrRemove):
                 {
                     FilterRuleAddOrRemoveEditBase* filterRuleEdit = (FilterRuleAddOrRemoveEditBase*)editHistory[i];
-                    sprintf(buf, "%c FilterRule #%zu from Filter #%zu from FilterGroup #%zu of Column %zu##%zu", 
+                    sprintf(buf, "%c Filter rule #%zu in filter #%zu in group #%zu of Column %zu##%zu", 
                         filterRuleEdit->getIsRemove() ? '-' : '+', 
                         filterRuleEdit->getFilterRuleIndex(),
                         filterRuleEdit->getFilterIndex(),
@@ -70,15 +70,19 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         i);
                     break;
                 }
-                // case (ScheduleEditType::FilterChange):
-                // {
-                //     FilterEditBase* filterEdit = (FilterEditBase*)editHistory[i];
-                //     sprintf(buf, "FilterRule #%zu of Column %zu edited##%zu", 
-                //         filterEdit->getFilterIndex(),
-                //         filterEdit->getColumn(),
-                //         i);
-                //     break;
-                // }
+                case (ScheduleEditType::FilterRuleChange):
+                {
+                    FilterRuleChangeEditBase* ruleChangeEdit = (FilterRuleChangeEditBase*)editHistory[i];
+                    sprintf(buf, "Edit filter rule #%zu in filter #%zu in group #%zu of Column %zu (%s -> %s)##%zu", 
+                        ruleChangeEdit->getFilterRuleIndex(),
+                        ruleChangeEdit->getFilterIndex(),
+                        ruleChangeEdit->getFilterGroupIndex(),
+                        ruleChangeEdit->getColumnIndex(),
+                        ruleChangeEdit->getPrevRule().getString().c_str(),
+                        ruleChangeEdit->getNewRule().getString().c_str(),
+                        i);
+                    break;
+                }
                 default:
                 {
                     sprintf(buf, "Edit of unknown type##%zu", i);

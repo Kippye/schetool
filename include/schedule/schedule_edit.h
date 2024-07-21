@@ -229,6 +229,11 @@ class FilterRuleAddOrRemoveEdit : public FilterRuleAddOrRemoveEditBase
             m_filterRule = filterRule;
         }
 
+        FilterRule<T> getRule() const
+        {
+            return m_filterRule;
+        }
+
         void revert(ScheduleCore* const scheduleCore) override
         {
             // reverting a removal means adding the rule
@@ -262,38 +267,52 @@ class FilterRuleAddOrRemoveEdit : public FilterRuleAddOrRemoveEditBase
         }
 };
 
-template <typename T>
-class FilterChangeEdit : public FilterEditBase
+class FilterRuleChangeEditBase : public FilterEditBase
 {
-    private:
-        SCHEDULE_TYPE m_valueType;
-        FilterRule<T> m_previousValue = FilterRule<T>(T());
-        FilterRule<T> m_newValue = FilterRule<T>(T());
+    protected:
+        FilterRuleContainer m_previousRule;
+        FilterRuleContainer m_newRule;
     public:
-        FilterChangeEdit(size_t column, size_t filterIndex, SCHEDULE_TYPE valueType, const FilterRule<T>& previousValue, const FilterRule<T>& newValue) : FilterEditBase(ScheduleEditType::FilterRuleChange, column, 0, 0, filterIndex) 
+        FilterRuleChangeEditBase(size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex, const FilterRuleContainer& previousValue, const FilterRuleContainer& newValue);
+
+        size_t getFilterIndex() const
         {
-            m_valueType = valueType;
-            m_previousValue = previousValue;
-            m_newValue = newValue;
+            return m_filterIndex;
         }
+
+        size_t getFilterRuleIndex() const
+        {
+            return m_filterRuleIndex;
+        }
+
+        FilterRuleContainer getPrevRule() const
+        {
+            return m_previousRule;
+        }
+
+        FilterRuleContainer getNewRule() const
+        {
+            return m_newRule;
+        }
+};
+
+template <typename T>
+class FilterRuleChangeEdit : public FilterRuleChangeEditBase
+{
+    public:
+        FilterRuleChangeEdit(size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex, const FilterRule<T>& previousValue, const FilterRule<T>& newValue) 
+        : FilterRuleChangeEditBase(column, filterGroupIndex, filterIndex, filterRuleIndex, previousValue, newValue) 
+        {}
 
         void revert(ScheduleCore* const scheduleCore) override
         {
-            // std::shared_ptr<FilterRule<T>> ptr = std::make_shared<FilterRule<T>>(m_previousValue);
-            // TODO: FILTER EDIT RULE
-            // scheduleCore->replaceColumnFilter(m_column, m_filterIndex, m_previousValue);
+            scheduleCore->replaceColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_previousRule.getAsType<T>());
             m_isReverted = true;
         }
 
         void apply(ScheduleCore* const scheduleCore) override
         {
-            // std::shared_ptr<FilterRule<T>> ptr = std::make_shared<FilterRule<T>>(m_newValue);
-            // scheduleCore->replaceColumnFilter(m_column, m_filterIndex, m_newValue);
+            scheduleCore->replaceColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_newRule.getAsType<T>());
             m_isReverted = false;
-        }
-
-        SCHEDULE_TYPE getValueType() const
-        {
-            return m_valueType;
         }
 };

@@ -26,6 +26,11 @@ class FilterRuleContainer
                 m_isEmpty = false;
             }
         }
+        template <typename T>
+        FilterRuleContainer(FilterRule<T> filterRule)
+        {
+            fill(filterRule);
+        }
 
         // copy assignment operator
         FilterRuleContainer& operator=(const FilterRuleContainer& other)

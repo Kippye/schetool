@@ -35,9 +35,9 @@ TEST_CASE("FilterGroup")
         passIsNotRule.setComparison(Comparison::IsNot);
 
         // false OR true = true
-        Filter passFilter = Filter({FilterRuleContainer().fill(failRule), FilterRuleContainer().fill(passRule)}, LogicalOperatorEnum::Or);
+        Filter passFilter = Filter({FilterRuleContainer(failRule), FilterRuleContainer(passRule)}, LogicalOperatorEnum::Or);
         // true AND false = false
-        Filter failFilter = Filter({FilterRuleContainer().fill(passIsNotRule), FilterRuleContainer().fill(failRule)});
+        Filter failFilter = Filter({FilterRuleContainer(passIsNotRule), FilterRuleContainer(failRule)});
 
         SECTION("One fail Filter")
         {

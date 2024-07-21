@@ -27,7 +27,7 @@ class Filter
         template <typename T>
         void addRule(const FilterRule<T>& filterRule)
         {
-            m_rules.push_back(FilterRuleContainer().fill(filterRule));
+            m_rules.push_back(FilterRuleContainer(filterRule));
         }
 
         template <typename T>
@@ -35,7 +35,7 @@ class Filter
         {
             if (index >= m_rules.size()) { printf("Filter::replaceRule(%zu): Index out of range (size %zu)\n", index, m_rules.size()); return; }
 
-            m_rules.at(index) = FilterRuleContainer().fill(filterRule);
+            m_rules.at(index) = FilterRuleContainer(filterRule);
         }
 
         void removeRule(size_t index);

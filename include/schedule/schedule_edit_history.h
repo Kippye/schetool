@@ -23,6 +23,10 @@ class ScheduleEditHistory
 
         void addEdit(ScheduleEdit* edit);
         void removeFollowingEditHistory();
-        void undo();
-        void redo();
+        // Undo an edit.
+        // Returns true if an edit was undone.
+        bool undo();
+        // Redo an edit.
+        // Returns true if an edit was reapplied.
+        bool redo();
 };

@@ -9,6 +9,7 @@
 #include "element_base.h"
 #include "schedule_events.h"
 #include "schedule_core.h"
+#include "schedule_edit.h"
 
 class FilterRuleEditorState
 {
@@ -25,7 +26,7 @@ class FilterRuleEditorState
             m_type = type;
             m_filterIndex = filterIndex;
             m_filterRuleIndex = filterRuleIndex;
-            m_filterRule = FilterRuleContainer().fill(filterRule);
+            m_filterRule = FilterRuleContainer(filterRule);
             m_isValid = true;
         }
         SCHEDULE_TYPE getType() const;
@@ -49,6 +50,7 @@ class FilterGroupEditorState
         size_t getFilterGroupIndex() const;
         FilterGroup& getFilterGroup(); 
         bool getIsValid() const;
+        void makeInvalid();
 };
 
 class FilterRuleEditorSubGui : public Gui
@@ -63,8 +65,202 @@ class FilterRuleEditorSubGui : public Gui
         unsigned int m_viewedMonth = 0;
         bool m_openNextFrame = false;
         ImRect m_avoidRect;
+
+        std::function<void(const ScheduleEdit*)> editUndoListener = [&](const ScheduleEdit* edit)
+        {
+            // not even editing so why update?
+            if (m_filterGroupState.getIsValid() == false) { return; }
+
+            switch(edit->getType())
+            {
+                case(ScheduleEditType::FilterRuleAddOrRemove):
+                {
+                    auto ruleAddOrRemoveBase = (const FilterRuleAddOrRemoveEditBase*)edit;
+
+                    // TODO: Handle removing of the FilterRule being edited
+                    // I think i also need to handle the index offset when one is added before the one being edited? Crazy stuff.
+                    // Maybe just close the editor if this happens lol. Give up.
+
+                    // the rule was added or remove from the column and filtergroup currently being edited
+                    if (ruleAddOrRemoveBase->getColumnIndex() == m_filterGroupState.getColumnIndex() && ruleAddOrRemoveBase->getFilterGroupIndex() == m_filterGroupState.getFilterGroupIndex())
+                    {
+                        // REMOVE + UNDO = ADD
+                        if (ruleAddOrRemoveBase->getIsRemove())
+                        {
+                            switch(m_filterGroupState.getType())
+                            {
+                                case(SCH_BOOL):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_NUMBER):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_DECIMAL):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_TEXT):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_SELECT):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_WEEKDAY):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_TIME):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_DATE):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_LAST):
+                                    break;
+                            }
+                        }
+                        // ADD + UNDO = REMOVE
+                        else
+                        {
+                            m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).removeRule(ruleAddOrRemoveBase->getFilterRuleIndex());
+                        }
+                    }
+                    break;
+                }
+                case(ScheduleEditType::FilterRuleChange):
+                {
+                    auto ruleChangeBase = (const FilterRuleChangeEditBase*)edit;
+
+                    switch(m_filterGroupState.getType())
+                    {
+                        case(SCH_BOOL):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<bool>());
+                            break;
+                        case(SCH_NUMBER):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<int>());
+                            break;
+                        case(SCH_DECIMAL):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<double>());
+                            break;
+                        case(SCH_TEXT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<std::string>());
+                            break;
+                        case(SCH_SELECT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<SelectContainer>());
+                            break;
+                        case(SCH_WEEKDAY):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<WeekdayContainer>());
+                            break;
+                        case(SCH_TIME):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<TimeContainer>());
+                            break;
+                        case(SCH_DATE):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<DateContainer>());
+                            break;
+                        case(SCH_LAST):
+                            break;
+                    }
+                    break;
+                }
+                default: break;
+            }
+        };
+        std::function<void(const ScheduleEdit*)> editRedoListener = [&](const ScheduleEdit* edit)
+        {
+            // not even open so why update?
+            if (m_filterGroupState.getIsValid() == false) { return; }
+
+            switch(edit->getType())
+            {
+                case(ScheduleEditType::FilterRuleAddOrRemove):
+                {
+                    auto ruleAddOrRemoveBase = (const FilterRuleAddOrRemoveEditBase*)edit;
+
+                    // TODO: Handle removing of the FilterRule being edited
+                    // I think i also need to handle the index offset when one is added before the one being edited? Crazy stuff.
+                    // Maybe just close the editor if this happens lol. Give up.
+
+                    // the rule was added or remove from the column and filtergroup currently being edited
+                    if (ruleAddOrRemoveBase->getColumnIndex() == m_filterGroupState.getColumnIndex() && ruleAddOrRemoveBase->getFilterGroupIndex() == m_filterGroupState.getFilterGroupIndex())
+                    {
+                        // ADD + REDO = ADD
+                        if (ruleAddOrRemoveBase->getIsRemove() == false)
+                        {
+                            switch (m_filterGroupState.getType())
+                            {
+                                case(SCH_BOOL):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_NUMBER):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_DECIMAL):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_TEXT):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_SELECT):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_WEEKDAY):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_TIME):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_DATE):
+                                    m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
+                                    break;
+                                case(SCH_LAST):
+                                    break;
+                            }
+                        }
+                        // REMOVE + REDO = REMOVE
+                        else
+                        {
+                            m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).removeRule(ruleAddOrRemoveBase->getFilterRuleIndex());
+                        }
+                    }
+                    break;
+                }
+                case(ScheduleEditType::FilterRuleChange):
+                {
+                    auto ruleChangeBase = (const FilterRuleChangeEditBase*)edit;
+
+                    switch(m_filterGroupState.getType())
+                    {
+                        case(SCH_BOOL):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<bool>());
+                            break;
+                        case(SCH_NUMBER):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<int>());
+                            break;
+                        case(SCH_DECIMAL):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<double>());
+                            break;
+                        case(SCH_TEXT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<std::string>());
+                            break;
+                        case(SCH_SELECT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<SelectContainer>());
+                            break;
+                        case(SCH_WEEKDAY):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<WeekdayContainer>());
+                            break;
+                        case(SCH_TIME):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<TimeContainer>());
+                            break;
+                        case(SCH_DATE):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<DateContainer>());
+                            break;
+                        case(SCH_LAST):
+                            break;
+                    }
+                    break;
+                }
+            }
+        };
     public:
-        FilterRuleEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, FilterGroupEditorState& filterGroupState);
+        FilterRuleEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents, FilterGroupEditorState& filterGroupState);
         
         Event<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
         Event<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
@@ -87,20 +283,20 @@ class FilterEditorSubGui : public Gui
         FilterGroupEditorState m_filterGroupState;
         ImRect m_avoidRect;
 
-        std::function<void(size_t)> columnAddedListener = std::function<void(size_t)>([&](size_t column)
+        std::function<void(size_t)> columnAddedListener = [&](size_t column)
         {
             if (column <= m_filterGroupState.getColumnIndex())
             {
                 close();
             }
-        });
-        std::function<void(size_t)> columnRemovedListener = std::function<void(size_t)>([&](size_t column)
+        };
+        std::function<void(size_t)> columnRemovedListener = [&](size_t column)
         {
             if (column <= m_filterGroupState.getColumnIndex())
             {
                 close();
             }
-        });
+        };
     public:
         FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents);
 

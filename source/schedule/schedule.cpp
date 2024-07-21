@@ -111,12 +111,20 @@ ScheduleEvents& Schedule::getScheduleEvents()
 
 void Schedule::undo()
 {
-    m_editHistory.undo();
+    size_t prevEditIndex = m_editHistory.getEditHistoryIndex();
+
+    if (m_editHistory.undo())
+    {
+        m_scheduleEvents.editUndone.invoke(m_editHistory.getEditHistory().at(prevEditIndex));
+    }
 }
 
 void Schedule::redo()
-{
-    m_editHistory.redo();
+{   
+    if (m_editHistory.redo())
+    {
+        m_scheduleEvents.editRedone.invoke(m_editHistory.getEditHistory().at(m_editHistory.getEditHistoryIndex()));
+    }
 }
 
 void Schedule::createDefaultSchedule()

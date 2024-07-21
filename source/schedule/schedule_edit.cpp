@@ -249,3 +249,11 @@ FilterRuleAddOrRemoveEditBase::FilterRuleAddOrRemoveEditBase(bool isRemove, size
 {
     m_isRemove = isRemove;
 }
+
+// FilterRuleChangeEditBase
+FilterRuleChangeEditBase::FilterRuleChangeEditBase(size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex, const FilterRuleContainer& previousValue, const FilterRuleContainer& newValue) 
+: FilterEditBase(ScheduleEditType::FilterRuleChange, column, filterGroupIndex, filterIndex, filterRuleIndex) 
+{
+    m_previousRule = previousValue;
+    m_newRule = newValue;
+}

@@ -310,8 +310,7 @@ class Schedule
             {
                 if (addToHistory)
                 {
-                    // TODO: FILTER EDIT RULE
-                    // m_editHistory.addEdit(new FilterChangeEdit<T>(column, index, m_core.getColumn(column)->type, previousFilter, filter));
+                    m_editHistory.addEdit(new FilterRuleChangeEdit<T>(column, groupIndex, filterIndex, ruleIndex, previousFilterRule, filterRule));
                 }
             }
         }
