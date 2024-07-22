@@ -121,19 +121,19 @@ struct Column
         bool hasFilterGroupAt(size_t index) const;
         bool hasFilterAt(size_t groupIndex, size_t filterIndex) const;
 
-        bool addFilterGroup(const FilterGroup& filterGroup);
+        bool addFilterGroup(size_t groupIndex, const FilterGroup& filterGroup);
         bool removeFilterGroup(size_t index);
 
-        bool addFilter(size_t groupIndex, const Filter& filter);
+        bool addFilter(size_t groupIndex, size_t filterIndex, const Filter& filter);
         bool removeFilter(size_t groupIndex, size_t filterIndex);
 
         template <typename T>
-        bool addFilterRule(size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule)
+        bool addFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filterRule)
         {
             if (hasFilterGroupAt(groupIndex) == false) { printf("Column::addFilterRule(%zu, %zu, filterRule): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return false; }
             if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::addFilterRule(%zu, %zu, filterRule): There is no Filter at the given indices\n", groupIndex, filterIndex); return false; }
 
-            m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).addRule(filterRule);
+            m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).addRule(ruleIndex, filterRule);
             return true;
         }
 

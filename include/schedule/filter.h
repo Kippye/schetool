@@ -25,9 +25,14 @@ class Filter
         LogicalOperatorEnum getOperatorType() const;
 
         template <typename T>
+        void addRule(size_t ruleIndex, const FilterRule<T>& filterRule)
+        {
+            m_rules.insert(m_rules.begin() + ruleIndex, FilterRuleContainer(filterRule));
+        }
+        template <typename T>
         void addRule(const FilterRule<T>& filterRule)
         {
-            m_rules.push_back(FilterRuleContainer(filterRule));
+            addRule(getRuleCount(), filterRule);
         }
 
         template <typename T>

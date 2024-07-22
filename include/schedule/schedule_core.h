@@ -47,25 +47,37 @@ class ScheduleCore
         bool setColumnName(size_t column, const std::string& name);
         bool setColumnSort(size_t column, COLUMN_SORT sortDirection);
         const SelectOptions& getColumnSelectOptions(size_t column) const;
-        // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
 
+        bool addColumnFilterGroup(size_t column, size_t groupIndex, const FilterGroup& filterGroup);
+        // Use the count as the group index
         bool addColumnFilterGroup(size_t column, const FilterGroup& filterGroup);
         bool removeColumnFilterGroup(size_t column, size_t groupIndex);
         bool setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name);
         bool setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator);
 
+        bool addColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, const Filter& filter);
+        // Use the count as the filter index
         bool addColumnFilter(size_t column, size_t groupIndex, const Filter& filter);
         bool setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator);
         bool removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex);
 
         template <typename T>
-        bool addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule)
+        bool addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filterRule)
         {
             if (existsColumnAtIndex(column) == false) { return false; }
 
-            getMutableColumn(column)->addFilterRule(groupIndex, filterIndex, filterRule);
+            getMutableColumn(column)->addFilterRule(groupIndex, filterIndex, ruleIndex, filterRule);
             return true;
+        }
+        // Use the count as the rule index
+        template <typename T>
+        bool addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule)
+        {
+            if (existsColumnAtIndex(column) == false) { return false; }
+            if (getColumn(column)->hasFilterAt(groupIndex, filterIndex) == false) { return false; }
+
+            return addColumnFilterRule(column, groupIndex, filterIndex, getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount(), filterRule);
         }
         template <typename T>
         bool replaceColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filterRule)

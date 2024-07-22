@@ -93,7 +93,7 @@ class FilterRuleEditorSubGui : public Gui
 
                     if (filterAddOrRemove->getIsRemove()) // REMOVE + UNDO = ADD
                     {
-                        m_filterGroupState.getFilterGroup().addFilter(filterAddOrRemove->getFilter());
+                        m_filterGroupState.getFilterGroup().addFilter(filterAddOrRemove->getFilterIndex(), filterAddOrRemove->getFilter());
                     }
                     else // ADD + UNDO = REMOVE
                     {
@@ -114,28 +114,28 @@ class FilterRuleEditorSubGui : public Gui
                         switch(m_filterGroupState.getType())
                         {
                             case(SCH_BOOL):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_NUMBER):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_DECIMAL):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_TEXT):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_SELECT):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_WEEKDAY):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_TIME):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_DATE):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_LAST):
                                 break;
@@ -203,7 +203,7 @@ class FilterRuleEditorSubGui : public Gui
 
                     if (filterAddOrRemove->getIsRemove() == false) // ADD + REDO = ADD
                     {
-                        m_filterGroupState.getFilterGroup().addFilter(filterAddOrRemove->getFilter());
+                        m_filterGroupState.getFilterGroup().addFilter(filterAddOrRemove->getFilterIndex(), filterAddOrRemove->getFilter());
                     }
                     else // REMOVE + REDO = REMOVE
                     {
@@ -225,28 +225,28 @@ class FilterRuleEditorSubGui : public Gui
                         switch (m_filterGroupState.getType())
                         {
                             case(SCH_BOOL):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_NUMBER):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_DECIMAL):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_TEXT):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_SELECT):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_WEEKDAY):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_TIME):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_DATE):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_LAST):
                                 break;

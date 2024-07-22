@@ -76,9 +76,14 @@ LogicalOperatorEnum FilterGroup::getOperatorType() const
     return m_operator.getOperatorType();
 }
 
+void FilterGroup::addFilter(size_t filterIndex, const Filter& filter)
+{
+    m_filters.insert(m_filters.begin() + filterIndex, filter);
+}
+
 void FilterGroup::addFilter(const Filter& filter)
 {
-    m_filters.push_back(filter);
+    addFilter(getFilterCount(), filter);
 }
 
 void FilterGroup::removeFilter(size_t index)

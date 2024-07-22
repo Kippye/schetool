@@ -245,7 +245,7 @@ FilterEditBase::FilterEditBase(ScheduleEditType editType, size_t column, size_t 
 
 // FilterAddOrRemoveEdit
 FilterAddOrRemoveEdit::FilterAddOrRemoveEdit(bool isRemove, size_t column, size_t filterGroupIndex, size_t filterIndex, const Filter& filter)
-: FilterEditBase(ScheduleEditType::FilterAddOrRemove, column, filterGroupIndex, filterGroupIndex, filterIndex)
+: FilterEditBase(ScheduleEditType::FilterAddOrRemove, column, filterGroupIndex, filterIndex)
 {
     m_isRemove = isRemove;
     m_filter = filter;

@@ -206,11 +206,11 @@ bool Column::checkElementPassesFilters(size_t index) const
     return checkElementPassesFilters(getElementConst(index));
 }
 
-bool Column::addFilterGroup(const FilterGroup& filterGroup)
+bool Column::addFilterGroup(size_t groupIndex, const FilterGroup& filterGroup)
 {
-    if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) { printf("Column::addFilterGroup(%zu): No m_filterGroupsPerType entry for type %d\n", type); return false; }
+    if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) { printf("Column::addFilterGroup(%zu): No m_filterGroupsPerType entry for type %d\n", groupIndex, type); return false; }
 
-    m_filterGroupsPerType.at(type).push_back(filterGroup);
+    m_filterGroupsPerType.at(type).insert(m_filterGroupsPerType.at(type).begin() + groupIndex, filterGroup);
     return true;
 }
 
@@ -222,11 +222,11 @@ bool Column::removeFilterGroup(size_t groupIndex)
     return true;
 }
 
-bool Column::addFilter(size_t groupIndex, const Filter& filter)
+bool Column::addFilter(size_t groupIndex, size_t filterIndex, const Filter& filter)
 {
-    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::addFilter(%zu, filter): No FilterGroup at given index\n", groupIndex); return false; }
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::addFilter(%zu, %zu, filter): No FilterGroup at given index\n", groupIndex, filterIndex); return false; }
 
-    m_filterGroupsPerType.at(type).at(groupIndex).addFilter(filter);
+    m_filterGroupsPerType.at(type).at(groupIndex).addFilter(filterIndex, filter);
     return true;
 }
 

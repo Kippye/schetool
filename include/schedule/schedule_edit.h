@@ -225,7 +225,7 @@ class FilterAddOrRemoveEdit : public FilterEditBase
             // reverting a removal means adding
             if (m_isRemove)
             {
-                scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filter);
+                scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filter);
             }
             // reverting an addition means removing
             else
@@ -246,7 +246,7 @@ class FilterAddOrRemoveEdit : public FilterEditBase
             // applying an addition means adding
             else
             {
-                scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filter);
+                scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filter);
             }
 
             m_isReverted = false;
@@ -298,7 +298,7 @@ class FilterRuleAddOrRemoveEdit : public FilterRuleAddOrRemoveEditBase
             // reverting a removal means adding the rule
             if (m_isRemove)
             {
-                scheduleCore->addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRule);
+                scheduleCore->addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_filterRule);
             }
             // reverting an addition means removing the rule
             else
@@ -319,7 +319,7 @@ class FilterRuleAddOrRemoveEdit : public FilterRuleAddOrRemoveEditBase
             // applying an addition means adding the filter
             else
             {
-                scheduleCore->addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRule);
+                scheduleCore->addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_filterRule);
             }
 
             m_isReverted = false;

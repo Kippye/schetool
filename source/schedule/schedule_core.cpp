@@ -339,11 +339,18 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
     return true;
 }
 
+bool ScheduleCore::addColumnFilterGroup(size_t column, size_t groupIndex, const FilterGroup& filterGroup)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    return getMutableColumn(column)->addFilterGroup(groupIndex, filterGroup);
+}
+
 bool ScheduleCore::addColumnFilterGroup(size_t column, const FilterGroup& filterGroup)
 {
     if (existsColumnAtIndex(column) == false) { return false; }
 
-    return getMutableColumn(column)->addFilterGroup(filterGroup);
+    return addColumnFilterGroup(column, getColumn(column)->getFilterGroupCount(), filterGroup);
 }
 
 bool ScheduleCore::removeColumnFilterGroup(size_t column, size_t groupIndex)
@@ -371,11 +378,19 @@ bool ScheduleCore::setColumnFilterGroupOperator(size_t column, size_t groupIndex
     return true;
 }
 
-bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, const Filter& filter)
+bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, const Filter& filter)
 {
     if (existsColumnAtIndex(column) == false) { return false; }
 
-    return getMutableColumn(column)->addFilter(groupIndex, filter);
+    return getMutableColumn(column)->addFilter(groupIndex, filterIndex, filter);
+}
+
+bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, const Filter& filter)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) { return false; }
+
+    return addColumnFilter(column, groupIndex, getColumn(column)->getFilterGroupConst(groupIndex).getFilterCount(), filter);
 }
 
 bool ScheduleCore::setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator)

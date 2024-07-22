@@ -28,6 +28,7 @@ class FilterGroup
         void setOperator(LogicalOperatorEnum newOperator);
         LogicalOperatorEnum getOperatorType() const;
 
+        void addFilter(size_t filterIndex, const Filter& filter);
         void addFilter(const Filter& filter);
 
         template <typename T>
