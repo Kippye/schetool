@@ -58,6 +58,17 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         i);
                     break;
                 }
+                case (ScheduleEditType::FilterAddOrRemove):
+                {
+                    FilterAddOrRemoveEdit* filterEdit = (FilterAddOrRemoveEdit*)editHistory[i];
+                    sprintf(buf, "%c Filter #%zu in group #%zu of Column %zu##%zu", 
+                        filterEdit->getIsRemove() ? '-' : '+', 
+                        filterEdit->getFilterIndex(),
+                        filterEdit->getFilterGroupIndex(),
+                        filterEdit->getColumnIndex(),
+                        i);
+                    break;
+                }
                 case (ScheduleEditType::FilterRuleAddOrRemove):
                 {
                     FilterRuleAddOrRemoveEditBase* filterRuleEdit = (FilterRuleAddOrRemoveEditBase*)editHistory[i];

@@ -243,6 +243,14 @@ FilterEditBase::FilterEditBase(ScheduleEditType editType, size_t column, size_t 
     m_filterRuleIndex = filterRuleIndex;
 }
 
+// FilterAddOrRemoveEdit
+FilterAddOrRemoveEdit::FilterAddOrRemoveEdit(bool isRemove, size_t column, size_t filterGroupIndex, size_t filterIndex, const Filter& filter)
+: FilterEditBase(ScheduleEditType::FilterAddOrRemove, column, filterGroupIndex, filterGroupIndex, filterIndex)
+{
+    m_isRemove = isRemove;
+    m_filter = filter;
+}
+
 // FilterRuleAddOrRemoveEditBase
 FilterRuleAddOrRemoveEditBase::FilterRuleAddOrRemoveEditBase(bool isRemove, size_t columnIndex, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex) 
 : FilterEditBase(ScheduleEditType::FilterRuleAddOrRemove, columnIndex, filterGroupIndex, filterIndex, filterRuleIndex) 

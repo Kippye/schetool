@@ -352,7 +352,8 @@ void Schedule::addColumnFilter(size_t column, size_t groupIndex, Filter filter, 
     {
         if (addToHistory)
         {
-            // TODO: FILTER EDIT FILTER
+            size_t filterIndex = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterCount() - 1;
+            m_editHistory.addEdit(new FilterAddOrRemoveEdit(false, column, groupIndex, filterIndex, filter));
         }
     }
 }
@@ -370,11 +371,13 @@ void Schedule::setColumnFilterOperator(size_t column, size_t groupIndex, size_t 
 
 void Schedule::removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, bool addToHistory)
 {
+    Filter filter = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex);
+
     if (m_core.removeColumnFilter(column, groupIndex, filterIndex))
     {
         if (addToHistory)
         {
-            // TODO: FILTER EDIT FILTER
+            m_editHistory.addEdit(new FilterAddOrRemoveEdit(true, column, groupIndex, filterIndex, filter));
         }
     }
 }

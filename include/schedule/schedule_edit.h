@@ -12,6 +12,7 @@ enum class ScheduleEditType
     RowAddOrRemove,
     ColumnAddOrRemove,
     ColumnPropertyChange,
+    FilterAddOrRemove,
     FilterRuleAddOrRemove,
     FilterRuleChange
 };
@@ -191,6 +192,64 @@ class FilterEditBase : public ScheduleEdit
         size_t getFilterGroupIndex() const
         {
             return m_filterGroupIndex;
+        }
+};
+
+class FilterAddOrRemoveEdit : public FilterEditBase
+{
+    private:
+        bool m_isRemove = false;
+        Filter m_filter;
+    public:
+        FilterAddOrRemoveEdit(bool isRemove, size_t column, size_t filterGroupIndex, size_t filterIndex, const Filter& filter);
+
+        bool getIsRemove() const
+        {
+            return m_isRemove;
+        }
+
+        size_t getFilterIndex() const
+        {
+            return m_filterIndex;
+        }
+
+        // NOT sure if this is actually const.. you could possibly get this Filter and then modify one of its rules, which would affect all other Filters with that rule.
+        // but shouldn't undo / redo mostly take care of that? we will see.
+        Filter getFilter() const
+        {
+            return m_filter;
+        }
+
+        void revert(ScheduleCore* const scheduleCore) override
+        {
+            // reverting a removal means adding
+            if (m_isRemove)
+            {
+                scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filter);
+            }
+            // reverting an addition means removing
+            else
+            {
+                scheduleCore->removeColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex);
+            }
+
+            m_isReverted = true;
+        } 
+
+        void apply(ScheduleCore* const scheduleCore) override
+        {
+            // applying a removal means removing
+            if (m_isRemove)
+            {
+                scheduleCore->removeColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex);
+            }
+            // applying an addition means adding
+            else
+            {
+                scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filter);
+            }
+
+            m_isReverted = false;
         }
 };
 
