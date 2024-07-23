@@ -13,6 +13,7 @@ enum class ScheduleEditType
     ColumnAddOrRemove,
     ColumnPropertyChange,
     FilterGroupAddOrRemove,
+    FilterGroupChange,
     FilterAddOrRemove,
     FilterChange,
     FilterRuleAddOrRemove,
@@ -246,6 +247,56 @@ class FilterGroupAddOrRemoveEdit : public FilterEditBase
                 scheduleCore->addColumnFilterGroup(m_columnIndex, m_filterGroupIndex, m_filterGroup);
             }
 
+            m_isReverted = false;
+        }
+};
+
+class FilterGroupChangeEdit : public FilterEditBase
+{
+    private:
+        LogicalOperatorEnum m_previousOperator;
+        std::string m_previousName;
+        LogicalOperatorEnum m_newOperator;
+        std::string m_newName;
+    public:
+        FilterGroupChangeEdit(size_t column, size_t filterGroupIndex, LogicalOperatorEnum previousOperator, LogicalOperatorEnum newOperator, const std::string& previousName, const std::string& newName);
+
+        size_t getFilterIndex() const
+        {
+            return m_filterIndex;
+        }
+
+        LogicalOperatorEnum getPrevOperator() const
+        {
+            return m_previousOperator;
+        }
+
+        std::string getPrevName() const
+        {
+            return m_previousName;
+        }
+
+        LogicalOperatorEnum getNewOperator() const
+        {
+            return m_newOperator;
+        }
+
+        std::string getNewName() const
+        {
+            return m_newName;
+        }
+
+        void revert(ScheduleCore* const scheduleCore) override
+        {
+            scheduleCore->setColumnFilterGroupOperator(m_columnIndex, m_filterGroupIndex, m_previousOperator);
+            scheduleCore->setColumnFilterGroupName(m_columnIndex, m_filterGroupIndex, m_previousName);
+            m_isReverted = true;
+        }
+
+        void apply(ScheduleCore* const scheduleCore) override
+        {
+            scheduleCore->setColumnFilterGroupOperator(m_columnIndex, m_filterGroupIndex, m_newOperator);
+            scheduleCore->setColumnFilterGroupName(m_columnIndex, m_filterGroupIndex, m_newName);
             m_isReverted = false;
         }
 };

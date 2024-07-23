@@ -73,6 +73,7 @@ class FilterRuleEditorSubGui : public Gui
         std::set<ScheduleEditType> m_filterEditTypes =
         {
             ScheduleEditType::FilterGroupAddOrRemove,
+            ScheduleEditType::FilterGroupChange,
             ScheduleEditType::FilterAddOrRemove,
             ScheduleEditType::FilterChange,
             ScheduleEditType::FilterRuleAddOrRemove,
@@ -102,10 +103,11 @@ class FilterRuleEditorSubGui : public Gui
                     }
                     break;
                 }
-                case(ScheduleEditType::FilterChange):
+                case(ScheduleEditType::FilterGroupChange):
                 {
-                    auto filterChange = (const FilterChangeEdit*)edit;
-                    m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getPrevOperator());
+                    auto filterGroupChange = (const FilterGroupChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().setOperator(filterGroupChange->getPrevOperator());
+                    m_filterGroupState.getFilterGroup().setName(filterGroupChange->getPrevName());
                     break;
                 }
                 case(ScheduleEditType::FilterAddOrRemove):
@@ -120,6 +122,12 @@ class FilterRuleEditorSubGui : public Gui
                     {
                         m_filterGroupState.getFilterGroup().removeFilter(filterAddOrRemove->getFilterIndex());
                     }
+                    break;
+                }
+                case(ScheduleEditType::FilterChange):
+                {
+                    auto filterChange = (const FilterChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getPrevOperator());
                     break;
                 }
                 case(ScheduleEditType::FilterRuleAddOrRemove):
@@ -229,10 +237,11 @@ class FilterRuleEditorSubGui : public Gui
                     }
                     break;
                 }
-                case(ScheduleEditType::FilterChange):
+                case(ScheduleEditType::FilterGroupChange):
                 {
-                    auto filterChange = (const FilterChangeEdit*)edit;
-                    m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getNewOperator());
+                    auto filterGroupChange = (const FilterGroupChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().setOperator(filterGroupChange->getNewOperator());
+                    m_filterGroupState.getFilterGroup().setName(filterGroupChange->getNewName());
                     break;
                 }
                 case(ScheduleEditType::FilterAddOrRemove):
@@ -247,6 +256,12 @@ class FilterRuleEditorSubGui : public Gui
                     {
                         m_filterGroupState.getFilterGroup().removeFilter(filterAddOrRemove->getFilterIndex());
                     }
+                    break;
+                }
+                case(ScheduleEditType::FilterChange):
+                {
+                    auto filterChange = (const FilterChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getNewOperator());
                     break;
                 }
                 case(ScheduleEditType::FilterRuleAddOrRemove):

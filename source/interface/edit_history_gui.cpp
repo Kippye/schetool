@@ -61,10 +61,23 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 case (ScheduleEditType::FilterGroupAddOrRemove):
                 {
                     FilterGroupAddOrRemoveEdit* filterGroupEdit = (FilterGroupAddOrRemoveEdit*)editHistory[i];
-                    sprintf(buf, "%c FilterGroup #%zu of Column %zu##%zu", 
+                    sprintf(buf, "%c Filter group #%zu of Column %zu##%zu", 
                         filterGroupEdit->getIsRemove() ? '-' : '+', 
                         filterGroupEdit->getFilterGroupIndex(),
                         filterGroupEdit->getColumnIndex(),
+                        i);
+                    break;
+                }
+                case (ScheduleEditType::FilterGroupChange):
+                {
+                    FilterGroupChangeEdit* filterGroupChangeEdit = (FilterGroupChangeEdit*)editHistory[i];
+                    bool operatorChanged = filterGroupChangeEdit->getPrevOperator() != filterGroupChangeEdit->getNewOperator();
+                    sprintf(buf, "Edit filter group #%zu of Column %zu %s (%s -> %s) ##%zu", 
+                        filterGroupChangeEdit->getFilterGroupIndex(),
+                        filterGroupChangeEdit->getColumnIndex(),
+                        operatorChanged ? "operator" : "name",
+                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getPrevOperator()) : filterGroupChangeEdit->getPrevName().c_str(),
+                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getNewOperator()) : filterGroupChangeEdit->getNewName().c_str(),
                         i);
                     break;
                 }

@@ -636,7 +636,11 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
         if (ImGui::InputText("##FilterGroupNameInput", buf, schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH))
         {
             m_filterGroupState.getFilterGroup().setName(buf);
-            setColumnFilterGroupName.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), std::string(buf)); 
+        }
+        // Just deactivated the name input after editing, call event
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            setColumnFilterGroupName.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), m_filterGroupState.getFilterGroup().getName()); 
         }
 
         ImGui::SameLine();

@@ -329,22 +329,30 @@ void Schedule::removeColumnFilterGroup(size_t column, size_t groupIndex, bool ad
 
 void Schedule::setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name, bool addToHistory)
 {
+    LogicalOperatorEnum logicalOperator = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getOperatorType();
+    std::string prevName = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getName();
+
     if (m_core.setColumnFilterGroupName(column, groupIndex, name))
     {
         if (addToHistory)
         {
-            // TODO: FILTER EDIT GROUP NAME
+            // edit for name, keep operator the same
+            m_editHistory.addEdit(new FilterGroupChangeEdit(column, groupIndex, logicalOperator, logicalOperator, prevName, name));
         }
     }
 }
 
 void Schedule::setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator, bool addToHistory)
 {
+    std::string name = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getName();
+    LogicalOperatorEnum prevOperator = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getOperatorType();
+
     if (m_core.setColumnFilterGroupOperator(column, groupIndex, logicalOperator))
     {
         if (addToHistory)
         {
-            // TODO: FILTER EDIT GROUP OPERATOR
+            // edit for operator, keep name the same
+            m_editHistory.addEdit(new FilterGroupChangeEdit(column, groupIndex, prevOperator, logicalOperator, name, name));
         }
     }
 }
