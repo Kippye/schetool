@@ -33,6 +33,7 @@ class FilterRuleEditorState
         std::pair<size_t, size_t> getIndices() const;
         FilterRuleContainer& getFilterRule(); 
         bool getIsValid() const;
+        void makeInvalid();
 };
 
 class FilterGroupEditorState
@@ -63,6 +64,7 @@ class FilterRuleEditorSubGui : public Gui
         std::string m_columnName = "";
         unsigned int m_viewedYear = 0;
         unsigned int m_viewedMonth = 0;
+        bool m_popupOpen = false;
         bool m_openNextFrame = false;
         ImRect m_avoidRect;
 
@@ -70,6 +72,7 @@ class FilterRuleEditorSubGui : public Gui
         // NOTE: Their corresponding classes should ALL inherit from FilterEditBase
         std::set<ScheduleEditType> m_filterEditTypes =
         {
+            ScheduleEditType::FilterGroupAddOrRemove,
             ScheduleEditType::FilterAddOrRemove,
             ScheduleEditType::FilterRuleAddOrRemove,
             ScheduleEditType::FilterRuleChange,
@@ -87,6 +90,17 @@ class FilterRuleEditorSubGui : public Gui
 
             switch(edit->getType())
             {
+                case(ScheduleEditType::FilterGroupAddOrRemove):
+                {
+                    // ADD + UNDO = REMOVE THIS GROUP
+                    // Close all the filter editors
+                    if (((const FilterGroupAddOrRemoveEdit*)edit)->getIsRemove() == false)
+                    {
+                        m_filterRuleState.makeInvalid(); // invalidate the state (causes popup to close)
+                        m_filterGroupState.makeInvalid(); // should cause filter group editor to close as well
+                    }
+                    break;
+                }
                 case(ScheduleEditType::FilterAddOrRemove):
                 {
                     auto filterAddOrRemove = (const FilterAddOrRemoveEdit*)edit;
@@ -197,6 +211,17 @@ class FilterRuleEditorSubGui : public Gui
 
             switch(edit->getType())
             {
+                case(ScheduleEditType::FilterGroupAddOrRemove):
+                {
+                    // REMOVE + REDO = REMOVE THIS GROUP
+                    // Close all the filter editors
+                    if (((const FilterGroupAddOrRemoveEdit*)edit)->getIsRemove())
+                    {
+                        m_filterRuleState.makeInvalid(); // invalidate the state (causes popup to close)
+                        m_filterGroupState.makeInvalid(); // should cause filter group editor to close as well
+                    }
+                    break;
+                }
                 case(ScheduleEditType::FilterAddOrRemove):
                 {
                     auto filterAddOrRemove = (const FilterAddOrRemoveEdit*)edit;
@@ -319,6 +344,7 @@ class FilterEditorSubGui : public Gui
     private:
         const ScheduleCore* m_scheduleCore = NULL;
         FilterGroupEditorState m_filterGroupState;
+        bool m_popupOpen = false;
         ImRect m_avoidRect;
 
         std::function<void(size_t)> columnAddedListener = [&](size_t column)

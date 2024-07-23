@@ -26,6 +26,11 @@ bool FilterRuleEditorState::getIsValid() const
     return m_isValid;
 }
 
+void FilterRuleEditorState::makeInvalid()
+{
+    m_isValid = false;
+}
+
 
 void FilterGroupEditorState::setup(SCHEDULE_TYPE type, size_t columnIndex, size_t filterGroupIndex, FilterGroup filterGroup)
 {
@@ -77,11 +82,13 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
 {
     if (ImGui::BeginPopupEx(ImGui::GetID("FilterRule Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
 	{
+        m_popupOpen = true;
+
         if (m_filterRuleState.getIsValid() == false)
         {
             printf("FilterRuleEditorSubGui::draw(): FilterRuleEditorState is not valid.\n");
-            ImGui::EndPopup();
             close();
+            ImGui::EndPopup();
             return;
         }
 
@@ -433,6 +440,10 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
 
 		ImGui::EndPopup();
 	}
+    else
+    {
+        m_popupOpen = false;
+    }
 
     if (m_openNextFrame)
     {
@@ -563,9 +574,11 @@ void FilterRuleEditorSubGui::openCreate(SCHEDULE_TYPE type, const std::string& c
 
 void FilterRuleEditorSubGui::close()
 {
-    if (ImGui::IsPopupOpen("FilterRule Editor"))
+    if (m_popupOpen)
     {
+        m_filterRuleState.makeInvalid();
         ImGui::CloseCurrentPopup();
+        m_popupOpen = false;
     }
 }
 
@@ -582,25 +595,27 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 {
     if (ImGui::BeginPopupEx(ImGui::GetID("FilterGroup Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
     {
+        m_popupOpen = true;
+
+        if (m_filterGroupState.getIsValid() == false)
+        {
+            printf("FilterEditorSubGui::draw(): FilterGroupEditorState is not valid.\n");
+            close();
+            ImGui::EndPopup();
+            return;
+        }
         if (m_scheduleCore->existsColumnAtIndex(m_filterGroupState.getColumnIndex()) == false)
         {
             printf("FilterEditorSubGui::draw(): There is no Column at the column index %zu\n", m_filterGroupState.getColumnIndex());
-            ImGui::EndPopup();
             close();
+            ImGui::EndPopup();
             return;
         }
         if (m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->type != m_filterGroupState.getType())
         {
             printf("FilterEditorSubGui::draw(): The types of the Column (%d) and the editor's filter state (%d) do not match!\n", m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->type, m_filterGroupState.getType());
-            ImGui::EndPopup();
             close();
-            return;
-        }
-        if (m_filterGroupState.getIsValid() == false)
-        {
-            printf("FilterEditorSubGui::draw(): FilterGroupEditorState is not valid.\n");
             ImGui::EndPopup();
-            close();
             return;
         }
 
@@ -739,6 +754,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
     else 
     {
         m_filterGroupState.makeInvalid();
+        m_popupOpen = false;
     }
 }
 
@@ -770,10 +786,11 @@ void FilterEditorSubGui::createGroupAndEdit(size_t column, const ImRect& avoidRe
 
 void FilterEditorSubGui::close()
 {
-    if (ImGui::IsPopupOpen("FilterGroup Editor"))
+    if (m_popupOpen)
     {
         m_filterGroupState.makeInvalid();
         ImGui::CloseCurrentPopup();
+        m_popupOpen = false;
     }
 }
 

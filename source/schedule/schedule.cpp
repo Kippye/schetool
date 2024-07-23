@@ -308,18 +308,21 @@ void Schedule::addColumnFilterGroup(size_t column, FilterGroup filterGroup, bool
     {
         if (addToHistory)
         {
-            // TODO: FILTER EDIT GROUP
+            size_t groupIndex = m_core.getColumn(column)->getFilterGroupCount() - 1;
+            m_editHistory.addEdit<FilterGroupAddOrRemoveEdit>(false, column, groupIndex, filterGroup);
         }
     }
 }
 
 void Schedule::removeColumnFilterGroup(size_t column, size_t groupIndex, bool addToHistory)
 {
+    FilterGroup filterGroup = m_core.getColumn(column)->getFilterGroupConst(groupIndex);
+
     if (m_core.removeColumnFilterGroup(column, groupIndex)) 
     {
         if (addToHistory)
         {
-            // TODO: FILTER EDIT GROUP
+            m_editHistory.addEdit<FilterGroupAddOrRemoveEdit>(true, column, groupIndex, filterGroup);
         }
     }
 }

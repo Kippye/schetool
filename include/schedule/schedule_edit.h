@@ -12,6 +12,7 @@ enum class ScheduleEditType
     RowAddOrRemove,
     ColumnAddOrRemove,
     ColumnPropertyChange,
+    FilterGroupAddOrRemove,
     FilterAddOrRemove,
     FilterRuleAddOrRemove,
     FilterRuleChange
@@ -192,6 +193,59 @@ class FilterEditBase : public ScheduleEdit
         size_t getFilterGroupIndex() const
         {
             return m_filterGroupIndex;
+        }
+};
+
+class FilterGroupAddOrRemoveEdit : public FilterEditBase
+{
+    private:
+        bool m_isRemove = false;
+        FilterGroup m_filterGroup;
+    public:
+        FilterGroupAddOrRemoveEdit(bool isRemove, size_t column, size_t filterGroupIndex, const FilterGroup& filterGroup);
+
+        bool getIsRemove() const
+        {
+            return m_isRemove;
+        }
+
+        // NOT sure if this is actually const.. you could possibly get this FilterGroup and then modify one of its rules, which would affect all other FilterGroups with that rule.
+        // but shouldn't undo / redo mostly take care of that? we will see.
+        FilterGroup getFilterGroup() const
+        {
+            return m_filterGroup;
+        }
+
+        void revert(ScheduleCore* const scheduleCore) override
+        {
+            // reverting a removal means adding
+            if (m_isRemove)
+            {
+                scheduleCore->addColumnFilterGroup(m_columnIndex, m_filterGroupIndex, m_filterGroup);
+            }
+            // reverting an addition means removing
+            else
+            {
+                scheduleCore->removeColumnFilterGroup(m_columnIndex, m_filterGroupIndex);
+            }
+
+            m_isReverted = true;
+        } 
+
+        void apply(ScheduleCore* const scheduleCore) override
+        {
+            // applying a removal means removing
+            if (m_isRemove)
+            {
+                scheduleCore->removeColumnFilterGroup(m_columnIndex, m_filterGroupIndex);
+            }
+            // applying an addition means adding
+            else
+            {
+                scheduleCore->addColumnFilterGroup(m_columnIndex, m_filterGroupIndex, m_filterGroup);
+            }
+
+            m_isReverted = false;
         }
 };
 

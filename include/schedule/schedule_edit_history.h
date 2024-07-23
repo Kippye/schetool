@@ -22,6 +22,11 @@ class ScheduleEditHistory
         void setEditedSinceWrite(bool to);
 
         void addEdit(ScheduleEdit* edit);
+        template <typename T, typename... Args>
+        void addEdit(Args&&... args)
+        {
+            addEdit(new T(std::forward<Args>(args)...));
+        }
         void removeFollowingEditHistory();
         // Undo an edit.
         // Returns true if an edit was undone.
