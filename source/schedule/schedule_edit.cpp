@@ -259,6 +259,14 @@ FilterAddOrRemoveEdit::FilterAddOrRemoveEdit(bool isRemove, size_t column, size_
     m_filter = filter;
 }
 
+// FilterChangeEditBase
+FilterChangeEdit::FilterChangeEdit(size_t column, size_t filterGroupIndex, size_t filterIndex, LogicalOperatorEnum previousOperator, LogicalOperatorEnum newOperator) 
+: FilterEditBase(ScheduleEditType::FilterChange, column, filterGroupIndex, filterIndex) 
+{
+    m_previousOperator = previousOperator;
+    m_newOperator = newOperator;
+}
+
 // FilterRuleAddOrRemoveEditBase
 FilterRuleAddOrRemoveEditBase::FilterRuleAddOrRemoveEditBase(bool isRemove, size_t columnIndex, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex) 
 : FilterEditBase(ScheduleEditType::FilterRuleAddOrRemove, columnIndex, filterGroupIndex, filterIndex, filterRuleIndex) 

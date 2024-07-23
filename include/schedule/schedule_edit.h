@@ -14,6 +14,7 @@ enum class ScheduleEditType
     ColumnPropertyChange,
     FilterGroupAddOrRemove,
     FilterAddOrRemove,
+    FilterChange,
     FilterRuleAddOrRemove,
     FilterRuleChange
 };
@@ -303,6 +304,42 @@ class FilterAddOrRemoveEdit : public FilterEditBase
                 scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filter);
             }
 
+            m_isReverted = false;
+        }
+};
+
+class FilterChangeEdit : public FilterEditBase
+{
+    private:
+        LogicalOperatorEnum m_previousOperator;
+        LogicalOperatorEnum m_newOperator;
+    public:
+        FilterChangeEdit(size_t column, size_t filterGroupIndex, size_t filterIndex, LogicalOperatorEnum previousOperator, LogicalOperatorEnum newOperator);
+
+        size_t getFilterIndex() const
+        {
+            return m_filterIndex;
+        }
+
+        LogicalOperatorEnum getPrevOperator() const
+        {
+            return m_previousOperator;
+        }
+
+        LogicalOperatorEnum getNewOperator() const
+        {
+            return m_newOperator;
+        }
+
+        void revert(ScheduleCore* const scheduleCore) override
+        {
+            scheduleCore->setColumnFilterOperator(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_previousOperator);
+            m_isReverted = true;
+        }
+
+        void apply(ScheduleCore* const scheduleCore) override
+        {
+            scheduleCore->setColumnFilterOperator(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_newOperator);
             m_isReverted = false;
         }
 };

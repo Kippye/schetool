@@ -74,6 +74,7 @@ class FilterRuleEditorSubGui : public Gui
         {
             ScheduleEditType::FilterGroupAddOrRemove,
             ScheduleEditType::FilterAddOrRemove,
+            ScheduleEditType::FilterChange,
             ScheduleEditType::FilterRuleAddOrRemove,
             ScheduleEditType::FilterRuleChange,
         };
@@ -99,6 +100,12 @@ class FilterRuleEditorSubGui : public Gui
                         m_filterRuleState.makeInvalid(); // invalidate the state (causes popup to close)
                         m_filterGroupState.makeInvalid(); // should cause filter group editor to close as well
                     }
+                    break;
+                }
+                case(ScheduleEditType::FilterChange):
+                {
+                    auto filterChange = (const FilterChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getPrevOperator());
                     break;
                 }
                 case(ScheduleEditType::FilterAddOrRemove):
@@ -220,6 +227,12 @@ class FilterRuleEditorSubGui : public Gui
                         m_filterRuleState.makeInvalid(); // invalidate the state (causes popup to close)
                         m_filterGroupState.makeInvalid(); // should cause filter group editor to close as well
                     }
+                    break;
+                }
+                case(ScheduleEditType::FilterChange):
+                {
+                    auto filterChange = (const FilterChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getNewOperator());
                     break;
                 }
                 case(ScheduleEditType::FilterAddOrRemove):

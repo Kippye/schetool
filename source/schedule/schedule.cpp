@@ -363,11 +363,13 @@ void Schedule::addColumnFilter(size_t column, size_t groupIndex, Filter filter, 
 
 void Schedule::setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator, bool addToHistory)
 {
+    LogicalOperatorEnum prevOperator = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getOperatorType();
+
     if (m_core.setColumnFilterOperator(column, groupIndex, filterIndex, logicalOperator))
     {
         if (addToHistory)
         {
-            // TODO: FILTER EDIT GROUP OPERATOR
+            m_editHistory.addEdit<FilterChangeEdit>(column, groupIndex, filterIndex, prevOperator, logicalOperator);
         }
     }
 }

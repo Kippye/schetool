@@ -58,6 +58,16 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         i);
                     break;
                 }
+                case (ScheduleEditType::FilterGroupAddOrRemove):
+                {
+                    FilterGroupAddOrRemoveEdit* filterGroupEdit = (FilterGroupAddOrRemoveEdit*)editHistory[i];
+                    sprintf(buf, "%c FilterGroup #%zu of Column %zu##%zu", 
+                        filterGroupEdit->getIsRemove() ? '-' : '+', 
+                        filterGroupEdit->getFilterGroupIndex(),
+                        filterGroupEdit->getColumnIndex(),
+                        i);
+                    break;
+                }
                 case (ScheduleEditType::FilterAddOrRemove):
                 {
                     FilterAddOrRemoveEdit* filterEdit = (FilterAddOrRemoveEdit*)editHistory[i];
@@ -66,6 +76,18 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         filterEdit->getFilterIndex(),
                         filterEdit->getFilterGroupIndex(),
                         filterEdit->getColumnIndex(),
+                        i);
+                    break;
+                }
+                case (ScheduleEditType::FilterChange):
+                {
+                    FilterChangeEdit* filterChangeEdit = (FilterChangeEdit*)editHistory[i];
+                    sprintf(buf, "Edit filter #%zu in group #%zu of Column %zu operator (%s -> %s)##%zu", 
+                        filterChangeEdit->getFilterIndex(),
+                        filterChangeEdit->getFilterGroupIndex(),
+                        filterChangeEdit->getColumnIndex(),
+                        schedule_consts::logicalOperatorStrings.at(filterChangeEdit->getPrevOperator()),
+                        schedule_consts::logicalOperatorStrings.at(filterChangeEdit->getNewOperator()),
                         i);
                     break;
                 }
