@@ -40,41 +40,11 @@ Column::Column(const Column& other)
     {
         rows.push_back(other.rows[i]->getCopy());
     }
-    // const auto& otherFiltersPerType = other.getFiltersPerType();
-    // for (size_t i = 0; i < otherFiltersPerType.at(type).size(); i++)
-    // {
-    //     auto otherFilter = otherFiltersPerType.at(type).at(i);
-    //     switch(type)
-    //     {
-    //         case SCH_BOOL:
-    //             m_filterGroupsPerType.at(type).push_back(std::make_shared<FilterRule<bool>>(*std::dynamic_pointer_cast<FilterRule<bool>>(otherFilter)));
-    //         break;
-    //         case SCH_NUMBER:
-    //             m_filterGroupsPerType.at(type).push_back(std::make_shared<FilterRule<int>>(*std::dynamic_pointer_cast<FilterRule<int>>(otherFilter)));
-    //         break;
-    //         case SCH_DECIMAL:
-    //             m_filterGroupsPerType.at(type).push_back(std::make_shared<FilterRule<double>>(*std::dynamic_pointer_cast<FilterRule<double>>(otherFilter)));
-    //         break;
-    //         case SCH_TEXT:
-    //             m_filterGroupsPerType.at(type).push_back(std::make_shared<FilterRule<std::string>>(*std::dynamic_pointer_cast<FilterRule<std::string>>(otherFilter)));
-    //         break;
-    //         case SCH_SELECT:
-    //             m_filterGroupsPerType.at(type).push_back(std::make_shared<FilterRule<SelectContainer>>(*std::dynamic_pointer_cast<FilterRule<SelectContainer>>(otherFilter)));
-    //         break;
-    //         case SCH_WEEKDAY:
-    //             m_filterGroupsPerType.at(type).push_back(std::make_shared<FilterRule<WeekdayContainer>>(*std::dynamic_pointer_cast<FilterRule<WeekdayContainer>>(otherFilter)));
-    //         break;
-    //         case SCH_TIME:
-    //             m_filterGroupsPerType.at(type).push_back(std::make_shared<FilterRule<TimeContainer>>(*std::dynamic_pointer_cast<FilterRule<TimeContainer>>(otherFilter)));
-    //         break;
-    //         case SCH_DATE:
-    //             m_filterGroupsPerType.at(type).push_back(std::make_shared<FilterRule<DateContainer>>(*std::dynamic_pointer_cast<FilterRule<DateContainer>>(otherFilter)));
-    //         break;
-    //         default:
-            
-    //         break;
-    //     }
-    // }
+    const auto& otherFiltersPerType = other.getFilterGroupsPerType();
+    for (const FilterGroup& filterGroup: otherFiltersPerType.at(type))
+    {
+        m_filterGroupsPerType.at(type).push_back(filterGroup);
+    }
 
     // std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
 }

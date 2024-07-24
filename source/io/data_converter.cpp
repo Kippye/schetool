@@ -1,6 +1,4 @@
 #include "data_converter.h"
-#include "element_base.h"
-#include "element.h"
 
 LocalObjectTable& ObjectDefinitions::getObjectTable()
 {
@@ -26,30 +24,15 @@ void DataConverter::setupObjectTable()
 {
     addObjectDefinition<BLF_Base>();
     addObjectDefinition<BLF_ElementInfo>();
-    addObjectDefinition<BLF_Element<bool>>();
-    addObjectDefinition<BLF_Element<int>>();
-    addObjectDefinition<BLF_Element<double>>();
-    addObjectDefinition<BLF_Element<std::string>>();
-    addObjectDefinition<BLF_Element<SelectContainer>>();
-    addObjectDefinition<BLF_Element<WeekdayContainer>>();
-    addObjectDefinition<BLF_Element<TimeContainer>>();
-    addObjectDefinition<BLF_Element<DateContainer>>();
-    addObjectDefinition<BLF_Filter<bool>>();
-    addObjectDefinition<BLF_Filter<int>>();
-    addObjectDefinition<BLF_Filter<double>>();
-    addObjectDefinition<BLF_Filter<std::string>>();
-    addObjectDefinition<BLF_Filter<SelectContainer>>();
-    addObjectDefinition<BLF_Filter<WeekdayContainer>>();
-    addObjectDefinition<BLF_Filter<TimeContainer>>();
-    addObjectDefinition<BLF_Filter<DateContainer>>();
-    addObjectDefinition<BLF_Column<bool>>();
-    addObjectDefinition<BLF_Column<int>>();
-    addObjectDefinition<BLF_Column<double>>();
-    addObjectDefinition<BLF_Column<std::string>>();
-    addObjectDefinition<BLF_Column<SelectContainer>>();
-    addObjectDefinition<BLF_Column<WeekdayContainer>>();
-    addObjectDefinition<BLF_Column<TimeContainer>>();
-    addObjectDefinition<BLF_Column<DateContainer>>();
+    
+    addTypeObjectDefinitions<bool>();
+    addTypeObjectDefinitions<int>();
+    addTypeObjectDefinitions<double>();
+    addTypeObjectDefinitions<std::string>();
+    addTypeObjectDefinitions<SelectContainer>();
+    addTypeObjectDefinitions<WeekdayContainer>();
+    addTypeObjectDefinitions<TimeContainer>();
+    addTypeObjectDefinitions<DateContainer>();
 }
 
 int DataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule)
@@ -111,8 +94,6 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     auto file = File::fromData(stream);
 
     auto fileBody = file.deserializeBody(m_definitions.getObjectTable());
-
-    std::cout << "Deserialized" << std::endl;
 
     std::map<size_t, SCHEDULE_TYPE> columnTypes = {};
 
@@ -193,8 +174,6 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
             }
         }
     }
-
-    std::cout << "Mapped indices to types" << std::endl;
 
     for (size_t columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
     {
