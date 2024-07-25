@@ -653,7 +653,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
         auto drawFilterRule = [&](size_t filterIndex, size_t ruleIndex)
         {
             Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
-            if (ImGui::Button(filter.getRule(ruleIndex).getString().append("##").append(std::to_string(filterIndex)).append(std::to_string(ruleIndex)).c_str()))
+            if (ImGui::Button(filter.getRule(ruleIndex).getString().append("##").append(std::to_string(filterIndex)).append(";").append(std::to_string(ruleIndex)).c_str()))
             {
                 // Open the filter rule editor to edit this rule
                 if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
@@ -664,7 +664,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
             ImGui::SameLine();
             // Remove FilterRule button
-            if (ImGui::Button("X"))
+            if (ImGui::Button(std::string("X##RemoveFilterRule").append(std::to_string(filterIndex)).append(";").append(std::to_string(ruleIndex)).c_str()))
             {
                 m_filterGroupState.getFilterGroup().getFilter(filterIndex).removeRule(ruleIndex);
                 removeColumnFilterRule.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), filterIndex, ruleIndex);
@@ -686,7 +686,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     // display operator between each rule except the last
                     if (r < filter.getRules().size() - 1)
                     {
-                        if (ImGui::BeginCombo(std::string("##FilterOperator").append(std::to_string(f)).append(std::to_string(r)).c_str(), schedule_consts::logicalOperatorStrings.at(filter.getOperatorType())))
+                        if (ImGui::BeginCombo(std::string("##FilterOperator").append(std::to_string(f)).append(";").append(std::to_string(r)).c_str(), schedule_consts::logicalOperatorStrings.at(filter.getOperatorType())))
                         {
                             for (const auto& [logicalOperator, operatorString]: schedule_consts::logicalOperatorStrings)
                             {
@@ -703,7 +703,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     }
                 }
                 // Add new rule button
-                if (ImGui::Button(std::string("+ Add rule##{}", f).c_str()))
+                if (ImGui::Button(std::string("+ Add rule##").append(std::to_string(f)).c_str()))
                 {
                     // DONT add a rule. Open the FilterRule editor with create. If the user creates it, THEN it will be added!
                     if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
