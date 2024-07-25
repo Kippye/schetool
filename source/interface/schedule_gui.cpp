@@ -1,6 +1,5 @@
 
 #include <array>
-#include <format>
 #include <ctime>
 #include <iterator>
 #include <string>
@@ -90,7 +89,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                         float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterGroupCount();
 
                         // FilterGroup button with its name
-                        if (ImGui::Button(std::format("{}##{};{}", currentColumn->getFilterGroupConst(i).getName().append("##").append(std::to_string(i)), column, i).c_str(), ImVec2(filterButtonWidth, 0)))
+                        if (ImGui::Button(currentColumn->getFilterGroupConst(i).getName().append("##").append(std::to_string(i)).append("##").append(std::to_string(column)).append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
                         {
                             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                             {
