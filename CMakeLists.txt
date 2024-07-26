@@ -25,10 +25,23 @@ target_compile_options(compiler_flags INTERFACE ${PRESET_ADD_COMPILE_OPTIONS})
 # Usage: CHECK_LIBRARY_EXISTS(library function location variable)
 
 message(STATUS "~~ Setting compile and link flags for ${CMAKE_GENERATOR}")
+message(STATUS "~~ Using CXX compiler ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
 IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-    IF ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS)) 
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=${CPP_VERSION} -lstdc++")
+    # WINDOWS OR MSYS SYSTEM
+    IF ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS))
+        # COMPILER FLAGS
+        # CLANG
+        
+        IF (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -stdlib=libc++ -fuse-ld=lld -mtune=native -std=${CPP_VERSION}")
+        ENDIF()
+        # GNU (G++)
+        IF (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -fuse-ld=lld -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=${CPP_VERSION}")
+        ENDIF()
         message(STATUS "~~ Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
+
+        # WINDOWS LINKER FLAGS
         # keep console for debug builds and hide it for release builds
         # /ENTRY:mainCRTStartup keeps the same "main" function instead of requiring "WinMain"
         IF (${CMAKE_BUILD_TYPE} STREQUAL Debug)
@@ -40,6 +53,7 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
             set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,windows" "-Wl,-entry,mainCRTStartup")
             message(STATUS "~~ Added Windows Release linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
         ENDIF()
+    # LINUX OR OTHER SYSTEM
     ELSE()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CPP_VERSION} -lstdc++")
         message(STATUS "~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
