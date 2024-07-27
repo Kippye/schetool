@@ -70,6 +70,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                             filterEditor->createGroupAndEdit(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                         }
                     }
+                    const float addButtonWidth = ImGui::GetItemRectSize().x;
                         
                     if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                     {
@@ -79,27 +80,60 @@ void ScheduleGui::draw(Window& window, Input& input)
                         }
                     }
 
+                    ImGui::SameLine();
+
                     const Column* currentColumn = m_scheduleCore->getColumn(column);
                     const auto& columnFilterGroups = currentColumn->getFilterGroupsConst();
 
-                    ImGui::SameLine();
+                    // DATA TO PASS TO FILTER EDITOR
+                    bool openFilterEditor = false;
+                    size_t editorGroupIndex = 0;
+                    ImRect itemAvoidRect;
 
-                    for (size_t i = 0; i < columnFilterGroups.size(); i++)
+                    // LAMBDA: Draws buttons for every FilterGroup in the column. Sets data to pass to filterEditor if a button is clicked.
+                    auto drawFilterGroupButtons = [&](bool sameLine, float buttonWidth)
                     {
-                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterGroupCount();
-
-                        // FilterGroup button with its name
-                        if (ImGui::Button(currentColumn->getFilterGroupConst(i).getName().append("##").append(std::to_string(column)).append(";").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
+                        for (size_t i = 0; i < columnFilterGroups.size(); i++)
                         {
-                            if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+                            // FilterGroup button with its name
+                            if (ImGui::Button(currentColumn->getFilterGroupConst(i).getName().append("##").append(std::to_string(column)).append(";").append(std::to_string(i)).c_str(), ImVec2(buttonWidth, 0)))
                             {
-                                filterEditor->openGroupEdit(column, i, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                openFilterEditor = true;
+                                editorGroupIndex = i;
+                                itemAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+                            }
+
+                            if (sameLine && i < currentColumn->getFilterGroupCount() - 1)
+                            {
+                                ImGui::SameLine();
                             }
                         }
+                    };
 
-                        if (i < currentColumn->getFilterGroupCount() - 1)
+                    const float filterButtonWidth = (ImGui::GetColumnWidth() - (ImGui::GetStyle().ItemSpacing.x * columnFilterGroups.size() - 1))  / columnFilterGroups.size();
+
+                    if (columnFilterGroups.size() <= 3)
+                    {
+                        drawFilterGroupButtons(true, filterButtonWidth);
+                    }
+                    else
+                    {
+                        if (ImGui::Button(std::to_string(columnFilterGroups.size()).append(" filter groups").append("##OpenFilterGroupListButton").c_str()))
                         {
-                            ImGui::SameLine();
+                            ImGui::OpenPopup("FilterGroupListPopup");
+                        }
+                        if (ImGui::BeginPopup("FilterGroupListPopup"))
+                        {
+                            drawFilterGroupButtons(false, ImGui::CalcTextSize("M").x * schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
+                            ImGui::EndPopup();
+                        }
+                    }
+                    // Open filter editor NOTE: All the data here is set in drawFilterGroupButtons() lambda!
+                    if (openFilterEditor)
+                    {
+                        if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+                        {
+                            filterEditor->openGroupEdit(column, editorGroupIndex, itemAvoidRect);
                         }
                     }
                 }
