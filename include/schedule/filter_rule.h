@@ -76,6 +76,10 @@ inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element)
         {
             return (value.contains(m_passValue));
         }
+        case Comparison::DoesNotContain:
+        {
+            return (!value.contains(m_passValue));
+        }
         default: isComparisonValidForElement(element); return false;
     }
 }
@@ -102,6 +106,10 @@ inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element
         case Comparison::Contains:
         {
             return (value.contains(m_passValue));
+        }
+        case Comparison::DoesNotContain:
+        {
+            return (!value.contains(m_passValue));
         }
         case Comparison::ContainsToday:
         {
