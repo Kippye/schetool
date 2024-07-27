@@ -653,7 +653,11 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
         auto drawFilterRule = [&](size_t filterIndex, size_t ruleIndex)
         {
             Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
-            if (ImGui::Button(filter.getRule(ruleIndex).getString().append("##").append(std::to_string(filterIndex)).append(";").append(std::to_string(ruleIndex)).c_str()))
+            
+            ImVec2 ruleTextSize = ImGui::CalcTextSize(filter.getRule(ruleIndex).getString().c_str());
+            ImVec2 ruleButtonSize = ImVec2(std::min(ruleTextSize.x, ImGui::GetContentRegionAvail().x - gui_sizes::filterRuleButtonWidthOffset), 0.0f);
+
+            if (ImGui::Button(filter.getRule(ruleIndex).getString().append("##").append(std::to_string(filterIndex)).append(";").append(std::to_string(ruleIndex)).c_str(), ruleButtonSize))
             {
                 // Open the filter rule editor to edit this rule
                 if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
