@@ -68,20 +68,23 @@ void ScheduleEditHistory::removeFollowingEditHistory()
     }
 }
 
-void ScheduleEditHistory::undo()
+bool ScheduleEditHistory::undo()
 {
-    if (m_editHistory.size() == 0 || m_editHistoryIndex == 0 && m_editHistory[m_editHistoryIndex]->getIsReverted()) { return; }
+    if (m_editHistory.size() == 0 || m_editHistoryIndex == 0 && m_editHistory[m_editHistoryIndex]->getIsReverted()) { return false; }
 
     ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
     edit->revert(m_core); 
     if (m_editHistoryIndex > 0) { m_editHistoryIndex--; }
+    return true;
 }
 
-void ScheduleEditHistory::redo()
+bool ScheduleEditHistory::redo()
 {
-    if (m_editHistory.size() == 0 || m_editHistoryIndex == m_editHistory.size() - 1 && m_editHistory[m_editHistoryIndex]->getIsReverted() == false) { return; }
+    if (m_editHistory.size() == 0 || m_editHistoryIndex == m_editHistory.size() - 1 && m_editHistory[m_editHistoryIndex]->getIsReverted() == false) { return false; }
 
+    // increase history index if (not 0th edit or 0th edit is reverted) AND there are later edits to redo
     if ((m_editHistoryIndex > 0 || m_editHistory[0]->getIsReverted() == false) && m_editHistoryIndex < m_editHistory.size() - 1) { m_editHistoryIndex++; }
     ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
     edit->apply(m_core);
+    return true;
 }

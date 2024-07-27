@@ -10,7 +10,7 @@
 #include "util.h"
 #include "element.h"
 #include "element_base.h"
-#include "filter.h"
+#include "filter_rule.h"
 #include "schedule.h"
 #include "gui_templates.h"
 #include <iostream>
@@ -62,40 +62,42 @@ void ScheduleGui::draw(Window& window, Input& input)
                 {
                     ImGui::TableSetColumnIndex(column);
 
-                    if (ImGui::SmallButton(std::string("+##addFilter").append(std::to_string(column)).c_str()))
+                    if (ImGui::SmallButton(std::string("+##addFilterGroup").append(std::to_string(column)).c_str()))
                     {
-                        // display the Filter editor to add a filter to this Column
+                        // display the FilterGroup editor to add a filter group to this Column
                         if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                         {
-                            filterEditor->open_create(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                            filterEditor->createGroupAndEdit(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                         }
                     }
                         
                     if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                     {
-                        if (filterEditor->getFilterColumn() == column)
+                        if (filterEditor->getColumn() == column)
                         {
                             filterEditor->draw(window, input);
                         }
                     }
 
                     const Column* currentColumn = m_scheduleCore->getColumn(column);
-                    const auto& columnFilters = currentColumn->getFiltersConst();
+                    const auto& columnFilterGroups = currentColumn->getFilterGroupsConst();
 
                     ImGui::SameLine();
 
-                    for (size_t i = 0; i < currentColumn->getFilterCount(); i++)
+                    for (size_t i = 0; i < columnFilterGroups.size(); i++)
                     {
-                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterCount();
-                        if (ImGui::Button(std::string(columnFilters.at(i)->getString()).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
+                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterGroupCount();
+
+                        // FilterGroup button with its name
+                        if (ImGui::Button(currentColumn->getFilterGroupConst(i).getName().append("##").append(std::to_string(column)).append(";").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
                         {
                             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                             {
-                                filterEditor->open_edit(column, i, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                filterEditor->openGroupEdit(column, i, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                             }
                         }
 
-                        if (i < currentColumn->getFilterCount() - 1)
+                        if (i < currentColumn->getFilterGroupCount() - 1)
                         {
                             ImGui::SameLine();
                         }
@@ -147,14 +149,11 @@ void ScheduleGui::draw(Window& window, Input& input)
                     // CHECK FILTERS BEFORE DRAWING ROW
                     for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
                     {
-                        // check if the row's Element passes all Filters in this Column
-                        for (const auto& filter: m_scheduleCore->getColumn(column)->getFiltersConst())
+                        // check if the row's Element passes every FilterGroup in this Column
+                        if (m_scheduleCore->getColumn(column)->checkElementPassesFilters(row) == false)
                         {
                             // fails to pass, don't show this row                            
-                            if (filter->checkPasses(m_scheduleCore->getElementConst(column, row)) == false)
-                            {
-                                goto do_not_draw_row;
-                            }
+                            goto do_not_draw_row;
                         }
                     }
 

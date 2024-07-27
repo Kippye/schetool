@@ -22,17 +22,36 @@ enum class Comparison
     Is,
     IsNot,
     Contains,
+    DoesNotContain,
     IsRelativeToToday,
     IsEmpty,
     ContainsToday,
-    // TEMP
-    ContainsTodayOrIsEmpty
+};
+
+enum class LogicalOperatorEnum 
+{
+    And,
+    Or
+};
+
+class LogicalOperator
+{
+    private:
+        LogicalOperatorEnum m_operatorType = LogicalOperatorEnum::And;    
+    public:
+        LogicalOperator() = default;
+        LogicalOperator(LogicalOperatorEnum type);
+        
+        LogicalOperatorEnum getOperatorType() const;
+
+        bool apply(bool a, bool b) const;
 };
 
 namespace schedule_consts
 {
     const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
     const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
+    const size_t FILTER_GROUP_NAME_MAX_LENGTH = 30;
     const std::map<SCHEDULE_TYPE, const char*> scheduleTypeNames =
     {
         {SCH_BOOL, "Checkbox"},
@@ -53,6 +72,11 @@ namespace schedule_consts
         "Friday",
         "Saturday",
         "Sunday",
+    };
+    const std::map<LogicalOperatorEnum, const char*> logicalOperatorStrings  =
+    {
+        { LogicalOperatorEnum::And, "AND" },
+        { LogicalOperatorEnum::Or, "OR" }
     };
 }
 
@@ -76,8 +100,8 @@ namespace filter_consts
         { SCH_NUMBER,   { Comparison::Is, Comparison::IsNot } },
         { SCH_DECIMAL,  { Comparison::Is, Comparison::IsNot } },
         { SCH_TEXT,     { Comparison::Is, Comparison::IsNot } },
-        { SCH_SELECT,   { Comparison::Is, Comparison::IsNot, Comparison::Contains } },
-        { SCH_WEEKDAY,  { Comparison::Is, Comparison::IsNot, Comparison::Contains, Comparison::ContainsToday, Comparison::ContainsTodayOrIsEmpty } },
+        { SCH_SELECT,   { Comparison::Is, Comparison::IsNot, Comparison::IsEmpty,  Comparison::Contains, Comparison::DoesNotContain } },
+        { SCH_WEEKDAY,  { Comparison::Is, Comparison::IsNot, Comparison::IsEmpty, Comparison::Contains, Comparison::DoesNotContain, Comparison::ContainsToday } },
         { SCH_TIME,     { Comparison::Is, Comparison::IsNot } },
         { SCH_DATE,     { Comparison::Is, Comparison::IsNot, Comparison::IsEmpty, Comparison::IsRelativeToToday } },
     };
@@ -87,10 +111,10 @@ namespace filter_consts
         { Comparison::Is, "is" },
         { Comparison::IsNot, "is not" },
         { Comparison::Contains, "contains" },
+        { Comparison::DoesNotContain, "does not contain" },
         { Comparison::IsRelativeToToday, "is relative to today" },
         { Comparison::IsEmpty, "is empty" },
         { Comparison::ContainsToday, "contains today" },
-        { Comparison::ContainsTodayOrIsEmpty, "contains today or is empty" },
     };
 
     TypeComparisonInfo getComparisonInfo(SCHEDULE_TYPE type);

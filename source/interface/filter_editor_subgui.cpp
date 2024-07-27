@@ -4,63 +4,90 @@
 
 using filter_consts::TypeComparisonInfo;
 
-void EditorFilterState::setFilter(const std::shared_ptr<FilterBase>& filter)
-{
-    m_filter = filter;
-}
 
-std::shared_ptr<FilterBase> EditorFilterState::getFilterBase()
-{
-    return m_filter;
-}
-
-void EditorFilterState::setType(SCHEDULE_TYPE type)
-{
-    if (type == SCH_LAST) { return; }
-    m_type = type;
-}
-
-SCHEDULE_TYPE EditorFilterState::getType() const
+SCHEDULE_TYPE FilterRuleEditorState::getType() const
 {
     return m_type;
 }
 
-bool EditorFilterState::hasValidFilter() const
+std::pair<size_t, size_t> FilterRuleEditorState::getIndices() const
 {
-    if (m_filter)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return {m_filterIndex, m_filterRuleIndex};
+}
+
+FilterRuleContainer& FilterRuleEditorState::getFilterRule()
+{
+    return m_filterRule;
+}
+ 
+bool FilterRuleEditorState::getIsValid() const
+{
+    return m_isValid;
+}
+
+void FilterRuleEditorState::makeInvalid()
+{
+    m_isValid = false;
 }
 
 
-FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents) : Gui(ID) 
+void FilterGroupEditorState::setup(SCHEDULE_TYPE type, size_t columnIndex, size_t filterGroupIndex, FilterGroup filterGroup)
 {
-	m_scheduleCore = scheduleCore;
-    scheduleEvents.columnAdded.addListener(columnAddedListener);
-    scheduleEvents.columnRemoved.addListener(columnRemovedListener);
+    m_type = type;
+    m_columnIndex = columnIndex;
+    m_filterGroupIndex = filterGroupIndex;
+    m_filterGroup = filterGroup;
+    m_isValid = true;
 }
 
-void FilterEditorSubGui::draw(Window& window, Input& input)
+SCHEDULE_TYPE FilterGroupEditorState::getType() const
 {
-	if (ImGui::BeginPopupEx(ImGui::GetID("Filter Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
+    return m_type;
+}
+
+size_t FilterGroupEditorState::getColumnIndex() const
+{
+    return m_columnIndex;
+}
+
+size_t FilterGroupEditorState::getFilterGroupIndex() const
+{
+    return m_filterGroupIndex;   
+}
+
+FilterGroup& FilterGroupEditorState::getFilterGroup()
+{
+    return m_filterGroup;
+}
+
+bool FilterGroupEditorState::getIsValid() const
+{
+    return m_isValid;
+}
+
+void FilterGroupEditorState::makeInvalid()
+{
+    m_isValid = false;
+}
+
+
+FilterRuleEditorSubGui::FilterRuleEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents, FilterGroupEditorState& filterGroupState) : Gui(ID), m_scheduleCore(scheduleCore), m_filterGroupState(filterGroupState)
+{
+    scheduleEvents.editUndone.addListener(editUndoListener);
+    scheduleEvents.editRedone.addListener(editRedoListener);
+}
+
+void FilterRuleEditorSubGui::draw(Window& window, Input& input)
+{
+    if (ImGui::BeginPopupEx(ImGui::GetID("FilterRule Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
 	{
-        if (m_scheduleCore->existsColumnAtIndex(m_editorColumn) == false)
+        m_popupOpen = true;
+
+        if (m_filterRuleState.getIsValid() == false)
         {
-            printf("FilterEditorSubGui::draw(): There is no Column at the editor column index %zu\n", m_editorColumn);
-            ImGui::EndPopup();
+            printf("FilterRuleEditorSubGui::draw(): FilterRuleEditorState is not valid.\n");
             close();
-            return;
-        }
-        if (m_scheduleCore->getColumn(m_editorColumn)->type != m_filterState.getType())
-        {
-            printf("FilterEditorSubGui::draw(): The types of the Column (%d) and the editor's filter state (%d) do not match!\n", m_scheduleCore->getColumn(m_editorColumn)->type, m_filterState.getType());
             ImGui::EndPopup();
-            close();
             return;
         }
 
@@ -72,15 +99,12 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		//ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
 		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
 
-		bool isPermanentColumn = m_scheduleCore->getColumn(m_editorColumn)->permanent;
-		tm formatTime;
-
         // LAMBDA.
         // Display a Selectable combo for choosing the comparison with options for the provided type.
         // Returns a pair containing a bool (whether the comparison was changed) and a Comparison (the selected Comparison)
         auto displayComparisonCombo = [&](SCHEDULE_TYPE type) -> std::pair<bool, Comparison>
         {
-            Comparison currentComparison = m_filterState.getFilterBase()->getComparison();
+            Comparison currentComparison = m_filterRuleState.getFilterRule().getComparison();
             TypeComparisonInfo comparisonInfo = filter_consts::getComparisonInfo(type);
             bool selectionChanged = false;
 
@@ -89,14 +113,14 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-            if (ImGui::BeginCombo("##filterEditorComparison", filter_consts::comparisonStrings.at(currentComparison)))
+            if (ImGui::BeginCombo("##filterRuleEditorComparison", filter_consts::comparisonStrings.at(currentComparison)))
             {
                 for (size_t i = 0; i < comparisonInfo.names.size(); i++)
                 {
                     bool isSelected = comparisonInfo.comparisons[i] == currentComparison;
                     if (ImGui::Selectable(comparisonInfo.names[i].c_str(), isSelected))
                     {
-                        m_filterState.getFilterBase()->setComparison(comparisonInfo.comparisons.at(i));
+                        m_filterRuleState.getFilterRule().setComparison(comparisonInfo.comparisons.at(i));
                         selectionChanged = true;
                     }
 
@@ -113,156 +137,169 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             {
                 ImGui::PopItemFlag();
             }
-            return { selectionChanged, m_filterState.getFilterBase()->getComparison() };
+            return { selectionChanged, m_filterRuleState.getFilterRule().getComparison() };
         };
 
-        bool hasRemoveButton = false;
-    
-        // LAMBDA
-        auto displayRemoveFilterButton = [&]() 
-        {
-            if (ImGui::SmallButton("X##removeFilter"))
-            {
-                removeColumnFilter.invoke(m_editorColumn, m_editorFilterIndex);
-                ImGui::CloseCurrentPopup();
-            }
-            hasRemoveButton = true;
-        };
-
-        gui_templates::TextWithBackground("%s", m_scheduleCore->getColumn(m_editorColumn)->name.c_str());
+        gui_templates::TextWithBackground("%s", m_columnName.c_str());
 
         ImGui::SameLine();
 
-		switch(m_filterState.getType())
+        tm formatTime;
+        auto [filterIndex, filterRuleIndex] = m_filterRuleState.getIndices();
+        Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
+
+        // LAMBDA.
+        // Invoke the editColumnFilterRule event
+        auto invokeEditFilterRuleEvent = [&](const FilterRuleContainer& prevFilterRule)
+        {
+            editColumnFilterRule.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), filterIndex, filterRuleIndex, prevFilterRule, m_filterRuleState.getFilterRule());
+        };
+
+		switch(m_filterRuleState.getType())
 		{
             case(SCH_BOOL):
             {
-                displayComparisonCombo(SCH_BOOL);
+                bool newValue = m_filterRuleState.getFilterRule().getPassValue<bool>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<bool>();
 
+                bool comparisonChanged = displayComparisonCombo(SCH_BOOL).first;
                 ImGui::SameLine();
 
-                bool newValue = m_filterState.getFilter<bool>()->getPassValue();
-                auto prevFilter = *m_filterState.getFilter<bool>(); 
-
-                if (ImGui::Checkbox(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue))
+                if (ImGui::Checkbox("##filterRuleEditor", &newValue) || comparisonChanged)
                 {
-                    m_filterState.getFilter<bool>()->setPassValue(newValue);
-                    invokeFilterEditEvent<bool>(prevFilter, *m_filterState.getFilter<bool>());
+                    m_filterRuleState.getFilterRule().setPassValue(newValue);
+                    if (m_editing == true)
+                    {
+                        filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<bool>());
+                        invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                    }
                 }
                 break;
             }
             case(SCH_NUMBER):
             {
-                displayComparisonCombo(SCH_NUMBER);
+                int newValue = m_filterRuleState.getFilterRule().getPassValue<int>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<int>(); 
 
+                bool comparisonChanged = displayComparisonCombo(SCH_NUMBER).first;
                 ImGui::SameLine();
 
-                int newValue = m_filterState.getFilter<int>()->getPassValue();
-                auto prevFilter = *m_filterState.getFilter<int>(); 
-
-                if (ImGui::InputInt(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue))
+                if (ImGui::InputInt("##filterRuleEditor", &newValue, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue) || comparisonChanged)
                 {
-                    m_filterState.getFilter<int>()->setPassValue(newValue);
-                    invokeFilterEditEvent<int>(prevFilter, *m_filterState.getFilter<int>());
+                    m_filterRuleState.getFilterRule().setPassValue(newValue);
+                    if (m_editing == true)
+                    {
+                        filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<int>());
+                        invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                    }
                 }
                 break;
             }
             case(SCH_DECIMAL):
             {
-                displayComparisonCombo(SCH_DECIMAL);
-
-                ImGui::SameLine();
-
-                double newValue = m_filterState.getFilter<double>()->getPassValue();
-                auto prevFilter = *m_filterState.getFilter<double>(); 
+                double newValue = m_filterRuleState.getFilterRule().getPassValue<double>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<double>();
                 
-                if (ImGui::InputDouble(std::string("##filterEditor").append(std::to_string(m_editorColumn)).append(";").c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
+                bool comparisonChanged = displayComparisonCombo(SCH_DECIMAL).first;
+                ImGui::SameLine();
+    
+                if (ImGui::InputDouble("##filterRuleEditor", &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue) || comparisonChanged)
                 {
-                    m_filterState.getFilter<double>()->setPassValue(newValue);
-                    invokeFilterEditEvent<double>(prevFilter, *m_filterState.getFilter<double>());
+                    m_filterRuleState.getFilterRule().setPassValue(newValue);
+                    if (m_editing == true)
+                    {
+                        filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<double>());
+                        invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                    }
                 }
                 break;
             }
             case(SCH_TEXT):
             {
-                displayComparisonCombo(SCH_TEXT);
+                std::string value = m_filterRuleState.getFilterRule().getPassValue<std::string>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<std::string>(); 
 
-                if (m_editing == true)
-                {
-                    ImGui::SameLine();
-                    displayRemoveFilterButton();
-                }
+                bool comparisonChanged = displayComparisonCombo(SCH_TEXT).first; 
 
-                std::string value = m_filterState.getFilter<std::string>()->getPassValue();
-                auto prevFilter = *m_filterState.getFilter<std::string>(); 
                 value.reserve(schedule_consts::ELEMENT_TEXT_MAX_LENGTH);
                 char* buf = value.data();
-                //ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
-                if (ImGui::InputTextMultiline(std::string("##filterEditor").append(std::to_string(m_editorColumn)).c_str(), buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+
+                if (ImGui::InputTextMultiline("##filterRuleEditor", buf, value.capacity(), ImVec2(0, 0), ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine) || comparisonChanged)
                 {
-                    m_filterState.getFilter<std::string>()->setPassValue(std::string(buf));
-                    invokeFilterEditEvent<std::string>(prevFilter, *m_filterState.getFilter<std::string>());
+                    m_filterRuleState.getFilterRule().setPassValue(std::string(buf));
+                    if (m_editing == true)
+                    {
+                        filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<std::string>());
+                        invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                    }
                 }
 
                 break;
             }
             case(SCH_SELECT):
             {
-				SelectContainer value = m_filterState.getFilter<SelectContainer>()->getPassValue();
-                auto prevFilter = *m_filterState.getFilter<SelectContainer>(); 
+				SelectContainer value = m_filterRuleState.getFilterRule().getPassValue<SelectContainer>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<SelectContainer>(); 
 
-                displayComparisonCombo(SCH_SELECT);
+                auto [comparisonChanged, newComparison] = displayComparisonCombo(SCH_SELECT);
 
-                // Remove button
-                if (m_editing == true)
+                if (comparisonChanged && m_editing == true)
                 {
-                    ImGui::SameLine();
-                    displayRemoveFilterButton();
+                    filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<SelectContainer>());
+                    invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
                 }
 
-                auto selection = value.getSelection();
-				const std::vector<std::string>& optionNames = m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptions();
-
-                // Options
-				for (size_t i = 0; i < optionNames.size(); i++)
-				{
-					bool selected = selection.find(i) != selection.end();
-
-                    if (ImGui::Checkbox(std::string("##SelectFilterEditorCheck").append(std::to_string(i)).c_str(), &selected))
+                if (newComparison != Comparison::IsEmpty)
+                {
+                    auto selection = value.getSelection();
+                    const std::vector<std::string>& optionNames = m_scheduleCore->getColumnSelectOptions(m_filterGroupState.getColumnIndex()).getOptions();
+                    // Options
+                    for (size_t i = 0; i < optionNames.size(); i++)
                     {
-                        value.setSelected(i, selected);
-                        m_filterState.getFilter<SelectContainer>()->setPassValue(value);
-                        invokeFilterEditEvent<SelectContainer>(prevFilter, *m_filterState.getFilter<SelectContainer>());
+                        bool selected = selection.find(i) != selection.end();
+
+                        auto setCurrentOptionSelected = [&](bool newSelected)
+                        {
+                            value.setSelected(i, newSelected);
+                            m_filterRuleState.getFilterRule().setPassValue(value);
+                            if (m_editing == true)
+                            {
+                                filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<SelectContainer>());
+                                invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                            }
+                        };
+
+                        if (ImGui::Checkbox(std::string("##SelectFilterEditorCheck").append(std::to_string(i)).c_str(), &selected))
+                        {
+                            setCurrentOptionSelected(selected);
+                        }
+
+                        ImGui::SameLine();
+
+                        std::string optionName = std::string(optionNames[i]);
+
+                        if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
+                        {
+                            setCurrentOptionSelected(selected);
+                        }
                     }
-
-                    ImGui::SameLine();
-
-					std::string optionName = std::string(optionNames[i]);
-
-					if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
-					{
-						value.setSelected(i, selected);
-                        m_filterState.getFilter<SelectContainer>()->setPassValue(value);
-                        invokeFilterEditEvent<SelectContainer>(prevFilter, *m_filterState.getFilter<SelectContainer>());
-					}
-				}
+                }
                 break;
             }
             case(SCH_WEEKDAY):
             {
-				WeekdayContainer value = m_filterState.getFilter<WeekdayContainer>()->getPassValue();
-                auto prevFilter = *m_filterState.getFilter<WeekdayContainer>(); 
+				WeekdayContainer value = m_filterRuleState.getFilterRule().getPassValue<WeekdayContainer>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<WeekdayContainer>(); 
 
-                displayComparisonCombo(SCH_WEEKDAY);
+                auto [comparisonChanged, newComparison] = displayComparisonCombo(SCH_WEEKDAY);
 
-                // Remove button
-                if (m_editing == true)
+                if (comparisonChanged && m_editing == true)
                 {
-                    ImGui::SameLine();
-                    displayRemoveFilterButton();
+                    filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<WeekdayContainer>());
+                    invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
                 }
 
-                if (m_filterState.getFilterBase()->getComparison() != Comparison::ContainsToday)
+                if (newComparison != Comparison::IsEmpty && newComparison != Comparison::ContainsToday)
                 {
                     auto selection = value.getSelection();
                     const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
@@ -271,11 +308,20 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     {
                         bool selected = selection.find(i) != selection.end();
 
+                        auto setCurrentOptionSelected = [&](bool newSelected)
+                        {
+                            value.setSelected(i, newSelected);
+                            m_filterRuleState.getFilterRule().setPassValue(value);
+                            if (m_editing == true)
+                            {
+                                filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<WeekdayContainer>());
+                                invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                            }
+                        };
+
                         if (ImGui::Checkbox(std::string("##WeekdayFilterEditorCheck").append(std::to_string(i)).c_str(), &selected))
                         {
-                            value.setSelected(i, selected);
-                            m_filterState.getFilter<WeekdayContainer>()->setPassValue(value);
-                            invokeFilterEditEvent<WeekdayContainer>(prevFilter, *m_filterState.getFilter<WeekdayContainer>());
+                            setCurrentOptionSelected(selected);
                         }
 
                         ImGui::SameLine();
@@ -285,9 +331,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                         ImGui::PushStyleColor(ImGuiCol_Header, gui_colors::dayColors[i]);
                         if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
                         {
-                            value.setSelected(i, selected);
-                            m_filterState.getFilter<WeekdayContainer>()->setPassValue(value);
-                            invokeFilterEditEvent<WeekdayContainer>(prevFilter, *m_filterState.getFilter<WeekdayContainer>());
+                            setCurrentOptionSelected(selected);
                         }
                         ImGui::PopStyleColor(1);
                     }
@@ -296,58 +340,56 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
             case(SCH_TIME):
             {
-                TimeContainer value = m_filterState.getFilter<TimeContainer>()->getPassValue();
-                auto prevFilter = *m_filterState.getFilter<TimeContainer>(); 
+                TimeContainer value = m_filterRuleState.getFilterRule().getPassValue<TimeContainer>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<TimeContainer>();
                 
-                displayComparisonCombo(SCH_TIME);
+                bool comparisonChanged = displayComparisonCombo(SCH_TIME).first;
 
                 ImGui::SameLine();
 
-                if (gui_templates::TimeEditor(value))
+                if (gui_templates::TimeEditor(value) || comparisonChanged)
                 {
-                    m_filterState.getFilter<TimeContainer>()->setPassValue(value);
-                    invokeFilterEditEvent<TimeContainer>(prevFilter, *m_filterState.getFilter<TimeContainer>());
+                    m_filterRuleState.getFilterRule().setPassValue(value);
+                    if (m_editing == true)
+                    {
+                        filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<TimeContainer>());
+                        invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                    }
                 }
- 
                 break;
             }
             case(SCH_DATE):
             {
-                DateContainer value = m_filterState.getFilter<DateContainer>()->getPassValue();
-                auto prevFilter = *m_filterState.getFilter<DateContainer>(); 
+                DateContainer value = m_filterRuleState.getFilterRule().getPassValue<DateContainer>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<DateContainer>(); 
 
-                auto [_comparisonChanged, newComparison] = displayComparisonCombo(SCH_DATE);
+                auto [comparisonChanged, newComparison] = displayComparisonCombo(SCH_DATE);
 
-                ImGui::SameLine();
-
-                // !!! update value, might have been modified above
-                value = m_filterState.getFilter<DateContainer>()->getPassValue();
+                if (comparisonChanged && m_editing == true)
+                {
+                    filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<DateContainer>());
+                    invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                }
 
                 // Display the date of the current Date element, UNLESS the comparison is IsEmpty
                 if (newComparison != Comparison::IsEmpty)
                 {
-                    gui_templates::TextWithBackground("%s##filterEditor%zu", newComparison == Comparison::IsRelativeToToday ? "Today" : value.getString().c_str(), m_editorColumn);
-                }
-                else
-                {
-                    ImGui::NewLine();
-                }
-
-                // If editing, display the remove filter button here, before the Date editor 
-                if (m_editing == true)
-                {
                     ImGui::SameLine();
-                    displayRemoveFilterButton();
+                    gui_templates::TextWithBackground("%s##filterRuleEditor", newComparison == Comparison::IsRelativeToToday ? "Today" : value.getString().c_str());
                 }
 
                 if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth, false, false))
                 {
-                    m_filterState.getFilter<DateContainer>()->setComparison(Comparison::Is);
-                    // weird lil thing: if a Date was selected, then the Date is no longer relative. so we make a copy using its time but with relative = false
-                    m_filterState.getFilter<DateContainer>()->setPassValue(DateContainer(value.getTime()));
-                    invokeFilterEditEvent<DateContainer>(prevFilter, *m_filterState.getFilter<DateContainer>());
+                    // Choosing a specific date makes the filter no longer relative
+                    m_filterRuleState.getFilterRule().setComparison(Comparison::Is);
+
+                    m_filterRuleState.getFilterRule().setPassValue(value);
+                    if (m_editing == true)
+                    {
+                        filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<DateContainer>());
+                        invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                    }
                 }
-                
                 break;
             }
 			default:
@@ -357,121 +399,405 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             }
 		}
 
-        // editing and a remove button hasn't been added before
-        if (m_editing == true && hasRemoveButton == false)
-        {
-            ImGui::SameLine();
-            displayRemoveFilterButton();
-        }
-
         if (m_editing == false && ImGui::Button("Create"))
         {
-            addColumnFilter.invoke(m_editorColumn, m_filterState.getFilterBase());
+            switch(m_filterRuleState.getType())
+            {
+                case(SCH_BOOL):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<bool>());
+                    break;
+                case(SCH_NUMBER):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<int>());
+                    break;
+                case(SCH_DECIMAL):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<double>());
+                    break;
+                case(SCH_TEXT):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<std::string>());
+                    break;
+                case(SCH_SELECT):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<SelectContainer>());
+                    break;
+                case(SCH_WEEKDAY):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<WeekdayContainer>());
+                    break;
+                case(SCH_TIME):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<TimeContainer>());
+                    break;
+                case(SCH_DATE):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<DateContainer>());
+                    break;                
+                default:
+                {
+                    printf("FilterRuleEditorSubGui::draw(): Creating filters of type %d has not been implemented\n", m_filterRuleState.getType());
+                    return;
+                }
+            }
+            addColumnFilterRule.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), filterIndex, m_filterRuleState.getFilterRule());
             ImGui::CloseCurrentPopup();
         }
 
 		ImGui::EndPopup();
 	}
+    else
+    {
+        m_popupOpen = false;
+    }
+
+    if (m_openNextFrame)
+    {
+        ImGui::OpenPopup("FilterRule Editor");
+        m_openNextFrame = false;
+    }
 }
 
-void FilterEditorSubGui::open_edit(size_t column, size_t filterIndex, const ImRect& avoidRect)
+void FilterRuleEditorSubGui::openEdit(SCHEDULE_TYPE type, const std::string& columnName, size_t filterIndex, size_t ruleIndex, const ImRect& avoidRect)
 {
-    if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
-
-	m_editorColumn = column;
-    m_editorFilterIndex = filterIndex;
+    if (m_filterGroupState.getFilterGroup().hasFilterAt(filterIndex) == false) { return; }
+    if (ruleIndex < m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRuleCount() == false) { return; }
+ 
     m_editing = true;
-	m_avoidRect = avoidRect;
+    m_columnName = columnName;
+    m_avoidRect = avoidRect;
 
     DateContainer currentDate = DateContainer::getCurrentSystemDate();
     m_viewedYear = currentDate.getTime().tm_year;
     m_viewedMonth = currentDate.getTime().tm_mon;
 
-    m_filterState.setType(m_scheduleCore->getColumn(column)->type);
-    m_filterState.setFilter(m_scheduleCore->getColumn(column)->getFiltersConst().at(filterIndex));
-
-	ImGui::OpenPopup("Filter Editor");
-}
-
-void FilterEditorSubGui::open_create(size_t column, const ImRect& avoidRect)
-{ 
-    if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
-
-	m_editorColumn = column;
-    m_editing = false;
-	m_avoidRect = avoidRect;
-
-    DateContainer currentDate = DateContainer::getCurrentSystemDate();
-    m_viewedYear = currentDate.getTime().tm_year;
-    m_viewedMonth = currentDate.getTime().tm_mon;
-
-    SCHEDULE_TYPE columnType = m_scheduleCore->getColumn(column)->type;
-
-    m_filterState.setType(columnType);
-
-    switch(columnType)
+    // Set up m_filterRuleState and open the popup
+    switch(type)
     {
         case(SCH_BOOL):
-        {
-            m_filterState.setFilter(std::make_shared<Filter<bool>>(false));
+            m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<bool>());
             break;
-        }
         case(SCH_NUMBER):
-        {
-            m_filterState.setFilter(std::make_shared<Filter<int>>(0));
+            m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<int>());
             break;
-        }
         case(SCH_DECIMAL):
-        {
-            m_filterState.setFilter(std::make_shared<Filter<double>>(0.0));
+             m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<double>());
             break;
-        }
         case(SCH_TEXT):
-        {
-            m_filterState.setFilter(std::make_shared<Filter<std::string>>(std::string("")));
+            m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<std::string>());
             break;
-        }
         case(SCH_SELECT):
-        {
-            m_filterState.setFilter(std::make_shared<Filter<SelectContainer>>(SelectContainer()));
+            m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<SelectContainer>());
             break;
-        }
         case(SCH_WEEKDAY):
-        {
-            m_filterState.setFilter(std::make_shared<Filter<WeekdayContainer>>(WeekdayContainer()));
+            m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<WeekdayContainer>());
             break;
-        }
         case(SCH_TIME):
-        {
-            m_filterState.setFilter(std::make_shared<Filter<TimeContainer>>(TimeContainer(0, 0)));
+            m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<TimeContainer>());
             break;
-        }
         case(SCH_DATE):
-        {
-            // default date mode to relative
-            m_filterState.setFilter(std::make_shared<Filter<DateContainer>>(DateContainer::getCurrentSystemDate()));
-            m_filterState.getFilter<DateContainer>()->setComparison(Comparison::IsRelativeToToday);
+            m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<DateContainer>());
             break;
-        }
         default:
         {
-            printf("FilterEditorSubGui::open_create(%zu): Creating filters for type %d has not been implemented\n", column, columnType);
+            printf("FilterRuleEditorSubGui::openEdit(): Editing a FilterRule of type %d has not been implemented\n", type);
             return;
         }
     }
 
-	ImGui::OpenPopup("Filter Editor");
+    m_openNextFrame = true;
+}
+
+void FilterRuleEditorSubGui::openCreate(SCHEDULE_TYPE type, const std::string& columnName, size_t filterIndex, const ImRect& avoidRect)
+{
+    if (m_filterGroupState.getFilterGroup().hasFilterAt(filterIndex) == false) { return; }
+
+    m_editing = false;
+    m_columnName = columnName;
+	m_avoidRect = avoidRect;
+
+    DateContainer currentDate = DateContainer::getCurrentSystemDate();
+    m_viewedYear = currentDate.getTime().tm_year;
+    m_viewedMonth = currentDate.getTime().tm_mon;
+
+    Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
+
+    // Set up m_filterRuleState and open the popup
+    switch(type)
+    {
+        case(SCH_BOOL):
+        {
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<bool>(false));
+            break;
+        }
+        case(SCH_NUMBER):
+        {
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<int>(0));
+            break;
+        }
+        case(SCH_DECIMAL):
+        {
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<double>(0.0));
+            break;
+        }
+        case(SCH_TEXT):
+        {
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<std::string>(""));
+            break;
+        }
+        case(SCH_SELECT):
+        {
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<SelectContainer>(SelectContainer()));
+            break;
+        }
+        case(SCH_WEEKDAY):
+        {
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<WeekdayContainer>(WeekdayContainer()));
+            break;
+        }
+        case(SCH_TIME):
+        {
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<TimeContainer>(TimeContainer(0, 0)));
+            break;
+        }
+        case(SCH_DATE):
+        {
+            // default date comparison to IsRelativeToToday
+            FilterRule<DateContainer> dateRule = FilterRule<DateContainer>(DateContainer::getCurrentSystemDate());
+            dateRule.setComparison(Comparison::IsRelativeToToday);
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), dateRule);
+            break;
+        }
+        default:
+        {
+            printf("FilterRuleEditorSubGui::openCreate(): Creating filters for type %d has not been implemented\n", type);
+            return;
+        }
+    }
+
+    m_openNextFrame = true;
+}
+
+void FilterRuleEditorSubGui::close()
+{
+    if (m_popupOpen)
+    {
+        m_filterRuleState.makeInvalid();
+        ImGui::CloseCurrentPopup();
+        m_popupOpen = false;
+    }
+}
+
+
+FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents) : Gui(ID) 
+{
+	m_scheduleCore = scheduleCore;
+    scheduleEvents.columnAdded.addListener(columnAddedListener);
+    scheduleEvents.columnRemoved.addListener(columnRemovedListener);
+	addSubGui("FilterRuleEditorSubGui", new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, scheduleEvents, m_filterGroupState));
+}
+
+void FilterEditorSubGui::draw(Window& window, Input& input)
+{
+    if (ImGui::BeginPopupEx(ImGui::GetID("FilterGroup Editor"), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize))
+    {
+        m_popupOpen = true;
+
+        if (m_filterGroupState.getIsValid() == false)
+        {
+            printf("FilterEditorSubGui::draw(): FilterGroupEditorState is not valid.\n");
+            close();
+            ImGui::EndPopup();
+            return;
+        }
+        if (m_scheduleCore->existsColumnAtIndex(m_filterGroupState.getColumnIndex()) == false)
+        {
+            printf("FilterEditorSubGui::draw(): There is no Column at the column index %zu\n", m_filterGroupState.getColumnIndex());
+            close();
+            ImGui::EndPopup();
+            return;
+        }
+        if (m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->type != m_filterGroupState.getType())
+        {
+            printf("FilterEditorSubGui::draw(): The types of the Column (%d) and the editor's filter state (%d) do not match!\n", m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->type, m_filterGroupState.getType());
+            close();
+            ImGui::EndPopup();
+            return;
+        }
+
+		// TO/DO clean up / make the positioning more precise!
+		// ImGuiDir dir = ImGuiDir_Down;
+		// ImGuiWindow* popup = ImGui::GetCurrentWindow();
+		// ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
+		// ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
+		//ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
+		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
+
+		bool isPermanentColumn = m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->permanent;
+		tm formatTime;
+
+        std::string groupName = m_filterGroupState.getFilterGroup().getName();
+        groupName.reserve(schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
+        char* buf = groupName.data();
+        if (ImGui::InputText("##FilterGroupNameInput", buf, schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH))
+        {
+            m_filterGroupState.getFilterGroup().setName(buf);
+        }
+        // Just deactivated the name input after editing, call event
+        if (ImGui::IsItemDeactivatedAfterEdit())
+        {
+            setColumnFilterGroupName.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), m_filterGroupState.getFilterGroup().getName()); 
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::SmallButton("X##RemoveFilterGroup"))
+        {
+            removeColumnFilterGroup.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex());
+            ImGui::CloseCurrentPopup();
+        }
+
+        auto drawFilterRule = [&](size_t filterIndex, size_t ruleIndex)
+        {
+            Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
+            if (ImGui::Button(filter.getRule(ruleIndex).getString().append("##").append(std::to_string(filterIndex)).append(";").append(std::to_string(ruleIndex)).c_str()))
+            {
+                // Open the filter rule editor to edit this rule
+                if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
+                {
+                    // TODO: Pass correct avoid rect
+                    filterRuleEditor->openEdit(m_filterGroupState.getType(), m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->name, filterIndex, ruleIndex, m_avoidRect);
+                }
+            }
+            ImGui::SameLine();
+            // Remove FilterRule button
+            if (ImGui::Button(std::string("X##RemoveFilterRule").append(std::to_string(filterIndex)).append(";").append(std::to_string(ruleIndex)).c_str()))
+            {
+                m_filterGroupState.getFilterGroup().getFilter(filterIndex).removeRule(ruleIndex);
+                removeColumnFilterRule.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), filterIndex, ruleIndex);
+            }
+        };
+
+        // Display all Filters
+        for (size_t f = 0; f < m_filterGroupState.getFilterGroup().getFilters().size(); f++)
+        {
+            Filter& filter = m_filterGroupState.getFilterGroup().getFilter(f);
+
+            ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, /* Calculate size using number of FilterRules */ FLT_MAX));
+            if (ImGui::BeginChild(std::string("###Filter").append(std::to_string(f)).c_str(), ImVec2(-FLT_MIN, 0.0f), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY))
+            {
+                // Display all contained FilterRules
+                for (size_t r = 0; r < filter.getRules().size(); r++)
+                {
+                    drawFilterRule(f, r);
+                    // display operator between each rule except the last
+                    if (r < filter.getRules().size() - 1)
+                    {
+                        if (ImGui::BeginCombo(std::string("##FilterOperator").append(std::to_string(f)).append(";").append(std::to_string(r)).c_str(), schedule_consts::logicalOperatorStrings.at(filter.getOperatorType())))
+                        {
+                            for (const auto& [logicalOperator, operatorString]: schedule_consts::logicalOperatorStrings)
+                            {
+                                bool isSelected = filter.getOperatorType() == logicalOperator;
+                                if (ImGui::Selectable(operatorString, isSelected))
+                                {
+                                    filter.setOperator(logicalOperator);
+                                    setColumnFilterOperator.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), f, logicalOperator);
+                                }
+                            }
+
+                            ImGui::EndCombo();
+                        }
+                    }
+                }
+                // Add new rule button
+                if (ImGui::Button(std::string("+ Add rule##").append(std::to_string(f)).c_str()))
+                {
+                    // DONT add a rule. Open the FilterRule editor with create. If the user creates it, THEN it will be added!
+                    if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
+                    {
+                        // TODO: Pass correct avoid rect
+                        filterRuleEditor->openCreate(m_filterGroupState.getType(), m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->name, f, m_avoidRect);
+                    }
+                }
+
+                ImGui::SameLine(ImGui::GetWindowWidth() - 30);
+                // Remove filter button
+                if (ImGui::Button(std::string("X##RemoveFilter").append(std::to_string(f)).c_str()))
+                {
+                    m_filterGroupState.getFilterGroup().removeFilter(f);
+                    removeColumnFilter.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), f);
+                }
+            }
+            ImGui::EndChild();
+            // display operator between each Filter except the last
+            if (f < m_filterGroupState.getFilterGroup().getFilters().size() - 1)
+            {
+                if (ImGui::BeginCombo(std::string("##FilterGroupOperator").append(std::to_string(f)).c_str(), schedule_consts::logicalOperatorStrings.at(m_filterGroupState.getFilterGroup().getOperatorType())))
+                {
+                    for (const auto& [logicalOperator, operatorString]: schedule_consts::logicalOperatorStrings)
+                    {
+                        bool isSelected = m_filterGroupState.getFilterGroup().getOperatorType() == logicalOperator;
+                        if (ImGui::Selectable(operatorString, isSelected))
+                        {
+                            m_filterGroupState.getFilterGroup().setOperator(logicalOperator);
+                            setColumnFilterGroupOperator.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), logicalOperator);
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
+            }
+        }
+        // Add new filter button
+        if (ImGui::Button("+ Add filter"))
+        {
+            m_filterGroupState.getFilterGroup().addFilter(Filter());
+            addColumnFilter.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), Filter());
+        }
+
+        if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
+        {
+            filterRuleEditor->draw(window, input);
+        }
+		ImGui::EndPopup();
+	}
+    else 
+    {
+        m_filterGroupState.makeInvalid();
+        m_popupOpen = false;
+    }
+}
+
+void FilterEditorSubGui::openGroupEdit(size_t column, size_t filterGroupIndex, const ImRect& avoidRect)
+{
+    if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
+    if (m_scheduleCore->getColumn(column)->hasFilterGroupAt(filterGroupIndex) == false) { return; }
+
+	m_avoidRect = avoidRect;
+
+    m_filterGroupState.setup(m_scheduleCore->getColumn(column)->type, column, filterGroupIndex, m_scheduleCore->getColumn(column)->getFilterGroupsConst().at(filterGroupIndex));
+
+	ImGui::OpenPopup("FilterGroup Editor");
+}
+
+void FilterEditorSubGui::createGroupAndEdit(size_t column, const ImRect& avoidRect)
+{ 
+    if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
+
+    addColumnFilterGroup.invoke(column, FilterGroup());
+
+    // Event has no listeners or they failed somewhere, can't edit a non-existant FilterGroup so quit.
+    if (m_scheduleCore->getColumn(column)->getFilterGroupsConst().size() == 0) { return; }
+
+    // NOTE: Just assuming that the FilterGroup was actually added..
+    // Not the best idea, but eh.
+    openGroupEdit(column, m_scheduleCore->getColumn(column)->getFilterGroupCount() - 1, avoidRect);
 }
 
 void FilterEditorSubGui::close()
 {
-    if (ImGui::IsPopupOpen("Filter Editor"))
+    if (m_popupOpen)
     {
+        m_filterGroupState.makeInvalid();
         ImGui::CloseCurrentPopup();
+        m_popupOpen = false;
     }
 }
 
-size_t FilterEditorSubGui::getFilterColumn() const
+size_t FilterEditorSubGui::getColumn() const
 {
-	return m_editorColumn;
+	return m_filterGroupState.getColumnIndex();
 }

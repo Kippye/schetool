@@ -5,7 +5,7 @@
 #include <vector>
 #include <ctime>
 #include <numeric>
-#include "filter.h"
+#include "filter_rule.h"
 #include "weekday_container.h"
 #include <schedule_core.h>
 #include <element_base.h>
@@ -321,12 +321,17 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
     
     if (m_schedule.at(column).type == SCH_SELECT)
     {
-        for (std::shared_ptr<FilterBase> filter: m_schedule.at(column).getFilters())
+        for (FilterGroup& filterGroup: m_schedule.at(column).getFilterGroups())
         {
-            std::shared_ptr<Filter<SelectContainer>> filterPtr = std::dynamic_pointer_cast<Filter<SelectContainer>>(filter); 
-            SelectContainer updatedValue = filterPtr->getPassValue();
-            updatedValue.update(getColumnSelectOptions(column).getLastChange(), getColumnSelectOptions(column).getOptionCount());
-            filterPtr->setPassValue(updatedValue);
+            for (Filter& filter : filterGroup.getFilters())
+            {
+                for (FilterRuleContainer& filterRule : filter.getRules())
+                {
+                    SelectContainer updatedValue = filterRule.getPassValue<SelectContainer>();
+                    updatedValue.update(getColumnSelectOptions(column).getLastChange(), getColumnSelectOptions(column).getOptionCount());
+                    filterRule.setPassValue(updatedValue);
+                }
+            }
         }
     }
 
@@ -334,12 +339,81 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
     return true;
 }
 
-bool ScheduleCore::removeColumnFilter(size_t column, size_t index)
+bool ScheduleCore::addColumnFilterGroup(size_t column, size_t groupIndex, const FilterGroup& filterGroup)
 {
     if (existsColumnAtIndex(column) == false) { return false; }
 
-    getMutableColumn(column)->removeFilter(index);
+    return getMutableColumn(column)->addFilterGroup(groupIndex, filterGroup);
+}
+
+bool ScheduleCore::addColumnFilterGroup(size_t column, const FilterGroup& filterGroup)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    return addColumnFilterGroup(column, getColumn(column)->getFilterGroupCount(), filterGroup);
+}
+
+bool ScheduleCore::removeColumnFilterGroup(size_t column, size_t groupIndex)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    return getMutableColumn(column)->removeFilterGroup(groupIndex);
+}
+
+bool ScheduleCore::setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) { return false; }
+
+    getMutableColumn(column)->getFilterGroup(groupIndex).setName(name);
     return true;
+}
+
+bool ScheduleCore::setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) { return false; }
+
+    getMutableColumn(column)->getFilterGroup(groupIndex).setOperator(logicalOperator);
+    return true;
+}
+
+bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, const Filter& filter)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    return getMutableColumn(column)->addFilter(groupIndex, filterIndex, filter);
+}
+
+bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, const Filter& filter)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) { return false; }
+
+    return addColumnFilter(column, groupIndex, getColumn(column)->getFilterGroupConst(groupIndex).getFilterCount(), filter);
+}
+
+bool ScheduleCore::setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterAt(groupIndex, filterIndex) == false) { return false; }
+
+    getMutableColumn(column)->getFilterGroup(groupIndex).getFilter(filterIndex).setOperator(logicalOperator);
+    return true;
+}
+
+bool ScheduleCore::removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    return getMutableColumn(column)->removeFilter(groupIndex, filterIndex);
+}
+
+bool ScheduleCore::removeColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    return getMutableColumn(column)->removeFilterRule(groupIndex, filterIndex, ruleIndex);
 }
 
 void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)

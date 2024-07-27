@@ -25,9 +25,19 @@ void Schedule::init(Input& input, Interface& interface)
 
         if (auto filterEditorSubGui = scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
         {
-            filterEditorSubGui->addColumnFilter.addListener(addFilterListener); 
-            filterEditorSubGui->editColumnFilter.addListener(editFilterListener);
-            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener); 
+            filterEditorSubGui->addColumnFilterGroup.addListener(addFilterGroupListener);
+            filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
+            filterEditorSubGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
+            filterEditorSubGui->setColumnFilterGroupOperator.addListener(setFilterGroupOperatorListener);
+            filterEditorSubGui->addColumnFilter.addListener(addFilterListener);
+            filterEditorSubGui->setColumnFilterOperator.addListener(setFilterOperatorListener);
+            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener);
+            filterEditorSubGui->removeColumnFilterRule.addListener(removeFilterRuleListener);
+            if (auto filterRuleEditorSubGui = filterEditorSubGui->getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
+            {
+                filterRuleEditorSubGui->addColumnFilterRule.addListener(addFilterRuleListener); 
+                filterRuleEditorSubGui->editColumnFilterRule.addListener(editFilterRuleListener);
+            }
         }
         
         scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
@@ -101,12 +111,20 @@ ScheduleEvents& Schedule::getScheduleEvents()
 
 void Schedule::undo()
 {
-    m_editHistory.undo();
+    size_t prevEditIndex = m_editHistory.getEditHistoryIndex();
+
+    if (m_editHistory.undo())
+    {
+        m_scheduleEvents.editUndone.invoke(m_editHistory.getEditHistory().at(prevEditIndex));
+    }
 }
 
 void Schedule::redo()
-{
-    m_editHistory.redo();
+{   
+    if (m_editHistory.redo())
+    {
+        m_scheduleEvents.editRedone.invoke(m_editHistory.getEditHistory().at(m_editHistory.getEditHistoryIndex()));
+    }
 }
 
 void Schedule::createDefaultSchedule()
@@ -281,6 +299,99 @@ void Schedule::modifyColumnSelectOptions(size_t column, const SelectOptionsModif
         }
     
         m_editHistory.setEditedSinceWrite(true);
+    }
+}
+
+void Schedule::addColumnFilterGroup(size_t column, FilterGroup filterGroup, bool addToHistory)
+{
+    if (m_core.addColumnFilterGroup(column, filterGroup)) 
+    {
+        if (addToHistory)
+        {
+            size_t groupIndex = m_core.getColumn(column)->getFilterGroupCount() - 1;
+            m_editHistory.addEdit<FilterGroupAddOrRemoveEdit>(false, column, groupIndex, filterGroup);
+        }
+    }
+}
+
+void Schedule::removeColumnFilterGroup(size_t column, size_t groupIndex, bool addToHistory)
+{
+    FilterGroup filterGroup = m_core.getColumn(column)->getFilterGroupConst(groupIndex);
+
+    if (m_core.removeColumnFilterGroup(column, groupIndex)) 
+    {
+        if (addToHistory)
+        {
+            m_editHistory.addEdit<FilterGroupAddOrRemoveEdit>(true, column, groupIndex, filterGroup);
+        }
+    }
+}
+
+void Schedule::setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name, bool addToHistory)
+{
+    LogicalOperatorEnum logicalOperator = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getOperatorType();
+    std::string prevName = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getName();
+
+    if (m_core.setColumnFilterGroupName(column, groupIndex, name))
+    {
+        if (addToHistory)
+        {
+            // edit for name, keep operator the same
+            m_editHistory.addEdit(new FilterGroupChangeEdit(column, groupIndex, logicalOperator, logicalOperator, prevName, name));
+        }
+    }
+}
+
+void Schedule::setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator, bool addToHistory)
+{
+    std::string name = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getName();
+    LogicalOperatorEnum prevOperator = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getOperatorType();
+
+    if (m_core.setColumnFilterGroupOperator(column, groupIndex, logicalOperator))
+    {
+        if (addToHistory)
+        {
+            // edit for operator, keep name the same
+            m_editHistory.addEdit(new FilterGroupChangeEdit(column, groupIndex, prevOperator, logicalOperator, name, name));
+        }
+    }
+}
+
+void Schedule::addColumnFilter(size_t column, size_t groupIndex, Filter filter, bool addToHistory)
+{
+    if (m_core.addColumnFilter(column, groupIndex, filter))
+    {
+        if (addToHistory)
+        {
+            size_t filterIndex = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterCount() - 1;
+            m_editHistory.addEdit(new FilterAddOrRemoveEdit(false, column, groupIndex, filterIndex, filter));
+        }
+    }
+}
+
+void Schedule::setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator, bool addToHistory)
+{
+    LogicalOperatorEnum prevOperator = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getOperatorType();
+
+    if (m_core.setColumnFilterOperator(column, groupIndex, filterIndex, logicalOperator))
+    {
+        if (addToHistory)
+        {
+            m_editHistory.addEdit<FilterChangeEdit>(column, groupIndex, filterIndex, prevOperator, logicalOperator);
+        }
+    }
+}
+
+void Schedule::removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, bool addToHistory)
+{
+    Filter filter = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex);
+
+    if (m_core.removeColumnFilter(column, groupIndex, filterIndex))
+    {
+        if (addToHistory)
+        {
+            m_editHistory.addEdit(new FilterAddOrRemoveEdit(true, column, groupIndex, filterIndex, filter));
+        }
     }
 }
 
