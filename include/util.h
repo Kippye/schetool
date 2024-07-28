@@ -49,6 +49,15 @@ class containers
 class mytime
 {
 	public:
+        static unsigned int get_year_day_count(unsigned int year)
+        {
+            if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
+            {
+                return 366;
+            }
+            return 365;
+        }
+
 		static unsigned int get_month_day_count(unsigned int year, unsigned int month)
 		{
 			switch(month)
@@ -82,6 +91,24 @@ class mytime
 		{
 			return get_month_day_count(time.tm_year + 1900, time.tm_mon);
 		}
+
+        static unsigned int get_year_day(unsigned int year, unsigned int month, unsigned int monthDay)
+        {
+            unsigned int yearDay = 0;
+
+            for (size_t m = 0; m < month; m++)
+            {
+                yearDay += get_month_day_count(year, m);
+            }
+
+            yearDay += monthDay;
+
+            return yearDay;
+        }
+        static unsigned int get_year_day(const tm& time)
+        {
+            return get_year_day(time.tm_year + 1900, time.tm_mon, time.tm_mday);
+        }
 };
 
 class debug

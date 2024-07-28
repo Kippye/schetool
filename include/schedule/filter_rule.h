@@ -32,7 +32,7 @@ class FilterRule : public FilterRuleBase
                 default: isComparisonValidForElement(element); return false;
             }
         }
-        std::string getString() const override
+        inline std::string getString() const override
         {
             Element<T> valueElement = Element<T>();
             valueElement.setValue(m_passValue);
@@ -52,6 +52,17 @@ class FilterRule : public FilterRuleBase
             m_passValue = passValue;
         }
 };
+
+template <>
+inline std::string FilterRule<DateContainer>::getString() const
+{
+    std::string filterString = std::string(filter_consts::comparisonStrings.at(m_comparison));
+    if (m_comparison != Comparison::IsEmpty)
+    {
+        filterString.append(" ").append(m_passValue.getString(m_comparison == Comparison::IsRelativeToToday));
+    }
+    return filterString;
+}
 
 template <>
 inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element) const

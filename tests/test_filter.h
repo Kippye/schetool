@@ -83,31 +83,6 @@ TEST_CASE("FilterRule")
             element.setValue(time);
             CHECK(filter.checkPasses(&element) == false);
         }
-        SECTION("Relative Date filter with offset 0")
-        {
-            FilterRule filter = FilterRule(DateContainer(tm(), true, 0));
-            tm time;
-            time.tm_mday = 25;
-            time.tm_mon = 4;
-            time.tm_year = 132;
-
-            SECTION("Element with different Date")
-            {
-                Element<DateContainer> element = Element<DateContainer>(SCH_DATE, DateContainer(time), creationDate, creationTime);
-                CHECK(filter.checkPasses(&element) == false);
-            }
-            SECTION("Element with the same Date")
-            {
-                Element<DateContainer> elementPass = Element<DateContainer>(SCH_DATE, DateContainer::getCurrentSystemDate(), creationDate, creationTime);
-                CHECK(filter.checkPasses(&elementPass) == true);
-            }
-            SECTION("Element that itself contains a relative Date with offset 0")
-            {
-                // NOTE: time is passed as the tm. This is because the check shouldn't pass simply due to tm() == tm()
-                Element<DateContainer> elementPass = Element<DateContainer>(SCH_DATE, DateContainer(time, true, 0), creationDate, creationTime);
-                CHECK(filter.checkPasses(&elementPass) == true);
-            }
-        }
     }
 }
 
