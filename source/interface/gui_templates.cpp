@@ -18,12 +18,18 @@ bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, boo
     return false;
 }
 
-bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate)
+bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate, bool displayClearButton)
 {
     bool changedDate = false;
     if (displayDate)
     {
-        TextWithBackground("%s", editorDate.getString().c_str());
+        // Display the date, with a minimum width for empty dates
+        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getString().c_str(), viewedYear, viewedMonth);
+    }
+    if (displayClearButton && ImGui::Button("Clear"))
+    {
+        editorDate.clear();
+        changedDate = true;
     }
     // DATE / CALENDAR
     if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))

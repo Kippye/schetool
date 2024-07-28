@@ -44,105 +44,135 @@ class Schedule
         };
 
         // FilterEditorSubGui
-        std::function<void(size_t, std::shared_ptr<FilterBase>)> addFilterListener = [&](size_t col, std::shared_ptr<FilterBase> filter)
+        std::function<void(size_t, FilterGroup)> addFilterGroupListener = [&](size_t col, FilterGroup filterGroup)
+        {
+            addColumnFilterGroup(col, filterGroup);
+        };
+        std::function<void(size_t, size_t, std::string)> setFilterGroupNameListener = [&](size_t col, size_t groupIndex, std::string name)
+        {
+            setColumnFilterGroupName(col, groupIndex, name);
+        };
+        std::function<void(size_t, size_t, LogicalOperatorEnum)> setFilterGroupOperatorListener = [&](size_t col, size_t groupIndex, LogicalOperatorEnum logicalOperator)
+        {
+            setColumnFilterGroupOperator(col, groupIndex, logicalOperator);
+        };
+        std::function<void(size_t, size_t)> removeFilterGroupListener = [&](size_t col, size_t groupIndex)
+        {
+            removeColumnFilterGroup(col, groupIndex);
+        };
+
+        std::function<void(size_t, size_t, Filter)> addFilterListener = [&](size_t col, size_t groupIndex, Filter filter)
+        {
+            addColumnFilter(col, groupIndex, filter);
+        };
+        std::function<void(size_t, size_t, size_t, LogicalOperatorEnum)> setFilterOperatorListener = [&](size_t col, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator)
+        {
+            setColumnFilterOperator(col, groupIndex, filterIndex, logicalOperator);
+        };
+        std::function<void(size_t, size_t, size_t)> removeFilterListener = [&](size_t col, size_t groupIndex, size_t filterIndex)
+        {
+            removeColumnFilter(col, groupIndex, filterIndex);
+        };
+
+        std::function<void(size_t, size_t, size_t, FilterRuleContainer)> addFilterRuleListener = [&](size_t col, size_t groupIndex, size_t filterIndex, FilterRuleContainer filterRule)
         {
             SCHEDULE_TYPE columnType = getColumn(col)->type;
             switch(columnType)
             {
                 case SCH_BOOL:
-                    addColumnFilter<bool>(col, *std::dynamic_pointer_cast<Filter<bool>>(filter));
+                    addColumnFilterRule<bool>(col, groupIndex, filterIndex, filterRule.getAsType<bool>());
                 break;
                 case SCH_NUMBER:
-                    addColumnFilter<int>(col, *std::dynamic_pointer_cast<Filter<int>>(filter));
+                    addColumnFilterRule<int>(col, groupIndex, filterIndex, filterRule.getAsType<int>());
                 break;
                 case SCH_DECIMAL:
-                    addColumnFilter<double>(col, *std::dynamic_pointer_cast<Filter<double>>(filter));
+                    addColumnFilterRule<double>(col, groupIndex, filterIndex, filterRule.getAsType<double>());
                 break;
                 case SCH_TEXT:
-                    addColumnFilter<std::string>(col, *std::dynamic_pointer_cast<Filter<std::string>>(filter));
+                    addColumnFilterRule<std::string>(col, groupIndex, filterIndex, filterRule.getAsType<std::string>());
                 break;
                 case SCH_SELECT:
-                    addColumnFilter<SelectContainer>(col, *std::dynamic_pointer_cast<Filter<SelectContainer>>(filter));
+                    addColumnFilterRule<SelectContainer>(col, groupIndex, filterIndex, filterRule.getAsType<SelectContainer>());
                 break;
                 case SCH_WEEKDAY:
-                    addColumnFilter<WeekdayContainer>(col, *std::dynamic_pointer_cast<Filter<WeekdayContainer>>(filter));
+                    addColumnFilterRule<WeekdayContainer>(col, groupIndex, filterIndex, filterRule.getAsType<WeekdayContainer>());
                 break;
                 case SCH_TIME:
-                    addColumnFilter<TimeContainer>(col, *std::dynamic_pointer_cast<Filter<TimeContainer>>(filter));
+                    addColumnFilterRule<TimeContainer>(col, groupIndex, filterIndex, filterRule.getAsType<TimeContainer>());
                 break;
                 case SCH_DATE:
-                    addColumnFilter<DateContainer>(col, *std::dynamic_pointer_cast<Filter<DateContainer>>(filter));
+                    addColumnFilterRule<DateContainer>(col, groupIndex, filterIndex, filterRule.getAsType<DateContainer>());
                 break;
                 default:
-                    printf("Schedule listener addFilterListener(%zu, const std::shared_ptr<FilterBase>&): Failed to find Schedule::addColumnFilter() for type %d\n", col, columnType);
+                    printf("Schedule listener addFilterRuleListener(): Failed to find Schedule::addColumnFilterRule() for type %d\n", columnType);
                 break;
             }
         };
-        std::function<void(size_t, size_t, std::shared_ptr<FilterBase>, std::shared_ptr<FilterBase>)> editFilterListener = [&](size_t col, size_t filterIndex, std::shared_ptr<FilterBase> previousFilter, std::shared_ptr<FilterBase> filter)
+        std::function<void(size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer)> editFilterRuleListener = [&](size_t col, size_t groupIndex, size_t filterIndex, size_t ruleIndex, FilterRuleContainer previousRule, FilterRuleContainer rule)
         {
             SCHEDULE_TYPE columnType = getColumn(col)->type;
             switch(columnType)
             {
                 case SCH_BOOL:
-                    replaceColumnFilter<bool>(col, filterIndex, *std::dynamic_pointer_cast<Filter<bool>>(previousFilter), *std::dynamic_pointer_cast<Filter<bool>>(filter));
+                    replaceColumnFilterRule<bool>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<bool>(), rule.getAsType<bool>());
                 break;
                 case SCH_NUMBER:
-                    replaceColumnFilter<int>(col, filterIndex, *std::dynamic_pointer_cast<Filter<int>>(previousFilter), *std::dynamic_pointer_cast<Filter<int>>(filter));
+                    replaceColumnFilterRule<int>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<int>(), rule.getAsType<int>());
                 break;
                 case SCH_DECIMAL:
-                    replaceColumnFilter<double>(col, filterIndex, *std::dynamic_pointer_cast<Filter<double>>(previousFilter), *std::dynamic_pointer_cast<Filter<double>>(filter));
+                    replaceColumnFilterRule<double>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<double>(), rule.getAsType<double>());
                 break;
                 case SCH_TEXT:
-                    replaceColumnFilter<std::string>(col, filterIndex, *std::dynamic_pointer_cast<Filter<std::string>>(previousFilter), *std::dynamic_pointer_cast<Filter<std::string>>(filter));
+                    replaceColumnFilterRule<std::string>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<std::string>(), rule.getAsType<std::string>());
                 break;
                 case SCH_SELECT:
-                    replaceColumnFilter<SelectContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<SelectContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<SelectContainer>>(filter));
+                    replaceColumnFilterRule<SelectContainer>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<SelectContainer>(), rule.getAsType<SelectContainer>());
                 break;
                 case SCH_WEEKDAY:
-                    replaceColumnFilter<WeekdayContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<WeekdayContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<WeekdayContainer>>(filter));
+                    replaceColumnFilterRule<WeekdayContainer>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<WeekdayContainer>(), rule.getAsType<WeekdayContainer>());
                 break;
                 case SCH_TIME:
-                    replaceColumnFilter<TimeContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<TimeContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<TimeContainer>>(filter));
+                    replaceColumnFilterRule<TimeContainer>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<TimeContainer>(), rule.getAsType<TimeContainer>());
                 break;
                 case SCH_DATE:
-                    replaceColumnFilter<DateContainer>(col, filterIndex, *std::dynamic_pointer_cast<Filter<DateContainer>>(previousFilter), *std::dynamic_pointer_cast<Filter<DateContainer>>(filter));
+                    replaceColumnFilterRule<DateContainer>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<DateContainer>(), rule.getAsType<DateContainer>());
                 break;
                 default:
-                    printf("Schedule listener editFilterListener(%zu, %zu, const std::shared_ptr<FilterBase>&): Failed to find Schedule::replaceColumnFilter() for type %d\n", col, filterIndex, columnType);
+                    printf("Schedule listener editFilterRuleListener(): Failed to find Schedule::replaceColumnFilterRule() for type %d\n", columnType);
                 break;
             }
         };
-        std::function<void(size_t, size_t)> removeFilterListener = [&](size_t col, size_t filterIndex)
+        std::function<void(size_t, size_t, size_t, size_t)> removeFilterRuleListener = [&](size_t col, size_t groupIndex, size_t filterIndex, size_t ruleIndex)
         {
             SCHEDULE_TYPE columnType = getColumn(col)->type;
             switch(columnType)
             {
                 case SCH_BOOL:
-                    removeColumnFilter<bool>(col, filterIndex);
+                    removeColumnFilterRule<bool>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_NUMBER:
-                    removeColumnFilter<int>(col, filterIndex);
+                    removeColumnFilterRule<int>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_DECIMAL:
-                    removeColumnFilter<double>(col, filterIndex);
+                    removeColumnFilterRule<double>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_TEXT:
-                    removeColumnFilter<std::string>(col, filterIndex);
+                    removeColumnFilterRule<std::string>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_SELECT:
-                    removeColumnFilter<SelectContainer>(col, filterIndex);
+                    removeColumnFilterRule<SelectContainer>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_WEEKDAY:
-                    removeColumnFilter<WeekdayContainer>(col, filterIndex);
+                    removeColumnFilterRule<WeekdayContainer>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_TIME:
-                    removeColumnFilter<TimeContainer>(col, filterIndex);
+                    removeColumnFilterRule<TimeContainer>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_DATE:
-                    removeColumnFilter<DateContainer>(col, filterIndex);
+                    removeColumnFilterRule<DateContainer>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 default:
-                    printf("Schedule listener removeFilterListener(%zu, %zu): Failed to find Schedule::removeColumnFilter() for type %d\n", col, filterIndex, columnType);
+                    printf("Schedule listener removeFilterRuleListener(): Failed to find Schedule::removeColumnFilterRule() for type %d\n", columnType);
                 break;
             }
         };
@@ -251,44 +281,49 @@ class Schedule
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory = true);
+
+        void addColumnFilterGroup(size_t column, FilterGroup filterGroup, bool addToHistory = true);
+        void removeColumnFilterGroup(size_t column, size_t groupIndex, bool addToHistory = true);
+        void setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name, bool addToHistory = true);
+        void setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator, bool addToHistory = true);
+
+        void addColumnFilter(size_t column, size_t groupIndex, Filter filter, bool addToHistory = true);
+        void removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, bool addToHistory = true);
+        void setColumnFilterOperator(size_t column, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator, bool addToHistory = true);
+
         template <typename T>
-        void addColumnFilter(size_t column, Filter<T> filter, bool addToHistory = true)
+        void addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, FilterRule<T> filterRule, bool addToHistory = true)
         {
-            if (m_core.addColumnFilter(column, filter))
+            if (m_core.addColumnFilterRule(column, groupIndex, filterIndex, filterRule))
             {
                 if (addToHistory)
                 {
-                    m_editHistory.addEdit(new FilterEdit(false, column, m_core.getColumn(column)->getFilterCount() - 1, filter));
+                    size_t filterRuleIndex = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount() - 1;
+                    m_editHistory.addEdit(new FilterRuleAddOrRemoveEdit(false, column, groupIndex, filterIndex, filterRuleIndex, filterRule));
                 }
             }
         }
         template <typename T>
-        void replaceColumnFilter(size_t column, size_t index, Filter<T> previousFilter, Filter<T> filter, bool addToHistory = true)
+        void replaceColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, FilterRule<T> previousFilterRule, FilterRule<T> filterRule, bool addToHistory = true)
         {
-            // OK so it seems that currently the given ptr and the existing ptr store different values
-            // so i COULD just get both of them and use them
-            // still, i need to find T somehow.
-            // the only way would be to trust the pointer and get the column's type
-            // i could turn this into a template function and get the type in the listener func since it is the only one that calls this.
-
-            if (m_core.replaceColumnFilter<T>(column, index, filter))
+            if (m_core.replaceColumnFilterRule<T>(column, groupIndex, filterIndex, ruleIndex, filterRule))
             {
                 if (addToHistory)
                 {
-                    m_editHistory.addEdit(new FilterChangeEdit<T>(column, index, m_core.getColumn(column)->type, previousFilter, filter));
+                    m_editHistory.addEdit(new FilterRuleChangeEdit<T>(column, groupIndex, filterIndex, ruleIndex, previousFilterRule, filterRule));
                 }
             }
         }
         template <typename T>
-        void removeColumnFilter(size_t column, size_t index, bool addToHistory = true)
+        void removeColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, bool addToHistory = true)  
         {
-            Filter<T> filterData = *std::dynamic_pointer_cast<Filter<T>>(m_core.getColumn(column)->getFiltersConst().at(index));
+            FilterRule<T> filterRule = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleConst(ruleIndex).getAsType<T>();
 
-            if (m_core.removeColumnFilter(column, index))
+            if (m_core.removeColumnFilterRule(column, groupIndex, filterIndex, ruleIndex))
             {
                 if (addToHistory)
                 {
-                    m_editHistory.addEdit(new FilterEdit(true, column, index, filterData));
+                    m_editHistory.addEdit(new FilterRuleAddOrRemoveEdit(true, column, groupIndex, filterIndex, ruleIndex, filterRule));
                 }
             }
         }

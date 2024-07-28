@@ -5,13 +5,13 @@
 #include <string>
 #include <cstdio>
 #include <algorithm>
-#include <schedule_constants.h>
-#include <schedule_gui.h>
-#include <util.h>
-#include <element.h>
-#include <element_base.h>
-#include "filter.h"
-#include <schedule.h>
+#include "schedule_constants.h"
+#include "schedule_gui.h"
+#include "util.h"
+#include "element.h"
+#include "element_base.h"
+#include "filter_rule.h"
+#include "schedule.h"
 #include "gui_templates.h"
 #include <iostream>
 
@@ -62,41 +62,78 @@ void ScheduleGui::draw(Window& window, Input& input)
                 {
                     ImGui::TableSetColumnIndex(column);
 
-                    if (ImGui::SmallButton(std::string("+##addFilter").append(std::to_string(column)).c_str()))
+                    if (ImGui::SmallButton(std::string("+##addFilterGroup").append(std::to_string(column)).c_str()))
                     {
-                        // display the Filter editor to add a filter to this Column
+                        // display the FilterGroup editor to add a filter group to this Column
                         if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                         {
-                            filterEditor->open_create(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                            filterEditor->createGroupAndEdit(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                         }
                     }
+                    const float addButtonWidth = ImGui::GetItemRectSize().x;
                         
                     if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                     {
-                        if (filterEditor->getFilterColumn() == column)
+                        if (filterEditor->getColumn() == column)
                         {
                             filterEditor->draw(window, input);
                         }
                     }
 
-                    const Column* currentColumn = m_scheduleCore->getColumn(column);
-
                     ImGui::SameLine();
 
-                    for (size_t i = 0; i < currentColumn->getFilterCount(); i++)
+                    const Column* currentColumn = m_scheduleCore->getColumn(column);
+                    const auto& columnFilterGroups = currentColumn->getFilterGroupsConst();
+
+                    // DATA TO PASS TO FILTER EDITOR
+                    bool openFilterEditor = false;
+                    size_t editorGroupIndex = 0;
+                    ImRect itemAvoidRect;
+
+                    // LAMBDA: Draws buttons for every FilterGroup in the column. Sets data to pass to filterEditor if a button is clicked.
+                    auto drawFilterGroupButtons = [&](bool sameLine, float buttonWidth)
                     {
-                        float filterButtonWidth = ImGui::GetColumnWidth(-1) / currentColumn->getFilterCount();
-                        if (ImGui::Button(std::string(m_scheduleCore->getColumn(column)->name).append("##").append(std::to_string(i)).c_str(), ImVec2(filterButtonWidth, 0)))
+                        for (size_t i = 0; i < columnFilterGroups.size(); i++)
                         {
-                            if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+                            // FilterGroup button with its name
+                            if (ImGui::Button(currentColumn->getFilterGroupConst(i).getName().append("##").append(std::to_string(column)).append(";").append(std::to_string(i)).c_str(), ImVec2(buttonWidth, 0)))
                             {
-                                filterEditor->open_edit(column, i, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                openFilterEditor = true;
+                                editorGroupIndex = i;
+                                itemAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+                            }
+
+                            if (sameLine && i < currentColumn->getFilterGroupCount() - 1)
+                            {
+                                ImGui::SameLine();
                             }
                         }
+                    };
 
-                        if (i < currentColumn->getFilterCount() - 1)
+                    const float filterButtonWidth = (ImGui::GetColumnWidth() - (ImGui::GetStyle().ItemSpacing.x * columnFilterGroups.size() - 1))  / columnFilterGroups.size();
+
+                    if (columnFilterGroups.size() <= 3)
+                    {
+                        drawFilterGroupButtons(true, filterButtonWidth);
+                    }
+                    else
+                    {
+                        if (ImGui::Button(std::to_string(columnFilterGroups.size()).append(" filter groups").append("##OpenFilterGroupListButton").c_str()))
                         {
-                            ImGui::SameLine();
+                            ImGui::OpenPopup("FilterGroupListPopup");
+                        }
+                        if (ImGui::BeginPopup("FilterGroupListPopup"))
+                        {
+                            drawFilterGroupButtons(false, ImGui::CalcTextSize("M").x * schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
+                            ImGui::EndPopup();
+                        }
+                    }
+                    // Open filter editor NOTE: All the data here is set in drawFilterGroupButtons() lambda!
+                    if (openFilterEditor)
+                    {
+                        if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+                        {
+                            filterEditor->openGroupEdit(column, editorGroupIndex, itemAvoidRect);
                         }
                     }
                 }
@@ -146,14 +183,11 @@ void ScheduleGui::draw(Window& window, Input& input)
                     // CHECK FILTERS BEFORE DRAWING ROW
                     for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
                     {
-                        // check if the row's Element passes all Filters in this Column
-                        for (const auto& filter: m_scheduleCore->getColumn(column)->getFiltersConst())
+                        // check if the row's Element passes every FilterGroup in this Column
+                        if (m_scheduleCore->getColumn(column)->checkElementPassesFilters(row) == false)
                         {
                             // fails to pass, don't show this row                            
-                            if (filter->checkPasses(m_scheduleCore->getElementConst(column, row)) == false)
-                            {
-                                goto do_not_draw_row;
-                            }
+                            goto do_not_draw_row;
                         }
                     }
 
@@ -487,7 +521,8 @@ void ScheduleGui::draw(Window& window, Input& input)
                                 auto value = m_scheduleCore->getElementValueConstRef<DateContainer>(column, row);
                             
                                 // Button displaying the date of the current Date element
-                                if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(),
+                                    value.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0))) // Set minimum width for empty Date buttons 
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {

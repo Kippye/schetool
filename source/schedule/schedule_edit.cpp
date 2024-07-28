@@ -235,14 +235,59 @@ std::string ColumnPropertyEdit::getColumnName() const
 
 
 // FilterEditBase
-FilterEditBase::FilterEditBase(size_t column, size_t filterIndex, ScheduleEditType editType) : ScheduleEdit(editType)
+FilterEditBase::FilterEditBase(ScheduleEditType editType, size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex) : ScheduleEdit(editType)
 {
-    m_column = column;
+    m_columnIndex = column;
+    m_filterGroupIndex = filterGroupIndex;
     m_filterIndex = filterIndex;
+    m_filterRuleIndex = filterRuleIndex;
 }
 
-// FilterAddOrRemoveEditBase
-FilterAddOrRemoveEditBase::FilterAddOrRemoveEditBase(bool isRemove, size_t column, size_t filterIndex) : FilterEditBase(column, filterIndex, ScheduleEditType::FilterAddOrRemove) 
+// FilterGroupAddOrRemoveEdit
+FilterGroupAddOrRemoveEdit::FilterGroupAddOrRemoveEdit(bool isRemove, size_t column, size_t filterGroupIndex, const FilterGroup& filterGroup)
+: FilterEditBase(ScheduleEditType::FilterGroupAddOrRemove, column, filterGroupIndex)
 {
     m_isRemove = isRemove;
+    m_filterGroup = filterGroup;
+}
+
+// FilterGroupChangeEdit
+FilterGroupChangeEdit::FilterGroupChangeEdit(size_t column, size_t filterGroupIndex, LogicalOperatorEnum previousOperator, LogicalOperatorEnum newOperator, const std::string& previousName, const std::string& newName)
+: FilterEditBase(ScheduleEditType::FilterGroupChange, column, filterGroupIndex)
+{
+    m_previousOperator = previousOperator;
+    m_newOperator = newOperator;
+    m_previousName = previousName;
+    m_newName = newName;
+}
+
+// FilterAddOrRemoveEdit
+FilterAddOrRemoveEdit::FilterAddOrRemoveEdit(bool isRemove, size_t column, size_t filterGroupIndex, size_t filterIndex, const Filter& filter)
+: FilterEditBase(ScheduleEditType::FilterAddOrRemove, column, filterGroupIndex, filterIndex)
+{
+    m_isRemove = isRemove;
+    m_filter = filter;
+}
+
+// FilterChangeEdit
+FilterChangeEdit::FilterChangeEdit(size_t column, size_t filterGroupIndex, size_t filterIndex, LogicalOperatorEnum previousOperator, LogicalOperatorEnum newOperator) 
+: FilterEditBase(ScheduleEditType::FilterChange, column, filterGroupIndex, filterIndex) 
+{
+    m_previousOperator = previousOperator;
+    m_newOperator = newOperator;
+}
+
+// FilterRuleAddOrRemoveEditBase
+FilterRuleAddOrRemoveEditBase::FilterRuleAddOrRemoveEditBase(bool isRemove, size_t columnIndex, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex) 
+: FilterEditBase(ScheduleEditType::FilterRuleAddOrRemove, columnIndex, filterGroupIndex, filterIndex, filterRuleIndex) 
+{
+    m_isRemove = isRemove;
+}
+
+// FilterRuleChangeEditBase
+FilterRuleChangeEditBase::FilterRuleChangeEditBase(size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex, const FilterRuleContainer& previousValue, const FilterRuleContainer& newValue) 
+: FilterEditBase(ScheduleEditType::FilterRuleChange, column, filterGroupIndex, filterIndex, filterRuleIndex) 
+{
+    m_previousRule = previousValue;
+    m_newRule = newValue;
 }

@@ -364,7 +364,7 @@ std::string IO_Handler::getFileEditTimeString(fs::path path)
     const auto fileEditTime = fs::last_write_time(path);
     time_t time;
 
-    #ifdef WIN32 // windows implementation using clock_cast
+    #if defined(WIN32) && !defined(__clang__) // windows implementation using clock_cast (my version of clang / libc++ didn't have it either)
     const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileEditTime);
     time = std::chrono::system_clock::to_time_t(systemTime);
     #else // workaround without clock_cast

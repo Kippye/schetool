@@ -58,22 +58,74 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         i);
                     break;
                 }
+                case (ScheduleEditType::FilterGroupAddOrRemove):
+                {
+                    FilterGroupAddOrRemoveEdit* filterGroupEdit = (FilterGroupAddOrRemoveEdit*)editHistory[i];
+                    sprintf(buf, "%c Filter group #%zu of Column %zu##%zu", 
+                        filterGroupEdit->getIsRemove() ? '-' : '+', 
+                        filterGroupEdit->getFilterGroupIndex(),
+                        filterGroupEdit->getColumnIndex(),
+                        i);
+                    break;
+                }
+                case (ScheduleEditType::FilterGroupChange):
+                {
+                    FilterGroupChangeEdit* filterGroupChangeEdit = (FilterGroupChangeEdit*)editHistory[i];
+                    bool operatorChanged = filterGroupChangeEdit->getPrevOperator() != filterGroupChangeEdit->getNewOperator();
+                    sprintf(buf, "Edit filter group #%zu of Column %zu %s (%s -> %s) ##%zu", 
+                        filterGroupChangeEdit->getFilterGroupIndex(),
+                        filterGroupChangeEdit->getColumnIndex(),
+                        operatorChanged ? "operator" : "name",
+                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getPrevOperator()) : filterGroupChangeEdit->getPrevName().c_str(),
+                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getNewOperator()) : filterGroupChangeEdit->getNewName().c_str(),
+                        i);
+                    break;
+                }
                 case (ScheduleEditType::FilterAddOrRemove):
                 {
-                    FilterAddOrRemoveEditBase* filterEdit = (FilterAddOrRemoveEditBase*)editHistory[i];
-                    sprintf(buf, "%c Filter #%zu of Column %zu##%zu", 
+                    FilterAddOrRemoveEdit* filterEdit = (FilterAddOrRemoveEdit*)editHistory[i];
+                    sprintf(buf, "%c Filter #%zu in group #%zu of Column %zu##%zu", 
                         filterEdit->getIsRemove() ? '-' : '+', 
                         filterEdit->getFilterIndex(),
-                        filterEdit->getColumn(),
+                        filterEdit->getFilterGroupIndex(),
+                        filterEdit->getColumnIndex(),
                         i);
                     break;
                 }
                 case (ScheduleEditType::FilterChange):
                 {
-                    FilterEditBase* filterEdit = (FilterEditBase*)editHistory[i];
-                    sprintf(buf, "Filter #%zu of Column %zu edited##%zu", 
-                        filterEdit->getFilterIndex(),
-                        filterEdit->getColumn(),
+                    FilterChangeEdit* filterChangeEdit = (FilterChangeEdit*)editHistory[i];
+                    sprintf(buf, "Edit filter #%zu in group #%zu of Column %zu operator (%s -> %s)##%zu", 
+                        filterChangeEdit->getFilterIndex(),
+                        filterChangeEdit->getFilterGroupIndex(),
+                        filterChangeEdit->getColumnIndex(),
+                        schedule_consts::logicalOperatorStrings.at(filterChangeEdit->getPrevOperator()),
+                        schedule_consts::logicalOperatorStrings.at(filterChangeEdit->getNewOperator()),
+                        i);
+                    break;
+                }
+                case (ScheduleEditType::FilterRuleAddOrRemove):
+                {
+                    FilterRuleAddOrRemoveEditBase* filterRuleEdit = (FilterRuleAddOrRemoveEditBase*)editHistory[i];
+                    sprintf(buf, "%c Filter rule #%zu in filter #%zu in group #%zu of Column %zu##%zu", 
+                        filterRuleEdit->getIsRemove() ? '-' : '+', 
+                        filterRuleEdit->getFilterRuleIndex(),
+                        filterRuleEdit->getFilterIndex(),
+                        filterRuleEdit->getFilterGroupIndex(),
+                        filterRuleEdit->getColumnIndex(),
+                        i);
+                    break;
+                }
+                case (ScheduleEditType::FilterRuleChange):
+                {
+                    FilterRuleChangeEditBase* ruleChangeEdit = (FilterRuleChangeEditBase*)editHistory[i];
+                    sprintf(buf, "Edit filter rule #%zu in filter #%zu in group #%zu of Column %zu (%s -> %s)##%zu", 
+                        ruleChangeEdit->getFilterRuleIndex(),
+                        ruleChangeEdit->getFilterIndex(),
+                        ruleChangeEdit->getFilterGroupIndex(),
+                        ruleChangeEdit->getColumnIndex(),
+                        ruleChangeEdit->getPrevRule().getString().c_str(),
+                        ruleChangeEdit->getNewRule().getString().c_str(),
                         i);
                     break;
                 }

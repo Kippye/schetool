@@ -40,40 +40,10 @@ Column::Column(const Column& other)
     {
         rows.push_back(other.rows[i]->getCopy());
     }
-    const auto& otherFiltersPerType = other.getFiltersPerType();
-    for (size_t i = 0; i < otherFiltersPerType.at(type).size(); i++)
+    const auto& otherFiltersPerType = other.getFilterGroupsPerType();
+    for (const FilterGroup& filterGroup: otherFiltersPerType.at(type))
     {
-        auto otherFilter = otherFiltersPerType.at(type).at(i);
-        switch(type)
-        {
-            case SCH_BOOL:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<bool>>(*std::dynamic_pointer_cast<Filter<bool>>(otherFilter)));
-            break;
-            case SCH_NUMBER:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<int>>(*std::dynamic_pointer_cast<Filter<int>>(otherFilter)));
-            break;
-            case SCH_DECIMAL:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<double>>(*std::dynamic_pointer_cast<Filter<double>>(otherFilter)));
-            break;
-            case SCH_TEXT:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<std::string>>(*std::dynamic_pointer_cast<Filter<std::string>>(otherFilter)));
-            break;
-            case SCH_SELECT:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<SelectContainer>>(*std::dynamic_pointer_cast<Filter<SelectContainer>>(otherFilter)));
-            break;
-            case SCH_WEEKDAY:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<WeekdayContainer>>(*std::dynamic_pointer_cast<Filter<WeekdayContainer>>(otherFilter)));
-            break;
-            case SCH_TIME:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<TimeContainer>>(*std::dynamic_pointer_cast<Filter<TimeContainer>>(otherFilter)));
-            break;
-            case SCH_DATE:
-                m_filtersPerType.at(type).push_back(std::make_shared<Filter<DateContainer>>(*std::dynamic_pointer_cast<Filter<DateContainer>>(otherFilter)));
-            break;
-            default:
-            
-            break;
-        }
+        m_filterGroupsPerType.at(type).push_back(filterGroup);
     }
 
     // std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
@@ -88,12 +58,12 @@ Column::~Column()
     }
 }
 
-// private function. Sets up the m_filtersPerType map to contain an empty vector for each SCHEDULE_TYPE
+// private function. Sets up the m_filterGroupsPerType map to contain an empty vector for each SCHEDULE_TYPE
 void Column::setupFiltersPerType()
 {
     for (int i = 0; i < SCH_LAST; i++)
     {
-        m_filtersPerType.insert_or_assign<std::vector<std::shared_ptr<FilterBase>>>((SCHEDULE_TYPE)i, {});
+        m_filterGroupsPerType.insert_or_assign<std::vector<FilterGroup>>((SCHEDULE_TYPE)i, {});
     }
 }
 
@@ -122,42 +92,129 @@ const ElementBase* Column::getElementConst(size_t index) const
     return rows[index];
 }
 
-const std::map<SCHEDULE_TYPE, std::vector<std::shared_ptr<FilterBase>>>& Column::getFiltersPerType() const
+const std::map<SCHEDULE_TYPE, std::vector<FilterGroup>>& Column::getFilterGroupsPerType() const
 {
-    return m_filtersPerType;
+    return m_filterGroupsPerType;
 }
 
-std::vector<std::shared_ptr<FilterBase>>& Column::getFilters()
+FilterGroup& Column::getFilterGroup(size_t index)
 {
-    if (m_filtersPerType.find(type) == m_filtersPerType.end()) 
+    auto& filterGroups = getFilterGroups();
+
+    if (index < filterGroups.size() == false) { throw std::out_of_range("Column::getFilterGroup(): Index out of range"); }
+
+    return filterGroups.at(index);
+}
+
+const FilterGroup& Column::getFilterGroupConst(size_t index) const
+{
+    const auto& filterGroups = getFilterGroupsConst();
+
+    if (index < filterGroups.size() == false) { throw std::out_of_range("Column::getFilterGroupConst(): Index out of range"); }
+
+    return filterGroups.at(index);
+}
+
+std::vector<FilterGroup>& Column::getFilterGroups()
+{
+    if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) 
     { 
-        printf("Column::getFilters(): Warning: There is no filters vector for the Column %s's type %d. Can't return reference early!\n", name.c_str(), type); 
+        printf("Column::getFilterGroups(): Warning: There is no FilterGroup vector for the Column %s's type %d. Can't return reference early!\n", name.c_str(), type);
+        throw std::out_of_range("Column::getFilterGroups():Type not present in Column::m_filterGroupsPerType");
     }
 
-    return m_filtersPerType.at(type);
+    return m_filterGroupsPerType.at(type);
 }
 
-const std::vector<std::shared_ptr<FilterBase>>& Column::getFiltersConst() const
+const std::vector<FilterGroup>& Column::getFilterGroupsConst() const
 {
-    if (m_filtersPerType.find(type) == m_filtersPerType.end()) 
+    if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) 
     { 
-        printf("Column::getFiltersConst(): Warning: There is no filters vector for the Column %s's type %d. Can't return reference early!\n", name.c_str(), type); 
+        printf("Column::getFiltersConst(): Warning: There is no FilterGroup vector for the Column %s's type %d. Can't return reference early!\n", name.c_str(), type); 
+        throw std::out_of_range("Column::getFilterGroupsConst():Type not present in Column::m_filterGroupsPerType");
     }
 
-    return m_filtersPerType.at(type);
+    return m_filterGroupsPerType.at(type);
 }
 
-size_t Column::getFilterCount() const
+bool Column::hasFilterGroupAt(size_t index) const
 {
-    if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::getFilterCount(): There is no filters vector for the Column %s's type %d\n", name.c_str(), type); return 0; }
+    // correct type and index is less than FilterGroup vector size
+    return (m_filterGroupsPerType.find(type) != m_filterGroupsPerType.end()) && (index < m_filterGroupsPerType.at(type).size());
+}
+
+bool Column::hasFilterAt(size_t groupIndex, size_t filterIndex) const
+{
+    if (hasFilterGroupAt(groupIndex) == false) { return false; }
+
+    return getFilterGroupsConst().at(groupIndex).hasFilterAt(filterIndex);
+}
+
+size_t Column::getFilterGroupCount() const
+{
+    if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) { printf("Column::getFilterGroupCount(): There is no FilterGroup vector for the Column %s's type %d\n", name.c_str(), type); return 0; }
    
-    return m_filtersPerType.at(type).size();
+    return m_filterGroupsPerType.at(type).size();
 }
 
-void Column::removeFilter(size_t index)
+bool Column::checkElementPassesFilters(const ElementBase* element) const
 {
-    if (m_filtersPerType.find(type) == m_filtersPerType.end()) { printf("Column::removeFilter(%zu): There is no filters vector for the Column %s's type %d\n", index, name.c_str(), type); return; }
-    if (index >= m_filtersPerType.at(type).size()) { printf("Column::removeFilter(%zu): Filter index out of range\n", index); return; }
+    bool passes = true;
 
-    m_filtersPerType.at(type).erase(m_filtersPerType.at(type).begin() + index);
+    for (const auto& filterGroup: m_filterGroupsPerType.at(type))
+    {
+        passes = passes && filterGroup.checkPasses(element);
+    }
+
+    return passes;
+}
+
+bool Column::checkElementPassesFilters(size_t index) const
+{
+    if (hasElement(index) == false) { return false; }
+
+    return checkElementPassesFilters(getElementConst(index));
+}
+
+bool Column::addFilterGroup(size_t groupIndex, const FilterGroup& filterGroup)
+{
+    if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) { printf("Column::addFilterGroup(%zu): No m_filterGroupsPerType entry for type %d\n", groupIndex, type); return false; }
+
+    m_filterGroupsPerType.at(type).insert(m_filterGroupsPerType.at(type).begin() + groupIndex, filterGroup);
+    return true;
+}
+
+bool Column::removeFilterGroup(size_t groupIndex)
+{
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::removeFilterGroup(%zu): There is no FilterGroup at the given index\n", groupIndex); return false; }
+
+    m_filterGroupsPerType.at(type).erase(m_filterGroupsPerType.at(type).begin() + groupIndex);
+    return true;
+}
+
+bool Column::addFilter(size_t groupIndex, size_t filterIndex, const Filter& filter)
+{
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::addFilter(%zu, %zu, filter): No FilterGroup at given index\n", groupIndex, filterIndex); return false; }
+
+    m_filterGroupsPerType.at(type).at(groupIndex).addFilter(filterIndex, filter);
+    return true;
+}
+
+bool Column::removeFilter(size_t groupIndex, size_t filterIndex)
+{
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::removeFilter(%zu, %zu): There is no FilterGroup at the given index\n", groupIndex, filterIndex); return false; }
+    if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::removeFilter(%zu, %zu): Filter index out of range\n", groupIndex, filterIndex); return false; }
+
+    m_filterGroupsPerType.at(type).at(groupIndex).removeFilter(filterIndex);
+    return true;
+}
+
+bool Column::removeFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex)
+{
+    if (hasFilterGroupAt(groupIndex) == false) { printf("Column::removeFilterRule(%zu, %zu, %zu): There is no FilterGroup at the given index\n", groupIndex, filterIndex, ruleIndex); return false; }
+    if (hasFilterAt(groupIndex, filterIndex) == false) { printf("Column::removeFilterRule(%zu, %zu, %zu): Filter index out of range\n", groupIndex, filterIndex, ruleIndex); return false; }
+    if (ruleIndex < m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).getRules().size() == false) { printf("Column::removeFilterRule(%zu, %zu, %zu): FilterRule index out of range\n", groupIndex, filterIndex, ruleIndex); return false; }
+
+    m_filterGroupsPerType.at(type).at(groupIndex).getFilter(filterIndex).removeRule(ruleIndex);
+    return true;
 }

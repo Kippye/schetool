@@ -2,90 +2,417 @@
 
 #include <map>
 #include "gui.h"
-#include "filter.h"
+#include "filter_rule.h"
 #include "select_container.h"
 #include "time_container.h"
 #include "date_container.h"
 #include "element_base.h"
 #include "schedule_events.h"
 #include "schedule_core.h"
+#include "schedule_edit.h"
 
-class EditorFilterState
+class FilterRuleEditorState
 {
     private:
-        std::shared_ptr<FilterBase> m_filter = NULL;
+        bool m_isValid = false;
+        size_t m_filterIndex = 0;
+        size_t m_filterRuleIndex = 0;
         SCHEDULE_TYPE m_type = SCH_LAST;
+        FilterRuleContainer m_filterRule;
     public:
-        void setFilter(const std::shared_ptr<FilterBase>& filter);
         template <typename T>
-        std::shared_ptr<Filter<T>> getFilter()
+        void setup(SCHEDULE_TYPE type, size_t filterIndex, size_t filterRuleIndex, FilterRule<T> filterRule)
         {
-            if (hasValidFilter() == false) 
-            { 
-                printf("EditorFilterState::getFilter(): Can't cast invalid filter pointer! Returning dummy shared_ptr\n"); 
-                auto errorReturn = std::make_shared<Filter<T>>(Filter<T>(T()));
-                return errorReturn; 
-            }
-            return std::dynamic_pointer_cast<Filter<T>>(getFilterBase());
+            m_type = type;
+            m_filterIndex = filterIndex;
+            m_filterRuleIndex = filterRuleIndex;
+            m_filterRule = FilterRuleContainer(filterRule);
+            m_isValid = true;
         }
-        std::shared_ptr<FilterBase> getFilterBase();
-        void setType(SCHEDULE_TYPE type);
         SCHEDULE_TYPE getType() const;
-        // only checks if the filter shared pointer is valid (so not NULL i guess?)
-        bool hasValidFilter() const;
+        std::pair<size_t, size_t> getIndices() const;
+        FilterRuleContainer& getFilterRule(); 
+        bool getIsValid() const;
+        void makeInvalid();
+};
+
+class FilterGroupEditorState
+{
+    private:
+        bool m_isValid = false;
+        size_t m_columnIndex = 0;
+        size_t m_filterGroupIndex = 0;
+        SCHEDULE_TYPE m_type = SCH_LAST;
+        FilterGroup m_filterGroup = FilterGroup();
+    public:
+        void setup(SCHEDULE_TYPE type, size_t columnIndex, size_t filterGroupIndex, FilterGroup filterGroup);
+        SCHEDULE_TYPE getType() const;
+        size_t getColumnIndex() const;
+        size_t getFilterGroupIndex() const;
+        FilterGroup& getFilterGroup(); 
+        bool getIsValid() const;
+        void makeInvalid();
+};
+
+class FilterRuleEditorSubGui : public Gui
+{
+    private:
+        const ScheduleCore* m_scheduleCore = NULL;
+        FilterRuleEditorState m_filterRuleState;
+        FilterGroupEditorState& m_filterGroupState;
+        bool m_editing = false;
+        std::string m_columnName = "";
+        unsigned int m_viewedYear = 0;
+        unsigned int m_viewedMonth = 0;
+        bool m_popupOpen = false;
+        bool m_openNextFrame = false;
+        ImRect m_avoidRect;
+
+        // Types of edits listened to by this gui's edit undo / redo listeners.
+        // NOTE: Their corresponding classes should ALL inherit from FilterEditBase
+        std::set<ScheduleEditType> m_filterEditTypes =
+        {
+            ScheduleEditType::FilterGroupAddOrRemove,
+            ScheduleEditType::FilterGroupChange,
+            ScheduleEditType::FilterAddOrRemove,
+            ScheduleEditType::FilterChange,
+            ScheduleEditType::FilterRuleAddOrRemove,
+            ScheduleEditType::FilterRuleChange,
+        };
+
+        std::function<void(const ScheduleEdit*)> editUndoListener = [&](const ScheduleEdit* edit)
+        {
+            // not even editing so why update?
+            if (m_filterGroupState.getIsValid() == false) { return; }
+            // not a filter edit, don't care
+            if (m_filterEditTypes.contains(edit->getType()) == false) { return; }
+            // not editing this column and filter group -> don't need to update gui
+            auto filterEditBase = ((FilterEditBase*)edit);
+            if (filterEditBase->getColumnIndex() != m_filterGroupState.getColumnIndex() || filterEditBase->getFilterGroupIndex() != m_filterGroupState.getFilterGroupIndex()) { return; }
+
+            switch(edit->getType())
+            {
+                case(ScheduleEditType::FilterGroupAddOrRemove):
+                {
+                    // ADD + UNDO = REMOVE THIS GROUP
+                    // Close all the filter editors
+                    if (((const FilterGroupAddOrRemoveEdit*)edit)->getIsRemove() == false)
+                    {
+                        m_filterRuleState.makeInvalid(); // invalidate the state (causes popup to close)
+                        m_filterGroupState.makeInvalid(); // should cause filter group editor to close as well
+                    }
+                    break;
+                }
+                case(ScheduleEditType::FilterGroupChange):
+                {
+                    auto filterGroupChange = (const FilterGroupChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().setOperator(filterGroupChange->getPrevOperator());
+                    m_filterGroupState.getFilterGroup().setName(filterGroupChange->getPrevName());
+                    break;
+                }
+                case(ScheduleEditType::FilterAddOrRemove):
+                {
+                    auto filterAddOrRemove = (const FilterAddOrRemoveEdit*)edit;
+
+                    if (filterAddOrRemove->getIsRemove()) // REMOVE + UNDO = ADD
+                    {
+                        m_filterGroupState.getFilterGroup().addFilter(filterAddOrRemove->getFilterIndex(), filterAddOrRemove->getFilter());
+                    }
+                    else // ADD + UNDO = REMOVE
+                    {
+                        m_filterGroupState.getFilterGroup().removeFilter(filterAddOrRemove->getFilterIndex());
+                    }
+                    break;
+                }
+                case(ScheduleEditType::FilterChange):
+                {
+                    auto filterChange = (const FilterChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getPrevOperator());
+                    break;
+                }
+                case(ScheduleEditType::FilterRuleAddOrRemove):
+                {
+                    auto ruleAddOrRemoveBase = (const FilterRuleAddOrRemoveEditBase*)edit;
+
+                    // TODO: Handle removing of the FilterRule being edited
+                    // I think i also need to handle the index offset when one is added before the one being edited? Crazy stuff.
+                    // Maybe just close the editor if this happens lol. Give up.
+
+                    if (ruleAddOrRemoveBase->getIsRemove()) // REMOVE + UNDO = ADD
+                    {
+                        switch(m_filterGroupState.getType())
+                        {
+                            case(SCH_BOOL):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_NUMBER):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_DECIMAL):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_TEXT):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_SELECT):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_WEEKDAY):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_TIME):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_DATE):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_LAST):
+                                break;
+                        }
+                    }
+                    else // ADD + UNDO = REMOVE
+                    {
+                        m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).removeRule(ruleAddOrRemoveBase->getFilterRuleIndex());
+                    }
+                    break;
+                }
+                case(ScheduleEditType::FilterRuleChange):
+                {
+                    auto ruleChangeBase = (const FilterRuleChangeEditBase*)edit;
+
+                    switch(m_filterGroupState.getType())
+                    {
+                        case(SCH_BOOL):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<bool>());
+                            break;
+                        case(SCH_NUMBER):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<int>());
+                            break;
+                        case(SCH_DECIMAL):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<double>());
+                            break;
+                        case(SCH_TEXT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<std::string>());
+                            break;
+                        case(SCH_SELECT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<SelectContainer>());
+                            break;
+                        case(SCH_WEEKDAY):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<WeekdayContainer>());
+                            break;
+                        case(SCH_TIME):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<TimeContainer>());
+                            break;
+                        case(SCH_DATE):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<DateContainer>());
+                            break;
+                        case(SCH_LAST):
+                            break;
+                    }
+                    break;
+                }
+                default: break;
+            }
+        };
+        std::function<void(const ScheduleEdit*)> editRedoListener = [&](const ScheduleEdit* edit)
+        {
+            // not even open so why update?
+            if (m_filterGroupState.getIsValid() == false) { return; }
+            // not a filter edit, don't care
+            if (m_filterEditTypes.contains(edit->getType()) == false) { return; }
+            // not editing this column and filter group -> don't need to update gui
+            auto filterEditBase = ((FilterEditBase*)edit);
+            if (filterEditBase->getColumnIndex() != m_filterGroupState.getColumnIndex() || filterEditBase->getFilterGroupIndex() != m_filterGroupState.getFilterGroupIndex()) { return; }
+
+            switch(edit->getType())
+            {
+                case(ScheduleEditType::FilterGroupAddOrRemove):
+                {
+                    // REMOVE + REDO = REMOVE THIS GROUP
+                    // Close all the filter editors
+                    if (((const FilterGroupAddOrRemoveEdit*)edit)->getIsRemove())
+                    {
+                        m_filterRuleState.makeInvalid(); // invalidate the state (causes popup to close)
+                        m_filterGroupState.makeInvalid(); // should cause filter group editor to close as well
+                    }
+                    break;
+                }
+                case(ScheduleEditType::FilterGroupChange):
+                {
+                    auto filterGroupChange = (const FilterGroupChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().setOperator(filterGroupChange->getNewOperator());
+                    m_filterGroupState.getFilterGroup().setName(filterGroupChange->getNewName());
+                    break;
+                }
+                case(ScheduleEditType::FilterAddOrRemove):
+                {
+                    auto filterAddOrRemove = (const FilterAddOrRemoveEdit*)edit;
+
+                    if (filterAddOrRemove->getIsRemove() == false) // ADD + REDO = ADD
+                    {
+                        m_filterGroupState.getFilterGroup().addFilter(filterAddOrRemove->getFilterIndex(), filterAddOrRemove->getFilter());
+                    }
+                    else // REMOVE + REDO = REMOVE
+                    {
+                        m_filterGroupState.getFilterGroup().removeFilter(filterAddOrRemove->getFilterIndex());
+                    }
+                    break;
+                }
+                case(ScheduleEditType::FilterChange):
+                {
+                    auto filterChange = (const FilterChangeEdit*)edit;
+                    m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getNewOperator());
+                    break;
+                }
+                case(ScheduleEditType::FilterRuleAddOrRemove):
+                {
+                    auto ruleAddOrRemoveBase = (const FilterRuleAddOrRemoveEditBase*)edit;
+
+                    // TODO: Handle removing of the FilterRule being edited
+                    // I think i also need to handle the index offset when one is added before the one being edited? Crazy stuff.
+                    // Maybe just close the editor if this happens lol. Give up.
+
+                    // ADD + REDO = ADD
+                    if (ruleAddOrRemoveBase->getIsRemove() == false)
+                    {
+                        switch (m_filterGroupState.getType())
+                        {
+                            case(SCH_BOOL):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_NUMBER):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_DECIMAL):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_TEXT):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_SELECT):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_WEEKDAY):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_TIME):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_DATE):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_LAST):
+                                break;
+                        }
+                    }
+                    // REMOVE + REDO = REMOVE
+                    else
+                    {
+                        m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).removeRule(ruleAddOrRemoveBase->getFilterRuleIndex());
+                    }
+                    break;
+                }
+                case(ScheduleEditType::FilterRuleChange):
+                {
+                    auto ruleChangeBase = (const FilterRuleChangeEditBase*)edit;
+
+                    switch(m_filterGroupState.getType())
+                    {
+                        case(SCH_BOOL):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<bool>());
+                            break;
+                        case(SCH_NUMBER):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<int>());
+                            break;
+                        case(SCH_DECIMAL):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<double>());
+                            break;
+                        case(SCH_TEXT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<std::string>());
+                            break;
+                        case(SCH_SELECT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<SelectContainer>());
+                            break;
+                        case(SCH_WEEKDAY):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<WeekdayContainer>());
+                            break;
+                        case(SCH_TIME):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<TimeContainer>());
+                            break;
+                        case(SCH_DATE):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<DateContainer>());
+                            break;
+                        case(SCH_LAST):
+                            break;
+                    }
+                    break;
+                }
+                default: break;
+            }
+        };
+    public:
+        FilterRuleEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents, FilterGroupEditorState& filterGroupState);
+        
+        Event<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
+        Event<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
+
+        void draw(Window& window, Input& input) override;
+        // open the editor to edit a pre-existing FilterRule
+        void openEdit(SCHEDULE_TYPE type, const std::string& columnName, size_t filterIndex, size_t ruleIndex, const ImRect& avoidRect);
+        // open the editor to add a new FilterRule to a Filter
+        void openCreate(SCHEDULE_TYPE type, const std::string& columnName, size_t filterIndex, const ImRect& avoidRect);
+        // close the FilterRule editor popup if it is open
+        void close();
+
+        bool getMadeEdits() const;
 };
 
 class FilterEditorSubGui : public Gui
 {
     private:
         const ScheduleCore* m_scheduleCore = NULL;
-        EditorFilterState m_filterState;
-        bool m_editing = false;
-        size_t m_editorColumn = 0;
-        size_t m_editorFilterIndex = 0;
-        unsigned int m_viewedYear = 0;
-        unsigned int m_viewedMonth = 0;
+        FilterGroupEditorState m_filterGroupState;
+        bool m_popupOpen = false;
         ImRect m_avoidRect;
 
-        std::function<void(size_t)> columnAddedListener = std::function<void(size_t)>([&](size_t column)
+        std::function<void(size_t)> columnAddedListener = [&](size_t column)
         {
-            if (column <= m_editorColumn)
+            if (column <= m_filterGroupState.getColumnIndex())
             {
                 close();
             }
-        });
-        std::function<void(size_t)> columnRemovedListener = std::function<void(size_t)>([&](size_t column)
+        };
+        std::function<void(size_t)> columnRemovedListener = [&](size_t column)
         {
-            if (column <= m_editorColumn)
+            if (column <= m_filterGroupState.getColumnIndex())
             {
                 close();
             }
-        });
+        };
     public:
         FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
-        Event<size_t, std::shared_ptr<FilterBase>> addColumnFilter;
-        Event<size_t, size_t, std::shared_ptr<FilterBase>, std::shared_ptr<FilterBase>> editColumnFilter;
-        Event<size_t, size_t> removeColumnFilter;
+        Event<size_t, FilterGroup> addColumnFilterGroup;
+        Event<size_t, size_t, std::string> setColumnFilterGroupName;
+        Event<size_t, size_t, LogicalOperatorEnum> setColumnFilterGroupOperator;
+        Event<size_t, size_t> removeColumnFilterGroup;
+
+        Event<size_t, size_t, Filter> addColumnFilter;
+        Event<size_t, size_t, size_t, LogicalOperatorEnum> setColumnFilterOperator;
+        Event<size_t, size_t, size_t> removeColumnFilter;
+
+        Event<size_t, size_t, size_t, size_t> removeColumnFilterRule;
 
         void draw(Window& window, Input& input) override;
-        // open the editor to edit a pre-existing Filter
-        void open_edit(size_t column, size_t filterIndex, const ImRect& avoidRect);
-        // open the editor to add a new Filter to a Column
-        void open_create(size_t column, const ImRect& avoidRect);
+        void drawRuleEditor();
+        // open the editor to edit a pre-existing FilterGroup
+        void openGroupEdit(size_t column, size_t filterGroupIndex, const ImRect& avoidRect);
+        // quickly create a new FilterGroup for a Column and then run openGroupEdit() to edit it.
+        void createGroupAndEdit(size_t column, const ImRect& avoidRect);
         // close the filter editor popup if it is open
         void close();
 
-        template <typename T>
-        void invokeFilterEditEvent(Filter<T> previousValue, Filter<T> newValue)
-        {
-            if (m_editing)
-            {
-                editColumnFilter.invoke(m_editorColumn, m_editorFilterIndex, std::make_shared<Filter<T>>(previousValue), std::make_shared<Filter<T>>(newValue));
-            }
-        };
-
         bool getMadeEdits() const;
-        size_t getFilterColumn() const;
+        size_t getColumn() const;
 };

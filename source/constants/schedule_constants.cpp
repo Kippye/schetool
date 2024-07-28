@@ -1,5 +1,32 @@
 #include "schedule_constants.h"
 
+LogicalOperator::LogicalOperator(LogicalOperatorEnum type) : m_operatorType(type) {}
+
+bool LogicalOperator::apply(bool a, bool b) const
+{
+    switch (m_operatorType)
+    {
+        case LogicalOperatorEnum::And:
+        {
+            return a && b;
+        }
+        case LogicalOperatorEnum::Or:
+        {
+            return a || b;
+        }
+        default:
+        {
+            printf("LogicalOperator::apply(%u, %u) Unimplemented binary operator %d\n", a, b, static_cast<int>(m_operatorType));
+            return a;
+        }
+    }
+}
+
+LogicalOperatorEnum LogicalOperator::getOperatorType() const
+{
+    return m_operatorType;
+}
+
 using filter_consts::TypeComparisonInfo;
 
 TypeComparisonInfo filter_consts::getComparisonInfo(SCHEDULE_TYPE type)

@@ -36,11 +36,11 @@ class Element : public ElementBase
             }
             else if constexpr(std::is_same_v<T, SelectContainer> || std::is_same_v<T, WeekdayContainer>)
             {
-                return "";
+                return "[...]";
             }
             else if constexpr(std::is_same_v<T, bool>)
             {
-                return m_value == true ? "True" : "False";
+                return m_value == true ? "checked" : "unchecked";
             }
             else if constexpr(std::is_same_v<T, std::string>)
             {

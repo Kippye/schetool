@@ -6,7 +6,8 @@
 #include "main.h"
 
 #include "test_date_container.h" // must be tested before filters since filters use it
-#include "test_filter.h"
+#include "test_filter.h" // tested before FilterGroups since they are contained
+#include "test_filter_group.h"
 #include "test_schedule_gui.h"
 
 Program program = Program();
@@ -18,10 +19,12 @@ class testListener : public Catch::EventListenerBase
 
         void testRunStarting(Catch::TestRunInfo const&) override 
         {
+            std::cout << "TESTS BEGIN" << std::endl;
         }
 
         void testRunEnded(Catch::TestRunStats const& test) override
         {
+            std::cout << "TESTS END" << std::endl;
             program.loop();
         }
 };
