@@ -1,36 +1,38 @@
-# schetool
+# Pre-built releases
 
-a daily-weekly-monthly scheduling program that aims to combine the best of all others
+The latest stable releases for Windows and Linux (built and tested on Fedora) are available under [Releases](https://github.com/Kippye/schetool/releases). Just download, extract and run.
 
-## Why schetool?
+# Building schetool
 
-Schetool was created to have every feature that a scheduling tool needs and is designed specifically **for** making schedules.
-Schetool contains everything that's needed and nothing more. Some alternatives have file sizes and memory usages in the hundreds of megabytes. Schetool can run in the background all day and you will only notice it when you need to.
+Building hasn't been tested extensively, so the exact functionality with different platforms and compilers isn't known.
 
-## Pre-built releases
+## Windows
 
-The latest stable releases for Windows and Linux (built and tested on Fedora) are available under Releases. Just download, extract and run.
+### Prerequisites
 
-## Building schetool
-
-Building hasn't been tested extensively, so the exact functionability with different platforms and compilers isn't known.
-
-### Windows
-
-**Prerequisites**
-
+**General**
 * [CMake](https://cmake.org/) version 3.25 or later for project file generation.
-* TODO: Windows compilation prerequisites
+* [vcpkg](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-bash) to get the some of the project's libraries - complete step 1. here.
+* It would be preferred to use [Visual Studio build tools](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022) for vcpkg.
 
-* MinGW64 to build from Makefile (recommended to get it from [MSYS2](https://www.msys2.org/))
+**MSVC**
+* Visual Studio, at least its C++ development [build tools](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022). The project has a preset for Visual Studio 17 2022. No other versions have been tested, but might work if a preset is added.
 
-**Building**
+**Makefile**
+* MinGW64 (recommended to get it from [MSYS2](https://www.msys2.org/))
+* A compiler (gcc and clang have been tested)
+* TODO: Full package list
 
-**Tests can be enabled / disabled using the ``-DENABLE_TESTING=ON`` or ``-DENABLE_TESTING=OFF`` CMake flags.**
+> [!NOTE]
+> Currently, using the ld linker seems to cause linking errors. The CMakeLists automatically uses lld instead.
 
-**If building with tests, the resulting executable for make, Visual Studio Debug or Visual Studio Release builds will be at ``build/tests/unit_tests.exe``, ``build\tests\Debug\unit_tests.exe`` or ``build\tests\Release\unit_tests.exe``, respectively**
+### Building
 
-Using MSVC
+Tests can be enabled / disabled using the ``-DENABLE_TESTING=ON`` or ``-DENABLE_TESTING=OFF`` CMake flags.
+
+If building with tests, the executable will be in a ``build\tests`` subdirectory.
+
+**Using MSVC**
 ```
 cmake --preset windows-msvc2022
   # Build Debug:
@@ -42,11 +44,9 @@ build\Debug\schetool
   # Run Release:
 build\Release\schetool
 ```
-Makefile
+**Makefile**
 
-Using MSYS2 MinGW64
-
-Open the MSYS2 MINGW64 shell launcher
+Open the MSYS2 MinGW64 shell launcher
 ```
   # Debug:
 cmake --preset make
@@ -57,17 +57,22 @@ cmake --build build
   # Run:
 build/schetool
 ```
-### Linux
+To build using a different compiler, such as clang, pass the compiler as an argument when configuring:
+```
+cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ --preset make
+```
+## Linux
 
-**Prerequisites on Fedora**  
+### Prerequisites (Fedora)  
 
 * CMake version 3.25 or later for project file generation.
+* [vcpkg](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-bash) to get the some of the project's libraries - complete step 1. here.
 * The following packages need to be installed:
 ```
 sudo dnf install libX11 libXcursor-devel libXrandr-devel libXinerama-devel libXi-devel mesa-libGL-devel xorg-x11-server-devel
 ```
 
-**Building**
+### Building
 
 ```
   # Debug:
