@@ -34,40 +34,40 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     // DATE / CALENDAR
     if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
     {
-        viewedMonth = viewedMonth == 0 ? 11 : viewedMonth - 1;
+        viewedMonth = viewedMonth == 1 ? 12 : viewedMonth - 1;
     }
     ImGui::SameLine();
     char monthName[16];
     tm formatTime;
-    formatTime.tm_mon = viewedMonth;
+    formatTime.tm_mon = viewedMonth - 1;
     std::strftime(monthName, sizeof(monthName), "%B", &formatTime);
     ImGui::Button(std::string(monthName).append(std::string("##Month")).c_str(), ImVec2(96, 0));
     ImGui::SameLine();
     if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
     {
-        viewedMonth = viewedMonth == 11 ? 0 : viewedMonth + 1;
+        viewedMonth = viewedMonth == 12 ? 1 : viewedMonth + 1;
     }
-    int yearInput = viewedYear + 1900;
+    int yearInput = viewedYear;
     if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        viewedYear = DateContainer::convertToValidYear(yearInput);
+        viewedYear = TimeWrapper::toValidYear(yearInput);
     }
 
     // CALENDAR
     size_t dayIndex = 0;
     unsigned int daysInMonth = mytime::get_month_day_count(viewedYear, viewedMonth);
 
-    tm timeIn = tm{0, 0, 0, 1, (int)viewedMonth, (int)viewedYear};
+    tm timeIn = TimeWrapper(viewedYear, viewedMonth, 1).getTm();
     time_t timeTemp = std::mktime(&timeIn);
+    // NOTE: This NEEDS to be tm, since TimeWrapper doesn't store weekday, currently.
     tm firstOfTheMonth = *localtime(&timeTemp);
 
     // day of the week converted from Sun-Sat to Mon-Sun
     int dayOfTheWeekFirst = firstOfTheMonth.tm_wday == 0 ? 6 : firstOfTheMonth.tm_wday - 1;
 
-    timeIn = tm{0, 0, 0, (int)daysInMonth, (int)viewedMonth, (int)viewedYear};
+    timeIn = TimeWrapper(viewedYear, viewedMonth, daysInMonth).getTm();
     timeTemp = std::mktime(&timeIn);
-    tm lastOfTheMonth;
-    lastOfTheMonth = *localtime(&timeTemp);
+    tm lastOfTheMonth = *localtime(&timeTemp);
 
     // day of the week converted from Sun-Sat to Mon-Sun
     int dayOfTheWeekLast = lastOfTheMonth.tm_wday == 0 ? 6 : lastOfTheMonth.tm_wday - 1;
@@ -80,12 +80,12 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     {
         if (ImGui::Button(std::to_string(dayDisplayNumber).c_str(), ImVec2(24, 24)) && month == viewedMonth)
         {
-            editorDate.setYear(viewedYear, false);
-            editorDate.setMonth(viewedMonth);
-            editorDate.setMonthDay(dayDisplayNumber); 
+            editorDate.getTime().setYear(viewedYear);
+            editorDate.getTime().setMonth(viewedMonth);
+            editorDate.getTime().setMonthDay(dayDisplayNumber); 
             changedDate = true;
         }
-        if (dayDisplayNumber == editorDate.getTime().tm_mday)
+        if (dayDisplayNumber == editorDate.getTime().getMonthDay())
         {
             // TODO: Highlight this day as selected in the calendar
         }
@@ -104,8 +104,8 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     // days from prev month
     for (size_t i = dayOfTheWeekFirst; i > 0; i--)
     {
-        int previousMonth = viewedMonth == 0 ? 11 : viewedMonth - 1;
-        addCalendarDay(previousMonth, mytime::get_month_day_count(previousMonth < 11 ? viewedYear : viewedYear - 1, previousMonth) - (i - 1));
+        int previousMonth = viewedMonth == 1 ? 12 : viewedMonth - 1;
+        addCalendarDay(previousMonth, mytime::get_month_day_count(previousMonth < 12 ? viewedYear : viewedYear - 1, previousMonth) - (i - 1));
     }
     // days of the viewed month
     for (size_t i = 0; i < daysInMonth; i++)
@@ -115,7 +115,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     // days from next month
     for (size_t i = 0; i < 6 - dayOfTheWeekLast; i++)
     {
-        int nextMonth = viewedMonth == 11 ? 0 : viewedMonth + 1;
+        int nextMonth = viewedMonth == 12 ? 1 : viewedMonth + 1;
         addCalendarDay(nextMonth, i + 1);
     }
 

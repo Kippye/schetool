@@ -20,42 +20,44 @@ TEST_CASE("DateContainer")
         operator--
     */
 
-    SECTION("Functions setMonthDay, setMonth, setYear")
+    SECTION("TimeWrapper functions setMonthDay, setMonth, setYear")
     {
-        dateContainer.setYear(1999, true);
-        CHECK(dateContainer.getYear(true) == 1999);
+        dateContainer.getTime().setYear(1999);
+        CHECK(dateContainer.getTime().getYear() == 1999);
 
-        dateContainer.setMonth(6);
-        CHECK(dateContainer.getMonth() == 6);
-        dateContainer.setMonth(12);
-        CHECK(dateContainer.getMonth() == 0);
-        dateContainer.setMonth(-5);
-        CHECK(dateContainer.getMonth() == 11);
+        dateContainer.getTime().setMonth(7);
+        CHECK(dateContainer.getTime().getMonth() == 7);
+        dateContainer.getTime().setMonth(13);
+        CHECK(dateContainer.getTime().getMonth() == 1);
+        dateContainer.getTime().setMonth(-5);
+        CHECK(dateContainer.getTime().getMonth() == 12);
         // clamping to month day count
-        dateContainer.setMonth(1);
-        dateContainer.setMonthDay(35);
-        CHECK(dateContainer.getMonthDay() == 28);
+        dateContainer.getTime().setMonth(2);
+        dateContainer.getTime().setMonthDay(35);
+        CHECK(dateContainer.getTime().getMonthDay() == 28);
 
-        dateContainer.setMonth(2);
-        dateContainer.setMonthDay(31);
+        dateContainer.getTime().setMonth(3);
+        dateContainer.getTime().setMonthDay(31);
         // set year to leap year
-        dateContainer.setYear(2000, true);
+        dateContainer.getTime().setYear(2000);
         // setting month std::mins to new month day count
-        dateContainer.setMonth(1);
+        dateContainer.getTime().setMonth(2);
         // february has 29 days in leap year
-        CHECK(dateContainer.getMonthDay() == 29);
+        CHECK(dateContainer.getTime().getMonthDay() == 29);
     }
 
     SECTION("Increment operators")
     {
-        dateContainer.setYear(2000, true);
-        dateContainer.setMonth(3);
-        dateContainer.setMonthDay(29);
+        dateContainer.getTime().setYear(2000);
+        dateContainer.getTime().setMonth(4);
+        dateContainer.getTime().setMonthDay(29);
         dateContainer++;
         dateContainer++;
-        CHECK(dateContainer.getMonth() == 4);
-        CHECK(dateContainer.getMonthDay() == 1);
-        CHECK((--dateContainer).getMonthDay() == 30);
+        // incremented to next month
+        CHECK(dateContainer.getTime().getMonth() == 5);
+        CHECK(dateContainer.getTime().getMonthDay() == 1);
+        // decrement back to last month
+        CHECK((--dateContainer).getTime().getMonthDay() == 30);
     }
 
     SECTION("Function getString() as relative")

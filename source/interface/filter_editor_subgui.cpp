@@ -144,7 +144,6 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
 
         ImGui::SameLine();
 
-        tm formatTime;
         auto [filterIndex, filterRuleIndex] = m_filterRuleState.getIndices();
         Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
 
@@ -461,8 +460,8 @@ void FilterRuleEditorSubGui::openEdit(SCHEDULE_TYPE type, const std::string& col
     m_avoidRect = avoidRect;
 
     DateContainer currentDate = DateContainer::getCurrentSystemDate();
-    m_viewedYear = currentDate.getTime().tm_year;
-    m_viewedMonth = currentDate.getTime().tm_mon;
+    m_viewedYear = currentDate.getTime().getYear();
+    m_viewedMonth = currentDate.getTime().getMonth();
 
     // Set up m_filterRuleState and open the popup
     switch(type)
@@ -510,8 +509,8 @@ void FilterRuleEditorSubGui::openCreate(SCHEDULE_TYPE type, const std::string& c
 	m_avoidRect = avoidRect;
 
     DateContainer currentDate = DateContainer::getCurrentSystemDate();
-    m_viewedYear = currentDate.getTime().tm_year;
-    m_viewedMonth = currentDate.getTime().tm_mon;
+    m_viewedYear = currentDate.getTime().getYear();
+    m_viewedMonth = currentDate.getTime().getMonth();
 
     Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
 
@@ -625,8 +624,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		//ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
 		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
 
-		bool isPermanentColumn = m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->permanent;
-		tm formatTime;
+		bool isPermanentColumn = m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->permanent;
 
         std::string groupName = m_filterGroupState.getFilterGroup().getName();
         groupName.reserve(schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);

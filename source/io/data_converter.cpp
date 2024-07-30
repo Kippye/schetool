@@ -10,19 +10,14 @@ const LocalObjectTable& ObjectDefinitions::getObjectTableConst() const
     return m_objectTable;
 }
 
-tm BLF_ElementInfo::getCreationTime() const
+TimeWrapper BLF_ElementInfo::getCreationTime() const
 {
-    return tm {
-        0,
-        (int)creationMinutes,
-        (int)creationHours,
-        (int)creationMday,
-        (int)creationMonth,
-        (int)creationYear,
-        0,
-        0,
-        0
-    };
+    return TimeWrapper(
+        ClockTimeWrapper(creationHours, creationMinutes),
+        creationYear, 
+        creationMonth,
+        creationMday
+    );
 }
 
 void DataConverter::setupObjectTable()

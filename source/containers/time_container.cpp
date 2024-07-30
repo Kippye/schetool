@@ -10,6 +10,11 @@ TimeContainer::TimeContainer(const tm& t)
     setTime(t.tm_hour, t.tm_min);
 }
 
+TimeContainer::TimeContainer(const ClockTimeWrapper& clockTime)
+{
+    setTime(clockTime.getHours(), clockTime.getMinutes());
+}
+
 std::string TimeContainer::getString() const
 {
     char output[1024];

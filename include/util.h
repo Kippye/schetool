@@ -58,11 +58,11 @@ class mytime
 		{
 			switch(month)
 			{
-				case(0):
+				case(1):
 				{
 					return 31;
 				}
-				case(1):
+				case(2):
 				{
 					if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
 					{
@@ -73,7 +73,7 @@ class mytime
 						return 28;
 					}
 				}
-				case 3: case 5: case 8: case 10:
+				case 4: case 6: case 9: case 11:
 				{
 					return 30;
 				}
@@ -85,14 +85,14 @@ class mytime
 		}
 		static unsigned int get_month_day_count(const tm& time)
 		{
-			return get_month_day_count(time.tm_year + 1900, time.tm_mon);
+			return get_month_day_count(time.tm_year + 1900, time.tm_mon + 1);
 		}
 
         static unsigned int get_year_day(unsigned int year, unsigned int month, unsigned int monthDay)
         {
             unsigned int yearDay = 0;
 
-            for (size_t m = 0; m < month; m++)
+            for (size_t m = 1; m < month; m++)
             {
                 yearDay += get_month_day_count(year, m);
             }
@@ -103,6 +103,6 @@ class mytime
         }
         static unsigned int get_year_day(const tm& time)
         {
-            return get_year_day(time.tm_year + 1900, time.tm_mon, time.tm_mday);
+            return get_year_day(time.tm_year + 1900, time.tm_mon + 1, time.tm_mday);
         }
 };

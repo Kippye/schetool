@@ -62,8 +62,8 @@ class FilterRuleEditorSubGui : public Gui
         FilterGroupEditorState& m_filterGroupState;
         bool m_editing = false;
         std::string m_columnName = "";
-        unsigned int m_viewedYear = 0;
-        unsigned int m_viewedMonth = 0;
+        unsigned int m_viewedYear = 1900;
+        unsigned int m_viewedMonth = 1;
         bool m_popupOpen = false;
         bool m_openNextFrame = false;
         ImRect m_avoidRect;

@@ -70,16 +70,13 @@ TEST_CASE("FilterRule")
         // }
         SECTION("Date filter")
         {
-            tm time;
-            time.tm_mday = 25;
-            time.tm_mon = 4;
-            time.tm_year = 132;
+            TimeWrapper time = TimeWrapper(132, 4, 25);
             Element<DateContainer> element = Element<DateContainer>(SCH_DATE, DateContainer(time), creationDate, creationTime);
             FilterRule filter = FilterRule(DateContainer(time));
             CHECK(filter.checkPasses(&element) == true);
 
-            time.tm_mday = 13;
-            time.tm_mon = 1;
+            time.setMonthDay(13);
+            time.setMonth(1);
             element.setValue(time);
             CHECK(filter.checkPasses(&element) == false);
         }

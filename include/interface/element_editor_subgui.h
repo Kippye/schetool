@@ -51,8 +51,8 @@ class ElementEditorSubGui : public Gui
         void setEditorValue(const DateContainer& value)
         {
             m_editorDate = value;
-            m_viewedMonth = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().tm_mon : m_editorDate.getTime().tm_mon;
-            m_viewedYear = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().tm_year : m_editorDate.getTime().tm_year;
+            m_viewedMonth = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().getMonth() : m_editorDate.getTime().getMonth();
+            m_viewedYear = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().getYear() : m_editorDate.getTime().getYear();
         }
         void setEditorValue(const SelectContainer& value)
         {
