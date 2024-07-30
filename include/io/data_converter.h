@@ -54,6 +54,58 @@ struct BLF_Base
     }
 };
 
+class BLF_Date : BLF_Base
+{
+	static constexpr const char* getName()
+	{
+		return "BLF_Date";
+	}
+
+	unsigned int year;
+	unsigned int month;
+	unsigned int monthDay;
+
+	BLF_Date() : year(1900), month(1), monthDay(1) 
+	{}
+	BLF_Date(const TimeWrapper& date) : year(date.getYear()), month(date.getMonth()), monthDay(date.getMonthDay())
+	{}
+
+	TimeWrapper getDate() const
+	{
+		return TimeWrapper(year, month, monthDay);
+	}
+
+	static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_Date>(getName(),
+			arg("year", &BLF_Date::year),
+			arg("month", &BLF_Date::month),
+			arg("monthDay", &BLF_Date::monthDay)
+		));
+	}
+};
+
+struct BLF_FileInfo : BLF_Base
+{
+	static constexpr const char* getName()
+	{
+		return "BLF_FileInfo";
+	}
+
+	BLF_Date editDate;
+
+	BLF_FileInfo() {}
+	BLF_FileInfo(const TimeWrapper& fileEditDate) : editDate(fileEditDate)
+	{}
+
+	static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_FileInfo>(getName(),
+			arg("editDate", &BLF_FileInfo::editDate, definitions.get<BLF_Date>())
+		));
+	}
+};
+
 struct BLF_ElementInfo : BLF_Base
 {
     static constexpr const char* getName()
