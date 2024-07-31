@@ -21,6 +21,7 @@ class ObjectDefinitions
         LocalObjectTable m_objectTable;
     public:
         LocalObjectTable& getObjectTable();
+        const LocalObjectTable& getObjectTableConst() const;
 
         template <typename T>
         void add(LocalObjectDefinition<T>& definition)
@@ -863,6 +864,7 @@ class DataConverter
             BLF_Column<T> blfColumn = BLF_Column<T>(&column, columnIndex);
             data.insert(getObjectDefinition<BLF_Column<T>>().serialize(blfColumn));
         }
+        bool isValidScheduleFile(const char* path) const;
         // Write the Columns of a Schedule to a file at the given path.
         int writeSchedule(const char* path, const std::vector<Column>&);
         // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The function creates a copy of the provided vector, but modifies the argument directly. If the function fails at any point, it will be reset to the copy created at the start.

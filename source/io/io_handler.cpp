@@ -9,6 +9,9 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
 {
     m_schedule = schedule;
     m_windowManager = window;
+    m_converter = DataConverter();
+    m_converter.setupObjectTable();
+    
     window->windowCloseEvent.addListener(windowCloseListener);
     input.addEventListener(INPUT_EVENT_SC_SAVE, saveListener);
 
@@ -31,12 +34,15 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     m_autosavePopupGui->ignoreAutosaveOpenFileEvent.addListener(ignoreAutosaveOpenFileEvent);
 
     passFileNamesToGui();
-
-    m_converter = DataConverter();
-    m_converter.setupObjectTable();
 }
 
-std::string IO_Handler::makeRelativePathFromName(const char* name)
+// Returns true if the path has the schedule file extension and is considered a valid file by the DataConverter
+bool IO_Handler::isScheduleFilePath(const fs::path& path) const
+{
+    return (strcmp(path.extension().string().c_str(), SCHEDULE_FILE_EXTENSION) == 0 && m_converter.isValidScheduleFile(makeRelativePathFromName(path.stem().string().c_str()).c_str()));
+}
+
+std::string IO_Handler::makeRelativePathFromName(const char* name) const
 {
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
 }
@@ -404,11 +410,25 @@ std::vector<std::string> IO_Handler::getScheduleStemNames(bool includeAutosaves)
 
     for (const auto& entry: fs::directory_iterator(schedulesPath))
     {
-        // Including all filenames or the filename is not an autosave, add it
-        if (includeAutosaves == true || !isAutosave(entry.path().stem().string()))
+        // Skip non-regular files
+        if (entry.is_regular_file() == false)
         {
-            filenames.push_back(entry.path().stem().string());
+            std::cout << "Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
+            continue;
         }
+        // Skip non-schedule files
+        if (isScheduleFilePath(entry.path()) == false)
+        {
+            std::cout << "Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
+            continue;
+        }
+        // Skip autosave files if includeAutosaves == false
+        if (includeAutosaves == false && isAutosave(entry.path().stem().string()))
+        {
+            continue;
+        }
+
+        filenames.push_back(entry.path().stem().string());
     }
     return filenames;
 }
@@ -427,12 +447,26 @@ std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime(bool i
 
     for (const auto& entry: fs::directory_iterator(schedulesPath))
     {
-        // Including all filenames or the filename is not an autosave, add it
-        if (includeAutosaves == true || !isAutosave(entry.path().stem().string()))
+        // Skip non-regular files
+        if (entry.is_regular_file() == false)
         {
-            filenames.push_back(entry.path().stem().string());
-            filenamesEditTimes.insert({entry.path().stem().string(), getFileEditTime(entry)}); 
+            std::cout << "Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
+            continue;
         }
+        // Skip non-schedule files
+        if (isScheduleFilePath(entry.path()) == false)
+        {
+            std::cout << "Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
+            continue;
+        }
+        // Skip autosave files if includeAutosaves == false
+        if (includeAutosaves == false && isAutosave(entry.path().stem().string()))
+        {
+            continue;
+        }
+
+        filenames.push_back(entry.path().stem().string());
+        filenamesEditTimes.insert({entry.path().stem().string(), getFileEditTime(entry)}); 
     }
 
     std::sort(filenames.begin(), filenames.end(), [&](std::string fs1, std::string fs2){ return filenamesEditTimes.at(fs1) > filenamesEditTimes.at(fs2); });
@@ -454,6 +488,19 @@ std::string IO_Handler::getLastEditedScheduleStemName()
 
     for (const auto& entry: dirIterator)
     {
+        // Skip non-regular files
+        if (entry.is_regular_file() == false)
+        {
+            std::cout << "Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
+            continue;
+        }
+        // Skip non-schedule files
+        if (isScheduleFilePath(entry.path()) == false)
+        {
+            std::cout << "Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
+            continue;
+        }
+
         fs::file_time_type editTime = fs::last_write_time(entry);
 
         if (latestEditTime == std::numeric_limits<long long>::min() || editTime.time_since_epoch().count() > latestEditTime)

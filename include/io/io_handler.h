@@ -82,7 +82,8 @@ class IO_Handler
             readSchedule(getFileBaseName(getLastEditedScheduleStemName().c_str()).c_str());
         });
 
-        std::string makeRelativePathFromName(const char* name);
+        bool isScheduleFilePath(const std::filesystem::path& path) const;
+        std::string makeRelativePathFromName(const char* name) const;
         bool applyAutosaveToFile(const char* name);
         void setHaveFileOpen(bool haveFileOpen);
         void passFileNamesToGui();
