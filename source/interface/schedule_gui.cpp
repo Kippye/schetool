@@ -256,9 +256,8 @@ void ScheduleGui::draw(Window& window, Input& input)
                                 }
                                 // element to display the value as a wrapped, multiline text
                                 ImGui::TextWrapped("%s", displayedValue.c_str());
-                                // open text editor if clicked while hovering the current column & row (note: hovered row has an offset removed to account for the filter and header rows)
-                                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() - 2 == row)
-                                // if (ImGui::IsItemClicked())
+                                // Open text editor if clicked while hovering the current column & row
+                                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::IsAnyItemHovered() == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
