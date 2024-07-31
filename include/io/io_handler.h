@@ -117,7 +117,7 @@ class IO_Handler
         // Change m_currentFileName to name.
         // Update the name in Schedule and the window's title
         void setCurrentFileName(const std::string& name);
-        std::vector<std::string> getScheduleStemNames();
-        std::vector<std::string> getScheduleStemNamesSortedByEditTime();
+        std::vector<std::string> getScheduleStemNames(bool includeAutosaves = true);
+        std::vector<std::string> getScheduleStemNamesSortedByEditTime(bool includeAutosaves = true);
         std::string getLastEditedScheduleStemName();
 };

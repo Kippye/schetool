@@ -49,8 +49,8 @@ void IO_Handler::setHaveFileOpen(bool haveFileOpen)
 
 void IO_Handler::passFileNamesToGui()
 {
-    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime());
-    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime());
+    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime(true));
+    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime(false));
 }
 
 void IO_Handler::unloadCurrentFile()
@@ -392,7 +392,7 @@ void IO_Handler::setCurrentFileName(const std::string& name)
     m_windowManager->setTitleSuffix(std::string(" - ").append(m_schedule->getName()).c_str());
 }
 
-std::vector<std::string> IO_Handler::getScheduleStemNames()
+std::vector<std::string> IO_Handler::getScheduleStemNames(bool includeAutosaves)
 {
     std::vector<std::string> filenames = {};
     fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
@@ -404,12 +404,16 @@ std::vector<std::string> IO_Handler::getScheduleStemNames()
 
     for (const auto& entry: fs::directory_iterator(schedulesPath))
     {
-        filenames.push_back(entry.path().stem().string());
+        // Including all filenames or the filename is not an autosave, add it
+        if (includeAutosaves == true || !isAutosave(entry.path().stem().string()))
+        {
+            filenames.push_back(entry.path().stem().string());
+        }
     }
     return filenames;
 }
 
-std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime()
+std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime(bool includeAutosaves)
 {
     std::vector<std::string> filenames = {};
     std::map<std::string, long long> filenamesEditTimes = {};
@@ -423,8 +427,12 @@ std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime()
 
     for (const auto& entry: fs::directory_iterator(schedulesPath))
     {
-        filenames.push_back(entry.path().stem().string());
-        filenamesEditTimes.insert({entry.path().stem().string(), getFileEditTime(entry)}); 
+        // Including all filenames or the filename is not an autosave, add it
+        if (includeAutosaves == true || !isAutosave(entry.path().stem().string()))
+        {
+            filenames.push_back(entry.path().stem().string());
+            filenamesEditTimes.insert({entry.path().stem().string(), getFileEditTime(entry)}); 
+        }
     }
 
     std::sort(filenames.begin(), filenames.end(), [&](std::string fs1, std::string fs2){ return filenamesEditTimes.at(fs1) > filenamesEditTimes.at(fs2); });
