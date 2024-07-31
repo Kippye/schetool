@@ -78,7 +78,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     // TODO: Handle selecting a day in the previous / next year
     auto addCalendarDay = [&](int month, int dayDisplayNumber)
     {
-        if (ImGui::Button(std::to_string(dayDisplayNumber).c_str(), ImVec2(24, 24)) && month == viewedMonth)
+        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(24, 24)) && month == viewedMonth)
         {
             editorDate.getTime().setYear(viewedYear);
             editorDate.getTime().setMonth(viewedMonth);
