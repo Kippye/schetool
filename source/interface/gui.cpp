@@ -30,15 +30,15 @@ void Gui::draw(Window& window, Input& input)
 {
 }
 
-void Gui::addSubGui(const std::string& ID, Gui* subGui)
+void Gui::addSubGui(Gui* subGui)
 {
     std::shared_ptr<Gui> subGuiPtr = std::shared_ptr<Gui>(subGui);
     if (subGuiPtr)
     {
-        subGuis.insert({ID, subGuiPtr});
+        subGuis.insert({subGuiPtr->getID(), subGuiPtr});
     }
     else
     {
-        printf("Gui::addSubGui(%s, %p): Failed to add subGui - invalid pointer\n", ID.c_str(), (void*)subGui);
+        printf("Gui::addSubGui(%s, %p): Failed to add subGui - invalid pointer\n", "ID", (void*)subGui);
     }
 }

@@ -107,9 +107,9 @@ void DeleteModalSubGui::setAffectedScheduleName(const std::string& name)
 MainMenuBarGui::MainMenuBarGui(const char* ID) : Gui(ID)
 {
 	// add subguis
-	addSubGui("NewNameModalSubGui", new NewNameModalSubGui("NewNameModalSubGui"));
-	addSubGui("RenameModalSubGui", new RenameModalSubGui("RenameModalSubGui"));
-	addSubGui("DeleteModalSubGui", new DeleteModalSubGui("DeleteModalSubGui"));
+	addSubGui(new NewNameModalSubGui("NewNameModalSubGui"));
+	addSubGui(new RenameModalSubGui("RenameModalSubGui"));
+	addSubGui(new DeleteModalSubGui("DeleteModalSubGui"));
 }
 
 void MainMenuBarGui::draw(Window& window, Input& input)

@@ -17,8 +17,8 @@
 
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents) : m_scheduleCore(scheduleCore), Gui(ID) 
 {
-	addSubGui("ElementEditorSubGui", new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
-	addSubGui("FilterEditorSubGui", new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
+	addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
+	addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 }
 
 void ScheduleGui::draw(Window& window, Input& input)

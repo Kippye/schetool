@@ -586,7 +586,7 @@ FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore& sched
 {
     scheduleEvents.columnAdded.addListener(columnAddedListener);
     scheduleEvents.columnRemoved.addListener(columnRemovedListener);
-	addSubGui("FilterRuleEditorSubGui", new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, scheduleEvents, m_filterGroupState));
+	addSubGui(new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, scheduleEvents, m_filterGroupState));
 }
 
 void FilterEditorSubGui::draw(Window& window, Input& input)
