@@ -13,11 +13,15 @@
 // TEMP
 #include <iostream>
 
+Schedule::Schedule() : m_core(), m_editHistory(m_core)
+{}
+
 void Schedule::init(Input& input, Interface& interface)
 {
+    interface.addGui(std::shared_ptr<ScheduleGui>(new ScheduleGui("ScheduleGui", m_core, m_scheduleEvents)));
+
     if (auto scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui"))
     {
-        scheduleGui->passScheduleComponents(m_core, m_scheduleEvents);
         if (auto elementEditorSubGui = scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
         {
             elementEditorSubGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener); 
@@ -70,9 +74,7 @@ void Schedule::init(Input& input, Interface& interface)
         editHistoryGui->undoEvent.addListener(undoListener);
         editHistoryGui->redoEvent.addListener(redoListener);
     }
-    m_core = ScheduleCore();
 
-    m_editHistory = ScheduleEditHistory(&m_core);
     input.addEventListener(INPUT_EVENT_SC_UNDO, undoListener);
     input.addEventListener(INPUT_EVENT_SC_REDO, redoListener);
 }

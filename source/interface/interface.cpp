@@ -23,7 +23,6 @@ void Interface::init(Window* windowManager, Input* input)
 	// ADD GUIS
     addGui(std::shared_ptr<StartPageGui>(new StartPageGui("StartPageGui")));
 	addGui(std::shared_ptr<MainMenuBarGui>(new MainMenuBarGui("MainMenuBarGui")));
-    addGui(std::shared_ptr<ScheduleGui>(new ScheduleGui("ScheduleGui")));
     // simple popups
     addGui(std::shared_ptr<AutosavePopupGui>(new AutosavePopupGui("AutosavePopupGui")));
 	#if DEBUG

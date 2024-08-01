@@ -15,10 +15,8 @@
 #include "gui_templates.h"
 #include <iostream>
 
-void ScheduleGui::passScheduleComponents(const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
+ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents) : m_scheduleCore(scheduleCore), Gui(ID) 
 {
-	m_scheduleCore = &scheduleCore;
-
 	addSubGui("ElementEditorSubGui", new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
 	addSubGui("FilterEditorSubGui", new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 }
@@ -45,20 +43,20 @@ void ScheduleGui::draw(Window& window, Input& input)
 		ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
 			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
             // avoid imgui 0 column abort by not beginning the table at all if there are no columns in the schedule
-            if (m_scheduleCore->getColumnCount() == 0)
+            if (m_scheduleCore.getColumnCount() == 0)
             {
                 goto skip_schedule_table;
             }
-			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore->getColumnCount(), tableFlags))
+			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags))
 			{ 
-				for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
+				for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 				{
-					ImGui::TableSetupColumn(m_scheduleCore->getColumn(column)->name.c_str());
+					ImGui::TableSetupColumn(m_scheduleCore.getColumn(column)->name.c_str());
 				}
  
                 // filters row
                 ImGui::TableNextRow();
-                for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
+                for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
                 {
                     ImGui::TableSetColumnIndex(column);
 
@@ -82,7 +80,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 
                     ImGui::SameLine();
 
-                    const Column* currentColumn = m_scheduleCore->getColumn(column);
+                    const Column* currentColumn = m_scheduleCore.getColumn(column);
                     const auto& columnFilterGroups = currentColumn->getFilterGroupsConst();
 
                     // DATA TO PASS TO FILTER EDITOR
@@ -140,20 +138,20 @@ void ScheduleGui::draw(Window& window, Input& input)
 
 				// custom header row
 				ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
-				for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
+				for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 				{
 					ImGui::TableSetColumnIndex(column);
 					const char* columnName = ImGui::TableGetColumnName(column); // get name passed to TableSetupColumn()
 					ImGui::PushID(column);
 					// sort button!
-					if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_scheduleCore->getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_scheduleCore->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+					if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
 					{
-						setColumnSort.invoke(column, m_scheduleCore->getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_scheduleCore->getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
+						setColumnSort.invoke(column, m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
 					}
 					ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					// close button
 					// permanent columns can't be removed so there's no need for a remove button
-					if (m_scheduleCore->getColumn(column)->permanent == false)
+					if (m_scheduleCore.getColumn(column)->permanent == false)
 					{
 						if (ImGui::Button("X##removecolumn", ImVec2(20.0, 20.0)))
 						{
@@ -174,17 +172,17 @@ void ScheduleGui::draw(Window& window, Input& input)
 					ImGui::PopID();
 				}
 
-				std::vector<size_t> sortedRowIndices = m_scheduleCore->getSortedRowIndices();
+				std::vector<size_t> sortedRowIndices = m_scheduleCore.getSortedRowIndices();
 
-				for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore->getRowCount(); unsortedRow++)
+				for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount(); unsortedRow++)
 				{
 					size_t row = sortedRowIndices[unsortedRow];
 					
                     // CHECK FILTERS BEFORE DRAWING ROW
-                    for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
+                    for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
                     {
                         // check if the row's Element passes every FilterGroup in this Column
-                        if (m_scheduleCore->getColumn(column)->checkElementPassesFilters(row) == false)
+                        if (m_scheduleCore.getColumn(column)->checkElementPassesFilters(row) == false)
                         {
                             // fails to pass, don't show this row                            
                             goto do_not_draw_row;
@@ -192,7 +190,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                     }
 
 					ImGui::TableNextRow();
-					for (size_t column = 0; column < m_scheduleCore->getColumnCount(); column++)
+					for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 					{
 						ImGui::TableSetColumnIndex(column);
 						// the buttons for removing rows are displayed in the first displayed column
@@ -207,7 +205,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							ImGui::SameLine();
 						}
 
-						SCHEDULE_TYPE columnType = m_scheduleCore->getColumn(column)->type;
+						SCHEDULE_TYPE columnType = m_scheduleCore.getColumn(column)->type;
 						// TODO: i could probably reduce the code repetition here
 						ImGui::SetNextItemWidth(-FLT_MIN);
  
@@ -215,7 +213,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 						{
 							case(SCH_BOOL):
 							{
-                                bool newValue = m_scheduleCore->getElementValueConstRef<bool>(column, row);
+                                bool newValue = m_scheduleCore.getElementValueConstRef<bool>(column, row);
                                 if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
                                 {
                                     setElementValueBool.invoke(column, row, newValue);
@@ -224,7 +222,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_NUMBER):
 							{
-                                int newValue = m_scheduleCore->getElementValueConstRef<int>(column, row);
+                                int newValue = m_scheduleCore.getElementValueConstRef<int>(column, row);
                                 if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     setElementValueNumber.invoke(column, row, newValue);
@@ -233,7 +231,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_DECIMAL):
 							{
-                                double newValue = m_scheduleCore->getElementValueConstRef<double>(column, row);
+                                double newValue = m_scheduleCore.getElementValueConstRef<double>(column, row);
                                 if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     setElementValueDecimal.invoke(column, row, newValue);
@@ -242,7 +240,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_TEXT):
 							{
-                                std::string value = m_scheduleCore->getElementValueConstRef<std::string>(column, row);
+                                std::string value = m_scheduleCore.getElementValueConstRef<std::string>(column, row);
                                 std::string displayedValue = value;
 
                                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -283,9 +281,9 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_SELECT):
 							{
-                                SelectContainer value = m_scheduleCore->getElementValueConstRef<SelectContainer>(column, row);
+                                SelectContainer value = m_scheduleCore.getElementValueConstRef<SelectContainer>(column, row);
                                 auto selection = value.getSelection();
-                                const std::vector<std::string>& optionNames = m_scheduleCore->getColumn(column)->selectOptions.getOptions();
+                                const std::vector<std::string>& optionNames = m_scheduleCore.getColumn(column)->selectOptions.getOptions();
 
                                 std::vector<int> selectionIndices = {};
 
@@ -345,7 +343,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     if (i != selectedCount - 1 && ImGui::IsItemHovered())
                                     {
                                         ImGui::BeginTooltip();
-                                        ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
+                                        ImGui::Text("Created: %s %s", m_scheduleCore.getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
                                         ImGui::EndTooltip();
                                     }
 
@@ -386,7 +384,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
                             case(SCH_WEEKDAY):
 							{
-                                WeekdayContainer value = m_scheduleCore->getElementValueConstRef<WeekdayContainer>(column, row);
+                                WeekdayContainer value = m_scheduleCore.getElementValueConstRef<WeekdayContainer>(column, row);
                                 auto selection = value.getSelection();
                                 const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
 
@@ -448,7 +446,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     if (i != selectedCount - 1 && ImGui::IsItemHovered())
                                     {
                                         ImGui::BeginTooltip();
-                                        ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
+                                        ImGui::Text("Created: %s %s", m_scheduleCore.getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
                                         ImGui::EndTooltip();
                                     }
 
@@ -489,7 +487,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_TIME):
 							{
-                                TimeContainer value = m_scheduleCore->getElementValueConstRef<TimeContainer>(column, row);
+                                TimeContainer value = m_scheduleCore.getElementValueConstRef<TimeContainer>(column, row);
 
                                 // Button displaying the Time of the current Time element
                                 if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
@@ -517,7 +515,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_DATE):
 							{
-                                auto value = m_scheduleCore->getElementValueConstRef<DateContainer>(column, row);
+                                auto value = m_scheduleCore.getElementValueConstRef<DateContainer>(column, row);
                             
                                 // Button displaying the date of the current Date element
                                 if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(),
@@ -549,11 +547,11 @@ void ScheduleGui::draw(Window& window, Input& input)
 						if (ImGui::IsItemHovered())
 						{
 							ImGui::BeginTooltip();
-							ImGui::Text("Created: %s %s", m_scheduleCore->getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore->getElementConst(column, row)->getCreationTime().getString().c_str());
+							ImGui::Text("Created: %s %s", m_scheduleCore.getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
 							ImGui::EndTooltip();
 						}
 					}
-                    // END OF for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore->getRowCount(); unsortedRow++)
+                    // END OF for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount(); unsortedRow++)
                     do_not_draw_row:
                     bool b = false; // stupid thing because fsr the label can't be at the end of the loop
 				}
@@ -564,11 +562,11 @@ void ScheduleGui::draw(Window& window, Input& input)
 		ImGui::SameLine();
 		if (ImGui::Button("+", ImVec2(ADD_COLUMN_BUTTON_WIDTH, (float)(CHILD_WINDOW_HEIGHT))))
 		{
-			addDefaultColumn.invoke(m_scheduleCore->getColumnCount());
+			addDefaultColumn.invoke(m_scheduleCore.getColumnCount());
 		}
 		if (ImGui::Button("Add row", ImVec2((float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 26), ADD_ROW_BUTTON_HEIGHT)))
 		{
-			addRow.invoke(m_scheduleCore->getRowCount());
+			addRow.invoke(m_scheduleCore.getRowCount());
 		}
 		ImGui::PopStyleVar();
     ImGui::End();
@@ -581,7 +579,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 	//ImGui::TableFindByID(ImGui::GetID("ScheduleTable"));
 
 	// renaming
-	std::string name = m_scheduleCore->getColumn(column)->name.c_str();
+	std::string name = m_scheduleCore.getColumn(column)->name.c_str();
 	name.reserve(COLUMN_NAME_MAX_LENGTH);
 	char* buf = name.data();
 	
@@ -591,10 +589,10 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 	}
 
 	// select type (for non-permanent columns)
-	if (m_scheduleCore->getColumn(column)->permanent == false)
+	if (m_scheduleCore.getColumn(column)->permanent == false)
 	{
 		ImGui::Separator();
-		SCHEDULE_TYPE selected = m_scheduleCore->getColumn(column)->type;
+		SCHEDULE_TYPE selected = m_scheduleCore.getColumn(column)->type;
 		for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++)
 		{
 			if (ImGui::Selectable(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
@@ -634,7 +632,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 		ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
 		for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++)
 		{
-			if (m_scheduleCore->getColumn(otherColumnIndex)->permanent)
+			if (m_scheduleCore.getColumn(otherColumnIndex)->permanent)
 			{
 				continue;
 			}

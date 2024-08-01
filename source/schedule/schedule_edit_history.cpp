@@ -1,15 +1,8 @@
 #include <schedule_edit_history.h>
 #include <iostream>
 
-ScheduleEditHistory::ScheduleEditHistory()
-{
-
-}
-
-ScheduleEditHistory::ScheduleEditHistory(ScheduleCore* scheduleCore)
-{
-    m_core = scheduleCore;
-}
+ScheduleEditHistory::ScheduleEditHistory(ScheduleCore& scheduleCore) : m_core(scheduleCore)
+{}
 
 const std::deque<ScheduleEdit*>& ScheduleEditHistory::getEditHistory() const
 {

@@ -28,9 +28,9 @@ Program::Program()
 	windowManager.init(&textureLoader);
 	input.init(&windowManager);
 	interface.init(&windowManager, &input);
-	ioHandler.init(&schedule, &windowManager, input, interface);
 	render.init(&windowManager, &interface);
 	schedule.init(input, interface);
+	ioHandler.init(&schedule, &windowManager, input, interface);
 
 	schedule.createDefaultSchedule();
 

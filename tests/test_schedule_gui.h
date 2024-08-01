@@ -9,8 +9,7 @@ TEST_CASE("ScheduleGui", "[gui]")
 {
     ScheduleCore scheduleCore = ScheduleCore();
     ScheduleEvents scheduleEvents = ScheduleEvents();
-    ScheduleGui scheduleGui = ScheduleGui("ScheduleGui");
-    scheduleGui.passScheduleComponents(scheduleCore, scheduleEvents);
+    ScheduleGui scheduleGui = ScheduleGui("ScheduleGui", scheduleCore, scheduleEvents);
 
     SECTION("has subguis")
     {

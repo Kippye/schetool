@@ -11,7 +11,7 @@
 class ElementEditorSubGui : public Gui
 {
     private:
-        const ScheduleCore* m_scheduleCore = NULL;
+        const ScheduleCore& m_scheduleCore;
         SCHEDULE_TYPE m_editedType;
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;
@@ -28,7 +28,7 @@ class ElementEditorSubGui : public Gui
         ImRect m_avoidRect;
         ImVec2 m_textInputBoxSize = ImVec2(0, 0);
     public:
-        ElementEditorSubGui(const char* ID, const ScheduleCore* scheduleCore);
+        ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore);
 
         // Events
         // modifyColumnSelectOptions

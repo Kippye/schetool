@@ -57,7 +57,7 @@ class FilterGroupEditorState
 class FilterRuleEditorSubGui : public Gui
 {
     private:
-        const ScheduleCore* m_scheduleCore = NULL;
+        const ScheduleCore& m_scheduleCore;
         FilterRuleEditorState m_filterRuleState;
         FilterGroupEditorState& m_filterGroupState;
         bool m_editing = false;
@@ -351,7 +351,7 @@ class FilterRuleEditorSubGui : public Gui
             }
         };
     public:
-        FilterRuleEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents, FilterGroupEditorState& filterGroupState);
+        FilterRuleEditorSubGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, FilterGroupEditorState& filterGroupState);
         
         Event<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
         Event<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
@@ -370,7 +370,7 @@ class FilterRuleEditorSubGui : public Gui
 class FilterEditorSubGui : public Gui
 {
     private:
-        const ScheduleCore* m_scheduleCore = NULL;
+        const ScheduleCore& m_scheduleCore;
         FilterGroupEditorState m_filterGroupState;
         bool m_popupOpen = false;
         ImRect m_avoidRect;
@@ -390,7 +390,7 @@ class FilterEditorSubGui : public Gui
             }
         };
     public:
-        FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents);
+        FilterEditorSubGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
         Event<size_t, FilterGroup> addColumnFilterGroup;

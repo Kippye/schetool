@@ -243,6 +243,7 @@ class Schedule
         };
 
     public:
+        Schedule();
         // WHOLE-SCHEDULE FUNCTIONS
         void init(Input& input, Interface& interface);
 

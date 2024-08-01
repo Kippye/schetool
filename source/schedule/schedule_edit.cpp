@@ -10,12 +10,12 @@ ScheduleEdit::~ScheduleEdit()
 
 }
 
-void ScheduleEdit::revert(ScheduleCore* const scheduleCore)
+void ScheduleEdit::revert(ScheduleCore& scheduleCore)
 {
     m_isReverted = true;
 }
 
-void ScheduleEdit::apply(ScheduleCore* const scheduleCore)
+void ScheduleEdit::apply(ScheduleCore&  scheduleCore)
 {
     m_isReverted = false;
 }
@@ -51,35 +51,35 @@ RowEdit::~RowEdit()
     }
 }
 
-void RowEdit::revert(ScheduleCore* const scheduleCore)
+void RowEdit::revert(ScheduleCore& scheduleCore)
 {
     // reverting a removal means adding the row back
     if (m_isRemove)
     {
-        scheduleCore->addRow(m_row);
-        scheduleCore->setRow(m_row, m_elementData);
+        scheduleCore.addRow(m_row);
+        scheduleCore.setRow(m_row, m_elementData);
     }
     // reverting an addition means removing the row again
     else
     {
-        scheduleCore->removeRow(m_row);
+        scheduleCore.removeRow(m_row);
     }
 
     m_isReverted = true;
 } 
 
-void RowEdit::apply(ScheduleCore* const scheduleCore)
+void RowEdit::apply(ScheduleCore& scheduleCore)
 {
     // applying a removal means removing the row
     if (m_isRemove)
     {
-        scheduleCore->removeRow(m_row);
+        scheduleCore.removeRow(m_row);
     }
     // applying an addition means adding the row
     else
     {
-        scheduleCore->addRow(m_row);
-        scheduleCore->setRow(m_row, m_elementData);
+        scheduleCore.addRow(m_row);
+        scheduleCore.setRow(m_row, m_elementData);
     }
 
     m_isReverted = false;
@@ -94,33 +94,33 @@ ColumnEdit::ColumnEdit(bool isRemove, size_t column, const Column& columnData) :
     m_columnData = Column(columnData);
 }
 
-void ColumnEdit::revert(ScheduleCore* const scheduleCore)
+void ColumnEdit::revert(ScheduleCore& scheduleCore)
 {
     // reverting a removal means adding the column
     if (m_isRemove)
     {
-        scheduleCore->addColumn(m_column, m_columnData);
+        scheduleCore.addColumn(m_column, m_columnData);
     }
     // reverting an addition means removing the column
     else
     {
-        scheduleCore->removeColumn(m_column);
+        scheduleCore.removeColumn(m_column);
     }
 
     m_isReverted = true;
 } 
 
-void ColumnEdit::apply(ScheduleCore* const scheduleCore)
+void ColumnEdit::apply(ScheduleCore& scheduleCore)
 {
     // applying a removal means removing the column
     if (m_isRemove)
     {
-        scheduleCore->removeColumn(m_column);
+        scheduleCore.removeColumn(m_column);
     }
     // applying an addition means adding the column
     else
     {
-        scheduleCore->addColumn(m_column, m_columnData);
+        scheduleCore.addColumn(m_column, m_columnData);
     }
 
     m_isReverted = false;
@@ -169,29 +169,29 @@ ColumnPropertyEdit::ColumnPropertyEdit(size_t column, COLUMN_PROPERTY editedProp
     }
 }
 
-void ColumnPropertyEdit::revert(ScheduleCore* const scheduleCore)
+void ColumnPropertyEdit::revert(ScheduleCore& scheduleCore)
 {
     switch(m_editedProperty)
     {
         case(COLUMN_PROPERTY_NAME):
         {
-            scheduleCore->setColumnName(m_column, m_previousColumnData.name.c_str());
+            scheduleCore.setColumnName(m_column, m_previousColumnData.name.c_str());
             break;
         }
         case(COLUMN_PROPERTY_TYPE):
         {
-            scheduleCore->setColumnType(m_column, m_previousColumnData.type); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
-            scheduleCore->setColumnElements(m_column, m_previousColumnData);
+            scheduleCore.setColumnType(m_column, m_previousColumnData.type); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
+            scheduleCore.setColumnElements(m_column, m_previousColumnData);
             break;
         }
         case(COLUMN_PROPERTY_SELECT_OPTIONS):
         {
-            scheduleCore->modifyColumnSelectOptions(m_column, SelectOptionsModification(OPTION_MODIFICATION_REPLACE).optionNames(m_previousColumnData.selectOptions.getOptions()));
+            scheduleCore.modifyColumnSelectOptions(m_column, SelectOptionsModification(OPTION_MODIFICATION_REPLACE).optionNames(m_previousColumnData.selectOptions.getOptions()));
             break;
         }
         case(COLUMN_PROPERTY_SORT):
         {
-            scheduleCore->setColumnSort(m_column, m_previousColumnData.sort);
+            scheduleCore.setColumnSort(m_column, m_previousColumnData.sort);
             break;
         }
     }
@@ -199,28 +199,28 @@ void ColumnPropertyEdit::revert(ScheduleCore* const scheduleCore)
     m_isReverted = true;
 } 
 
-void ColumnPropertyEdit::apply(ScheduleCore* const scheduleCore)
+void ColumnPropertyEdit::apply(ScheduleCore& scheduleCore)
 {
     switch(m_editedProperty)
     {
         case(COLUMN_PROPERTY_NAME):
         {
-            scheduleCore->setColumnName(m_column, m_columnData.name.c_str());
+            scheduleCore.setColumnName(m_column, m_columnData.name.c_str());
             break;
         }
         case(COLUMN_PROPERTY_TYPE):
         {
-            scheduleCore->setColumnType(m_column, m_columnData.type); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
+            scheduleCore.setColumnType(m_column, m_columnData.type); // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
             break;
         }
         case(COLUMN_PROPERTY_SELECT_OPTIONS):
         {
-            scheduleCore->modifyColumnSelectOptions(m_column, SelectOptionsModification(OPTION_MODIFICATION_REPLACE).optionNames(m_columnData.selectOptions.getOptions()));
+            scheduleCore.modifyColumnSelectOptions(m_column, SelectOptionsModification(OPTION_MODIFICATION_REPLACE).optionNames(m_columnData.selectOptions.getOptions()));
             break;
         }
         case(COLUMN_PROPERTY_SORT):
         {
-            scheduleCore->setColumnSort(m_column, m_columnData.sort);
+            scheduleCore.setColumnSort(m_column, m_columnData.sort);
             break;
         }
     }

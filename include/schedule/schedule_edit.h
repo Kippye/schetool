@@ -36,8 +36,8 @@ class ScheduleEdit
     public:
         ScheduleEdit(ScheduleEditType type);
         virtual ~ScheduleEdit();
-        virtual void revert(ScheduleCore* const scheduleCore);
-        virtual void apply(ScheduleCore* const scheduleCore);
+        virtual void revert(ScheduleCore& scheduleCore);
+        virtual void apply(ScheduleCore& scheduleCore);
         bool getIsReverted() const
         {
             return m_isReverted;
@@ -81,15 +81,15 @@ class ElementEdit : public ElementEditBase
             m_newValue = newValue;
         }
 
-        void revert(ScheduleCore* const scheduleCore) override
+        void revert(ScheduleCore& scheduleCore) override
         {
-            scheduleCore->setElementValue(m_column, m_row, m_previousValue, true);
+            scheduleCore.setElementValue(m_column, m_row, m_previousValue, true);
             m_isReverted = true;
         }
 
-        void apply(ScheduleCore* const scheduleCore) override
+        void apply(ScheduleCore& scheduleCore) override
         {
-            scheduleCore->setElementValue(m_column, m_row, m_newValue, true);
+            scheduleCore.setElementValue(m_column, m_row, m_newValue, true);
             m_isReverted = false;
         }
 };
@@ -105,9 +105,9 @@ class RowEdit : public ScheduleEdit
 
         ~RowEdit() override;
 
-        void revert(ScheduleCore* const scheduleCore) override;
+        void revert(ScheduleCore& scheduleCore) override;
 
-        void apply(ScheduleCore* const scheduleCore) override;
+        void apply(ScheduleCore& scheduleCore) override;
 
         bool getIsRemove() const
         {
@@ -129,9 +129,9 @@ class ColumnEdit : public ScheduleEdit
     public:
         ColumnEdit(bool isRemove, size_t column, const Column& columnData);
 
-        void revert(ScheduleCore* const scheduleCore) override;
+        void revert(ScheduleCore& scheduleCore) override;
 
-        void apply(ScheduleCore* const scheduleCore) override;
+        void apply(ScheduleCore& scheduleCore) override;
 
         bool getIsRemove() const
         {
@@ -159,9 +159,9 @@ class ColumnPropertyEdit : public ScheduleEdit
     public:
         ColumnPropertyEdit(size_t column, COLUMN_PROPERTY editedProperty, const Column& previousData, const Column& newData);
 
-        void revert(ScheduleCore* const scheduleCore) override;
+        void revert(ScheduleCore& scheduleCore) override;
 
-        void apply(ScheduleCore* const scheduleCore) override;
+        void apply(ScheduleCore& scheduleCore) override;
 
         size_t getColumn() const
         {
@@ -218,33 +218,33 @@ class FilterGroupAddOrRemoveEdit : public FilterEditBase
             return m_filterGroup;
         }
 
-        void revert(ScheduleCore* const scheduleCore) override
+        void revert(ScheduleCore& scheduleCore) override
         {
             // reverting a removal means adding
             if (m_isRemove)
             {
-                scheduleCore->addColumnFilterGroup(m_columnIndex, m_filterGroupIndex, m_filterGroup);
+                scheduleCore.addColumnFilterGroup(m_columnIndex, m_filterGroupIndex, m_filterGroup);
             }
             // reverting an addition means removing
             else
             {
-                scheduleCore->removeColumnFilterGroup(m_columnIndex, m_filterGroupIndex);
+                scheduleCore.removeColumnFilterGroup(m_columnIndex, m_filterGroupIndex);
             }
 
             m_isReverted = true;
         } 
 
-        void apply(ScheduleCore* const scheduleCore) override
+        void apply(ScheduleCore& scheduleCore) override
         {
             // applying a removal means removing
             if (m_isRemove)
             {
-                scheduleCore->removeColumnFilterGroup(m_columnIndex, m_filterGroupIndex);
+                scheduleCore.removeColumnFilterGroup(m_columnIndex, m_filterGroupIndex);
             }
             // applying an addition means adding
             else
             {
-                scheduleCore->addColumnFilterGroup(m_columnIndex, m_filterGroupIndex, m_filterGroup);
+                scheduleCore.addColumnFilterGroup(m_columnIndex, m_filterGroupIndex, m_filterGroup);
             }
 
             m_isReverted = false;
@@ -286,17 +286,17 @@ class FilterGroupChangeEdit : public FilterEditBase
             return m_newName;
         }
 
-        void revert(ScheduleCore* const scheduleCore) override
+        void revert(ScheduleCore& scheduleCore) override
         {
-            scheduleCore->setColumnFilterGroupOperator(m_columnIndex, m_filterGroupIndex, m_previousOperator);
-            scheduleCore->setColumnFilterGroupName(m_columnIndex, m_filterGroupIndex, m_previousName);
+            scheduleCore.setColumnFilterGroupOperator(m_columnIndex, m_filterGroupIndex, m_previousOperator);
+            scheduleCore.setColumnFilterGroupName(m_columnIndex, m_filterGroupIndex, m_previousName);
             m_isReverted = true;
         }
 
-        void apply(ScheduleCore* const scheduleCore) override
+        void apply(ScheduleCore& scheduleCore) override
         {
-            scheduleCore->setColumnFilterGroupOperator(m_columnIndex, m_filterGroupIndex, m_newOperator);
-            scheduleCore->setColumnFilterGroupName(m_columnIndex, m_filterGroupIndex, m_newName);
+            scheduleCore.setColumnFilterGroupOperator(m_columnIndex, m_filterGroupIndex, m_newOperator);
+            scheduleCore.setColumnFilterGroupName(m_columnIndex, m_filterGroupIndex, m_newName);
             m_isReverted = false;
         }
 };
@@ -326,33 +326,33 @@ class FilterAddOrRemoveEdit : public FilterEditBase
             return m_filter;
         }
 
-        void revert(ScheduleCore* const scheduleCore) override
+        void revert(ScheduleCore& scheduleCore) override
         {
             // reverting a removal means adding
             if (m_isRemove)
             {
-                scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filter);
+                scheduleCore.addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filter);
             }
             // reverting an addition means removing
             else
             {
-                scheduleCore->removeColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex);
+                scheduleCore.removeColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex);
             }
 
             m_isReverted = true;
         } 
 
-        void apply(ScheduleCore* const scheduleCore) override
+        void apply(ScheduleCore& scheduleCore) override
         {
             // applying a removal means removing
             if (m_isRemove)
             {
-                scheduleCore->removeColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex);
+                scheduleCore.removeColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex);
             }
             // applying an addition means adding
             else
             {
-                scheduleCore->addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filter);
+                scheduleCore.addColumnFilter(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filter);
             }
 
             m_isReverted = false;
@@ -382,15 +382,15 @@ class FilterChangeEdit : public FilterEditBase
             return m_newOperator;
         }
 
-        void revert(ScheduleCore* const scheduleCore) override
+        void revert(ScheduleCore& scheduleCore) override
         {
-            scheduleCore->setColumnFilterOperator(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_previousOperator);
+            scheduleCore.setColumnFilterOperator(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_previousOperator);
             m_isReverted = true;
         }
 
-        void apply(ScheduleCore* const scheduleCore) override
+        void apply(ScheduleCore& scheduleCore) override
         {
-            scheduleCore->setColumnFilterOperator(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_newOperator);
+            scheduleCore.setColumnFilterOperator(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_newOperator);
             m_isReverted = false;
         }
 };
@@ -435,33 +435,33 @@ class FilterRuleAddOrRemoveEdit : public FilterRuleAddOrRemoveEditBase
             return m_filterRule;
         }
 
-        void revert(ScheduleCore* const scheduleCore) override
+        void revert(ScheduleCore& scheduleCore) override
         {
             // reverting a removal means adding the rule
             if (m_isRemove)
             {
-                scheduleCore->addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_filterRule);
+                scheduleCore.addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_filterRule);
             }
             // reverting an addition means removing the rule
             else
             {
-                scheduleCore->removeColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex);
+                scheduleCore.removeColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex);
             }
 
             m_isReverted = true;
         } 
 
-        void apply(ScheduleCore* const scheduleCore) override
+        void apply(ScheduleCore& scheduleCore) override
         {
             // applying a removal means removing the filter
             if (m_isRemove)
             {
-                scheduleCore->removeColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex);
+                scheduleCore.removeColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex);
             }
             // applying an addition means adding the filter
             else
             {
-                scheduleCore->addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_filterRule);
+                scheduleCore.addColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_filterRule);
             }
 
             m_isReverted = false;
@@ -505,15 +505,15 @@ class FilterRuleChangeEdit : public FilterRuleChangeEditBase
         : FilterRuleChangeEditBase(column, filterGroupIndex, filterIndex, filterRuleIndex, previousValue, newValue) 
         {}
 
-        void revert(ScheduleCore* const scheduleCore) override
+        void revert(ScheduleCore& scheduleCore) override
         {
-            scheduleCore->replaceColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_previousRule.getAsType<T>());
+            scheduleCore.replaceColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_previousRule.getAsType<T>());
             m_isReverted = true;
         }
 
-        void apply(ScheduleCore* const scheduleCore) override
+        void apply(ScheduleCore& scheduleCore) override
         {
-            scheduleCore->replaceColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_newRule.getAsType<T>());
+            scheduleCore.replaceColumnFilterRule(m_columnIndex, m_filterGroupIndex, m_filterIndex, m_filterRuleIndex, m_newRule.getAsType<T>());
             m_isReverted = false;
         }
 };
