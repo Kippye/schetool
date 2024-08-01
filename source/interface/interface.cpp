@@ -21,12 +21,12 @@ void Interface::init(Window* windowManager, Input* input)
 	imGuiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
 	// ADD GUIS
-    addGui(std::shared_ptr<StartPageGui>(new StartPageGui("StartPageGui")));
-	addGui(std::shared_ptr<MainMenuBarGui>(new MainMenuBarGui("MainMenuBarGui")));
+    addGui<StartPageGui>("StartPageGui");
+	addGui<MainMenuBarGui>("MainMenuBarGui");
     // simple popups
-    addGui(std::shared_ptr<AutosavePopupGui>(new AutosavePopupGui("AutosavePopupGui")));
+    addGui<AutosavePopupGui>("AutosavePopupGui");
 	#if DEBUG
-	addGui(std::shared_ptr<EditHistoryGui>(new EditHistoryGui("EditHistoryGui")));
+	addGui<EditHistoryGui>("EditHistoryGui");
 	#endif
 }
 

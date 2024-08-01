@@ -18,7 +18,7 @@ Schedule::Schedule() : m_core(), m_editHistory(m_core)
 
 void Schedule::init(Input& input, Interface& interface)
 {
-    interface.addGui(std::shared_ptr<ScheduleGui>(new ScheduleGui("ScheduleGui", m_core, m_scheduleEvents)));
+    interface.addGui<ScheduleGui>("ScheduleGui", m_core, m_scheduleEvents);
 
     if (auto scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui"))
     {

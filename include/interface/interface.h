@@ -20,15 +20,20 @@ class Interface
 		Window* m_windowManager;
 		Input* m_input;
 		std::map<std::string, std::shared_ptr<Gui>> m_guis = {};
+
+		void addGui(std::shared_ptr<Gui> gui);
 	public:
 		bool guiFocused = false, guiHovered = false, guiWantKeyboard = false;
 
 		ImGuiIO* imGuiIO;
 		ImGuiContext* imGui;
 
-	public:
 		void init(Window*, Input*);
-		void addGui(std::shared_ptr<Gui> gui);
+        template <typename T, typename... Args>
+        void addGui(Args&&... args)
+        {
+            addGui(std::make_shared<T>(std::forward<Args>(args)...));
+        }
         template <typename T>
         std::shared_ptr<T> getGuiByID(const std::string& ID)
         {
