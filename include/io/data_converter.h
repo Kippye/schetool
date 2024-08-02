@@ -54,7 +54,7 @@ struct BLF_Base
     }
 };
 
-class BLF_Date : BLF_Base
+struct BLF_Date : BLF_Base
 {
 	static constexpr const char* getName()
 	{
@@ -423,11 +423,11 @@ struct BLF_Element<DateContainer> : BLF_Base
     BLF_Element() {}
     BLF_Element(const Element<DateContainer>* element) : info(element)
     {
-        tm dateTime = element->getValue().getTime();
+        TimeWrapper dateTime = element->getValue().getTime();
         empty = element->getValue().getIsEmpty();
-        year = dateTime.tm_year;
-        month = dateTime.tm_mon;
-        mday = dateTime.tm_mday;
+        year = dateTime.getYear();
+        month = dateTime.getMonth();
+        mday = dateTime.getMonthDay();
     }
 
 	Element<DateContainer> getElement() const
