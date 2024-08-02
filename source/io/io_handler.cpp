@@ -274,6 +274,12 @@ bool IO_Handler::renameCurrentFile(const std::string& newName)
 
 void IO_Handler::openMostRecentFile()
 {
+    // LAMBDA
+    auto goToStartPage = [&] ()
+    {
+        m_scheduleGui->setVisible(false);
+		m_startPageGui->setVisible(true);
+    };
     // There are pre-existing Schedules. Open the most recently edited one.
 	if (getScheduleStemNames().size() > 0)
 	{
@@ -284,13 +290,24 @@ void IO_Handler::openMostRecentFile()
         if (isAutosave(lastEditedScheduleName))
         {
             std::string fileBaseName = getFileBaseName(lastEditedScheduleName.c_str());
+            fs::path fileBasePath = fs::path(makeRelativePathFromName(fileBaseName.c_str()));
 
-            m_autosavePopupGui->open(
-                fileBaseName.c_str(),
-                lastEditedScheduleName,
-                getFileEditTimeString(fs::path(makeRelativePathFromName(fileBaseName.c_str()))),
-                getFileEditTimeString(fs::path(makeRelativePathFromName(lastEditedScheduleName.c_str())))
-            );
+            // The autosave has a base file, ask which to open
+            if (std::filesystem::exists(fs::path(makeRelativePathFromName(fileBaseName.c_str()))))
+            {
+                m_autosavePopupGui->open(
+                    fileBaseName.c_str(),
+                    lastEditedScheduleName,
+                    getFileEditTimeString(fileBasePath),
+                    getFileEditTimeString(fs::path(makeRelativePathFromName(lastEditedScheduleName.c_str())))
+                );
+            }
+            // Somehow there is only an autosave and no base file.
+            // Don't know what to do, open the start page and let the user decide?
+            else
+            {
+                goToStartPage();
+            }
         }
         // the most recent file is a normal file, read it
         else
@@ -301,8 +318,7 @@ void IO_Handler::openMostRecentFile()
 	// There are no Schedule files. Open the Start Page so the user can create one from there or File->New.
 	else
 	{
-        m_scheduleGui->setVisible(false);
-		m_startPageGui->setVisible(true);
+        goToStartPage();
 	}
 }
 
