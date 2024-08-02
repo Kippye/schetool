@@ -14,9 +14,6 @@
 #include "schedule_column.h"
 #include "schedule_core.h"
 
-// TEMP
-#include <iostream>
-
 const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
 class Schedule
@@ -300,7 +297,7 @@ class Schedule
                 if (addToHistory)
                 {
                     size_t filterRuleIndex = m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount() - 1;
-                    m_editHistory.addEdit(new FilterRuleAddOrRemoveEdit(false, column, groupIndex, filterIndex, filterRuleIndex, filterRule));
+                    m_editHistory.addEdit<FilterRuleAddOrRemoveEdit<T>>(false, column, groupIndex, filterIndex, filterRuleIndex, filterRule);
                 }
             }
         }
@@ -311,7 +308,7 @@ class Schedule
             {
                 if (addToHistory)
                 {
-                    m_editHistory.addEdit(new FilterRuleChangeEdit<T>(column, groupIndex, filterIndex, ruleIndex, previousFilterRule, filterRule));
+                    m_editHistory.addEdit<FilterRuleChangeEdit<T>>(column, groupIndex, filterIndex, ruleIndex, previousFilterRule, filterRule);
                 }
             }
         }
@@ -324,7 +321,7 @@ class Schedule
             {
                 if (addToHistory)
                 {
-                    m_editHistory.addEdit(new FilterRuleAddOrRemoveEdit(true, column, groupIndex, filterIndex, ruleIndex, filterRule));
+                    m_editHistory.addEdit<FilterRuleAddOrRemoveEdit<T>>(true, column, groupIndex, filterIndex, ruleIndex, filterRule);
                 }
             }
         }
@@ -404,7 +401,7 @@ class Schedule
             // add the edit to history
             if (addToHistory)
             {
-                m_editHistory.addEdit(new ElementEdit<T>(column, row, element->getType(), ((Element<T>*)element)->getValue(), value)); 
+                m_editHistory.addEdit<ElementEdit<T>>(column, row, element->getType(), ((Element<T>*)element)->getValue(), value); 
             }
 
             m_core.setElementValue<T>(column, row, value, resort);

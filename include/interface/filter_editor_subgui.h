@@ -80,14 +80,14 @@ class FilterRuleEditorSubGui : public Gui
             ScheduleEditType::FilterRuleChange,
         };
 
-        std::function<void(const ScheduleEdit*)> editUndoListener = [&](const ScheduleEdit* edit)
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> editUndoListener = [&](std::shared_ptr<const ScheduleEdit> edit)
         {
             // not even editing so why update?
             if (m_filterGroupState.getIsValid() == false) { return; }
             // not a filter edit, don't care
             if (m_filterEditTypes.contains(edit->getType()) == false) { return; }
             // not editing this column and filter group -> don't need to update gui
-            auto filterEditBase = ((FilterEditBase*)edit);
+            auto filterEditBase = std::dynamic_pointer_cast<const FilterEditBase>(edit);
             if (filterEditBase->getColumnIndex() != m_filterGroupState.getColumnIndex() || filterEditBase->getFilterGroupIndex() != m_filterGroupState.getFilterGroupIndex()) { return; }
 
             switch(edit->getType())
@@ -96,7 +96,7 @@ class FilterRuleEditorSubGui : public Gui
                 {
                     // ADD + UNDO = REMOVE THIS GROUP
                     // Close all the filter editors
-                    if (((const FilterGroupAddOrRemoveEdit*)edit)->getIsRemove() == false)
+                    if (std::dynamic_pointer_cast<const FilterGroupAddOrRemoveEdit>(edit)->getIsRemove() == false)
                     {
                         m_filterRuleState.makeInvalid(); // invalidate the state (causes popup to close)
                         m_filterGroupState.makeInvalid(); // should cause filter group editor to close as well
@@ -105,14 +105,14 @@ class FilterRuleEditorSubGui : public Gui
                 }
                 case(ScheduleEditType::FilterGroupChange):
                 {
-                    auto filterGroupChange = (const FilterGroupChangeEdit*)edit;
+                    auto filterGroupChange = std::dynamic_pointer_cast<const FilterGroupChangeEdit>(edit);
                     m_filterGroupState.getFilterGroup().setOperator(filterGroupChange->getPrevOperator());
                     m_filterGroupState.getFilterGroup().setName(filterGroupChange->getPrevName());
                     break;
                 }
                 case(ScheduleEditType::FilterAddOrRemove):
                 {
-                    auto filterAddOrRemove = (const FilterAddOrRemoveEdit*)edit;
+                    auto filterAddOrRemove = std::dynamic_pointer_cast<const FilterAddOrRemoveEdit>(edit);
 
                     if (filterAddOrRemove->getIsRemove()) // REMOVE + UNDO = ADD
                     {
@@ -126,13 +126,13 @@ class FilterRuleEditorSubGui : public Gui
                 }
                 case(ScheduleEditType::FilterChange):
                 {
-                    auto filterChange = (const FilterChangeEdit*)edit;
+                    auto filterChange = std::dynamic_pointer_cast<const FilterChangeEdit>(edit);
                     m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getPrevOperator());
                     break;
                 }
                 case(ScheduleEditType::FilterRuleAddOrRemove):
                 {
-                    auto ruleAddOrRemoveBase = (const FilterRuleAddOrRemoveEditBase*)edit;
+                    auto ruleAddOrRemoveBase = std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEditBase>(edit);
 
                     // TODO: Handle removing of the FilterRule being edited
                     // I think i also need to handle the index offset when one is added before the one being edited? Crazy stuff.
@@ -143,28 +143,28 @@ class FilterRuleEditorSubGui : public Gui
                         switch(m_filterGroupState.getType())
                         {
                             case(SCH_BOOL):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<bool>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_NUMBER):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<int>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_DECIMAL):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<double>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_TEXT):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<std::string>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_SELECT):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<SelectContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_WEEKDAY):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<WeekdayContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_TIME):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<TimeContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_DATE):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<DateContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_LAST):
                                 break;
@@ -178,7 +178,7 @@ class FilterRuleEditorSubGui : public Gui
                 }
                 case(ScheduleEditType::FilterRuleChange):
                 {
-                    auto ruleChangeBase = (const FilterRuleChangeEditBase*)edit;
+                    auto ruleChangeBase = std::dynamic_pointer_cast<const FilterRuleChangeEditBase>(edit);
 
                     switch(m_filterGroupState.getType())
                     {
@@ -214,14 +214,14 @@ class FilterRuleEditorSubGui : public Gui
                 default: break;
             }
         };
-        std::function<void(const ScheduleEdit*)> editRedoListener = [&](const ScheduleEdit* edit)
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> editRedoListener = [&](std::shared_ptr<const ScheduleEdit> edit)
         {
             // not even open so why update?
             if (m_filterGroupState.getIsValid() == false) { return; }
             // not a filter edit, don't care
             if (m_filterEditTypes.contains(edit->getType()) == false) { return; }
             // not editing this column and filter group -> don't need to update gui
-            auto filterEditBase = ((FilterEditBase*)edit);
+            auto filterEditBase = std::dynamic_pointer_cast<const FilterEditBase>(edit);
             if (filterEditBase->getColumnIndex() != m_filterGroupState.getColumnIndex() || filterEditBase->getFilterGroupIndex() != m_filterGroupState.getFilterGroupIndex()) { return; }
 
             switch(edit->getType())
@@ -230,7 +230,7 @@ class FilterRuleEditorSubGui : public Gui
                 {
                     // REMOVE + REDO = REMOVE THIS GROUP
                     // Close all the filter editors
-                    if (((const FilterGroupAddOrRemoveEdit*)edit)->getIsRemove())
+                    if (std::dynamic_pointer_cast<const FilterGroupAddOrRemoveEdit>(edit)->getIsRemove())
                     {
                         m_filterRuleState.makeInvalid(); // invalidate the state (causes popup to close)
                         m_filterGroupState.makeInvalid(); // should cause filter group editor to close as well
@@ -239,14 +239,14 @@ class FilterRuleEditorSubGui : public Gui
                 }
                 case(ScheduleEditType::FilterGroupChange):
                 {
-                    auto filterGroupChange = (const FilterGroupChangeEdit*)edit;
+                    auto filterGroupChange = std::dynamic_pointer_cast<const FilterGroupChangeEdit>(edit);
                     m_filterGroupState.getFilterGroup().setOperator(filterGroupChange->getNewOperator());
                     m_filterGroupState.getFilterGroup().setName(filterGroupChange->getNewName());
                     break;
                 }
                 case(ScheduleEditType::FilterAddOrRemove):
                 {
-                    auto filterAddOrRemove = (const FilterAddOrRemoveEdit*)edit;
+                    auto filterAddOrRemove = std::dynamic_pointer_cast<const FilterAddOrRemoveEdit>(edit);
 
                     if (filterAddOrRemove->getIsRemove() == false) // ADD + REDO = ADD
                     {
@@ -260,13 +260,13 @@ class FilterRuleEditorSubGui : public Gui
                 }
                 case(ScheduleEditType::FilterChange):
                 {
-                    auto filterChange = (const FilterChangeEdit*)edit;
+                    auto filterChange = std::dynamic_pointer_cast<const FilterChangeEdit>(edit);
                     m_filterGroupState.getFilterGroup().getFilter(filterChange->getFilterIndex()).setOperator(filterChange->getNewOperator());
                     break;
                 }
                 case(ScheduleEditType::FilterRuleAddOrRemove):
                 {
-                    auto ruleAddOrRemoveBase = (const FilterRuleAddOrRemoveEditBase*)edit;
+                    auto ruleAddOrRemoveBase = std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEditBase>(edit);
 
                     // TODO: Handle removing of the FilterRule being edited
                     // I think i also need to handle the index offset when one is added before the one being edited? Crazy stuff.
@@ -278,28 +278,28 @@ class FilterRuleEditorSubGui : public Gui
                         switch (m_filterGroupState.getType())
                         {
                             case(SCH_BOOL):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<bool>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<bool>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_NUMBER):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<int>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<int>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_DECIMAL):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<double>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<double>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_TEXT):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<std::string>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<std::string>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_SELECT):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<SelectContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<SelectContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_WEEKDAY):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<WeekdayContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<WeekdayContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_TIME):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<TimeContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<TimeContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_DATE):
-                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), ((FilterRuleAddOrRemoveEdit<DateContainer>*)ruleAddOrRemoveBase)->getRule());
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<DateContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_LAST):
                                 break;
@@ -314,7 +314,7 @@ class FilterRuleEditorSubGui : public Gui
                 }
                 case(ScheduleEditType::FilterRuleChange):
                 {
-                    auto ruleChangeBase = (const FilterRuleChangeEditBase*)edit;
+                    auto ruleChangeBase = std::dynamic_pointer_cast<const FilterRuleChangeEditBase>(edit);
 
                     switch(m_filterGroupState.getType())
                     {

@@ -19,7 +19,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
             {
                 case (ScheduleEditType::ElementChange):
                 {
-                    ElementEditBase* elementEdit = (ElementEditBase*)editHistory[i];
+                    auto elementEdit = std::dynamic_pointer_cast<ElementEditBase>(editHistory[i]);
                     sprintf(buf, "Element of type %s at (%zu; %zu)##%zu", 
                         schedule_consts::scheduleTypeNames.at(elementEdit->getElementType()), 
                         elementEdit->getPosition().first, 
@@ -29,7 +29,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::RowAddOrRemove):
                 {
-                    RowEdit* rowEdit = (RowEdit*)editHistory[i];
+                    auto rowEdit = std::dynamic_pointer_cast<RowEdit>(editHistory[i]);
                     sprintf(buf, "%c Row at %zu##%zu", 
                         rowEdit->getIsRemove() ? '-' : '+', 
                         rowEdit->getRow(),
@@ -38,7 +38,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::ColumnAddOrRemove):
                 {
-                    ColumnEdit* columnEdit = (ColumnEdit*)editHistory[i];
+                    auto columnEdit = std::dynamic_pointer_cast<ColumnEdit>(editHistory[i]);
                     sprintf(buf, "%c Column %s of type %s at %zu##%zu", 
                         columnEdit->getIsRemove() ? '-' : '+',
                         columnEdit->getColumnData().name.c_str(), 
@@ -49,7 +49,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::ColumnPropertyChange):
                 {
-                    ColumnPropertyEdit* columnPropertyEdit = (ColumnPropertyEdit*)editHistory[i];
+                    auto columnPropertyEdit = std::dynamic_pointer_cast<ColumnPropertyEdit>(editHistory[i]);
                     COLUMN_PROPERTY editedProperty = columnPropertyEdit->getEditedProperty();
                     sprintf(buf, "Column %s property %s at %zu##%zu", 
                         columnPropertyEdit->getColumnName().c_str(),
@@ -60,7 +60,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::FilterGroupAddOrRemove):
                 {
-                    FilterGroupAddOrRemoveEdit* filterGroupEdit = (FilterGroupAddOrRemoveEdit*)editHistory[i];
+                    auto filterGroupEdit = std::dynamic_pointer_cast<FilterGroupAddOrRemoveEdit>(editHistory[i]);
                     sprintf(buf, "%c Filter group #%zu of Column %zu##%zu", 
                         filterGroupEdit->getIsRemove() ? '-' : '+', 
                         filterGroupEdit->getFilterGroupIndex(),
@@ -70,7 +70,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::FilterGroupChange):
                 {
-                    FilterGroupChangeEdit* filterGroupChangeEdit = (FilterGroupChangeEdit*)editHistory[i];
+                    auto filterGroupChangeEdit = std::dynamic_pointer_cast<FilterGroupChangeEdit>(editHistory[i]);
                     bool operatorChanged = filterGroupChangeEdit->getPrevOperator() != filterGroupChangeEdit->getNewOperator();
                     sprintf(buf, "Edit filter group #%zu of Column %zu %s (%s -> %s) ##%zu", 
                         filterGroupChangeEdit->getFilterGroupIndex(),
@@ -83,7 +83,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::FilterAddOrRemove):
                 {
-                    FilterAddOrRemoveEdit* filterEdit = (FilterAddOrRemoveEdit*)editHistory[i];
+                    auto filterEdit = std::dynamic_pointer_cast<FilterAddOrRemoveEdit>(editHistory[i]);
                     sprintf(buf, "%c Filter #%zu in group #%zu of Column %zu##%zu", 
                         filterEdit->getIsRemove() ? '-' : '+', 
                         filterEdit->getFilterIndex(),
@@ -94,7 +94,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::FilterChange):
                 {
-                    FilterChangeEdit* filterChangeEdit = (FilterChangeEdit*)editHistory[i];
+                    auto filterChangeEdit = std::dynamic_pointer_cast<FilterChangeEdit>(editHistory[i]);
                     sprintf(buf, "Edit filter #%zu in group #%zu of Column %zu operator (%s -> %s)##%zu", 
                         filterChangeEdit->getFilterIndex(),
                         filterChangeEdit->getFilterGroupIndex(),
@@ -106,7 +106,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::FilterRuleAddOrRemove):
                 {
-                    FilterRuleAddOrRemoveEditBase* filterRuleEdit = (FilterRuleAddOrRemoveEditBase*)editHistory[i];
+                    auto filterRuleEdit = std::dynamic_pointer_cast<FilterRuleAddOrRemoveEditBase>(editHistory[i]);
                     sprintf(buf, "%c Filter rule #%zu in filter #%zu in group #%zu of Column %zu##%zu", 
                         filterRuleEdit->getIsRemove() ? '-' : '+', 
                         filterRuleEdit->getFilterRuleIndex(),
@@ -118,7 +118,7 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 }
                 case (ScheduleEditType::FilterRuleChange):
                 {
-                    FilterRuleChangeEditBase* ruleChangeEdit = (FilterRuleChangeEditBase*)editHistory[i];
+                    auto ruleChangeEdit = std::dynamic_pointer_cast<FilterRuleChangeEditBase>(editHistory[i]);
                     sprintf(buf, "Edit filter rule #%zu in filter #%zu in group #%zu of Column %zu (%s -> %s)##%zu", 
                         ruleChangeEdit->getFilterRuleIndex(),
                         ruleChangeEdit->getFilterIndex(),
