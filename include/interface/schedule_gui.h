@@ -14,10 +14,10 @@
 class ScheduleGui : public Gui
 {
     private:
-        const ScheduleCore* m_scheduleCore = NULL;
+        const ScheduleCore& m_scheduleCore;
         void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
     public:
-        ScheduleGui(const char* ID) : Gui(ID) { }
+        ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
         // setElementValue(column, row, value)
@@ -40,7 +40,5 @@ class ScheduleGui : public Gui
         Event<size_t> addRow;
         Event<size_t> removeRow;
 
-        // ScheduleGui(const char* ID, Schedule*);
-        void passScheduleComponents(const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
         void draw(Window& window, Input& input) override;
 };

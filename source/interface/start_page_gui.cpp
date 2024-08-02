@@ -9,7 +9,7 @@ void StartPageNewNameModalSubGui::invokeEvent(const std::string& text)
 StartPageGui::StartPageGui(const char* ID) : Gui(ID)
 {
     setVisible(false);
-    addSubGui("StartPageNewNameModalSubGui", new StartPageNewNameModalSubGui("StartPageNewNameModalSubGui"));
+    addSubGui(new StartPageNewNameModalSubGui("StartPageNewNameModalSubGui"));
 }
 
 void StartPageGui::draw(Window& window, Input& input)

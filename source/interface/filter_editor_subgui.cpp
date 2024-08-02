@@ -71,7 +71,7 @@ void FilterGroupEditorState::makeInvalid()
 }
 
 
-FilterRuleEditorSubGui::FilterRuleEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents, FilterGroupEditorState& filterGroupState) : Gui(ID), m_scheduleCore(scheduleCore), m_filterGroupState(filterGroupState)
+FilterRuleEditorSubGui::FilterRuleEditorSubGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, FilterGroupEditorState& filterGroupState) : Gui(ID), m_scheduleCore(scheduleCore), m_filterGroupState(filterGroupState)
 {
     scheduleEvents.editUndone.addListener(editUndoListener);
     scheduleEvents.editRedone.addListener(editRedoListener);
@@ -252,7 +252,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
                 if (newComparison != Comparison::IsEmpty)
                 {
                     auto selection = value.getSelection();
-                    const std::vector<std::string>& optionNames = m_scheduleCore->getColumnSelectOptions(m_filterGroupState.getColumnIndex()).getOptions();
+                    const std::vector<std::string>& optionNames = m_scheduleCore.getColumnSelectOptions(m_filterGroupState.getColumnIndex()).getOptions();
                     // Options
                     for (size_t i = 0; i < optionNames.size(); i++)
                     {
@@ -582,12 +582,11 @@ void FilterRuleEditorSubGui::close()
 }
 
 
-FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore* scheduleCore, ScheduleEvents& scheduleEvents) : Gui(ID) 
+FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents) : m_scheduleCore(scheduleCore), Gui(ID) 
 {
-	m_scheduleCore = scheduleCore;
     scheduleEvents.columnAdded.addListener(columnAddedListener);
     scheduleEvents.columnRemoved.addListener(columnRemovedListener);
-	addSubGui("FilterRuleEditorSubGui", new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, scheduleEvents, m_filterGroupState));
+	addSubGui(new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, scheduleEvents, m_filterGroupState));
 }
 
 void FilterEditorSubGui::draw(Window& window, Input& input)
@@ -603,16 +602,16 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             ImGui::EndPopup();
             return;
         }
-        if (m_scheduleCore->existsColumnAtIndex(m_filterGroupState.getColumnIndex()) == false)
+        if (m_scheduleCore.existsColumnAtIndex(m_filterGroupState.getColumnIndex()) == false)
         {
             printf("FilterEditorSubGui::draw(): There is no Column at the column index %zu\n", m_filterGroupState.getColumnIndex());
             close();
             ImGui::EndPopup();
             return;
         }
-        if (m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->type != m_filterGroupState.getType())
+        if (m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->type != m_filterGroupState.getType())
         {
-            printf("FilterEditorSubGui::draw(): The types of the Column (%d) and the editor's filter state (%d) do not match!\n", m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->type, m_filterGroupState.getType());
+            printf("FilterEditorSubGui::draw(): The types of the Column (%d) and the editor's filter state (%d) do not match!\n", m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->type, m_filterGroupState.getType());
             close();
             ImGui::EndPopup();
             return;
@@ -626,7 +625,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		//ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
 		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
 
-		bool isPermanentColumn = m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->permanent;
+		bool isPermanentColumn = m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->permanent;
 		tm formatTime;
 
         std::string groupName = m_filterGroupState.getFilterGroup().getName();
@@ -663,7 +662,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                 if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
                 {
                     // TODO: Pass correct avoid rect
-                    filterRuleEditor->openEdit(m_filterGroupState.getType(), m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->name, filterIndex, ruleIndex, m_avoidRect);
+                    filterRuleEditor->openEdit(m_filterGroupState.getType(), m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->name, filterIndex, ruleIndex, m_avoidRect);
                 }
             }
             ImGui::SameLine();
@@ -713,7 +712,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui"))
                     {
                         // TODO: Pass correct avoid rect
-                        filterRuleEditor->openCreate(m_filterGroupState.getType(), m_scheduleCore->getColumn(m_filterGroupState.getColumnIndex())->name, f, m_avoidRect);
+                        filterRuleEditor->openCreate(m_filterGroupState.getType(), m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->name, f, m_avoidRect);
                     }
                 }
 
@@ -767,28 +766,28 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 
 void FilterEditorSubGui::openGroupEdit(size_t column, size_t filterGroupIndex, const ImRect& avoidRect)
 {
-    if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
-    if (m_scheduleCore->getColumn(column)->hasFilterGroupAt(filterGroupIndex) == false) { return; }
+    if (m_scheduleCore.existsColumnAtIndex(column) == false) { return; }
+    if (m_scheduleCore.getColumn(column)->hasFilterGroupAt(filterGroupIndex) == false) { return; }
 
 	m_avoidRect = avoidRect;
 
-    m_filterGroupState.setup(m_scheduleCore->getColumn(column)->type, column, filterGroupIndex, m_scheduleCore->getColumn(column)->getFilterGroupsConst().at(filterGroupIndex));
+    m_filterGroupState.setup(m_scheduleCore.getColumn(column)->type, column, filterGroupIndex, m_scheduleCore.getColumn(column)->getFilterGroupsConst().at(filterGroupIndex));
 
 	ImGui::OpenPopup("FilterGroup Editor");
 }
 
 void FilterEditorSubGui::createGroupAndEdit(size_t column, const ImRect& avoidRect)
 { 
-    if (m_scheduleCore->existsColumnAtIndex(column) == false) { return; }
+    if (m_scheduleCore.existsColumnAtIndex(column) == false) { return; }
 
     addColumnFilterGroup.invoke(column, FilterGroup());
 
     // Event has no listeners or they failed somewhere, can't edit a non-existant FilterGroup so quit.
-    if (m_scheduleCore->getColumn(column)->getFilterGroupsConst().size() == 0) { return; }
+    if (m_scheduleCore.getColumn(column)->getFilterGroupsConst().size() == 0) { return; }
 
     // NOTE: Just assuming that the FilterGroup was actually added..
     // Not the best idea, but eh.
-    openGroupEdit(column, m_scheduleCore->getColumn(column)->getFilterGroupCount() - 1, avoidRect);
+    openGroupEdit(column, m_scheduleCore.getColumn(column)->getFilterGroupCount() - 1, avoidRect);
 }
 
 void FilterEditorSubGui::close()

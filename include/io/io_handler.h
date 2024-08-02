@@ -82,7 +82,8 @@ class IO_Handler
             readSchedule(getFileBaseName(getLastEditedScheduleStemName().c_str()).c_str());
         });
 
-        std::string makeRelativePathFromName(const char* name);
+        bool isScheduleFilePath(const std::filesystem::path& path) const;
+        std::string makeRelativePathFromName(const char* name) const;
         bool applyAutosaveToFile(const char* name);
         void setHaveFileOpen(bool haveFileOpen);
         void passFileNamesToGui();
@@ -117,7 +118,7 @@ class IO_Handler
         // Change m_currentFileName to name.
         // Update the name in Schedule and the window's title
         void setCurrentFileName(const std::string& name);
-        std::vector<std::string> getScheduleStemNames();
-        std::vector<std::string> getScheduleStemNamesSortedByEditTime();
+        std::vector<std::string> getScheduleStemNames(bool includeAutosaves = true);
+        std::vector<std::string> getScheduleStemNamesSortedByEditTime(bool includeAutosaves = true);
         std::string getLastEditedScheduleStemName();
 };

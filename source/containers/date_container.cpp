@@ -1,4 +1,5 @@
 #include <date_container.h>
+#include <cmath>
 #include "util.h"
 
 DateContainer::DateContainer() 
@@ -168,7 +169,7 @@ int DateContainer::getDayDifference(const DateContainer& other) const
     if (thisTime != (std::time_t)(-1) && otherTime != (std::time_t)(-1))
     {
         double difference = std::difftime(thisTime, otherTime) / (60 * 60 * 24);
-        dayDifference = (int)round(difference);
+        dayDifference = (int)std::round(difference);
     }
 
     return dayDifference;

@@ -31,7 +31,7 @@ class Gui
         bool getVisible() const;
         void setVisible(bool visible);
         virtual void draw(Window& window, Input& input);
-        void addSubGui(const std::string& ID, Gui* subGui);
+        void addSubGui(Gui* subGui);
         template <typename T>
         std::shared_ptr<T> getSubGui(const std::string& ID)
         {

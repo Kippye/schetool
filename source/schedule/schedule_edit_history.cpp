@@ -1,17 +1,10 @@
 #include <schedule_edit_history.h>
 #include <iostream>
 
-ScheduleEditHistory::ScheduleEditHistory()
-{
+ScheduleEditHistory::ScheduleEditHistory(ScheduleCore& scheduleCore) : m_core(scheduleCore)
+{}
 
-}
-
-ScheduleEditHistory::ScheduleEditHistory(ScheduleCore* scheduleCore)
-{
-    m_core = scheduleCore;
-}
-
-const std::deque<ScheduleEdit*>& ScheduleEditHistory::getEditHistory() const
+const std::deque<std::shared_ptr<ScheduleEdit>>& ScheduleEditHistory::getEditHistory() const
 {
     return m_editHistory;
 }
@@ -24,11 +17,6 @@ size_t ScheduleEditHistory::getEditHistoryIndex() const
 void ScheduleEditHistory::clearEditHistory()
 {
     if (m_editHistory.size() == 0) { return; }
-
-    for (int i = m_editHistory.size() - 1; i > 0; i--)
-    {
-        delete m_editHistory[i];
-    }
 
     m_editHistory.clear();
 }
@@ -43,7 +31,7 @@ void ScheduleEditHistory::setEditedSinceWrite(bool to)
     m_editedSinceWrite = to;
 }
 
-void ScheduleEditHistory::addEdit(ScheduleEdit* edit)
+void ScheduleEditHistory::addEdit(std::shared_ptr<ScheduleEdit> edit)
 {
     removeFollowingEditHistory();
     m_editHistory.push_back(edit);
@@ -63,7 +51,6 @@ void ScheduleEditHistory::removeFollowingEditHistory()
 
     for (int i = m_editHistory.size() - 1; i > m_editHistoryIndex; i--)
     {
-        delete m_editHistory[i];
         m_editHistory.pop_back();
     }
 }
@@ -72,7 +59,7 @@ bool ScheduleEditHistory::undo()
 {
     if (m_editHistory.size() == 0 || m_editHistoryIndex == 0 && m_editHistory[m_editHistoryIndex]->getIsReverted()) { return false; }
 
-    ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
+    std::shared_ptr<ScheduleEdit> edit = m_editHistory[m_editHistoryIndex];
     edit->revert(m_core); 
     if (m_editHistoryIndex > 0) { m_editHistoryIndex--; }
     return true;
@@ -84,7 +71,7 @@ bool ScheduleEditHistory::redo()
 
     // increase history index if (not 0th edit or 0th edit is reverted) AND there are later edits to redo
     if ((m_editHistoryIndex > 0 || m_editHistory[0]->getIsReverted() == false) && m_editHistoryIndex < m_editHistory.size() - 1) { m_editHistoryIndex++; }
-    ScheduleEdit* edit = m_editHistory[m_editHistoryIndex];
+    std::shared_ptr<ScheduleEdit> edit = m_editHistory[m_editHistoryIndex];
     edit->apply(m_core);
     return true;
 }

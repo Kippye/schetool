@@ -12,7 +12,7 @@
 using namespace blf;
 using namespace blf::file;
 
-class BLF_Base;
+struct BLF_Base;
 
 class ObjectDefinitions
 {
@@ -21,6 +21,7 @@ class ObjectDefinitions
         LocalObjectTable m_objectTable;
     public:
         LocalObjectTable& getObjectTable();
+        const LocalObjectTable& getObjectTableConst() const;
 
         template <typename T>
         void add(LocalObjectDefinition<T>& definition)
@@ -41,31 +42,29 @@ class ObjectDefinitions
         }
 };
 
-class BLF_Base
+struct BLF_Base
 {
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Base";
-        }
-        static void addDefinition(ObjectDefinitions& objectTable)
-        {
-            objectTable.add(objectTable.getObjectTable().define<BLF_Base>(getName()));
-        }
+    static constexpr const char* getName()
+    {
+        return "BLF_Base";
+    }
+    static void addDefinition(ObjectDefinitions& objectTable)
+    {
+        objectTable.add(objectTable.getObjectTable().define<BLF_Base>(getName()));
+    }
 };
 
-class BLF_ElementInfo : BLF_Base
+struct BLF_ElementInfo : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_ElementInfo";
-        }
-        int creationYear;
-        int creationMonth;
-        int creationMday;
-        int creationHours;
-        int creationMinutes;
+    static constexpr const char* getName()
+    {
+        return "BLF_ElementInfo";
+    }
+    int creationYear;
+    int creationMonth;
+    int creationMday;
+    int creationHours;
+    int creationMinutes;
 
     BLF_ElementInfo() {}
     BLF_ElementInfo(const ElementBase* element)
@@ -92,362 +91,353 @@ class BLF_ElementInfo : BLF_Base
 };
 
 template <typename T>
-class BLF_Element : BLF_Base {};
+struct BLF_Element : BLF_Base {};
 
 template <>
-class BLF_Element<bool> : BLF_Base
+struct BLF_Element<bool> : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Element_bool";
-        }
-        BLF_ElementInfo info;
-        bool value;
+    static constexpr const char* getName()
+    {
+        return "BLF_Element_bool";
+    }
+    BLF_ElementInfo info;
+    bool value;
 
-        BLF_Element() {}
-        BLF_Element(const Element<bool>* element) : info(element)
-        {
-            value = element->getValue();
-        }
-         
-        Element<bool> getElement() const
-        {
-            tm creationTime = info.getCreationTime();
-            return Element<bool>(SCH_BOOL, value, DateContainer(creationTime), TimeContainer(creationTime));
-        }
-
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Element<bool>>(getName(),
-                arg("info", &BLF_Element<bool>::info, definitions.get<BLF_ElementInfo>()),
-                arg("value", &BLF_Element<bool>::value)
-            ));
-        }
-};
-
-template <>
-class BLF_Element<int> : BLF_Base
-{
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Element_int";
-        }        
-        BLF_ElementInfo info;
-        int value;
-
-        BLF_Element() {}
-        BLF_Element(const Element<int>* element) : info(element)
-        {
-            value = element->getValue();
-        }
-
-        Element<int> getElement() const
-        {
-            tm creationTime = info.getCreationTime();
-            return Element<int>(SCH_NUMBER, value, DateContainer(creationTime), TimeContainer(creationTime));
-        }
-
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Element<int>>(getName(),
-                arg("info", &BLF_Element<int>::info, definitions.get<BLF_ElementInfo>()),
-                arg("value", &BLF_Element<int>::value)
-            ));
-        }
-};
-
-template <>
-class BLF_Element<double> : BLF_Base
-{
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Element_double";
-        }        
-        BLF_ElementInfo info;
-        double value;
-
-        BLF_Element() {}
-        BLF_Element(const Element<double>* element) : info(element)
-        {
-            value = element->getValue();
-        }
-
-        Element<double> getElement() const
-        {
-            tm creationTime = info.getCreationTime();
-            return Element<double>(SCH_DECIMAL, value, DateContainer(creationTime), TimeContainer(creationTime));
-        }
-
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Element<double>>(getName(),
-                arg("info", &BLF_Element<double>::info, definitions.get<BLF_ElementInfo>()),
-                arg("value", &BLF_Element<double>::value)
-            ));
-        }
-};
-
-template <>
-class BLF_Element<std::string> : BLF_Base
-{
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Element_string";
-        }        
-        BLF_ElementInfo info;
-        std::string value;
-
-        BLF_Element() {}
-        BLF_Element(const Element<std::string>* element) : info(element)
-        {
-            value = element->getValue();
-        }
-
-        Element<std::string> getElement() const
-        {
-            tm creationTime = info.getCreationTime();
-            return Element<std::string>(SCH_TEXT, value, DateContainer(creationTime), TimeContainer(creationTime));
-        }
+    BLF_Element() {}
+    BLF_Element(const Element<bool>* element) : info(element)
+    {
+        value = element->getValue();
+    }
         
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Element<std::string>>(getName(),
-                arg("info", &BLF_Element<std::string>::info, definitions.get<BLF_ElementInfo>()),
-                arg("value", &BLF_Element<std::string>::value)
-            ));
-        }
+    Element<bool> getElement() const
+    {
+        tm creationTime = info.getCreationTime();
+        return Element<bool>(SCH_BOOL, value, DateContainer(creationTime), TimeContainer(creationTime));
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<bool>>(getName(),
+            arg("info", &BLF_Element<bool>::info, definitions.get<BLF_ElementInfo>()),
+            arg("value", &BLF_Element<bool>::value)
+        ));
+    }
 };
 
 template <>
-class BLF_Element<SelectContainer> : BLF_Base
+struct BLF_Element<int> : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Element_SelectContainer";
-        }        
-        BLF_ElementInfo info;
-        std::vector<size_t> selectionIndices = {};
+    static constexpr const char* getName()
+    {
+        return "BLF_Element_int";
+    }        
+    BLF_ElementInfo info;
+    int value;
 
-        BLF_Element() {}
-        BLF_Element(const Element<SelectContainer>* element) : info(element)
+    BLF_Element() {}
+    BLF_Element(const Element<int>* element) : info(element)
+    {
+        value = element->getValue();
+    }
+
+    Element<int> getElement() const
+    {
+        tm creationTime = info.getCreationTime();
+        return Element<int>(SCH_NUMBER, value, DateContainer(creationTime), TimeContainer(creationTime));
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<int>>(getName(),
+            arg("info", &BLF_Element<int>::info, definitions.get<BLF_ElementInfo>()),
+            arg("value", &BLF_Element<int>::value)
+        ));
+    }
+};
+
+template <>
+struct BLF_Element<double> : BLF_Base
+{
+    static constexpr const char* getName()
+    {
+        return "BLF_Element_double";
+    }        
+    BLF_ElementInfo info;
+    double value;
+
+    BLF_Element() {}
+    BLF_Element(const Element<double>* element) : info(element)
+    {
+        value = element->getValue();
+    }
+
+    Element<double> getElement() const
+    {
+        tm creationTime = info.getCreationTime();
+        return Element<double>(SCH_DECIMAL, value, DateContainer(creationTime), TimeContainer(creationTime));
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<double>>(getName(),
+            arg("info", &BLF_Element<double>::info, definitions.get<BLF_ElementInfo>()),
+            arg("value", &BLF_Element<double>::value)
+        ));
+    }
+};
+
+template <>
+struct BLF_Element<std::string> : BLF_Base
+{
+    static constexpr const char* getName()
+    {
+        return "BLF_Element_string";
+    }        
+    BLF_ElementInfo info;
+    std::string value;
+
+    BLF_Element() {}
+    BLF_Element(const Element<std::string>* element) : info(element)
+    {
+        value = element->getValue();
+    }
+
+    Element<std::string> getElement() const
+    {
+        tm creationTime = info.getCreationTime();
+        return Element<std::string>(SCH_TEXT, value, DateContainer(creationTime), TimeContainer(creationTime));
+    }
+    
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<std::string>>(getName(),
+            arg("info", &BLF_Element<std::string>::info, definitions.get<BLF_ElementInfo>()),
+            arg("value", &BLF_Element<std::string>::value)
+        ));
+    }
+};
+
+template <>
+struct BLF_Element<SelectContainer> : BLF_Base
+{
+    static constexpr const char* getName()
+    {
+        return "BLF_Element_SelectContainer";
+    }        
+    BLF_ElementInfo info;
+    std::vector<size_t> selectionIndices = {};
+
+    BLF_Element() {}
+    BLF_Element(const Element<SelectContainer>* element) : info(element)
+    {
+        const std::set<size_t>& selection = element->getValue().getSelection();
+    
+        for (size_t s: selection)
         {
-            const std::set<size_t>& selection = element->getValue().getSelection();
-        
-            for (size_t s: selection)
-            {
-                selectionIndices.push_back(s);
-            }
+            selectionIndices.push_back(s);
         }
-          
-        std::set<size_t> getSelection() const
-        {
-            std::set<size_t> selection = {};
+    }
+        
+    std::set<size_t> getSelection() const
+    {
+        std::set<size_t> selection = {};
 
-            for (size_t i: selectionIndices)
+        for (size_t i: selectionIndices)
+        {
+            selection.insert(i);
+        }
+
+        return selection;
+    }
+
+    Element<SelectContainer> getElement() const
+    {
+        tm creationTime = info.getCreationTime();
+        Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+        select.getValueReference().replaceSelection(getSelection());
+        return select;
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<SelectContainer>>(getName(),
+            arg("info", &BLF_Element<SelectContainer>::info, definitions.get<BLF_ElementInfo>()),
+            arg("selectionIndices", &BLF_Element<SelectContainer>::selectionIndices)
+        ));
+    }
+};
+
+template <>
+struct BLF_Element<WeekdayContainer> : BLF_Base
+{
+    static constexpr const char* getName()
+    {
+        return "BLF_Element_WeekdayContainer";
+    }
+    BLF_ElementInfo info;
+    std::vector<size_t> selectionIndices = {};
+
+    BLF_Element() {}
+    BLF_Element(const Element<WeekdayContainer>* element) : info(element)
+    {
+        const std::set<size_t>& selection = element->getValue().getSelection();
+    
+        for (size_t s: selection)
+        {
+            selectionIndices.push_back(s);
+        }
+    }
+        
+    std::set<size_t> getSelection() const
+    {
+        std::set<size_t> selection = {};
+
+        for (size_t i: selectionIndices)
+        {
+            // only insert valid weekday indices
+            if (i < 7)
             {
                 selection.insert(i);
             }
-
-            return selection;
         }
 
-        Element<SelectContainer> getElement() const
-        {
-            tm creationTime = info.getCreationTime();
-            Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
-            select.getValueReference().replaceSelection(getSelection());
-            return select;
-        }
+        return selection;
+    }
 
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Element<SelectContainer>>(getName(),
-                arg("info", &BLF_Element<SelectContainer>::info, definitions.get<BLF_ElementInfo>()),
-                arg("selectionIndices", &BLF_Element<SelectContainer>::selectionIndices)
-            ));
-        }
+    Element<WeekdayContainer> getElement() const
+    {
+        tm creationTime = info.getCreationTime();
+        Element<WeekdayContainer> weekday = Element<WeekdayContainer>(SCH_WEEKDAY, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+        weekday.getValueReference().replaceSelection(getSelection());
+        return weekday;
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<WeekdayContainer>>(getName(),
+            arg("info", &BLF_Element<WeekdayContainer>::info, definitions.get<BLF_ElementInfo>()),
+            arg("selectionIndices", &BLF_Element<WeekdayContainer>::selectionIndices)
+        ));
+    }
 };
 
 template <>
-class BLF_Element<WeekdayContainer> : BLF_Base
+struct BLF_Element<TimeContainer> : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Element_WeekdayContainer";
-        }
-        BLF_ElementInfo info;
-        std::vector<size_t> selectionIndices = {};
+    static constexpr const char* getName()
+    {
+        return "BLF_Element_TimeContainer";
+    }
+    BLF_ElementInfo info;
+    int hours;
+    int minutes;
 
-        BLF_Element() {}
-        BLF_Element(const Element<WeekdayContainer>* element) : info(element)
-        {
-            const std::set<size_t>& selection = element->getValue().getSelection();
-        
-            for (size_t s: selection)
-            {
-                selectionIndices.push_back(s);
-            }
-        }
-          
-        std::set<size_t> getSelection() const
-        {
-            std::set<size_t> selection = {};
+    BLF_Element() {}
+    BLF_Element(const Element<TimeContainer>* element) : info(element)
+    {
+        hours = element->getValue().getHours();
+        minutes = element->getValue().getMinutes();
+    }
 
-            for (size_t i: selectionIndices)
-            {
-                // only insert valid weekday indices
-                if (i < 7)
-                {
-                    selection.insert(i);
-                }
-            }
+    Element<TimeContainer> getElement() const
+    {
+        tm creationTime = info.getCreationTime(); 
+        return Element<TimeContainer>(SCH_TIME, TimeContainer(hours, minutes), DateContainer(creationTime), TimeContainer(creationTime));
+    }
 
-            return selection;
-        }
-
-        Element<WeekdayContainer> getElement() const
-        {
-            tm creationTime = info.getCreationTime();
-            Element<WeekdayContainer> weekday = Element<WeekdayContainer>(SCH_WEEKDAY, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
-            weekday.getValueReference().replaceSelection(getSelection());
-            return weekday;
-        }
-
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Element<WeekdayContainer>>(getName(),
-                arg("info", &BLF_Element<WeekdayContainer>::info, definitions.get<BLF_ElementInfo>()),
-                arg("selectionIndices", &BLF_Element<WeekdayContainer>::selectionIndices)
-            ));
-        }
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<TimeContainer>>(getName(),
+            arg("info", &BLF_Element<TimeContainer>::info, definitions.get<BLF_ElementInfo>()),
+            arg("hours", &BLF_Element<TimeContainer>::hours),
+            arg("minutes", &BLF_Element<TimeContainer>::minutes)
+        ));
+    }
 };
 
 template <>
-class BLF_Element<TimeContainer> : BLF_Base
+struct BLF_Element<DateContainer> : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Element_TimeContainer";
-        }
-        BLF_ElementInfo info;
-        int hours;
-        int minutes;
+    static constexpr const char* getName()
+    {
+        return "BLF_Element_DateContainer";
+    }
+    BLF_ElementInfo info;
+    bool empty;
+    int year;
+    int month;
+    int mday;
 
-        BLF_Element() {}
-        BLF_Element(const Element<TimeContainer>* element) : info(element)
-        {
-            hours = element->getValue().getHours();
-            minutes = element->getValue().getMinutes();
-        }
+    BLF_Element() {}
+    BLF_Element(const Element<DateContainer>* element) : info(element)
+    {
+        tm dateTime = element->getValue().getTime();
+        empty = element->getValue().getIsEmpty();
+        year = dateTime.tm_year;
+        month = dateTime.tm_mon;
+        mday = dateTime.tm_mday;
+    }
 
-        Element<TimeContainer> getElement() const
+    Element<DateContainer> getElement() const
+    {
+        tm creationTime = info.getCreationTime();
+        tm dateTime;
+        dateTime.tm_year = year;
+        dateTime.tm_mon = month;
+        dateTime.tm_mday = mday;
+        DateContainer dateContainer = DateContainer(dateTime);
+        if (empty)
         {
-            tm creationTime = info.getCreationTime(); 
-            return Element<TimeContainer>(SCH_TIME, TimeContainer(hours, minutes), DateContainer(creationTime), TimeContainer(creationTime));
+            dateContainer.clear();
         }
+        return Element<DateContainer>(SCH_DATE, dateContainer, DateContainer(creationTime), TimeContainer(creationTime));
+    }
 
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Element<TimeContainer>>(getName(),
-                arg("info", &BLF_Element<TimeContainer>::info, definitions.get<BLF_ElementInfo>()),
-                arg("hours", &BLF_Element<TimeContainer>::hours),
-                arg("minutes", &BLF_Element<TimeContainer>::minutes)
-            ));
-        }
-};
-
-template <>
-class BLF_Element<DateContainer> : BLF_Base
-{
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_Element_DateContainer";
-        }
-        BLF_ElementInfo info;
-        bool empty;
-        int year;
-        int month;
-        int mday;
-
-        BLF_Element() {}
-        BLF_Element(const Element<DateContainer>* element) : info(element)
-        {
-            tm dateTime = element->getValue().getTime();
-            empty = element->getValue().getIsEmpty();
-            year = dateTime.tm_year;
-            month = dateTime.tm_mon;
-            mday = dateTime.tm_mday;
-        }
-
-        Element<DateContainer> getElement() const
-        {
-            tm creationTime = info.getCreationTime();
-            tm dateTime;
-            dateTime.tm_year = year;
-            dateTime.tm_mon = month;
-            dateTime.tm_mday = mday;
-            DateContainer dateContainer = DateContainer(dateTime);
-            if (empty)
-            {
-                dateContainer.clear();
-            }
-            return Element<DateContainer>(SCH_DATE, dateContainer, DateContainer(creationTime), TimeContainer(creationTime));
-        }
-
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Element<DateContainer>>(getName(),
-                arg("info", &BLF_Element<DateContainer>::info, definitions.get<BLF_ElementInfo>()),
-                arg("empty", &BLF_Element<DateContainer>::empty),
-                arg("year", &BLF_Element<DateContainer>::year),
-                arg("month", &BLF_Element<DateContainer>::month),
-                arg("mday", &BLF_Element<DateContainer>::mday)
-            ));
-        }
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<DateContainer>>(getName(),
+            arg("info", &BLF_Element<DateContainer>::info, definitions.get<BLF_ElementInfo>()),
+            arg("empty", &BLF_Element<DateContainer>::empty),
+            arg("year", &BLF_Element<DateContainer>::year),
+            arg("month", &BLF_Element<DateContainer>::month),
+            arg("mday", &BLF_Element<DateContainer>::mday)
+        ));
+    }
 };
 
 template <typename T>
-class BLF_FilterRule : BLF_Base
+struct BLF_FilterRule : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
-        {
-            return "BLF_FilterRule";
-        }
-        BLF_Element<T> passValueElement;
-        int comparison;
+    static constexpr const char* getName()
+    {
+        return "BLF_FilterRule";
+    }
+    BLF_Element<T> passValueElement;
+    int comparison;
 
-        BLF_FilterRule() {}
-        BLF_FilterRule(SCHEDULE_TYPE type, const FilterRule<T>& filterRule)
-        {
-            Element<T> element = Element<T>(type, filterRule.getPassValue(), DateContainer(), TimeContainer());
-            passValueElement = BLF_Element<T>(&element);
+    BLF_FilterRule() {}
+    BLF_FilterRule(SCHEDULE_TYPE type, const FilterRule<T>& filterRule)
+    {
+        Element<T> element = Element<T>(type, filterRule.getPassValue(), DateContainer(), TimeContainer());
+        passValueElement = BLF_Element<T>(&element);
 
-            comparison = (int)filterRule.getComparison();
-        }
+        comparison = (int)filterRule.getComparison();
+    }
 
-        FilterRule<T> getFilterRule() const
-        {
-            FilterRule<T> filter = FilterRule<T>(passValueElement.getElement().getValue());
-            filter.setComparison((Comparison)comparison);
-            return filter;
-        }
+    FilterRule<T> getFilterRule() const
+    {
+        FilterRule<T> filter = FilterRule<T>(passValueElement.getElement().getValue());
+        filter.setComparison((Comparison)comparison);
+        return filter;
+    }
 
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_FilterRule<T>>(getName(),
-                arg("passValueElement", &BLF_FilterRule<T>::passValueElement, definitions.get<BLF_Element<T>>()),
-                arg("comparison", &BLF_FilterRule<T>::comparison)
-            ));
-        }
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_FilterRule<T>>(getName(),
+            arg("passValueElement", &BLF_FilterRule<T>::passValueElement, definitions.get<BLF_Element<T>>()),
+            arg("comparison", &BLF_FilterRule<T>::comparison)
+        ));
+    }
 };
 
 template <>
@@ -499,46 +489,45 @@ constexpr const char* BLF_FilterRule<DateContainer>::getName()
 }
 
 template <typename T>
-class BLF_Filter : BLF_Base
+struct BLF_Filter : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
+    static constexpr const char* getName()
+    {
+        return "BLF_Filter";
+    }
+    int logicalOperator;
+    std::vector<BLF_FilterRule<T>> rules = {};
+    BLF_Filter() {}
+
+    BLF_Filter(SCHEDULE_TYPE type, const Filter& filter)
+    {
+        this->logicalOperator = (int)filter.getOperatorType();
+
+        for (size_t i = 0; i < filter.getRuleCount(); i++)
         {
-            return "BLF_Filter";
+            rules.emplace_back(type, filter.getRuleConst(i).getAsType<T>());
         }
-        int logicalOperator;
-        std::vector<BLF_FilterRule<T>> rules = {};
-        BLF_Filter() {}
+    }
 
-        BLF_Filter(SCHEDULE_TYPE type, const Filter& filter)
+    Filter getFilter() const
+    {
+        Filter filter = Filter({}, (LogicalOperatorEnum)logicalOperator);
+
+        for (const BLF_FilterRule<T>& blfRule: rules)
         {
-            this->logicalOperator = (int)filter.getOperatorType();
-
-            for (size_t i = 0; i < filter.getRuleCount(); i++)
-            {
-                rules.emplace_back(type, filter.getRuleConst(i).getAsType<T>());
-            }
-        }
-
-        Filter getFilter() const
-        {
-            Filter filter = Filter({}, (LogicalOperatorEnum)logicalOperator);
-
-            for (const BLF_FilterRule<T>& blfRule: rules)
-            {
-                filter.addRule(blfRule.getFilterRule());
-            }
-
-            return filter;
+            filter.addRule(blfRule.getFilterRule());
         }
 
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_Filter<T>>(getName(),
-                arg("logicalOperator", &BLF_Filter<T>::logicalOperator),
-                arg("rules", &BLF_Filter<T>::rules, definitions.get<BLF_FilterRule<T>>())
-            ));
-        }
+        return filter;
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Filter<T>>(getName(),
+            arg("logicalOperator", &BLF_Filter<T>::logicalOperator),
+            arg("rules", &BLF_Filter<T>::rules, definitions.get<BLF_FilterRule<T>>())
+        ));
+    }
 };
 
 template <>
@@ -590,49 +579,48 @@ constexpr const char* BLF_Filter<DateContainer>::getName()
 }
 
 template <typename T>
-class BLF_FilterGroup : BLF_Base
+struct BLF_FilterGroup : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
+    static constexpr const char* getName()
+    {
+        return "BLF_FilterGroup";
+    }
+    int logicalOperator;
+    std::string name;
+    std::vector<BLF_Filter<T>> filters = {};
+    BLF_FilterGroup() {}
+
+    BLF_FilterGroup(SCHEDULE_TYPE type, const FilterGroup& filterGroup)
+    {
+        this->logicalOperator = (int)filterGroup.getOperatorType();
+        this->name = filterGroup.getName();
+
+        for (size_t i = 0; i < filterGroup.getFilterCount(); i++)
         {
-            return "BLF_FilterGroup";
+            filters.emplace_back(type, filterGroup.getFilterConst(i));
         }
-        int logicalOperator;
-        std::string name;
-        std::vector<BLF_Filter<T>> filters = {};
-        BLF_FilterGroup() {}
+    }
 
-        BLF_FilterGroup(SCHEDULE_TYPE type, const FilterGroup& filterGroup)
+    FilterGroup getFilterGroup() const
+    {
+        FilterGroup filterGroup = FilterGroup({}, name, (LogicalOperatorEnum)logicalOperator);
+
+        for (const BLF_Filter<T>& blfFilter: filters)
         {
-            this->logicalOperator = (int)filterGroup.getOperatorType();
-            this->name = filterGroup.getName();
-
-            for (size_t i = 0; i < filterGroup.getFilterCount(); i++)
-            {
-                filters.emplace_back(type, filterGroup.getFilterConst(i));
-            }
-        }
-
-        FilterGroup getFilterGroup() const
-        {
-            FilterGroup filterGroup = FilterGroup({}, name, (LogicalOperatorEnum)logicalOperator);
-
-            for (const BLF_Filter<T>& blfFilter: filters)
-            {
-                filterGroup.addFilter(blfFilter.getFilter());
-            }
-
-            return filterGroup;
+            filterGroup.addFilter(blfFilter.getFilter());
         }
 
-        static void addDefinition(ObjectDefinitions& definitions)
-        {
-            definitions.add(definitions.getObjectTable().define<BLF_FilterGroup<T>>(getName(),
-                arg("logicalOperator", &BLF_FilterGroup<T>::logicalOperator),
-                arg("name", &BLF_FilterGroup<T>::name),
-                arg("filters", &BLF_FilterGroup<T>::filters, definitions.get<BLF_Filter<T>>())
-            ));
-        }
+        return filterGroup;
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_FilterGroup<T>>(getName(),
+            arg("logicalOperator", &BLF_FilterGroup<T>::logicalOperator),
+            arg("name", &BLF_FilterGroup<T>::name),
+            arg("filters", &BLF_FilterGroup<T>::filters, definitions.get<BLF_Filter<T>>())
+        ));
+    }
 };
 
 template <>
@@ -684,97 +672,96 @@ constexpr const char* BLF_FilterGroup<DateContainer>::getName()
 }
 
 template <typename T>
-class BLF_Column : BLF_Base
+struct BLF_Column : BLF_Base
 {
-    public:
-        static constexpr const char* getName()
+    static constexpr const char* getName()
+    {
+        return "BLF_Column";
+    }
+    int index;
+    int type;
+    std::string name;
+    bool permanent;
+    int flags;
+    int sort;
+    bool selectOptionsMutable;
+    std::vector<std::string> selectOptions = {};
+    std::vector<BLF_Element<T>> elements = {};
+    std::vector<BLF_FilterGroup<T>> filterGroups = {};
+    BLF_Column() {}
+
+    BLF_Column(const Column* column, size_t index)
+    {
+        this->index = (int)index;
+        this->type = (int)column->type;
+        this->name = column->name;
+        this->permanent = column->permanent;
+        this->flags = column->flags;
+        this->sort = (int)column->sort;
+        this->selectOptionsMutable = column->selectOptions.getIsMutable();
+
+        selectOptions = column->selectOptions.getOptions();
+
+        for (ElementBase* elementBase: column->rows)
         {
-            return "BLF_Column";
-        }
-        int index;
-        int type;
-        std::string name;
-        bool permanent;
-        int flags;
-        int sort;
-        bool selectOptionsMutable;
-        std::vector<std::string> selectOptions = {};
-        std::vector<BLF_Element<T>> elements = {};
-        std::vector<BLF_FilterGroup<T>> filterGroups = {};
-        BLF_Column() {}
-
-        BLF_Column(const Column* column, size_t index)
-        {
-            this->index = (int)index;
-            this->type = (int)column->type;
-            this->name = column->name;
-            this->permanent = column->permanent;
-            this->flags = column->flags;
-            this->sort = (int)column->sort;
-            this->selectOptionsMutable = column->selectOptions.getIsMutable();
-    
-            selectOptions = column->selectOptions.getOptions();
-
-            for (ElementBase* elementBase: column->rows)
-            {
-                elements.push_back(BLF_Element<T>((Element<T>*)elementBase));
-            }
-
-            for (auto filterGroup : column->getFilterGroupsConst())
-            {
-                filterGroups.emplace_back(column->type, filterGroup);
-            }
+            elements.push_back(BLF_Element<T>((Element<T>*)elementBase));
         }
 
-        Column getColumn() const
+        for (auto filterGroup : column->getFilterGroupsConst())
         {
-            std::vector<ElementBase*> rows = {};
+            filterGroups.emplace_back(column->type, filterGroup);
+        }
+    }
 
-            // set up SelectOptions
-            SelectOptions columnSelectOptions = SelectOptions(selectOptions);
-            columnSelectOptions.setIsMutable(selectOptionsMutable);
+    Column getColumn() const
+    {
+        std::vector<ElementBase*> rows = {};
 
-            // add elements to rows
-            for (size_t row = 0; row < elements.size(); row++)
-            {
-                Element<T>* element = new Element<T>(elements[row].getElement());
-                rows.push_back(element);
-            }
+        // set up SelectOptions
+        SelectOptions columnSelectOptions = SelectOptions(selectOptions);
+        columnSelectOptions.setIsMutable(selectOptionsMutable);
 
-            Column col = Column(
-                rows,
-                (SCHEDULE_TYPE)type,
-                name,
-                permanent,
-                (ScheduleColumnFlags)flags,
-                (COLUMN_SORT)sort,
-                columnSelectOptions
-            );
-
-            // add filter groups to the column
-            for (const BLF_FilterGroup<T>& filterGroup: filterGroups)
-            {
-                col.addFilterGroup(col.getFilterGroupCount(), filterGroup.getFilterGroup());
-            }
-
-            return col;
+        // add elements to rows
+        for (size_t row = 0; row < elements.size(); row++)
+        {
+            Element<T>* element = new Element<T>(elements[row].getElement());
+            rows.push_back(element);
         }
 
-        static void addDefinition(ObjectDefinitions& definitions)
+        Column col = Column(
+            rows,
+            (SCHEDULE_TYPE)type,
+            name,
+            permanent,
+            (ScheduleColumnFlags)flags,
+            (COLUMN_SORT)sort,
+            columnSelectOptions
+        );
+
+        // add filter groups to the column
+        for (const BLF_FilterGroup<T>& filterGroup: filterGroups)
         {
-            definitions.add(definitions.getObjectTable().define<BLF_Column<T>>(getName(),
-                arg("index", &BLF_Column<T>::index),
-                arg("type", &BLF_Column<T>::type),
-                arg("name", &BLF_Column<T>::name),
-                arg("permanent", &BLF_Column<T>::permanent),
-                arg("flags", &BLF_Column<T>::flags),
-                arg("sort", &BLF_Column<T>::sort),
-                arg("selectOptionsMutable", &BLF_Column<T>::selectOptionsMutable),
-                arg("selectOptions", &BLF_Column<T>::selectOptions),
-                arg("elements", &BLF_Column<T>::elements, definitions.get<BLF_Element<T>>()),
-                arg("filterGroups", &BLF_Column<T>::filterGroups, definitions.get<BLF_FilterGroup<T>>())
-            ));
+            col.addFilterGroup(col.getFilterGroupCount(), filterGroup.getFilterGroup());
         }
+
+        return col;
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Column<T>>(getName(),
+            arg("index", &BLF_Column<T>::index),
+            arg("type", &BLF_Column<T>::type),
+            arg("name", &BLF_Column<T>::name),
+            arg("permanent", &BLF_Column<T>::permanent),
+            arg("flags", &BLF_Column<T>::flags),
+            arg("sort", &BLF_Column<T>::sort),
+            arg("selectOptionsMutable", &BLF_Column<T>::selectOptionsMutable),
+            arg("selectOptions", &BLF_Column<T>::selectOptions),
+            arg("elements", &BLF_Column<T>::elements, definitions.get<BLF_Element<T>>()),
+            arg("filterGroups", &BLF_Column<T>::filterGroups, definitions.get<BLF_FilterGroup<T>>())
+        ));
+    }
 };
 
 template <>
@@ -863,6 +850,7 @@ class DataConverter
             BLF_Column<T> blfColumn = BLF_Column<T>(&column, columnIndex);
             data.insert(getObjectDefinition<BLF_Column<T>>().serialize(blfColumn));
         }
+        bool isValidScheduleFile(const char* path) const;
         // Write the Columns of a Schedule to a file at the given path.
         int writeSchedule(const char* path, const std::vector<Column>&);
         // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The function creates a copy of the provided vector, but modifies the argument directly. If the function fails at any point, it will be reset to the copy created at the start.

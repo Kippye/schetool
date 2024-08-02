@@ -55,7 +55,14 @@ void Window::init(TextureLoader* textureLoader)
 	// load and set the window's icon
 	GLFWimage images[1] = { GLFWimage() } ;
 	images[0].pixels = m_textureLoader->loadTextureData("icon.png", &images[0].width, &images[0].height, m_textureLoader->textureFolder, false);
-	glfwSetWindowIcon(window, 1, images);
+    if (images[0].pixels)
+    {
+        glfwSetWindowIcon(window, 1, images);
+    }
+    else
+    {
+        printf("Window::init(..): Failed to load program icon from path: %s\n", (m_textureLoader->textureFolder + "icon.png").c_str());
+    }
 
 	// load and create cursors
 	// cursors[NORMAL] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);

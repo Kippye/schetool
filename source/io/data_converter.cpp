@@ -5,6 +5,11 @@ LocalObjectTable& ObjectDefinitions::getObjectTable()
     return m_objectTable;
 }
 
+const LocalObjectTable& ObjectDefinitions::getObjectTableConst() const
+{
+    return m_objectTable;
+}
+
 tm BLF_ElementInfo::getCreationTime() const
 {
     return tm {
@@ -33,6 +38,25 @@ void DataConverter::setupObjectTable()
     addTypeObjectDefinitions<WeekdayContainer>();
     addTypeObjectDefinitions<TimeContainer>();
     addTypeObjectDefinitions<DateContainer>();
+}
+
+bool DataConverter::isValidScheduleFile(const char* path) const
+{
+    try
+    {
+        // Try to load the file
+        FileReadStream stream(path);
+        File file = File::fromData(stream);
+        // Try to deserialize the file
+        file.deserializeBody(m_definitions.getObjectTableConst());
+        return true;
+    }
+    // The file is not valid BLF or some other I/O error occurred, catch error and return false
+    // OR Some error occurred, probably due to a mismatch in the object tables, return false
+    catch(std::exception& e)
+    {
+        return false;
+    }
 }
 
 int DataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule)
@@ -93,7 +117,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 
     auto file = File::fromData(stream);
 
-    auto fileBody = file.deserializeBody(m_definitions.getObjectTable());
+    auto fileBody = file.deserializeBody(m_definitions.getObjectTableConst());
 
     std::map<size_t, SCHEDULE_TYPE> columnTypes = {};
 

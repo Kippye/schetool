@@ -3,10 +3,8 @@
 #include "gui_templates.h"
 #include "schedule_constants.h"
 
-ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore* scheduleCore) : Gui(ID) 
-{
-	m_scheduleCore = scheduleCore;
-}
+ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore) : m_scheduleCore(scheduleCore), Gui(ID) 
+{}
 
 void ElementEditorSubGui::draw(Window& window, Input& input)
 {
@@ -23,7 +21,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 		ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
 		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
 
-		bool isPermanentColumn = m_scheduleCore->getColumn(m_editorColumn)->permanent;
+		bool isPermanentColumn = m_scheduleCore.getColumn(m_editorColumn)->permanent;
 		tm formatTime;
 		
 		switch(m_editedType)
@@ -59,7 +57,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 			{
 				auto selection = m_editorSelect.getSelection();
 				size_t selectedCount = selection.size();
-				const std::vector<std::string>& optionNames = m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptions();
+				const std::vector<std::string>& optionNames = m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptions();
 
 				std::vector<size_t> selectionIndices = {};
 
@@ -84,7 +82,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				}
 
 				// add new options
-				if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable())
+				if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
 				{
 					std::string str;
 					str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
@@ -97,8 +95,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_ADD)
 								.firstIndex(0)
 								.optionNames(std::vector<std::string>{std::string(buf)}));
-							m_editorSelect.update(m_scheduleCore->getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptionCount());
-							m_editorSelect.setSelected(m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
+							m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+							m_editorSelect.setSelected(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
 							m_madeEdits = true;
 							// NOTE: break here because otherwise the start and end of the function kind of go out of sync
 							break;
@@ -111,12 +109,12 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				{
 					bool selected = selection.find(i) != selection.end();
 
-					if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable())
+					if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
 					{
 						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
 						{
 							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
-							m_editorSelect.update(m_scheduleCore->getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptionCount());
+							m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
 							m_madeEdits = true;
 							// break because the whole thing must be restarted now
 							goto break_select_case;
@@ -133,7 +131,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 					}
 
 					// drag to reorder options
-					if (m_scheduleCore->getColumnSelectOptions(m_editorColumn).getIsMutable())
+					if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
 					{
 						if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
 						{
@@ -141,7 +139,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 							if (i_next >= 0 && i_next < optionNames.size())
 							{
 								modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next));
-								m_editorSelect.update(m_scheduleCore->getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore->getColumnSelectOptions(m_editorColumn).getOptionCount());
+								m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
 								m_madeEdits = true;
 								ImGui::ResetMouseDragDelta();
 								break;
