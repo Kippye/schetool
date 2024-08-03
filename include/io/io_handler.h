@@ -13,7 +13,7 @@
 #include "autosave_popup_gui.h"
 #include "interface.h"
 
-const unsigned int AUTOSAVE_DELAY_SECONDS = 2 * 60;
+const unsigned int AUTOSAVE_DELAY_SECONDS = 1 * 60;
 
 class IO_Handler
 {

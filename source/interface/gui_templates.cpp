@@ -164,7 +164,7 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
 
         std::string hourStr = std::string(hourBuf);
 
-        if (hourStr.find_first_not_of("0123456789") == std::string::npos)
+        if (hourStr.empty() == false && hourStr.find_first_not_of("0123456789") == std::string::npos)
         {
             hourValue = std::stoi(hourBuf);
         }
@@ -182,7 +182,7 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
 
         std::string minStr = std::string(minBuf);
 
-        if (minStr.find_first_not_of("0123456789") == std::string::npos)
+        if (minStr.empty() == false && minStr.find_first_not_of("0123456789") == std::string::npos)
         {
             minValue = std::stoi(minBuf);
         }
