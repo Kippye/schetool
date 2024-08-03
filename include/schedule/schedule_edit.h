@@ -12,6 +12,7 @@ enum class ScheduleEditType
     RowAddOrRemove,
     ColumnAddOrRemove,
     ColumnPropertyChange,
+    ColumnReset,
     FilterGroupAddOrRemove,
     FilterGroupChange,
     FilterAddOrRemove,
@@ -175,6 +176,29 @@ class ColumnPropertyEdit : public ScheduleEdit
 
         // Returns the Column name from the previous data
         std::string getColumnName() const;
+};
+
+class ColumnResetEdit : public ScheduleEdit
+{
+    private:
+        size_t m_column;
+        Column m_columnData;
+    public:
+        ColumnResetEdit(size_t column, const Column& columnData);
+
+        void revert(ScheduleCore& scheduleCore) override;
+
+        void apply(ScheduleCore& scheduleCore) override;
+        
+        size_t getColumn() const
+        {
+            return m_column;
+        }
+
+        const Column& getColumnData() const
+        {
+            return m_columnData;
+        }
 };
 
 class FilterEditBase : public ScheduleEdit

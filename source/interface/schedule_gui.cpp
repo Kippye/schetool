@@ -617,6 +617,12 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 			ImGui::TableSetColumnWidthAutoAll(table);
 	}
 
+    // Reset values
+    if (ImGui::MenuItem("Reset default values", NULL, false))
+    {
+        resetColumn.invoke(column, true);
+    }
+
 	// Ordering
 	if (tableFlags & ImGuiTableFlags_Reorderable)
 	{

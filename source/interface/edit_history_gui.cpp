@@ -58,6 +58,16 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         i);
                     break;
                 }
+                case (ScheduleEditType::ColumnReset):
+                {
+                    auto columnResetEdit = std::dynamic_pointer_cast<ColumnResetEdit>(editHistory[i]);
+                    sprintf(buf, "Reset Column %s of type %s at %zu##%zu", 
+                        columnResetEdit->getColumnData().name.c_str(), 
+                        schedule_consts::scheduleTypeNames.at(columnResetEdit->getColumnData().type),
+                        columnResetEdit->getColumn(),
+                        i);
+                    break;
+                }
                 case (ScheduleEditType::FilterGroupAddOrRemove):
                 {
                     auto filterGroupEdit = std::dynamic_pointer_cast<FilterGroupAddOrRemoveEdit>(editHistory[i]);

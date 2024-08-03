@@ -229,6 +229,11 @@ class Schedule
         {
             setColumnName(col, name);
         };
+        // whole column modification
+        std::function<void(size_t, bool)> resetColumnListener = [&](size_t col, bool addToHistory)
+        {
+            resetColumn(col, addToHistory);
+        };
         // row modification
         std::function<void(size_t)> addRowListener = [&](size_t col)
         {
@@ -326,7 +331,7 @@ class Schedule
             }
         }
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
-        void resetColumn(size_t index, SCHEDULE_TYPE type);
+        void resetColumn(size_t index, bool addToHistory);
 
         // ROWS
         size_t getRowCount();

@@ -53,7 +53,7 @@ class SelectOptions
         std::vector<std::string> m_options = {};
         SelectOptionChange m_lastModification;
         std::vector<SelectContainer*> m_listeners = {};
-        bool m_mutable = false;
+        bool m_mutable = true;
         void updateListeners();
     public:
         SelectOptions();

@@ -234,6 +234,30 @@ std::string ColumnPropertyEdit::getColumnName() const
 }
 
 
+// ColumnResetEdit
+ColumnResetEdit::ColumnResetEdit(size_t column, const Column& columnData) : ScheduleEdit(ScheduleEditType::ColumnReset) 
+{
+    m_column = column;
+    m_columnData = Column(columnData);
+}
+
+void ColumnResetEdit::revert(ScheduleCore& scheduleCore)
+{
+    // reverting a reset means reapplying the old data
+    scheduleCore.setColumnElements(m_column, m_columnData);
+
+    m_isReverted = true;
+} 
+
+void ColumnResetEdit::apply(ScheduleCore& scheduleCore)
+{
+    // applying a reset means resetting again
+    scheduleCore.resetColumn(m_column, m_columnData.type);
+
+    m_isReverted = false;
+}
+
+
 // FilterEditBase
 FilterEditBase::FilterEditBase(ScheduleEditType editType, size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex) : ScheduleEdit(editType)
 {

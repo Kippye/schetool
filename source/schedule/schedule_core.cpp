@@ -203,10 +203,10 @@ const Column* ScheduleCore::getColumn(size_t column) const
     return &m_schedule.at(column);
 }
 
-void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
+bool ScheduleCore::setColumnElements(size_t index, const Column& columnData)
 {
-    if (existsColumnAtIndex(index) == false) { return; }
-    if (getColumn(index)->type != columnData.type) { printf("ScheduleCore::setColumnElements: The target Column and columnData types must match but are %d and %d\n", getColumn(index)->type, columnData.type); return; }
+    if (existsColumnAtIndex(index) == false) { return false; }
+    if (getColumn(index)->type != columnData.type) { printf("ScheduleCore::setColumnElements: The target Column and columnData types must match but are %d and %d\n", getColumn(index)->type, columnData.type); return false; }
 
     for (size_t row = 0; row < getRowCount(); row++)
     {
@@ -265,6 +265,8 @@ void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
             }
         }
     }
+
+    return true;
 }
 
 bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
@@ -272,20 +274,9 @@ bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
     if (existsColumnAtIndex(column) == false){ return false; }
     if (getColumn(column)->permanent == true) { printf("ScheduleCore::setColumnType tried to set type of a permanent Column at %zu! Returning.\n", column); return false; }
 
-    // HACK y
-    m_schedule.at(column).selectOptions.clearListeners();
-    if (type == SCH_SELECT)
-    {
-        m_schedule.at(column).selectOptions.setIsMutable(true);
-    }
-
     // TODO: try to convert types..? i guess there's no point in doing that. only really numbers could be turned into text.
     // reset values to defaults of the (new?) type
     resetColumn(column, type);
-    // read resetColumn description for why this is run after
-    m_schedule.at(column).type = type;
-    // NOTE!!! must sort AFTER this because otherwise we're doing some REALLY sus things. Sorting a column that contains X type values as if it was a Y type column. REALLY bad.
-    sortColumns();
     return true;
 }
 
@@ -419,6 +410,9 @@ bool ScheduleCore::removeColumnFilterRule(size_t column, size_t groupIndex, size
 void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
 {
     Column& column = *getMutableColumn(index);
+    // HACK y
+    column.selectOptions.clearListeners();
+
     size_t rowCount = column.rows.size();
 
     time_t t = std::time(nullptr);
@@ -462,10 +456,6 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                if (column.selectOptions.getIsMutable() == true)
-                {
-                    column.selectOptions.clearOptions();
-                }
                 auto selectElement = new Element<SelectContainer>(type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
                 column.selectOptions.addListener(row, selectElement->getValueReference());
                 setElement(index, row, (ElementBase*)selectElement, false);
@@ -503,6 +493,9 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
             break;
         }
     }
+
+    column.type = type;
+    sortColumns();
 }
 
 

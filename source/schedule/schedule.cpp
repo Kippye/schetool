@@ -52,6 +52,7 @@ void Schedule::init(Input& input, Interface& interface)
 
         scheduleGui->addDefaultColumn.addListener(addDefaultColumnListener);
         scheduleGui->removeColumn.addListener(removeColumnListener);
+        scheduleGui->resetColumn.addListener(resetColumnListener);
 
         scheduleGui->setColumnType.addListener(setColumnTypeListener);
         scheduleGui->setColumnSort.addListener(setColumnSortListener);
@@ -188,8 +189,6 @@ void Schedule::addColumn(size_t columnIndex, const Column& column, bool addToHis
 
     m_core.addColumn(columnIndex, column);
 
-    m_editHistory.setEditedSinceWrite(true);
-
     m_scheduleEvents.columnAdded.invoke(columnIndex);
 }
 
@@ -205,8 +204,6 @@ void Schedule::addDefaultColumn(size_t columnIndex, bool addToHistory)
             m_editHistory.addEdit<ColumnEdit>(false, columnIndex, *m_core.getColumn(columnIndex));
         }
     }
-
-    m_editHistory.setEditedSinceWrite(true);
 
     m_scheduleEvents.columnAdded.invoke(columnIndex);
 }
@@ -226,8 +223,6 @@ void Schedule::removeColumn(size_t columnIndex, bool addToHistory)
         {
             m_editHistory.addEdit<ColumnEdit>(true, columnIndex, columnCopy);
         }
-
-        m_editHistory.setEditedSinceWrite(true);
 
         m_scheduleEvents.columnRemoved.invoke(columnIndex);
     }
@@ -250,8 +245,6 @@ void Schedule::setColumnType(size_t columnIndex, SCHEDULE_TYPE type, bool addToH
         {
             m_editHistory.addEdit<ColumnPropertyEdit>(columnIndex, COLUMN_PROPERTY_TYPE, previousData, *m_core.getColumn(columnIndex));
         }
-
-        m_editHistory.setEditedSinceWrite(true);
     }
 }
 
@@ -265,8 +258,6 @@ void Schedule::setColumnName(size_t columnIndex, const std::string& name, bool a
         {
             m_editHistory.addEdit<ColumnPropertyEdit>(columnIndex, COLUMN_PROPERTY_NAME, previousData, *m_core.getColumn(columnIndex));
         }
-
-        m_editHistory.setEditedSinceWrite(true);
     }
 }
 
@@ -280,8 +271,6 @@ void Schedule::setColumnSort(size_t columnIndex, COLUMN_SORT sortDirection, bool
         {
             m_editHistory.addEdit<ColumnPropertyEdit>(columnIndex, COLUMN_PROPERTY_SORT, previousData, *m_core.getColumn(columnIndex));
         }
-
-        m_editHistory.setEditedSinceWrite(true);
     }
 }
 
@@ -300,8 +289,6 @@ void Schedule::modifyColumnSelectOptions(size_t columnIndex, const SelectOptions
         {
             m_editHistory.addEdit<ColumnPropertyEdit>(columnIndex, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, *m_core.getColumn(columnIndex));
         }
-    
-        m_editHistory.setEditedSinceWrite(true);
     }
 }
 
@@ -398,9 +385,18 @@ void Schedule::removeColumnFilter(size_t columnIndex, size_t groupIndex, size_t 
     }
 }
 
-void Schedule::resetColumn(size_t index, SCHEDULE_TYPE type)
+void Schedule::resetColumn(size_t columnIndex, bool addToHistory)
 {
-    m_core.resetColumn(index, type);
+    if (m_core.getColumn(columnIndex) == nullptr) { return; }
+
+    Column columnData = *m_core.getColumn(columnIndex);
+
+    m_core.resetColumn(columnIndex, columnData.type);
+
+    if (addToHistory)
+    {
+        m_editHistory.addEdit<ColumnResetEdit>(columnIndex, columnData);
+    }
 }
 
 
@@ -418,8 +414,6 @@ void Schedule::addRow(size_t rowIndex, bool addToHistory)
     {
         m_editHistory.addEdit<RowEdit>(false, rowIndex, m_core.getRow(rowIndex));
     }
-
-    m_editHistory.setEditedSinceWrite(true);
 }
 
 void Schedule::removeRow(size_t rowIndex, bool addToHistory)
@@ -440,8 +434,6 @@ void Schedule::removeRow(size_t rowIndex, bool addToHistory)
             // add a remove RowEdit to the edit history with copies of the removed Elements
             m_editHistory.addEdit<RowEdit>(true, rowIndex, originalRowCopies);
         }
-
-        m_editHistory.setEditedSinceWrite(true);
     }
 
     for (size_t i = 0; i < originalRowCopies.size(); i++)

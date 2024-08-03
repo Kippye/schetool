@@ -42,7 +42,7 @@ class ScheduleCore
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column) const;
         // Set the values of every Element to be copies of the provided Column's Element values. NOTE: If the provided Column has fewer rows, only those will be modified. If it has more rows, ones past the end will be ignored.
-        void setColumnElements(size_t index, const Column& columnData);
+        bool setColumnElements(size_t index, const Column& columnData);
         bool setColumnType(size_t column, SCHEDULE_TYPE type);
         bool setColumnName(size_t column, const std::string& name);
         bool setColumnSort(size_t column, COLUMN_SORT sortDirection);
@@ -88,7 +88,9 @@ class ScheduleCore
             return true;
         }
         bool removeColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex);
-        // NOTE: Does NOT resort on its own. Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
+        // Sets every Element in the Column index to a default value of the given type.
+        // Do NOT change the column's type before running this.
+        // After resetting, sets the column's type to type and calls sortColumns().
         void resetColumn(size_t index, SCHEDULE_TYPE type);
 
         // ROWS
