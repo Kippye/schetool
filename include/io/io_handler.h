@@ -7,6 +7,7 @@
 #include "schedule.h"
 #include "window.h"
 #include "input.h"
+#include "file_info.h"
 #include "start_page_gui.h"
 #include "schedule_gui.h"
 #include "main_menu_bar_gui.h"
@@ -25,16 +26,15 @@ class IO_Handler
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = NULL;
         std::shared_ptr<ScheduleGui> m_scheduleGui = NULL;
-        bool m_haveFileOpen = false;
-        std::string m_currentFileName;
+        FileInfo m_currentFileInfo = FileInfo();
         double m_timeSinceAutosave = 0.0;
         const char* m_autosaveSuffix = "_auto";
 
         // input listeners
         std::function<void()> saveListener = std::function<void()>([&]()
         {
-            if (m_haveFileOpen == false) { return; }
-            writeSchedule(m_currentFileName.c_str());
+            if (m_currentFileInfo.empty()) { return; }
+            writeSchedule(m_currentFileInfo.getName().c_str());
         });
         // window event listeners
         std::function<void()> windowCloseListener = std::function<void()>([&]()
@@ -85,7 +85,7 @@ class IO_Handler
         bool isScheduleFilePath(const std::filesystem::path& path) const;
         std::string makeRelativePathFromName(const char* name) const;
         bool applyAutosaveToFile(const char* name);
-        void setHaveFileOpen(bool haveFileOpen);
+        void sendFileInfoUpdates();
         void passFileNamesToGui();
         // Cleans everything about the currently open file (clears the schedule, edit history, etc)
         void unloadCurrentFile();
@@ -106,6 +106,7 @@ class IO_Handler
         // If the open file doesn't exist, write a file with the new name.
         // If the open file exists, rename it to the new name.
         bool renameCurrentFile(const std::string& newName);
+        FileInfo getCurrentFileInfo() const;
         void openMostRecentFile();
         bool createAutosave();
         void addToAutosaveTimer(double delta);
@@ -113,11 +114,8 @@ class IO_Handler
         std::string getFileAutosaveName(const char* fileName);
         std::string getFileBaseName(const char* autosaveName);
         long long getFileEditTime(std::filesystem::path filePath);
+        TimeWrapper getFileEditTimeWrapped(std::filesystem::path filePath);
         std::string getFileEditTimeString(std::filesystem::path filePath);
-        std::string getOpenScheduleFilename();
-        // Change m_currentFileName to name.
-        // Update the name in Schedule and the window's title
-        void setCurrentFileName(const std::string& name);
         std::vector<std::string> getScheduleStemNames(bool includeAutosaves = true);
         std::vector<std::string> getScheduleStemNamesSortedByEditTime(bool includeAutosaves = true);
         std::string getLastEditedScheduleStemName();

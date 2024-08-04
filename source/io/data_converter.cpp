@@ -107,7 +107,7 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
     return 0;
 }
 
-int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
+std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 {
     std::vector<Column> scheduleCopy = schedule;
     // clear the provided copy just in case
@@ -120,9 +120,7 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     auto fileBody = file.deserializeBody(m_definitions.getObjectTableConst());
 
     BLF_FileInfo fileInfo = *fileBody.data.groupby(m_definitions.get<BLF_FileInfo>()).begin();
-    // Dunno what to do with this or where to do it
-    TimeWrapper editDate = fileInfo.editDate.getDate();
-    std::cout << DateContainer(editDate).getString() << std::endl;
+    FileInfo returnFileInfo = FileInfo(path, TimeWrapper(), fileInfo.editDate.getDate());
 
     std::map<size_t, SCHEDULE_TYPE> columnTypes = {};
 
@@ -316,5 +314,5 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
         }
     }
 
-    return 0;
+    return returnFileInfo;
 }
