@@ -572,41 +572,65 @@ void ScheduleGui::draw(Window& window, Input& input)
     ImGui::End();
 }
 
-void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags)
+void ScheduleGui::displayColumnContextPopup(unsigned int columnIndex, ImGuiTableFlags tableFlags)
 {
 	// FIXME TODO STUPID HACK !!
 	ImGuiTable* table = ImGui::GetCurrentContext()->Tables.GetByIndex(0) ;
 	//ImGui::TableFindByID(ImGui::GetID("ScheduleTable"));
 
+    const Column& column = *m_scheduleCore.getColumn(columnIndex);
+
 	// renaming
-	std::string name = m_scheduleCore.getColumn(column)->name.c_str();
+	std::string name = column.name.c_str();
 	name.reserve(COLUMN_NAME_MAX_LENGTH);
 	char* buf = name.data();
 	
-	if (ImGui::InputText(std::string("##columnName").append(std::to_string(column)).c_str(), buf, name.capacity(), ImGuiInputTextFlags_EnterReturnsTrue))
+	if (ImGui::InputText(std::string("##columnName").append(std::to_string(columnIndex)).c_str(), buf, name.capacity(), ImGuiInputTextFlags_EnterReturnsTrue))
 	{
-		setColumnName.invoke(column, buf);
+		setColumnName.invoke(columnIndex, buf);
 	}
 
 	// select type (for non-permanent columns)
-	if (m_scheduleCore.getColumn(column)->permanent == false)
+	if (column.permanent == false)
 	{
 		ImGui::Separator();
-		SCHEDULE_TYPE selected = m_scheduleCore.getColumn(column)->type;
+		SCHEDULE_TYPE selected = column.type;
 		for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++)
 		{
 			if (ImGui::Selectable(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
-				setColumnType.invoke(column, SCHEDULE_TYPE(i));
+				setColumnType.invoke(columnIndex, SCHEDULE_TYPE(i));
 		}
 	}
 
 	ImGui::Separator(); 
 	
+    // Reset values
+    if (ImGui::MenuItem("Reset default values", NULL, false))
+    {
+        resetColumn.invoke(columnIndex, true);
+    }
+
+    // Reset setting dropdown
+    ImGui::Text("Reset column:");
+    ImGui::SameLine();
+    if (ImGui::BeginCombo("##ColumnResetSetting", schedule_consts::columnResetOptionStrings.at(column.resetOption)))
+    {
+        for (auto [resetOption, settingString] : schedule_consts::columnResetOptionStrings)
+        {
+            bool isSelected = column.resetOption == resetOption;
+            if (ImGui::Selectable(std::string(settingString).append("##").append(std::to_string((int)resetOption)).c_str(), isSelected))
+            {
+                setColumnResetOption.invoke(columnIndex, resetOption);
+            }
+        }
+        ImGui::EndCombo();
+    }
+
 	// resizing
 	if (tableFlags & ImGuiTableFlags_Resizable)
 	{
 		if (ImGui::MenuItem("Size column to fit###SizeOne", NULL, false))
-			ImGui::TableSetColumnWidthAutoSingle(table, column);
+			ImGui::TableSetColumnWidthAutoSingle(table, columnIndex);
 
 		const char* size_all_desc;
 		//if (table->ColumnsEnabledFixedCount == table->ColumnsEnabledCount && (table->Flags & ImGuiTableFlags_SizingMask_) != ImGuiTableFlags_SizingFixedSame)
@@ -616,12 +640,6 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 		if (ImGui::MenuItem(size_all_desc, NULL))
 			ImGui::TableSetColumnWidthAutoAll(table);
 	}
-
-    // Reset values
-    if (ImGui::MenuItem("Reset default values", NULL, false))
-    {
-        resetColumn.invoke(column, true);
-    }
 
 	// Ordering
 	if (tableFlags & ImGuiTableFlags_Reorderable)
@@ -638,7 +656,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int column, ImGuiTableFlags
 		ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
 		for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++)
 		{
-			if (m_scheduleCore.getColumn(otherColumnIndex)->permanent)
+			if (column.permanent)
 			{
 				continue;
 			}

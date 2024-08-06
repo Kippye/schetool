@@ -283,7 +283,6 @@ bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
 bool ScheduleCore::setColumnName(size_t column, const std::string& name)
 {
     if (existsColumnAtIndex(column) == false) { return false; }
-    Column previousData = Column(m_schedule.at(column));
 
     m_schedule.at(column).name = name;
     return true;
@@ -292,10 +291,17 @@ bool ScheduleCore::setColumnName(size_t column, const std::string& name)
 bool ScheduleCore::setColumnSort(size_t column, COLUMN_SORT sortDirection)
 {
     if (existsColumnAtIndex(column) == false) { return false; }
-    Column previousData = Column(m_schedule.at(column));
 
     m_schedule.at(column).sort = sortDirection;
     sortColumns();
+    return true;
+}
+
+bool ScheduleCore::setColumnResetOption(size_t column, ColumnResetOption option)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    m_schedule.at(column).resetOption = option;
     return true;
 }
 

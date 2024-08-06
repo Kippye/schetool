@@ -36,6 +36,7 @@ class ScheduleGui : public Gui
         Event<size_t, SCHEDULE_TYPE>         setColumnType;
         Event<size_t, COLUMN_SORT>           setColumnSort;
         Event<size_t, std::string>    setColumnName;
+        Event<size_t, ColumnResetOption> setColumnResetOption;
         // entire column modification
         Event<size_t, bool> resetColumn;
         // row modification

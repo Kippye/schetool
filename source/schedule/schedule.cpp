@@ -57,6 +57,7 @@ void Schedule::init(Input& input, Interface& interface)
         scheduleGui->setColumnType.addListener(setColumnTypeListener);
         scheduleGui->setColumnSort.addListener(setColumnSortListener);
         scheduleGui->setColumnName.addListener(setColumnNameListener);
+        scheduleGui->setColumnResetOption.addListener(setColumnResetOptionListener);
 
         scheduleGui->addRow.addListener(addRowListener);
         scheduleGui->removeRow.addListener(removeRowListener);
@@ -133,7 +134,7 @@ void Schedule::createDefaultSchedule()
     m_editHistory.clearEditHistory();
 
     m_core.addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Name"), true, ScheduleColumnFlags_Name));
-    m_core.addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleColumnFlags_Finished));
+    m_core.addColumn(getColumnCount(), Column(std::vector<ElementBase*>{}, SCH_BOOL, std::string("Finished"), true, ScheduleColumnFlags_Finished, COLUMN_SORT_NONE, SelectOptions(), ColumnResetOption::Daily));
     // Add the default filter to hide finished elements
     Filter isUnfinishedFilter = Filter();
     isUnfinishedFilter.addRule(FilterRule<bool>(false));
@@ -270,6 +271,19 @@ void Schedule::setColumnSort(size_t columnIndex, COLUMN_SORT sortDirection, bool
         if (addToHistory)
         {
             m_editHistory.addEdit<ColumnPropertyEdit>(columnIndex, COLUMN_PROPERTY_SORT, previousData, *m_core.getColumn(columnIndex));
+        }
+    }
+}
+
+void Schedule::setColumnResetOption(size_t columnIndex, ColumnResetOption option, bool addToHistory)
+{
+    Column previousData = Column(*m_core.getColumn(columnIndex));
+
+    if (m_core.setColumnResetOption(columnIndex, option))
+    {
+        if (addToHistory)
+        {
+            m_editHistory.addEdit<ColumnPropertyEdit>(columnIndex, COLUMN_PROPERTY_RESET_OPTION, previousData, *m_core.getColumn(columnIndex));
         }
     }
 }

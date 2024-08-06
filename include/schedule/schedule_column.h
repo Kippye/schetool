@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include "schedule_constants.h"
 #include "filter_group.h"
 #include "element_base.h"
 #include "element.h"
@@ -48,6 +49,7 @@ struct Column
         ScheduleColumnFlags flags;
         COLUMN_SORT sort;
         SelectOptions selectOptions;
+        ColumnResetOption resetOption = ColumnResetOption::Never;
 
         Column();
         Column(const std::vector<ElementBase*>& rows, 
@@ -56,7 +58,8 @@ struct Column
             bool permanent = false,
             ScheduleColumnFlags flags = ScheduleColumnFlags_None,
             COLUMN_SORT sort = COLUMN_SORT_NONE,
-            const SelectOptions& selectOptions = SelectOptions()
+            const SelectOptions& selectOptions = SelectOptions(),
+            ColumnResetOption resetSetting = ColumnResetOption::Never
         );
 
         Column(const Column& other);
@@ -73,6 +76,7 @@ struct Column
                 flags = other.flags;
                 sort = other.sort;
                 selectOptions = other.selectOptions;
+                resetOption = other.resetOption;
 
                 rows.clear();
 

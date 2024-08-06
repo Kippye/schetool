@@ -53,7 +53,10 @@ void EditHistoryGui::draw(Window& window, Input& input)
                     COLUMN_PROPERTY editedProperty = columnPropertyEdit->getEditedProperty();
                     sprintf(buf, "Column %s property %s at %zu##%zu", 
                         columnPropertyEdit->getColumnName().c_str(),
-                        editedProperty == COLUMN_PROPERTY_NAME ? "Name" : (editedProperty == COLUMN_PROPERTY_TYPE ? "Type" : (editedProperty == COLUMN_PROPERTY_SELECT_OPTIONS ? "Select options" : "Sort")),
+                        editedProperty == COLUMN_PROPERTY_NAME ? "Name" 
+                        : (editedProperty == COLUMN_PROPERTY_TYPE ? "Type" 
+                        : (editedProperty == COLUMN_PROPERTY_SELECT_OPTIONS ? "Select options" 
+                        : (editedProperty == COLUMN_PROPERTY_SORT ? "Sort" : "Reset option"))),
                         columnPropertyEdit->getColumn(),
                         i);
                     break;

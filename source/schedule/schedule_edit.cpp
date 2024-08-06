@@ -166,6 +166,12 @@ ColumnPropertyEdit::ColumnPropertyEdit(size_t column, COLUMN_PROPERTY editedProp
             m_columnData.sort = newData.sort;
             break;
         }
+        case(COLUMN_PROPERTY_RESET_OPTION):
+        {
+            m_previousColumnData.resetOption = previousData.resetOption;
+            m_columnData.resetOption = newData.resetOption;
+            break;
+        }
     }
 }
 
@@ -192,6 +198,11 @@ void ColumnPropertyEdit::revert(ScheduleCore& scheduleCore)
         case(COLUMN_PROPERTY_SORT):
         {
             scheduleCore.setColumnSort(m_column, m_previousColumnData.sort);
+            break;
+        }
+        case(COLUMN_PROPERTY_RESET_OPTION):
+        {
+            scheduleCore.setColumnResetOption(m_column, m_previousColumnData.resetOption);
             break;
         }
     }
@@ -221,6 +232,11 @@ void ColumnPropertyEdit::apply(ScheduleCore& scheduleCore)
         case(COLUMN_PROPERTY_SORT):
         {
             scheduleCore.setColumnSort(m_column, m_columnData.sort);
+            break;
+        }
+        case(COLUMN_PROPERTY_RESET_OPTION):
+        {
+            scheduleCore.setColumnResetOption(m_column, m_columnData.resetOption);
             break;
         }
     }

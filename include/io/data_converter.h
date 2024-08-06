@@ -735,6 +735,7 @@ struct BLF_Column : BLF_Base
     int flags;
     int sort;
     bool selectOptionsMutable;
+    int resetOption;
     std::vector<std::string> selectOptions = {};
     std::vector<BLF_Element<T>> elements = {};
     std::vector<BLF_FilterGroup<T>> filterGroups = {};
@@ -749,6 +750,7 @@ struct BLF_Column : BLF_Base
         this->flags = column->flags;
         this->sort = (int)column->sort;
         this->selectOptionsMutable = column->selectOptions.getIsMutable();
+        this->resetOption = (int)column->resetOption;
 
         selectOptions = column->selectOptions.getOptions();
 
@@ -785,7 +787,8 @@ struct BLF_Column : BLF_Base
             permanent,
             (ScheduleColumnFlags)flags,
             (COLUMN_SORT)sort,
-            columnSelectOptions
+            columnSelectOptions,
+            (ColumnResetOption)resetOption
         );
 
         // add filter groups to the column
@@ -805,6 +808,7 @@ struct BLF_Column : BLF_Base
             arg("name", &BLF_Column<T>::name),
             arg("permanent", &BLF_Column<T>::permanent),
             arg("flags", &BLF_Column<T>::flags),
+            arg("resetSetting", &BLF_Column<T>::resetOption),
             arg("sort", &BLF_Column<T>::sort),
             arg("selectOptionsMutable", &BLF_Column<T>::selectOptionsMutable),
             arg("selectOptions", &BLF_Column<T>::selectOptions),

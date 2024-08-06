@@ -46,6 +46,7 @@ class ScheduleCore
         bool setColumnType(size_t column, SCHEDULE_TYPE type);
         bool setColumnName(size_t column, const std::string& name);
         bool setColumnSort(size_t column, COLUMN_SORT sortDirection);
+        bool setColumnResetOption(size_t column, ColumnResetOption resetSetting);
         const SelectOptions& getColumnSelectOptions(size_t column) const;
         bool modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification);
 

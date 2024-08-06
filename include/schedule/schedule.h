@@ -229,6 +229,10 @@ class Schedule
         {
             setColumnName(col, name);
         };
+        std::function<void(size_t, ColumnResetOption)> setColumnResetOptionListener = [&](size_t col, ColumnResetOption option)
+        {
+            setColumnResetOption(col, option);
+        };
         // whole column modification
         std::function<void(size_t, bool)> resetColumnListener = [&](size_t col, bool addToHistory)
         {
@@ -281,6 +285,7 @@ class Schedule
         void setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory = true);
         void setColumnName(size_t column, const std::string& name, bool addToHistory = true);
         void setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory = true);
+        void setColumnResetOption(size_t column, ColumnResetOption option, bool addToHistory = true);
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory = true);

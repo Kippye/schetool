@@ -28,6 +28,14 @@ enum class Comparison
     ContainsToday,
 };
 
+enum class ColumnResetOption
+{
+    Never,
+    Daily,
+    Weekly,
+    Monthly
+};
+
 enum class LogicalOperatorEnum 
 {
     And,
@@ -72,6 +80,13 @@ namespace schedule_consts
         "Friday",
         "Saturday",
         "Sunday",
+    };
+    const std::map<ColumnResetOption, const char*> columnResetOptionStrings =
+    {
+        { ColumnResetOption::Never, "Never" },
+        { ColumnResetOption::Daily, "Daily" },
+        { ColumnResetOption::Weekly, "Weekly" },
+        { ColumnResetOption::Monthly, "Monthly" }
     };
     const std::map<LogicalOperatorEnum, const char*> logicalOperatorStrings  =
     {
