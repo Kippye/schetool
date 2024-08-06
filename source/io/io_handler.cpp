@@ -165,6 +165,7 @@ bool IO_Handler::readSchedule(const char* name)
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
         m_schedule->sortColumns();
         m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(fs::path(relativePath)), readFileInfo->getScheduleEditTime());
+        fileReadEvent.invoke(m_currentFileInfo);
         sendFileInfoUpdates();
         m_startPageGui->setVisible(false);
         m_scheduleGui->setVisible(true);

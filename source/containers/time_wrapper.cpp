@@ -3,8 +3,11 @@
 
 ClockTimeWrapper::ClockTimeWrapper(){}
 
-ClockTimeWrapper::ClockTimeWrapper(unsigned int hours, unsigned int minutes) : m_hours(hours), m_minutes(minutes)
-{}
+ClockTimeWrapper::ClockTimeWrapper(unsigned int hours, unsigned int minutes)
+{
+    setHours(hours);
+    setMinutes(minutes);
+}
 
 unsigned int ClockTimeWrapper::getHours() const
 {
@@ -63,7 +66,8 @@ tm TimeWrapper::getTm() const
     timeAsTm.tm_mday = m_monthDay;
     timeAsTm.tm_hour = m_clockTime.getHours();
     timeAsTm.tm_min = m_clockTime.getMinutes();
-    return timeAsTm;
+    time_t asTime = mktime(&timeAsTm);
+    return *localtime(&asTime);
 }
 
 bool TimeWrapper::getIsEmpty() const
@@ -123,6 +127,11 @@ void TimeWrapper::decrementMonthDay()
         decrementMonth();
         m_monthDay = mytime::get_month_day_count(m_year, m_month);
     }
+}
+
+unsigned int TimeWrapper::getWeekDay(bool basedness) const
+{
+    return basedness + getTm().tm_wday;
 }
 
 unsigned int TimeWrapper::getMonth(bool basedness) const
@@ -202,4 +211,11 @@ unsigned int TimeWrapper::fromYearsSinceTm(unsigned int year)
 unsigned int TimeWrapper::toValidYear(unsigned int year)
 {
     return std::max(std::min(year, 8000u), 1900u);
+}
+
+TimeWrapper TimeWrapper::getCurrentSystemTime()
+{ 
+    time_t time = std::time(0);
+    tm now = *localtime(&time);
+    return TimeWrapper(now);
 }

@@ -7,7 +7,7 @@
 #include "input.h"
 #include "schedule.h"
 #include "interface.h"
-#include "time_tracker.h"
+#include "time_handler.h"
 
 class Program
 {
@@ -19,7 +19,7 @@ class Program
 		Input input;
 		Interface interface;
 		Schedule schedule;
-        TimeTracker timeTracker;
+        TimeHandler timeHandler;
 
 		bool programWillClose = false;
 		bool quitProgram = false;

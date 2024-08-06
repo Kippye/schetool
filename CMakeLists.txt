@@ -141,6 +141,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/textures.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/time_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/window.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/autosave_popup_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/edit_history_gui.cpp"

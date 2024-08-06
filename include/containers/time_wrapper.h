@@ -57,10 +57,17 @@ class TimeWrapper
 
         // ONE_BASED: Get day of the year stored in the time (1..365 or 366).
         // ZERO_BASED: (0..364 or 365).
+        private:
         unsigned int getYearDay(bool basedness = ONE_BASED) const;
         // ONE_BASED: Sets the month and month day to be this day in the time's year (starting from 1).
         // ZERO_BASED: (starting from 0).
+        private:
         void setYearDay(unsigned int yearDay, bool basedness = ONE_BASED);
+        public:
+
+        // ONE_BASED: Get the weekday from MON to SUN (1..7).
+        // ZERO_BASED: (0..6).
+        unsigned int getWeekDay(bool basedness = ONE_BASED) const;
 
         // ONE_BASED: Get the month (1..12).
         // ZERO_BASED: (0..11).
@@ -130,4 +137,7 @@ class TimeWrapper
             }
             else return false;
         }
+
+        // Gets the current system date and time
+        static TimeWrapper getCurrentSystemTime();
 };

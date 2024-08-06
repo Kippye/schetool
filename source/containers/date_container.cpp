@@ -121,7 +121,5 @@ int DateContainer::getDayDifference(const DateContainer& other) const
 // STATIC
 DateContainer DateContainer::getCurrentSystemDate()
 { 
-    time_t time = std::time(0);
-    tm now = *localtime(&time);
-    return DateContainer(now);
+    return DateContainer(TimeWrapper::getCurrentSystemTime());
 }

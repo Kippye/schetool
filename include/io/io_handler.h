@@ -3,6 +3,7 @@
 #include <functional>
 #include <filesystem>
 #include <string>
+#include "event.h"
 #include "data_converter.h"
 #include "schedule.h"
 #include "window.h"
@@ -94,6 +95,9 @@ class IO_Handler
     public:
         const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
+
+        Event<FileInfo> fileReadEvent;
+
         void init(Schedule* schedule, Window* window, Input& input, Interface& interface);
 
         // Does any necessary procedures between when a file is "closed" and the program closed or a new one opened
