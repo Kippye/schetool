@@ -97,6 +97,7 @@ class IO_Handler
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
 
         Event<FileInfo> fileReadEvent;
+        Event<> fileUnloadEvent;
 
         void init(Schedule* schedule, Window* window, Input& input, Interface& interface);
 

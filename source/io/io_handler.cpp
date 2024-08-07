@@ -67,6 +67,7 @@ void IO_Handler::unloadCurrentFile()
     m_schedule->getEditHistoryMutable().clearEditHistory();
     m_currentFileInfo.clear();
     sendFileInfoUpdates();
+    fileUnloadEvent.invoke();
 }
 
 void IO_Handler::closeCurrentFile()
