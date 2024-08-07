@@ -85,11 +85,15 @@ TEST_CASE("TimeWrapper")
 
     SECTION("getWeekday()")
     {
-        timeWrapper = TimeWrapper(2024, 8, 6);
-        CHECK(timeWrapper.getWeekDay() == 2);
-        CHECK(timeWrapper.getWeekDay(ZERO_BASED) == 1);
-        timeWrapper.setMonthDay(25);
-        CHECK(timeWrapper.getWeekDay() == 7);
-        CHECK(timeWrapper.getWeekDay(ZERO_BASED) == 6);
+        timeWrapper = TimeWrapper(2024, 8, 6); // Tuesday
+        CHECK(timeWrapper.getWeekDay(WEEK_START_MONDAY) == 2);
+        CHECK(timeWrapper.getWeekDay(WEEK_START_SUNDAY) == 3);
+        CHECK(timeWrapper.getWeekDay(WEEK_START_MONDAY, ZERO_BASED) == 1);
+        CHECK(timeWrapper.getWeekDay(WEEK_START_SUNDAY, ZERO_BASED) == 2);
+        timeWrapper.setMonthDay(25); // Sunday
+        CHECK(timeWrapper.getWeekDay(WEEK_START_MONDAY) == 7);
+        CHECK(timeWrapper.getWeekDay(WEEK_START_SUNDAY) == 1);
+        CHECK(timeWrapper.getWeekDay(WEEK_START_MONDAY, ZERO_BASED) == 6);
+        CHECK(timeWrapper.getWeekDay(WEEK_START_SUNDAY, ZERO_BASED) == 0);
     }
 }

@@ -70,6 +70,16 @@ tm TimeWrapper::getTm() const
     return *localtime(&asTime);
 }
 
+std::string TimeWrapper::getString() const
+{
+    std::cout << m_clockTime.getHours() << std::endl;
+    tm timeTm = getTm();
+    std::cout << timeTm.tm_hour << std::endl;
+    char timeBuf[256];
+    strftime(timeBuf, sizeof(timeBuf), "%x (%a %b %d) %H:%M", &timeTm);
+    return std::string(timeBuf);
+}
+
 bool TimeWrapper::getIsEmpty() const
 {
     return m_empty;
@@ -129,9 +139,16 @@ void TimeWrapper::decrementMonthDay()
     }
 }
 
-unsigned int TimeWrapper::getWeekDay(bool basedness) const
+unsigned int TimeWrapper::getWeekDay(bool weekStart, bool basedness) const
 {
-    return basedness + getTm().tm_wday;
+    unsigned int weekday = getTm().tm_wday; 
+    // tm weekdays start from Sunday by default, so modify it here if it has to start from Monday instead.
+    if (weekStart == WEEK_START_MONDAY)
+    {
+        weekday = weekday == 0 ? 6 : weekday - 1;
+    }
+
+    return basedness + weekday;
 }
 
 unsigned int TimeWrapper::getMonth(bool basedness) const

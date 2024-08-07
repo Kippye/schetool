@@ -57,20 +57,13 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     size_t dayIndex = 0;
     unsigned int daysInMonth = mytime::get_month_day_count(viewedYear, viewedMonth);
 
-    tm timeIn = TimeWrapper(viewedYear, viewedMonth, 1).getTm();
-    time_t timeTemp = std::mktime(&timeIn);
-    // NOTE: This NEEDS to be tm, since TimeWrapper doesn't store weekday, currently.
-    tm firstOfTheMonth = *localtime(&timeTemp);
-
+    TimeWrapper firstOfTheMonth = TimeWrapper(viewedYear, viewedMonth, 1);
     // day of the week converted from Sun-Sat to Mon-Sun
-    int dayOfTheWeekFirst = firstOfTheMonth.tm_wday == 0 ? 6 : firstOfTheMonth.tm_wday - 1;
+    int dayOfTheWeekFirst = firstOfTheMonth.getWeekDay(WEEK_START_MONDAY, ZERO_BASED);
 
-    timeIn = TimeWrapper(viewedYear, viewedMonth, daysInMonth).getTm();
-    timeTemp = std::mktime(&timeIn);
-    tm lastOfTheMonth = *localtime(&timeTemp);
-
+    TimeWrapper lastOfTheMonth = TimeWrapper(viewedYear, viewedMonth, daysInMonth);
     // day of the week converted from Sun-Sat to Mon-Sun
-    int dayOfTheWeekLast = lastOfTheMonth.tm_wday == 0 ? 6 : lastOfTheMonth.tm_wday - 1;
+    int dayOfTheWeekLast = lastOfTheMonth.getWeekDay(WEEK_START_MONDAY, ZERO_BASED);
 
     unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
 

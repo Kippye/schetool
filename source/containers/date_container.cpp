@@ -101,18 +101,34 @@ void DateContainer::decrementYear()
     m_time.decrementYear();
 }
 
+// TODO: Fix this function. It's weird and not really useful?
+// It would be better to return a double or to get the difference in actual dates (maybe by setting both clock times to the same value?).
 int DateContainer::getDayDifference(const DateContainer& other) const
 {
     int dayDifference = 0;
     tm thisTm = m_time.getTm();
+    std::cout << "This: " << m_time.getString() << std::endl;
     tm otherTm = other.getTimeConst().getTm();
+    std::cout << "Other: " << other.getTimeConst().getString() << std::endl;
     std::time_t thisTime = std::mktime(&thisTm);
     std::time_t otherTime = std::mktime(&otherTm);
 
     if (thisTime != (std::time_t)(-1) && otherTime != (std::time_t)(-1))
     {
         double difference = std::difftime(thisTime, otherTime) / (60 * 60 * 24);
-        dayDifference = (int)std::round(difference);
+        std::cout << difference << std::endl;
+        std::cout << "otherdiff: " << std::difftime(thisTime, otherTime) / (60.0f * 60.0f * 24.0f) << std::endl;
+        // The dayDifference is floored / ceiled because if rounded, a 0.8 would become 1, for example. But this function's objective is to get full days of difference.
+        // Ceil negative numbers
+        if (difference < 0)
+        {
+            dayDifference = (int)std::ceil(difference);
+        }
+        // Floor positive numbers
+        else
+        {
+            dayDifference = (int)std::floor(difference);
+        }
     }
 
     return dayDifference;

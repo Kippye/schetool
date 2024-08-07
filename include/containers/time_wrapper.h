@@ -1,7 +1,10 @@
 #pragma once
 
 #include <ctime>
+#include <string>
 
+inline const bool WEEK_START_MONDAY = 0;
+inline const bool WEEK_START_SUNDAY = 1;
 inline const bool ZERO_BASED = 0;
 inline const bool ONE_BASED = 1;
 
@@ -44,6 +47,8 @@ class TimeWrapper
   
         ClockTimeWrapper& getClockTime();
         tm getTm() const;
+        // Returns a string in the format: [DATE] (FULL WORD WEEKDAY + DATE) [CLOCKTIME] or an empty string if the TimeWrapper is empty.
+        std::string getString() const;
         bool getIsEmpty() const;
         void clear();  
         void setTime(const tm& time);
@@ -69,9 +74,11 @@ class TimeWrapper
         void setYearDay(unsigned int yearDay, bool basedness = ONE_BASED);
         public:
 
-        // ONE_BASED: Get the weekday from MON to SUN (1..7).
+        // WEEK_START_MONDAY: Get the weekday from MON to SUN.
+        // WEEK_START_SUNDAY: Get the weekday from SUN to SAT.
+        // ONE_BASED: (1..7).
         // ZERO_BASED: (0..6).
-        unsigned int getWeekDay(bool basedness = ONE_BASED) const;
+        unsigned int getWeekDay(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
 
         // ONE_BASED: Get the month (1..12).
         // ZERO_BASED: (0..11).
