@@ -72,7 +72,7 @@ TEST_CASE("TimeWrapper")
 
     SECTION("getTm()")
     {
-        timeWrapper = TimeWrapper(ClockTimeWrapper(13, 02), 2024, 8, 6);
+        timeWrapper = TimeWrapper(ClockTimeWrapper(13, 2), 2024, 8, 6);
         tm timeTm = timeWrapper.getTm();
         CHECK(timeTm.tm_hour == 13);
         CHECK(timeTm.tm_min == 2);

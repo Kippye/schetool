@@ -28,6 +28,10 @@ class TimeWrapper
         bool m_empty = true;
         ClockTimeWrapper m_clockTime;
     public:
+        #ifdef PERFORM_UNIT_TESTS
+        static TimeWrapper testOverrideCurrentTime;
+        #endif
+        // Create an empty TimeWrapper.
         TimeWrapper();
         // Construct TimeWrapper and ClockTimeWrapper from tm struct
         TimeWrapper(const tm& t);

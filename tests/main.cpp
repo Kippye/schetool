@@ -10,6 +10,7 @@
 #include "test_filter.h" // tested before FilterGroups since they are contained
 #include "test_filter_group.h"
 #include "test_schedule_gui.h"
+#include "test_time_handler.h"
 
 Program program = Program();
 

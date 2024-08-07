@@ -21,11 +21,11 @@ class TimeHandler
         };
 
         void applyResetsSince(const TimeWrapper& previousTime);
-        // Called by TimeHandler::fileReadListener.
-        void applyResetsSinceEditTime(TimeWrapper lastEditTime);
         void handleFileUnloaded();
     public:
         void init(IO_Handler& ioHandler, Schedule& schedule);
         // Applies any resets that should have taken place since the read file's last schedule edit time.
+        // Called by TimeHandler::fileReadListener.
+        void applyResetsSinceEditTime(TimeWrapper lastEditTime);
         void timeTick();
 };

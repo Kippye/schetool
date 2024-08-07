@@ -214,8 +214,18 @@ unsigned int TimeWrapper::toValidYear(unsigned int year)
 }
 
 TimeWrapper TimeWrapper::getCurrentSystemTime()
-{ 
+{
+    #ifdef PERFORM_UNIT_TESTS
+    if (testOverrideCurrentTime.getIsEmpty() == false)
+    {
+        return testOverrideCurrentTime;
+    }
+    #endif
     time_t time = std::time(0);
     tm now = *localtime(&time);
     return TimeWrapper(now);
 }
+
+#ifdef PERFORM_UNIT_TESTS
+TimeWrapper TimeWrapper::testOverrideCurrentTime = TimeWrapper();
+#endif
