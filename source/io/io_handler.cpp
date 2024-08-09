@@ -414,19 +414,16 @@ TimeWrapper IO_Handler::getFileEditTimeWrapped(fs::path path)
     auto systemTime = std::chrono::time_point_cast<std::chrono::system_clock::duration>(fileEditTime - fileNow + systemNow);
     time = std::chrono::system_clock::to_time_t(systemTime);
     #endif
-    return TimeWrapper(*localtime(&time));
+    // TODO: converting this chrono stuff or a time_t into a TimeWrapper
+    // return TimeWrapper(*localtime(&time));
+    return TimeWrapper::getCurrentSystemTime();
 }
 
 std::string IO_Handler::getFileEditTimeString(fs::path path)
 {
     if (fs::exists(path) == false) { printf("IO_Handler::getFileEditTimeString(%s): No file exists at the path\n", path.string().c_str()); return std::string(""); }
 
-    TimeWrapper editTime = getFileEditTimeWrapped(path);
-    tm editTimeTm = editTime.getTm();
-    char buf[128];
-    strftime(buf, 128, "%x %X", &editTimeTm);
-
-    return std::string(buf);
+    return getFileEditTimeWrapped(path).getString(TIME_FORMAT_FULL);
 }
 
 std::vector<std::string> IO_Handler::getScheduleStemNames(bool includeAutosaves)

@@ -1,12 +1,47 @@
 #pragma once
 
-#include <ctime>
 #include <string>
+#include <memory>
+#include <chrono>
+
+typedef std::chrono::system_clock::time_point utc_tp;
+using namespace std::chrono;
+
+template<class T>
+struct is_duration : std::false_type{};
+template<class Rep, class Period>
+struct is_duration<duration<Rep, Period>> : std::true_type{};
 
 inline const bool WEEK_START_MONDAY = 0;
 inline const bool WEEK_START_SUNDAY = 1;
 inline const bool ZERO_BASED = 0;
 inline const bool ONE_BASED = 1;
+
+enum TIME_FORMAT
+{
+    TIME_FORMAT_DATE = 1,
+    TIME_FORMAT_TIME = 2,
+    TIME_FORMAT_FULL = 3,
+};
+
+struct TimeInput
+{
+    unsigned int hours = 0;
+    unsigned int minutes = 0;
+
+    TimeInput(unsigned int h = 0, unsigned int min = 0) : hours(h), minutes(min)
+    {}
+};
+
+struct DateInput
+{
+    unsigned int year;
+    unsigned int month = 1;
+    unsigned int monthDay = 1;
+
+    DateInput(unsigned int y, unsigned int m = 1, unsigned int mDay =  1) : year(y), month(m), monthDay(mDay)
+    {}
+};
 
 class ClockTimeWrapper
 {
@@ -14,6 +49,7 @@ class ClockTimeWrapper
         unsigned int m_hours = 0, m_minutes = 0;
     public:
         ClockTimeWrapper();
+        ClockTimeWrapper(const TimeInput& time);
         ClockTimeWrapper(unsigned int hours, unsigned int minutes);
 
         unsigned int getHours() const;
@@ -23,35 +59,45 @@ class ClockTimeWrapper
         void setMinutes(unsigned int minutes);
 };
 
-// A friendlier wrapper for the tm time struct
 class TimeWrapper
 {
     private:
-        unsigned int m_year = 1900, m_month = 1, m_monthDay = 1;
         bool m_empty = true;
         ClockTimeWrapper m_clockTime;
+        utc_tp m_time;
+        unsigned int m_year = 1900, m_month = 1, m_monthDay = 1;
+
+        static std::time_t custom_timegm(const std::tm& t);
+        static std::time_t time_to_utc_time_t(const DateInput& date, const TimeInput& time) ;
+        // Constructs a disgusting tm struct.
+        // NOTE: All the inputs are assumed to be 1-based.
+        tm getTm(const DateInput& date, const TimeInput& time) const;
+        void setTime(const DateInput& date, const TimeInput& time);
+        local_time<seconds> getLocalTime() const;
     public:
         #ifdef PERFORM_UNIT_TESTS
-        static TimeWrapper testOverrideCurrentTime;
+        static void setCurrentTimeOverride(TimeWrapper time);
         #endif
         // Create an empty TimeWrapper.
         TimeWrapper();
-        // Construct TimeWrapper and ClockTimeWrapper from tm struct
-        TimeWrapper(const tm& t);
-        // Construct TimeWrapper from time values
-        TimeWrapper(unsigned int year, unsigned int month = 1, unsigned int monthDay = 1);
+        // Construct TimeWrapper from time_point (should be UTC)
+        TimeWrapper(const time_point<system_clock>& tp);
+        // Construct TimeWrapper from date
+        TimeWrapper(const DateInput& date);
         // Construct ClockTimeWrapper from copy
         TimeWrapper(const ClockTimeWrapper& clockTime);
-        // Construct ClockTimeWrapper from copy and TimeWrapper from values 
-        TimeWrapper(const ClockTimeWrapper& clockTime, unsigned int year, unsigned int month = 1, unsigned int monthDay = 1);
-  
+        // Construct TimeWrapper from date and time
+        TimeWrapper(const DateInput& date, const TimeInput& time);
+        // Construct ClockTimeWrapper from time and TimeWrapper from date 
+        // TimeWrapper(const TimeInput& time, const DateInput& date);
+        // TEMP
+        TimeWrapper(unsigned int year, unsigned int month = 1, unsigned int monthDay = 1);
+
         ClockTimeWrapper& getClockTime();
-        tm getTm() const;
         // Returns a string in the format: [DATE] (FULL WORD WEEKDAY + DATE) [CLOCKTIME] or an empty string if the TimeWrapper is empty.
-        std::string getString() const;
+        std::string getString(TIME_FORMAT = TIME_FORMAT_FULL) const;
         bool getIsEmpty() const;
         void clear();  
-        void setTime(const tm& time);
         // ONE_BASED: Get the month day (1..dayCount).
         // ZERO_BASED: (0..dayCount - 1).
         unsigned int getMonthDay(bool basedness = ONE_BASED) const;
@@ -63,16 +109,6 @@ class TimeWrapper
         void incrementMonthDay();
         // Subtract 1 from the month day. Handles decrementing months as well.
         void decrementMonthDay();
-
-        // ONE_BASED: Get day of the year stored in the time (1..365 or 366).
-        // ZERO_BASED: (0..364 or 365).
-        private:
-        unsigned int getYearDay(bool basedness = ONE_BASED) const;
-        // ONE_BASED: Sets the month and month day to be this day in the time's year (starting from 1).
-        // ZERO_BASED: (starting from 0).
-        private:
-        void setYearDay(unsigned int yearDay, bool basedness = ONE_BASED);
-        public:
 
         // WEEK_START_MONDAY: Get the weekday from MON to SUN.
         // WEEK_START_SUNDAY: Get the weekday from SUN to SAT.
@@ -98,6 +134,13 @@ class TimeWrapper
         void incrementYear();
         void decrementYear();
 
+        template <typename Duration>
+        static Duration::rep getDifference(const TimeWrapper& base, const TimeWrapper& subtracted)
+        {
+            static_assert(is_duration<Duration>::value, "TimeWrapper::getDifference() only works with std::chrono::duration types!");
+            return (floor<Duration>(base.m_time) - floor<Duration>(subtracted.m_time)).count();
+        }
+
         // Return the year as years since 1900 (0...)
         static unsigned int toYearsSinceTm(unsigned int year);
         // Convert from the tm struct's years since 1900 to a normal year (i.e. 104 -> 1900 + 104 = 2004)
@@ -107,46 +150,22 @@ class TimeWrapper
 
         bool operator==(const TimeWrapper& other) const
         {
-            return (m_year == other.m_year &&
-                    m_month == other.m_month &&
-                    m_monthDay == other.m_monthDay);
+            return m_time == other.m_time;
         }
 
         bool operator!=(const TimeWrapper& other) const
         {
-            return (m_year != other.m_year ||
-                    m_month != other.m_month ||
-                    m_monthDay != other.m_monthDay);
+            return m_time != other.m_time;
         }
 
         friend bool operator<(const TimeWrapper& left, const TimeWrapper& right)
         {
-            if (left.m_year < right.m_year) { return true; }
-            else if (left.m_year == right.m_year)
-            {
-                if (left.m_month < right.m_month) { return true; }
-                else if (left.m_month == right.m_month)
-                {
-                    return left.m_monthDay < right.m_monthDay;
-                }
-                else return false;
-            }
-            else return false;
+            return left.m_time < right.m_time;
         }
 
         friend bool operator>(const TimeWrapper& left, const TimeWrapper& right)
         {
-            if (left.m_year > right.m_year) { return true; }
-            else if (left.m_year == right.m_year)
-            {
-                if (left.m_month > right.m_month) { return true; }
-                else if (left.m_month == right.m_month)
-                {
-                    return left.m_monthDay > right.m_monthDay;
-                }
-                else return false;
-            }
-            else return false;
+            return left.m_time > right.m_time;
         }
 
         // Gets the current system date and time

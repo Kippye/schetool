@@ -130,7 +130,13 @@ struct BLF_ElementInfo : BLF_Base
         creationMinutes = element->getCreationTime().minutes;
     }
 
-    TimeWrapper getCreationTime() const;
+    TimeWrapper getCreationTime() const
+    {
+        return TimeWrapper(
+            DateInput(creationYear, creationMonth, creationMday),
+            TimeInput(creationHours, creationMinutes)
+        );         
+    }
 
     static void addDefinition(ObjectDefinitions& definitions)
     {

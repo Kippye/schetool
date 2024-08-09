@@ -59,7 +59,7 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
         message(STATUS "~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
     ENDIF()
 ELSEIF (CMAKE_GENERATOR MATCHES "Visual Studio")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:${CPP_VERSION}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:${CPP_VERSION} /bigobj") # Pass /bigobj to avoid C1128 for data_converter.cpp due to its templates.
     message(STATUS "~~ Set Visual Studio compile flags to: ${CMAKE_CXX_FLAGS}")
 ENDIF()
 message(STATUS "~~ Finished setting compile flags")

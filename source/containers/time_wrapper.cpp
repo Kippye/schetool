@@ -1,7 +1,73 @@
-#include "util.h"
 #include "time_wrapper.h"
 
+#include <chrono>
+#include <iostream>
+#include <ctime>
+#include <format>
+
+#include "util.h"
+
+#ifdef __MINGW32__
+#include "time_wrapper_impl_mingw.h"
+#endif
+
+using namespace std::chrono_literals;
+using namespace std::chrono;
+
+void test()
+{
+    // UTC time
+    auto utcNow = utc_clock::now();
+    time_t utcTimeT = system_clock::to_time_t(utc_clock::to_sys(utcNow));
+    std::cout << utcNow.time_since_epoch().count() << std::endl;
+    tm UTC;
+    UTC = *std::gmtime(&utcTimeT);
+    char utcBuf[256];
+    strftime(utcBuf, sizeof(utcBuf), "UTC time: %c timezone: %z", &UTC);
+    std::cout << utcBuf << std::endl;
+
+    // Ok let's get the local time now.
+    tm localTime;
+    localTime = *std::localtime(&utcTimeT);
+    char locBuf[256];
+    strftime(locBuf, sizeof(locBuf), "Local time: %c timezone: %z", &localTime);
+    std::cout << locBuf << std::endl;
+
+    // Ok now let's get the local date without using C functions
+    auto sysNow = system_clock::now();
+    std::cout << "Current TZ name: " << current_zone()->name() << std::endl;
+    std::cout << "Current TZ offset: " << current_zone()->get_info(sysNow).offset << std::endl;
+    std::cout << "Current TZ name: " << current_zone()->get_info(sysNow).abbrev << std::endl;
+    auto zonedTime = zoned_time(current_zone(), sysNow);
+    std::cout << "UTC offset: " << zonedTime.get_info().offset << std::endl;
+    auto localZoneTime = zonedTime.get_local_time();
+    std::cout << sysNow.time_since_epoch().count() << std::endl;
+    std::cout << localZoneTime.time_since_epoch().count() << std::endl;
+    // Truncate to days
+    auto zonedDays = floor<days>(localZoneTime);
+    year_month_day date = year_month_day(zonedDays);
+    // zonedDays is truncated to days. So if we get the difference between localZoneTime and zonedDays, we get the amount of time left that is smaller than a day.
+    hh_mm_ss clockTime = hh_mm_ss(floor<seconds>(localZoneTime - zonedDays));
+
+    std::cout << std::format("{}{}", clockTime.hours(), clockTime.minutes()) << std::endl;
+
+    // Output as formatted :D
+    std::cout << std::format("Local date and time: {:%m/%d/%Y %R}", localZoneTime) << std::endl;
+
+    // Convert year_month_day to a time point!
+    // std::system_clock::time_point tp = std::sys_days{_ymd};
+
+    // Use on android (and linux): ?
+    // -DUSE_OS_TZDB=1
+}
+
 ClockTimeWrapper::ClockTimeWrapper(){}
+
+ClockTimeWrapper::ClockTimeWrapper(const TimeInput& time)
+{
+    setHours(time.hours);
+    setMinutes(time.minutes);
+}
 
 ClockTimeWrapper::ClockTimeWrapper(unsigned int hours, unsigned int minutes)
 {
@@ -33,51 +99,127 @@ void ClockTimeWrapper::setMinutes(unsigned int minutes)
 TimeWrapper::TimeWrapper() : m_empty(true)
 {}
 
-TimeWrapper::TimeWrapper(const tm& t) : m_clockTime(t.tm_hour, t.tm_min)
-{
-    setTime(t);
-}
+TimeWrapper::TimeWrapper(const time_point<system_clock>& tp) : m_time(tp)
+{}
 
-TimeWrapper::TimeWrapper(unsigned int year, unsigned int month, unsigned int monthDay)
+TimeWrapper::TimeWrapper(const DateInput& date)
 {
-    setYear(year);
-    setMonth(month);
-    setMonthDay(monthDay);
+    setTime(date, {});
 }
 
 TimeWrapper::TimeWrapper(const ClockTimeWrapper& clockTime) : m_clockTime(clockTime)
 {}
 
-TimeWrapper::TimeWrapper(const ClockTimeWrapper& clockTime, unsigned int year, unsigned int month, unsigned int monthDay) : TimeWrapper(year, month, monthDay)
+TimeWrapper::TimeWrapper(const DateInput& date, const TimeInput& time)
 {
-    m_clockTime = clockTime;
+    setTime(date, time);
+}
+
+TimeWrapper::TimeWrapper(unsigned int year, unsigned int month, unsigned int monthDay) : TimeWrapper(DateInput{year, month, monthDay})
+{}
+
+// Static function.
+// Takes a tm struct and returns it as a time_t in UTC time.
+// Thanks to the legend Howard Hinnant from StackOverflow!
+std::time_t TimeWrapper::custom_timegm(const std::tm& t)
+{
+    auto ymd = year{1900 + t.tm_year}/(1 + t.tm_mon)/t.tm_mday;
+
+    return system_clock::to_time_t(
+        sys_days{ymd} + hours{t.tm_hour} + minutes{t.tm_min}
+    );
+}
+
+// Static function.
+// Turns the input date and time into a time_t in UTC time.
+std::time_t TimeWrapper::time_to_utc_time_t(const DateInput& date, const TimeInput& time)
+{
+    auto ymd = year{(int)date.year}/(date.month)/date.monthDay;
+
+    return system_clock::to_time_t(
+        sys_days{ymd} + hours{time.hours} + minutes{time.minutes}
+    );
+}
+
+tm TimeWrapper::getTm(const DateInput& date, const TimeInput& time) const
+{
+    return tm
+    {
+        0,
+        (int)time.minutes, (int)time.hours,
+        (int)date.monthDay, (int)date.month - 1, (int)date.year - 1900,
+        0,
+        0
+    };
+}
+
+void TimeWrapper::setTime(const DateInput& date, const TimeInput& time)
+{
+    m_time = system_clock::from_time_t(time_to_utc_time_t(date, time));
+}
+
+local_time<seconds> TimeWrapper::getLocalTime() const
+{
+    auto zonedTime = zoned_time(current_zone(), m_time);
+    auto localTime = floor<seconds>(zonedTime.get_local_time());
+    auto localDays = floor<days>(localTime);
+    year_month_day date = year_month_day(localDays);
+
+    // Patch for MinGW (not only MinGW).
+    // At least for me, getting current_zone() just returned UTC every time. This was not an issue with MSVC or non-MinGW gcc.
+    // As a "fix", on MinGW32 the WIN32 API is used to get time zone information (UTC offset and DST offset, if it is active).
+    // It probably has more issues than the usual implementation.
+    #ifdef __MINGW32__
+    int utcOffsetMins = getTimeZoneOffsetMinutesUTC((int)date.year());
+    // std::cout << "UTC offset: " << utcOffsetMins << " (min)" << std::endl;
+    // Add UTC offset BEFORE calling function to get DST offset.
+    localTime += minutes{utcOffsetMins};
+    // Update all the other kinds of time since the day etc might have changed and the clock time DEFINITELY did
+    localDays = floor<days>(localTime);
+    date = year_month_day(localDays);
+    year_month_weekday weekday = year_month_weekday(localDays);
+    hh_mm_ss localClockTime = hh_mm_ss(floor<seconds>(localTime - localDays));
+    
+    // Silly check to see if the weekday is the last of its kind in the month
+    auto nextWeekDays = localDays + days{7};
+    bool isLastWeekdayIndex = year_month_weekday(nextWeekDays).index() == 1;
+    
+    int daylightSavingsOffsetMins = getDaylightSavingsOffsetMinutes(
+        (int)date.year(),
+        (unsigned int)date.month(),
+        weekday.weekday().c_encoding(),
+        weekday.index(),
+        isLastWeekdayIndex,
+        (unsigned int)localClockTime.hours().count(),
+        (unsigned int)localClockTime.minutes().count()
+    );
+    // std::cout << "DST offset: " << daylightSavingsOffsetMins << " (min)" << std::endl;
+    // Apply DST offset
+    localTime += minutes{daylightSavingsOffsetMins};
+    #else
+    // std::cout << "UTC offset: " << zonedTime.get_info().offset << std::endl;
+    #endif
+
+    return localTime;
 }
 
 ClockTimeWrapper& TimeWrapper::getClockTime()
 {
     return m_clockTime;
-}
+} 
 
-tm TimeWrapper::getTm() const
+std::string TimeWrapper::getString(TIME_FORMAT fmtType) const
 {
-    tm timeAsTm = tm();
-    timeAsTm.tm_year = toYearsSinceTm(m_year);
-    timeAsTm.tm_mon = m_month - 1;
-    timeAsTm.tm_mday = m_monthDay;
-    timeAsTm.tm_hour = m_clockTime.getHours();
-    timeAsTm.tm_min = m_clockTime.getMinutes();
-    time_t asTime = mktime(&timeAsTm);
-    return *localtime(&asTime);
-}
-
-std::string TimeWrapper::getString() const
-{
-    std::cout << m_clockTime.getHours() << std::endl;
-    tm timeTm = getTm();
-    std::cout << timeTm.tm_hour << std::endl;
-    char timeBuf[256];
-    strftime(timeBuf, sizeof(timeBuf), "%x (%a %b %d) %H:%M", &timeTm);
-    return std::string(timeBuf);
+    switch(fmtType) 
+    {
+        case(TIME_FORMAT_DATE):
+            return std::format("{:%d/%m/%Y}", getLocalTime());
+        case(TIME_FORMAT_TIME):
+            return std::format("{:%R}", getLocalTime());
+        case(TIME_FORMAT_FULL):
+        default:
+            return std::format("{:%d/%m/%Y %R}", getLocalTime());
+    }
 }
 
 bool TimeWrapper::getIsEmpty() const
@@ -87,19 +229,8 @@ bool TimeWrapper::getIsEmpty() const
 
 void TimeWrapper::clear()
 {
-    // reset date, but set month day to 1 since that is already a valid date (01/01/1900)
-    m_year = 1900;
-    m_month = 1;
-    m_monthDay = 1;
+    // TODO: Reset date to some value
     m_empty = true;
-}
-
-void TimeWrapper::setTime(const tm& time)
-{
-    setYear(fromYearsSinceTm(time.tm_year));
-    setMonth(time.tm_mon, ZERO_BASED);
-    setMonthDay(time.tm_mday);
-    m_empty = false;
 }
 
 unsigned int TimeWrapper::getMonthDay(bool basedness) const
@@ -141,12 +272,10 @@ void TimeWrapper::decrementMonthDay()
 
 unsigned int TimeWrapper::getWeekDay(bool weekStart, bool basedness) const
 {
-    unsigned int weekday = getTm().tm_wday; 
-    // tm weekdays start from Sunday by default, so modify it here if it has to start from Monday instead.
-    if (weekStart == WEEK_START_MONDAY)
-    {
-        weekday = weekday == 0 ? 6 : weekday - 1;
-    }
+    auto zonedDays = floor<days>(getLocalTime());
+    year_month_weekday ymw = year_month_weekday(zonedDays);
+    unsigned int weekday = weekStart == WEEK_START_MONDAY ? ymw.weekday().iso_encoding() - 1 // The ISO encoding means Monday = 1,  Sunday = 7
+        : ymw.weekday().c_encoding(); // The C encoding means Sunday = 0, Saturday = 6
 
     return basedness + weekday;
 }
@@ -232,17 +361,14 @@ unsigned int TimeWrapper::toValidYear(unsigned int year)
 
 TimeWrapper TimeWrapper::getCurrentSystemTime()
 {
-    #ifdef PERFORM_UNIT_TESTS
-    if (testOverrideCurrentTime.getIsEmpty() == false)
-    {
-        return testOverrideCurrentTime;
-    }
-    #endif
-    time_t time = std::time(0);
-    tm now = *localtime(&time);
-    return TimeWrapper(now);
+    // #ifdef PERFORM_UNIT_TESTS
+    // if (testOverrideCurrentTime.getIsEmpty() == false)
+    // {
+    //     return testOverrideCurrentTime;
+    // }
+    // #endif
+    // time_t time = std::time(0);
+    // tm now = *localtime(&time);
+    // return TimeWrapper(now);
+    return TimeWrapper(utc_clock::to_sys(utc_clock::now()));
 }
-
-#ifdef PERFORM_UNIT_TESTS
-TimeWrapper TimeWrapper::testOverrideCurrentTime = TimeWrapper();
-#endif
