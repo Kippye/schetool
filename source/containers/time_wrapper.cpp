@@ -162,40 +162,13 @@ local_time<seconds> TimeWrapper::getLocalTime() const
 {
     auto zonedTime = zoned_time(current_zone(), m_time);
     auto localTime = floor<seconds>(zonedTime.get_local_time());
-    auto localDays = floor<days>(localTime);
-    year_month_day date = year_month_day(localDays);
 
-    // Patch for MinGW (not only MinGW).
+    // Patch for MinGW (not specifically MinGW32).
     // At least for me, getting current_zone() just returned UTC every time. This was not an issue with MSVC or non-MinGW gcc.
     // As a "fix", on MinGW32 the WIN32 API is used to get time zone information (UTC offset and DST offset, if it is active).
     // It probably has more issues than the usual implementation.
     #ifdef __MINGW32__
-    int utcOffsetMins = getTimeZoneOffsetMinutesUTC((int)date.year());
-    // std::cout << "UTC offset: " << utcOffsetMins << " (min)" << std::endl;
-    // Add UTC offset BEFORE calling function to get DST offset.
-    localTime += minutes{utcOffsetMins};
-    // Update all the other kinds of time since the day etc might have changed and the clock time DEFINITELY did
-    localDays = floor<days>(localTime);
-    date = year_month_day(localDays);
-    year_month_weekday weekday = year_month_weekday(localDays);
-    hh_mm_ss localClockTime = hh_mm_ss(floor<seconds>(localTime - localDays));
-    
-    // Silly check to see if the weekday is the last of its kind in the month
-    auto nextWeekDays = localDays + days{7};
-    bool isLastWeekdayIndex = year_month_weekday(nextWeekDays).index() == 1;
-    
-    int daylightSavingsOffsetMins = getDaylightSavingsOffsetMinutes(
-        (int)date.year(),
-        (unsigned int)date.month(),
-        weekday.weekday().c_encoding(),
-        weekday.index(),
-        isLastWeekdayIndex,
-        (unsigned int)localClockTime.hours().count(),
-        (unsigned int)localClockTime.minutes().count()
-    );
-    // std::cout << "DST offset: " << daylightSavingsOffsetMins << " (min)" << std::endl;
-    // Apply DST offset
-    localTime += minutes{daylightSavingsOffsetMins};
+    applyLocalTimeOffsetFromUTC(localTime);
     #else
     // std::cout << "UTC offset: " << zonedTime.get_info().offset << std::endl;
     #endif
