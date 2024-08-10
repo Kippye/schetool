@@ -416,7 +416,7 @@ TimeWrapper IO_Handler::getFileEditTimeWrapped(fs::path path)
     #endif
     // TODO: converting this chrono stuff or a time_t into a TimeWrapper
     // return TimeWrapper(*localtime(&time));
-    return TimeWrapper::getCurrentSystemTime();
+    return TimeWrapper::getCurrentTime();
 }
 
 std::string IO_Handler::getFileEditTimeString(fs::path path)

@@ -133,8 +133,8 @@ struct BLF_ElementInfo : BLF_Base
     TimeWrapper getCreationTime() const
     {
         return TimeWrapper(
-            DateInput(creationYear, creationMonth, creationMday),
-            TimeInput(creationHours, creationMinutes)
+            DateWrapper(creationYear, creationMonth, creationMday),
+            ClockTimeWrapper(creationHours, creationMinutes)
         );         
     }
 

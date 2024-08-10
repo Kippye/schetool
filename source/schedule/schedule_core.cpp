@@ -154,7 +154,7 @@ void ScheduleCore::addColumn(size_t index, const Column& column)
 
 void ScheduleCore::addDefaultColumn(size_t index)
 {
-    TimeWrapper creationTime = TimeWrapper::getCurrentSystemTime();
+    TimeWrapper creationTime = TimeWrapper::getCurrentTime();
 
     Column addedColumn = Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Text"), false);
 
@@ -420,7 +420,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
 
     size_t rowCount = column.rows.size();
 
-    TimeWrapper creationTime = TimeWrapper::getCurrentSystemTime();
+    TimeWrapper creationTime = TimeWrapper::getCurrentTime();
 
     switch(type) 
     {
@@ -527,7 +527,7 @@ void ScheduleCore::addRow(size_t index)
     {
         Column& column = m_schedule[i];
         std::vector<ElementBase*>& columnValues = column.rows;
-        TimeWrapper creationTime = TimeWrapper::getCurrentSystemTime();
+        TimeWrapper creationTime = TimeWrapper::getCurrentTime();
 
         switch(column.type)
         {

@@ -68,36 +68,36 @@ void DateContainer::setTime(const TimeWrapper& time)
     m_time = time;
 }
 
-// Add 1 to the month day. If it reaches the amount of days in the month, the month day will be set to 1 and month will be incremented, too.
+// Add 1 to the month day.
 void DateContainer::incrementMonthDay()
 {
-    m_time.incrementMonthDay();
+    m_time.addDays(1);
 }
 
 void DateContainer::decrementMonthDay()
 {
-    m_time.decrementMonthDay();
+    m_time.addDays(-1);
 }
 
-// Add 1 to the month. If it reaches 12 (0-indexed), the month will be set to 0 and year will be incremented, too.
+// Add 1 to the month.
 void DateContainer::incrementMonth()
 {
-    m_time.incrementMonth();
+    m_time.addMonths(1);
 }
 
 void DateContainer::decrementMonth()
 {
-    m_time.decrementMonth();
+    m_time.addMonths(-1);
 }
 
 void DateContainer::incrementYear()
 {
-    m_time.incrementYear();
+    m_time.setYear(m_time.getYear() + 1);
 }
 
 void DateContainer::decrementYear()
 {
-    m_time.decrementYear();
+    m_time.setYear(m_time.getYear() - 1);
 }
 
 // TODO: Fix this function. It's weird and not really useful?
@@ -111,5 +111,5 @@ int DateContainer::getDayDifference(const DateContainer& other) const
 // STATIC
 DateContainer DateContainer::getCurrentSystemDate()
 { 
-    return DateContainer(TimeWrapper::getCurrentSystemTime());
+    return DateContainer(TimeWrapper::getCurrentTime());
 }

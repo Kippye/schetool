@@ -1,4 +1,3 @@
-#include <regex>
 #include "imgui_stdlib.h"
 #include "gui_templates.h"
 #include "schedule_constants.h"
@@ -37,11 +36,10 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
         viewedMonth = viewedMonth == 1 ? 12 : viewedMonth - 1;
     }
     ImGui::SameLine();
-    char monthName[16];
-    tm formatTime;
-    formatTime.tm_mon = viewedMonth - 1;
-    std::strftime(monthName, sizeof(monthName), "%B", &formatTime);
-    ImGui::Button(std::string(monthName).append(std::string("##Month")).c_str(), ImVec2(96, 0));
+    TimeWrapper formatTime;
+    formatTime.setMonth(viewedMonth);
+    std::string monthName = formatTime.getDynamicFmtString("{:%B}");
+    ImGui::Button(monthName.append(std::string("##Month")).c_str(), ImVec2(96, 0));
     ImGui::SameLine();
     if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
     {
@@ -50,7 +48,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     int yearInput = viewedYear;
     if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        viewedYear = TimeWrapper::toValidYear(yearInput);
+        viewedYear = TimeWrapper::limitYearToValidRange(yearInput);
     }
 
     // CALENDAR
@@ -73,9 +71,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     {
         if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(24, 24)) && month == viewedMonth)
         {
-            editorDate.getTime().setYear(viewedYear);
-            editorDate.getTime().setMonth(viewedMonth);
-            editorDate.getTime().setMonthDay(dayDisplayNumber); 
+            editorDate.getTime().setDate({viewedYear, viewedMonth, (unsigned int)dayDisplayNumber});
             changedDate = true;
         }
         if (dayDisplayNumber == editorDate.getTime().getMonthDay())
@@ -146,12 +142,11 @@ void gui_templates::TextWithBackground(const ImVec2& size, const char *fmt, ...)
 bool gui_templates::TimeEditor(TimeContainer& editorTime)
 {
     bool madeEdits = false;
-    tm formatTime;
-    formatTime.tm_hour = editorTime.getHours();
-    char hourBuf[3];
-    std::strftime(hourBuf, sizeof(hourBuf), "%H", &formatTime);
+    TimeWrapper hourFormatTime = TimeWrapper(ClockTimeWrapper(editorTime.getHours(), 0));
+    std::string hourString = hourFormatTime.getDynamicFmtString("{:%H}");
+    auto hourBuf = hourString.data();
     ImGui::SetNextItemWidth(24);
-    if (ImGui::InputText("##TimeEditorHours", hourBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
+    if (ImGui::InputText("##TimeEditorHours", hourBuf, sizeof(hourBuf), ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
     {
         int hourValue = 0;
 
@@ -165,11 +160,11 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
         madeEdits = true;
     }
     ImGui::SameLine();
-    formatTime.tm_min = editorTime.getMinutes();
-    char minBuf[3];
-    std::strftime(minBuf, sizeof(minBuf), "%M", &formatTime);
+    TimeWrapper minFormatTime = TimeWrapper(ClockTimeWrapper(0, editorTime.getMinutes()));
+    std::string minString = minFormatTime.getDynamicFmtString("{:%M}");
+    auto minBuf = minString.data();
     ImGui::SetNextItemWidth(24);
-    if (ImGui::InputText("##TimeEditorMinutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
+    if (ImGui::InputText("##TimeEditorMinutes", minBuf, sizeof(minBuf), ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
     {
         int minValue = 0;
 

@@ -9,7 +9,7 @@ void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule)
 
 void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
 {
-    TimeWrapper currentTime = TimeWrapper::getCurrentSystemTime();
+    TimeWrapper currentTime = TimeWrapper::getCurrentTime();
     DateContainer currentDate = DateContainer(currentTime);
     int daysSince = currentDate.getDayDifference(DateContainer(previousTime));
 
@@ -61,7 +61,7 @@ void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
 void TimeHandler::applyResetsSinceEditTime(TimeWrapper lastEditTime)
 {
     applyResetsSince(lastEditTime);
-    m_lastTickTime = TimeWrapper::getCurrentSystemTime();
+    m_lastTickTime = TimeWrapper::getCurrentTime();
 }
 
 void TimeHandler::timeTick()
@@ -69,7 +69,7 @@ void TimeHandler::timeTick()
     // The last tick time is full when a file is open.
     if (m_lastTickTime.getIsEmpty()) { return; }
 
-    TimeWrapper currentTime = TimeWrapper::getCurrentSystemTime();
+    TimeWrapper currentTime = TimeWrapper::getCurrentTime();
 
     // Apply any resets since the last tick time.
     applyResetsSince(m_lastTickTime);
