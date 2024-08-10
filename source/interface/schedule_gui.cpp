@@ -343,7 +343,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     if (i != selectedCount - 1 && ImGui::IsItemHovered())
                                     {
                                         ImGui::BeginTooltip();
-                                        ImGui::Text("Created: %s %s", m_scheduleCore.getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
+                                        ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
                                         ImGui::EndTooltip();
                                     }
 
@@ -446,7 +446,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     if (i != selectedCount - 1 && ImGui::IsItemHovered())
                                     {
                                         ImGui::BeginTooltip();
-                                        ImGui::Text("Created: %s %s", m_scheduleCore.getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
+                                        ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
                                         ImGui::EndTooltip();
                                     }
 
@@ -547,7 +547,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 						if (ImGui::IsItemHovered())
 						{
 							ImGui::BeginTooltip();
-							ImGui::Text("Created: %s %s", m_scheduleCore.getElementConst(column, row)->getCreationDate().getString().c_str(), m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
+							ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
 							ImGui::EndTooltip();
 						}
 					}

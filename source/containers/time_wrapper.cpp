@@ -25,15 +25,8 @@ DateWrapper::DateWrapper(unsigned int year, unsigned int month, unsigned int mon
     m_monthDay = std::min(m_monthDay, 31u);
 }
 
-DateWrapper::DateWrapper(const year_month_day& date)
-{
-    m_year = std::max((int)date.year(), 1678);
-    m_year = std::min(m_year, 2261u);
-    m_month = std::max((unsigned int)date.month(), 1u);
-    m_month = std::min(m_month, 12u);
-    m_monthDay = std::max((unsigned int)date.day(), 1u);
-    m_monthDay = std::min(m_monthDay, 31u);
-}
+DateWrapper::DateWrapper(const year_month_day& date) : DateWrapper((int)date.year(), (unsigned int)date.month(), (unsigned int)date.day())
+{}
 
 unsigned int DateWrapper::getYear() const
 {
@@ -277,10 +270,22 @@ void TimeWrapper::setUtcYear(unsigned int year)
     setUtcTime(newDate, getLocalClockTime());
 }
 
+std::string TimeWrapper::getUtcString(TIME_FORMAT fmtType) const
+{
+    if (m_empty) { return ""; }
+    return TimeWrapper::getString(m_time, fmtType);
+}
+
 std::string TimeWrapper::getString(TIME_FORMAT fmtType) const
 {
     if (m_empty) { return ""; }
     return TimeWrapper::getString(getLocalTime(), fmtType);
+}
+ 
+std::string TimeWrapper::getUtcDynamicFmtString(const std::string_view& fmt) const
+{
+    if (m_empty) { return ""; }
+    return TimeWrapper::getDynamicFmtString(m_time, fmt);
 }
 
 std::string TimeWrapper::getDynamicFmtString(const std::string_view& fmt) const

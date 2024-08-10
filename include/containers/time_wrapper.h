@@ -227,9 +227,15 @@ class TimeWrapper
         // Set the year
         void setUtcYear(unsigned int year);
 
+        // Returns a string with this TimeWrapper's UTC time using one of the pre-existing formats: Date only, Time only or full. 
+        // Returns an empty string if the TimeWrapper is empty.
+        std::string getUtcString(TIME_FORMAT = TIME_FORMAT_FULL) const;
         // Returns a string with this TimeWrapper's local time in the current time zone using one of the pre-existing formats: Date only, Time only or full. 
         // Returns an empty string if the TimeWrapper is empty.
         std::string getString(TIME_FORMAT = TIME_FORMAT_FULL) const;
+        // Format this TimeWrapper's UTC time using the provided format string.
+        // Returns an empty string if the TimeWrapper is empty.
+        std::string getUtcDynamicFmtString(const std::string_view& fmt) const;
         // Format this TimeWrapper's local time in the current time zone using the provided format string.
         // Returns an empty string if the TimeWrapper is empty.
         std::string getDynamicFmtString(const std::string_view& fmt) const;

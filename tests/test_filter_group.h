@@ -28,7 +28,7 @@ TEST_CASE("FilterGroup")
     }
     SECTION("FilterGroup operators")
     {
-        Element<std::string> element = Element<std::string>(SCH_TEXT, "PASS", DateContainer(), TimeContainer());
+        Element<std::string> element = Element<std::string>(SCH_TEXT, "PASS");
         FilterRule<std::string> failRule = FilterRule<std::string>("FAILURE");
         FilterRule<std::string> passRule = FilterRule<std::string>("PASS");
         FilterRule<std::string> passIsNotRule = FilterRule<std::string>("");

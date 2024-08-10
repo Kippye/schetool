@@ -92,24 +92,23 @@ void DateContainer::decrementMonth()
 
 void DateContainer::incrementYear()
 {
-    m_time.setUtcYear(m_time.getYear() + 1);
+    m_time.setUtcYear(m_time.getUtcYear() + 1);
 }
 
 void DateContainer::decrementYear()
 {
-    m_time.setUtcYear(m_time.getYear() - 1);
+    m_time.setUtcYear(m_time.getUtcYear() - 1);
 }
 
 // TODO: Fix this function. It's weird and not really useful?
 // It would be better to return a double or to get the difference in actual dates (maybe by setting both clock times to the same value?).
 int DateContainer::getDayDifference(const DateContainer& other) const
 {
-    // TODO: implement
     return TimeWrapper::getDifference<days>(m_time, other.getTimeConst());
 }
 
 // STATIC
 DateContainer DateContainer::getCurrentSystemDate()
 { 
-    return DateContainer(TimeWrapper::getCurrentTime());
+    return DateContainer(TimeWrapper(TimeWrapper::getCurrentTime().getUtcDate()));
 }

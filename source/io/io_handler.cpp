@@ -403,20 +403,16 @@ TimeWrapper IO_Handler::getFileEditTimeWrapped(fs::path path)
     if (fs::exists(path) == false) { printf("IO_Handler::getFileEditTimeWrapped(%s): No file exists at the path\n", path.string().c_str()); return TimeWrapper(); }
 
     const auto fileEditTime = fs::last_write_time(path);
-    time_t time;
+    std::chrono::system_clock::time_point systemTime;
 
     #if defined(WIN32) && !defined(__clang__) // windows implementation using clock_cast (my version of clang / libc++ didn't have it either)
-    const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileEditTime);
-    time = std::chrono::system_clock::to_time_t(systemTime);
+    systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileEditTime);
     #else // workaround without clock_cast
     auto systemNow = std::chrono::system_clock::now();
     auto fileNow = std::chrono::file_clock::now();
-    auto systemTime = std::chrono::time_point_cast<std::chrono::system_clock::duration>(fileEditTime - fileNow + systemNow);
-    time = std::chrono::system_clock::to_time_t(systemTime);
+    systemTime = std::chrono::time_point_cast<std::chrono::system_clock::duration>(fileEditTime - fileNow + systemNow);
     #endif
-    // TODO: converting this chrono stuff or a time_t into a TimeWrapper
-    // return TimeWrapper(*localtime(&time));
-    return TimeWrapper::getCurrentTime();
+    return TimeWrapper(systemTime);
 }
 
 std::string IO_Handler::getFileEditTimeString(fs::path path)

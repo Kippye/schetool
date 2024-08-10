@@ -38,7 +38,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     ImGui::SameLine();
     TimeWrapper formatTime;
     formatTime.setUtcMonth(viewedMonth);
-    std::string monthName = formatTime.getDynamicFmtString("{:%B}");
+    std::string monthName = formatTime.getUtcDynamicFmtString("{:%B}");
     ImGui::Button(monthName.append(std::string("##Month")).c_str(), ImVec2(96, 0));
     ImGui::SameLine();
     if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
@@ -57,11 +57,11 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
 
     TimeWrapper firstOfTheMonth = TimeWrapper(viewedYear, viewedMonth, 1);
     // day of the week converted from Sun-Sat to Mon-Sun
-    int dayOfTheWeekFirst = firstOfTheMonth.getWeekDay(WEEK_START_MONDAY, ZERO_BASED);
+    int dayOfTheWeekFirst = firstOfTheMonth.getUtcWeekDay(WEEK_START_MONDAY, ZERO_BASED);
 
     TimeWrapper lastOfTheMonth = TimeWrapper(viewedYear, viewedMonth, daysInMonth);
     // day of the week converted from Sun-Sat to Mon-Sun
-    int dayOfTheWeekLast = lastOfTheMonth.getWeekDay(WEEK_START_MONDAY, ZERO_BASED);
+    int dayOfTheWeekLast = lastOfTheMonth.getUtcWeekDay(WEEK_START_MONDAY, ZERO_BASED);
 
     unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
 
@@ -74,7 +74,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
             editorDate.getTime().setUtcDate({viewedYear, viewedMonth, (unsigned int)dayDisplayNumber});
             changedDate = true;
         }
-        if (dayDisplayNumber == editorDate.getTime().getMonthDay())
+        if (dayDisplayNumber == editorDate.getTime().getUtcMonthDay())
         {
             // TODO: Highlight this day as selected in the calendar
         }
@@ -143,7 +143,8 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
 {
     bool madeEdits = false;
     TimeWrapper hourFormatTime = TimeWrapper(ClockTimeWrapper(editorTime.getHours(), 0));
-    std::string hourString = hourFormatTime.getDynamicFmtString("{:%H}");
+    // NOTE: Usually we would get local time for displaying but here we are only using the TimeWrapper as a formatting tool, the same time can be stored and formatted.
+    std::string hourString = hourFormatTime.getUtcDynamicFmtString("{:%H}");
     auto hourBuf = hourString.data();
     ImGui::SetNextItemWidth(24);
     if (ImGui::InputText("##TimeEditorHours", hourBuf, sizeof(hourBuf), ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
@@ -161,7 +162,8 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
     }
     ImGui::SameLine();
     TimeWrapper minFormatTime = TimeWrapper(ClockTimeWrapper(0, editorTime.getMinutes()));
-    std::string minString = minFormatTime.getDynamicFmtString("{:%M}");
+    // NOTE: Read above
+    std::string minString = minFormatTime.getUtcDynamicFmtString("{:%M}");
     auto minBuf = minString.data();
     ImGui::SetNextItemWidth(24);
     if (ImGui::InputText("##TimeEditorMinutes", minBuf, sizeof(minBuf), ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))

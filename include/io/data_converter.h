@@ -69,12 +69,12 @@ struct BLF_Date : BLF_Base
 
 	BLF_Date() : year(1900), month(1), monthDay(1) 
 	{}
-	BLF_Date(const TimeWrapper& date) : year(date.getYear()), month(date.getMonth()), monthDay(date.getMonthDay())
+	BLF_Date(const TimeWrapper& date) : year(date.getUtcYear()), month(date.getUtcMonth()), monthDay(date.getUtcMonthDay())
 	{}
 
 	TimeWrapper getDate() const
 	{
-		return TimeWrapper(year, month, monthDay);
+		return TimeWrapper(DateWrapper(year, month, monthDay));
 	}
 
 	static void addDefinition(ObjectDefinitions& definitions)
@@ -123,11 +123,11 @@ struct BLF_ElementInfo : BLF_Base
     BLF_ElementInfo() {}
     BLF_ElementInfo(const ElementBase* element)
     {
-        creationYear = element->getCreationDate().getTimeConst().getYear();
-        creationMonth = element->getCreationDate().getTimeConst().getMonth();
-        creationMday = element->getCreationDate().getTimeConst().getMonthDay();
-        creationHours = element->getCreationTime().hours;
-        creationMinutes = element->getCreationTime().minutes;
+        creationYear = element->getCreationTime().getUtcYear();
+        creationMonth = element->getCreationTime().getUtcMonth();
+        creationMday = element->getCreationTime().getUtcMonthDay();
+        creationHours = element->getCreationTime().getUtcClockTime().getHours();
+        creationMinutes = element->getCreationTime().getUtcClockTime().getMinutes();
     }
 
     TimeWrapper getCreationTime() const
@@ -171,8 +171,7 @@ struct BLF_Element<bool> : BLF_Base
 	 
 	Element<bool> getElement() const
 	{
-		TimeWrapper creationTime = info.getCreationTime();
-		return Element<bool>(SCH_BOOL, value, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
+		return Element<bool>(SCH_BOOL, value, info.getCreationTime());
 	}
 
 	static void addDefinition(ObjectDefinitions& definitions)
@@ -202,8 +201,7 @@ struct BLF_Element<int> : BLF_Base
 
 	Element<int> getElement() const
 	{
-		TimeWrapper creationTime = info.getCreationTime();
-		return Element<int>(SCH_NUMBER, value, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
+		return Element<int>(SCH_NUMBER, value, info.getCreationTime());
 	}
 
 	static void addDefinition(ObjectDefinitions& definitions)
@@ -233,8 +231,7 @@ struct BLF_Element<double> : BLF_Base
 
 	Element<double> getElement() const
 	{
-		TimeWrapper creationTime = info.getCreationTime();
-		return Element<double>(SCH_DECIMAL, value, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
+		return Element<double>(SCH_DECIMAL, value, info.getCreationTime());
 	}
 
 	static void addDefinition(ObjectDefinitions& definitions)
@@ -264,8 +261,7 @@ struct BLF_Element<std::string> : BLF_Base
 
 	Element<std::string> getElement() const
 	{
-		TimeWrapper creationTime = info.getCreationTime();
-		return Element<std::string>(SCH_TEXT, value, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
+		return Element<std::string>(SCH_TEXT, value, info.getCreationTime());
 	}
     
     static void addDefinition(ObjectDefinitions& definitions)
@@ -312,8 +308,7 @@ struct BLF_Element<SelectContainer> : BLF_Base
 
 	Element<SelectContainer> getElement() const
 	{
-		TimeWrapper creationTime = info.getCreationTime();
-		Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
+		Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), info.getCreationTime());
 		select.getValueReference().replaceSelection(getSelection());
 		return select;
 	}
@@ -366,8 +361,7 @@ struct BLF_Element<WeekdayContainer> : BLF_Base
 
 	Element<WeekdayContainer> getElement() const
 	{
-		TimeWrapper creationTime = info.getCreationTime();
-		Element<WeekdayContainer> weekday = Element<WeekdayContainer>(SCH_WEEKDAY, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
+		Element<WeekdayContainer> weekday = Element<WeekdayContainer>(SCH_WEEKDAY, WeekdayContainer(), info.getCreationTime());
 		weekday.getValueReference().replaceSelection(getSelection());
 		return weekday;
 	}
@@ -401,8 +395,7 @@ struct BLF_Element<TimeContainer> : BLF_Base
 
     Element<TimeContainer> getElement() const
     {
-		TimeWrapper creationTime = info.getCreationTime(); 
-		return Element<TimeContainer>(SCH_TIME, TimeContainer(hours, minutes), DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
+		return Element<TimeContainer>(SCH_TIME, TimeContainer(hours, minutes), info.getCreationTime());
     }
 
     static void addDefinition(ObjectDefinitions& definitions)
@@ -433,20 +426,19 @@ struct BLF_Element<DateContainer> : BLF_Base
     {
         TimeWrapper dateTime = element->getValue().getTime();
         empty = element->getValue().getIsEmpty();
-        year = dateTime.getYear();
-        month = dateTime.getMonth();
-        mday = dateTime.getMonthDay();
+        year = dateTime.getUtcYear();
+        month = dateTime.getUtcMonth();
+        mday = dateTime.getUtcMonthDay();
     }
 
 	Element<DateContainer> getElement() const
 	{
-		TimeWrapper creationTime = info.getCreationTime();
-		DateContainer dateContainer = DateContainer(TimeWrapper(year, month, mday));
+		DateContainer dateContainer = DateContainer(TimeWrapper(DateWrapper(year, month, mday)));
 		if (empty)
 		{
 			dateContainer.clear();
 		}
-		return Element<DateContainer>(SCH_DATE, dateContainer, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
+		return Element<DateContainer>(SCH_DATE, dateContainer, info.getCreationTime());
 	}
 
     static void addDefinition(ObjectDefinitions& definitions)
@@ -474,7 +466,7 @@ struct BLF_FilterRule : BLF_Base
     BLF_FilterRule() {}
     BLF_FilterRule(SCHEDULE_TYPE type, const FilterRule<T>& filterRule)
     {
-        Element<T> element = Element<T>(type, filterRule.getPassValue(), DateContainer(), TimeContainer());
+        Element<T> element = Element<T>(type, filterRule.getPassValue(), TimeWrapper());
         passValueElement = BLF_Element<T>(&element);
 
         comparison = (int)filterRule.getComparison();
