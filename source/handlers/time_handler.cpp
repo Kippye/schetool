@@ -10,8 +10,7 @@ void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule)
 void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
 {
     TimeWrapper currentTime = TimeWrapper::getCurrentTime();
-    DateContainer currentDate = DateContainer(currentTime);
-    int daysSince = currentDate.getDayDifference(DateContainer(previousTime));
+    int daysSince = TimeWrapper::getDifference<days>(currentTime, previousTime);
 
     // Same or previous date, don't reset
     if (daysSince < 1) { return; }
@@ -48,8 +47,9 @@ void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
         }
     }
 
+    int monthsSince = TimeWrapper::getDifference<months>(currentTime, previousTime);
     // New month
-    if (currentTime.getYear() > previousTime.getYear() || currentTime.getMonth() > previousTime.getMonth())
+    if (monthsSince > 0)
     {
         for (size_t columnIndex : columnsByResetOption.at(ColumnResetOption::Monthly))
         {

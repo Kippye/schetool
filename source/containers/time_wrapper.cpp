@@ -304,12 +304,12 @@ std::pair<DateWrapper, ClockTimeWrapper> TimeWrapper::getTimeComponents(const sy
 
 TimeWrapper TimeWrapper::getCurrentTime()
 {
-    // #ifdef PERFORM_UNIT_TESTS
-    // if (testOverrideCurrentTime.getIsEmpty() == false)
-    // {
-    //     return testOverrideCurrentTime;
-    // }
-    // #endif
+    #ifdef PERFORM_UNIT_TESTS
+    if (testCurrentTimeOverride.getIsEmpty() == false)
+    {
+        return testCurrentTimeOverride;
+    }
+    #endif
     return TimeWrapper(utc_clock::to_sys(utc_clock::now()));
 }
 
@@ -319,3 +319,7 @@ int TimeWrapper::limitYearToValidRange(int year)
     year = std::min(year, 2261);
     return year;
 }
+
+#ifdef PERFORM_UNIT_TESTS
+TimeWrapper TimeWrapper::testCurrentTimeOverride = TimeWrapper();
+#endif

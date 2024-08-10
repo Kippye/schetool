@@ -151,7 +151,7 @@ class TimeWrapper
         }
     public:
         #ifdef PERFORM_UNIT_TESTS
-        static void setCurrentTimeOverride(TimeWrapper time);
+        static TimeWrapper testCurrentTimeOverride;
         #endif
         // Create an empty TimeWrapper.
         TimeWrapper();
