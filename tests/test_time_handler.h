@@ -54,7 +54,7 @@ TEST_CASE("TimeHandler")
     {
         TimeWrapper editTime = TimeWrapper::getCurrentTime();
         TimeWrapper::testCurrentTimeOverride = editTime;
-        for (size_t i = 0; i < 8 - editTime.getWeekDay(); i++)
+        for (size_t i = 0; i < 8 - editTime.getWeekday(); i++)
         {
             TimeWrapper::testCurrentTimeOverride.addDays(1);
         }

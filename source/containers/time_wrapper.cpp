@@ -75,17 +75,17 @@ TimeWrapper::TimeWrapper(const time_point<system_clock>& tp) : m_time(tp), m_emp
 
 TimeWrapper::TimeWrapper(const DateWrapper& date)
 {
-    setUtcTime(date, {});
+    setTimeUTC(date, {});
 }
 
 TimeWrapper::TimeWrapper(const ClockTimeWrapper& clockTime)
 {
-    setUtcTime({}, clockTime);
+    setTimeUTC({}, clockTime);
 }
 
 TimeWrapper::TimeWrapper(const DateWrapper& date, const ClockTimeWrapper& time)
 {
-    setUtcTime(date, time);
+    setTimeUTC(date, time);
 }
 
 TimeWrapper::TimeWrapper(unsigned int year, unsigned int month, unsigned int monthDay) : TimeWrapper(DateWrapper{year, month, monthDay})
@@ -104,7 +104,7 @@ std::time_t TimeWrapper::time_to_utc_time_t(const DateWrapper& date, const Clock
 }
 
 
-time_point<system_clock> TimeWrapper::getUtcTime() const
+time_point<system_clock> TimeWrapper::getTimeUTC() const
 {
     return m_time;
 }
@@ -151,11 +151,11 @@ bool TimeWrapper::getIsEmpty() const
 
 void TimeWrapper::clear()
 {
-    setUtcTime(DateWrapper(1970, 1, 1), ClockTimeWrapper(0, 0));
+    setTimeUTC(DateWrapper(1970, 1, 1), ClockTimeWrapper(0, 0));
     m_empty = true;
 }
 
-DateWrapper TimeWrapper::getUtcDate() const
+DateWrapper TimeWrapper::getDateUTC() const
 {
     return getDate(m_time);
 }
@@ -165,7 +165,7 @@ DateWrapper TimeWrapper::getLocalDate() const
     return getDate(getLocalTime());
 }
 
-ClockTimeWrapper TimeWrapper::getUtcClockTime() const
+ClockTimeWrapper TimeWrapper::getClockTimeUTC() const
 {
     return getClockTime(m_time);
 } 
@@ -175,18 +175,18 @@ ClockTimeWrapper TimeWrapper::getLocalClockTime() const
     return getClockTime(getLocalTime());
 }
 
-void TimeWrapper::setUtcTime(const DateWrapper& date, const ClockTimeWrapper& time)
+void TimeWrapper::setTimeUTC(const DateWrapper& date, const ClockTimeWrapper& time)
 {
     m_time = system_clock::from_time_t(time_to_utc_time_t(date, time));
     m_empty = false;
 }
 
-void TimeWrapper::setUtcDate(const DateWrapper& date)
+void TimeWrapper::setDateUTC(const DateWrapper& date)
 {
-    setUtcTime(date, getLocalClockTime());
+    setTimeUTC(date, getLocalClockTime());
 }
 
-unsigned int TimeWrapper::getUtcMonthDay(bool basedness) const
+unsigned int TimeWrapper::getMonthDayUTC(bool basedness) const
 {
     return getMonthDay(m_time, basedness);
 }
@@ -196,7 +196,7 @@ unsigned int TimeWrapper::getMonthDay(bool basedness) const
     return getMonthDay(getLocalTime(), basedness);
 }
 
-void TimeWrapper::setUtcMonthDay(unsigned int day, bool basedness)
+void TimeWrapper::setMonthDayUTC(unsigned int day, bool basedness)
 {
     DateWrapper currentDate = getLocalDate();
     unsigned int max = basedness == ONE_BASED ? mytime::get_month_day_count(currentDate.getYear(), currentDate.getMonth()) // 1..dayCount
@@ -209,7 +209,7 @@ void TimeWrapper::setUtcMonthDay(unsigned int day, bool basedness)
         currentDate.getMonth(),
         basedness == ONE_BASED ? day : day + 1
     );
-    setUtcTime(newDate, getLocalClockTime());
+    setTimeUTC(newDate, getLocalClockTime());
 }
 
 void TimeWrapper::addDays(int dayCount)
@@ -217,17 +217,17 @@ void TimeWrapper::addDays(int dayCount)
     m_time += days{dayCount};
 }
 
-unsigned int TimeWrapper::getUtcWeekDay(bool weekStart, bool basedness) const
+unsigned int TimeWrapper::getWeekdayUTC(bool weekStart, bool basedness) const
 {
-    return getWeekDay(m_time, weekStart, basedness);
+    return getWeekday(m_time, weekStart, basedness);
 }
 
-unsigned int TimeWrapper::getWeekDay(bool weekStart, bool basedness) const
+unsigned int TimeWrapper::getWeekday(bool weekStart, bool basedness) const
 {
-    return getWeekDay(getLocalTime(), weekStart, basedness);
+    return getWeekday(getLocalTime(), weekStart, basedness);
 }
 
-unsigned int TimeWrapper::getUtcMonth(bool basedness) const
+unsigned int TimeWrapper::getMonthUTC(bool basedness) const
 {
     return getMonth(m_time, basedness);
 }
@@ -237,7 +237,7 @@ unsigned int TimeWrapper::getMonth(bool basedness) const
     return getMonth(getLocalTime(), basedness);
 }
 
-void TimeWrapper::setUtcMonth(int month, bool basedness)
+void TimeWrapper::setMonthUTC(int month, bool basedness)
 {
     DateWrapper currentDate = getLocalDate();
     DateWrapper newDate = DateWrapper(currentDate.getYear(), 
@@ -245,7 +245,7 @@ void TimeWrapper::setUtcMonth(int month, bool basedness)
         : (month < 0 ? 12 : (month > 11 ? 1 : month + 1)),
         currentDate.getMonthDay()
     );
-    setUtcTime(newDate, getLocalClockTime());
+    setTimeUTC(newDate, getLocalClockTime());
 }
 
 void TimeWrapper::addMonths(int monthCount)
@@ -253,9 +253,9 @@ void TimeWrapper::addMonths(int monthCount)
     m_time += months{monthCount};
 }
 
-unsigned int TimeWrapper::getUtcYear() const
+unsigned int TimeWrapper::getYearUTC() const
 {
-    return getUtcDate().getYear();
+    return getDateUTC().getYear();
 }
 
 unsigned int TimeWrapper::getYear() const
@@ -263,14 +263,14 @@ unsigned int TimeWrapper::getYear() const
     return getLocalDate().getYear();
 }
 
-void TimeWrapper::setUtcYear(unsigned int year)
+void TimeWrapper::setYearUTC(unsigned int year)
 {
     DateWrapper currentDate = getLocalDate();
     DateWrapper newDate = DateWrapper(year, currentDate.getMonth(), currentDate.getMonthDay());
-    setUtcTime(newDate, getLocalClockTime());
+    setTimeUTC(newDate, getLocalClockTime());
 }
 
-std::string TimeWrapper::getUtcString(TIME_FORMAT fmtType) const
+std::string TimeWrapper::getStringUTC(TIME_FORMAT fmtType) const
 {
     if (m_empty) { return ""; }
     return TimeWrapper::getString(m_time, fmtType);
@@ -282,7 +282,7 @@ std::string TimeWrapper::getString(TIME_FORMAT fmtType) const
     return TimeWrapper::getString(getLocalTime(), fmtType);
 }
  
-std::string TimeWrapper::getUtcDynamicFmtString(const std::string_view& fmt) const
+std::string TimeWrapper::getDynamicFmtStringUTC(const std::string_view& fmt) const
 {
     if (m_empty) { return ""; }
     return TimeWrapper::getDynamicFmtString(m_time, fmt);

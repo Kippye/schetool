@@ -133,9 +133,9 @@ class TimeWrapper
             return basedness == ONE_BASED ? getDate(tp).getMonthDay() : getDate(tp).getMonthDay() - 1;
         }
         template <typename Timepoint>
-        static unsigned int getWeekDay(const Timepoint& tp, bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED)
+        static unsigned int getWeekday(const Timepoint& tp, bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED)
         {
-            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getWeekDay() only works with std::chrono::time_point types!");
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getWeekday() only works with std::chrono::time_point types!");
             auto zonedDays = floor<days>(tp);
             year_month_weekday ymw = year_month_weekday(zonedDays);
             unsigned int weekday = weekStart == WEEK_START_MONDAY ? ymw.weekday().iso_encoding() - 1 // The ISO encoding means Monday = 1,  Sunday = 7
@@ -169,29 +169,29 @@ class TimeWrapper
         bool getIsEmpty() const;
         void clear();  
 
-        time_point<system_clock> getUtcTime() const;
+        time_point<system_clock> getTimeUTC() const;
         local_time<seconds> getLocalTime(const std::string& timezoneName = "") const;
 
-        DateWrapper getUtcDate() const;
+        DateWrapper getDateUTC() const;
         DateWrapper getLocalDate() const;
-        ClockTimeWrapper getUtcClockTime() const;
+        ClockTimeWrapper getClockTimeUTC() const;
         ClockTimeWrapper getLocalClockTime() const;
 
         // Set the UTC date and clock time
-        void setUtcTime(const DateWrapper& date, const ClockTimeWrapper& time);
+        void setTimeUTC(const DateWrapper& date, const ClockTimeWrapper& time);
         // Set the UTC date while keeping the clock time the same
-        void setUtcDate(const DateWrapper& date);
+        void setDateUTC(const DateWrapper& date);
 
         // ONE_BASED: Get the UTC month day (1..dayCount).
         // ZERO_BASED: (0..dayCount - 1).
-        unsigned int getUtcMonthDay(bool basedness = ONE_BASED) const;
+        unsigned int getMonthDayUTC(bool basedness = ONE_BASED) const;
         // ONE_BASED: Get the month day (1..dayCount).
         // ZERO_BASED: (0..dayCount - 1).
         unsigned int getMonthDay(bool basedness = ONE_BASED) const;
         // ONE_BASED: Set the month day (1..dayCount).
         // ZERO_BASED: (0.. dayCount - 1).
         // NOTE: If the day provided is more than the days in the current month, the day will be set to it
-        void setUtcMonthDay(unsigned int day, bool basedness = ONE_BASED);
+        void setMonthDayUTC(unsigned int day, bool basedness = ONE_BASED);
         // Add this number of days to the time.
         // Can be a negative number to subtract days.
         void addDays(int days);
@@ -200,51 +200,57 @@ class TimeWrapper
         // WEEK_START_SUNDAY: Get the UTC weekday from SUN to SAT.
         // ONE_BASED: (1..7).
         // ZERO_BASED: (0..6).
-        unsigned int getUtcWeekDay(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
+        unsigned int getWeekdayUTC(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
         // WEEK_START_MONDAY: Get the weekday from MON to SUN.
         // WEEK_START_SUNDAY: Get the weekday from SUN to SAT.
         // ONE_BASED: (1..7).
         // ZERO_BASED: (0..6).
-        unsigned int getWeekDay(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
+        unsigned int getWeekday(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
 
         // ONE_BASED: Get the UTC month (1..12).
         // ZERO_BASED: (0..11).
-        unsigned int getUtcMonth(bool basedness = ONE_BASED) const; 
+        unsigned int getMonthUTC(bool basedness = ONE_BASED) const; 
         // ONE_BASED: Get the month (1..12).
         // ZERO_BASED: (0..11).
         unsigned int getMonth(bool basedness = ONE_BASED) const;   
         // ONE_BASED: If the given month is < 1, it will be passed as 12. If it's > 12, it will passed as 1.
         // ZERO_BASED: If the given month is < 0, it will be set to 11. If it's > 11, it will be set to 0.
-        void setUtcMonth(int month, bool basedness = ONE_BASED);
+        void setMonthUTC(int month, bool basedness = ONE_BASED);
         // Add this number of months to the time.
         // Can be a negative number to subtract.
         void addMonths(int months);
 
         // Get the UTC year
-        unsigned int getUtcYear() const;
+        unsigned int getYearUTC() const;
         // Get the year
         unsigned int getYear() const;
         // Set the year
-        void setUtcYear(unsigned int year);
+        void setYearUTC(unsigned int year);
 
         // Returns a string with this TimeWrapper's UTC time using one of the pre-existing formats: Date only, Time only or full. 
         // Returns an empty string if the TimeWrapper is empty.
-        std::string getUtcString(TIME_FORMAT = TIME_FORMAT_FULL) const;
+        std::string getStringUTC(TIME_FORMAT = TIME_FORMAT_FULL) const;
         // Returns a string with this TimeWrapper's local time in the current time zone using one of the pre-existing formats: Date only, Time only or full. 
         // Returns an empty string if the TimeWrapper is empty.
         std::string getString(TIME_FORMAT = TIME_FORMAT_FULL) const;
         // Format this TimeWrapper's UTC time using the provided format string.
         // Returns an empty string if the TimeWrapper is empty.
-        std::string getUtcDynamicFmtString(const std::string_view& fmt) const;
+        std::string getDynamicFmtStringUTC(const std::string_view& fmt) const;
         // Format this TimeWrapper's local time in the current time zone using the provided format string.
         // Returns an empty string if the TimeWrapper is empty.
         std::string getDynamicFmtString(const std::string_view& fmt) const;
 
         template <typename Duration>
+        static Duration::rep getDifferenceUTC(const TimeWrapper& base, const TimeWrapper& subtracted)
+        {
+            static_assert(is_duration<Duration>::value, "TimeWrapper::getDifferenceUTC() only works with std::chrono::duration types!");
+            return (floor<Duration>(base.m_time) - floor<Duration>(subtracted.m_time)).count();
+        }
+        template <typename Duration>
         static Duration::rep getDifference(const TimeWrapper& base, const TimeWrapper& subtracted)
         {
             static_assert(is_duration<Duration>::value, "TimeWrapper::getDifference() only works with std::chrono::duration types!");
-            return (floor<Duration>(base.m_time) - floor<Duration>(subtracted.m_time)).count();
+            return (floor<Duration>(base.getLocalTime()) - floor<Duration>(subtracted.getLocalTime())).count();
         }
 
         bool operator==(const TimeWrapper& other) const

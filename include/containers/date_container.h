@@ -69,22 +69,22 @@ struct DateContainer
 
         bool operator==(const DateContainer& other) const
         {
-            return getTimeConst().getUtcDate() == other.getTimeConst().getUtcDate();
+            return getTimeConst().getDateUTC() == other.getTimeConst().getDateUTC();
         }
 
         bool operator!=(const DateContainer& other) const
         {
-            return getTimeConst().getUtcDate() != other.getTimeConst().getUtcDate();
+            return getTimeConst().getDateUTC() != other.getTimeConst().getDateUTC();
         }
 
         friend bool operator<(const DateContainer& left, const DateContainer& right)
         {
-            return left.getTimeConst().getUtcDate() < right.getTimeConst().getUtcDate();
+            return left.getTimeConst().getDateUTC() < right.getTimeConst().getDateUTC();
         }
 
         friend bool operator>(const DateContainer& left, const DateContainer& right)
         {
-            return left.getTimeConst().getUtcDate() > right.getTimeConst().getUtcDate();
+            return left.getTimeConst().getDateUTC() > right.getTimeConst().getDateUTC();
         }
 
         static DateContainer getCurrentSystemDate();

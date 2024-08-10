@@ -69,7 +69,7 @@ struct BLF_Date : BLF_Base
 
 	BLF_Date() : year(1900), month(1), monthDay(1) 
 	{}
-	BLF_Date(const TimeWrapper& date) : year(date.getUtcYear()), month(date.getUtcMonth()), monthDay(date.getUtcMonthDay())
+	BLF_Date(const TimeWrapper& date) : year(date.getYearUTC()), month(date.getMonthUTC()), monthDay(date.getMonthDayUTC())
 	{}
 
 	TimeWrapper getDate() const
@@ -123,11 +123,11 @@ struct BLF_ElementInfo : BLF_Base
     BLF_ElementInfo() {}
     BLF_ElementInfo(const ElementBase* element)
     {
-        creationYear = element->getCreationTime().getUtcYear();
-        creationMonth = element->getCreationTime().getUtcMonth();
-        creationMday = element->getCreationTime().getUtcMonthDay();
-        creationHours = element->getCreationTime().getUtcClockTime().getHours();
-        creationMinutes = element->getCreationTime().getUtcClockTime().getMinutes();
+        creationYear = element->getCreationTime().getYearUTC();
+        creationMonth = element->getCreationTime().getMonthUTC();
+        creationMday = element->getCreationTime().getMonthDayUTC();
+        creationHours = element->getCreationTime().getClockTimeUTC().getHours();
+        creationMinutes = element->getCreationTime().getClockTimeUTC().getMinutes();
     }
 
     TimeWrapper getCreationTime() const
@@ -426,9 +426,9 @@ struct BLF_Element<DateContainer> : BLF_Base
     {
         TimeWrapper dateTime = element->getValue().getTime();
         empty = element->getValue().getIsEmpty();
-        year = dateTime.getUtcYear();
-        month = dateTime.getUtcMonth();
-        mday = dateTime.getUtcMonthDay();
+        year = dateTime.getYearUTC();
+        month = dateTime.getMonthUTC();
+        mday = dateTime.getMonthDayUTC();
     }
 
 	Element<DateContainer> getElement() const

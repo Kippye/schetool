@@ -92,12 +92,12 @@ void DateContainer::decrementMonth()
 
 void DateContainer::incrementYear()
 {
-    m_time.setUtcYear(m_time.getUtcYear() + 1);
+    m_time.setYearUTC(m_time.getYearUTC() + 1);
 }
 
 void DateContainer::decrementYear()
 {
-    m_time.setUtcYear(m_time.getUtcYear() - 1);
+    m_time.setYearUTC(m_time.getYearUTC() - 1);
 }
 
 // TODO: Fix this function. It's weird and not really useful?
@@ -110,5 +110,5 @@ int DateContainer::getDayDifference(const DateContainer& other) const
 // STATIC
 DateContainer DateContainer::getCurrentSystemDate()
 { 
-    return DateContainer(TimeWrapper(TimeWrapper::getCurrentTime().getUtcDate()));
+    return DateContainer(TimeWrapper(TimeWrapper::getCurrentTime().getDateUTC()));
 }

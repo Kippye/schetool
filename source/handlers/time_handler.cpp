@@ -39,7 +39,7 @@ void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
     }
 
     // Enough days since previous time to get to the next week
-    if (daysSince > (7 - previousTime.getWeekDay()))
+    if (daysSince > (7 - previousTime.getWeekday()))
     {
         for (size_t columnIndex : columnsByResetOption.at(ColumnResetOption::Weekly))
         {
