@@ -5,7 +5,7 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 #include "main.h"
 
-#include "time_wrapper.h" // tested early because almost everything uses it
+#include "test_time_wrapper.h" // tested early because almost everything uses it
 #include "test_date_container.h" // must be tested before filters since filters use it
 #include "test_filter.h" // tested before FilterGroups since they are contained
 #include "test_filter_group.h"

@@ -92,12 +92,12 @@ void DateContainer::decrementMonth()
 
 void DateContainer::incrementYear()
 {
-    m_time.setYear(m_time.getYear() + 1);
+    m_time.setUtcYear(m_time.getYear() + 1);
 }
 
 void DateContainer::decrementYear()
 {
-    m_time.setYear(m_time.getYear() - 1);
+    m_time.setUtcYear(m_time.getYear() - 1);
 }
 
 // TODO: Fix this function. It's weird and not really useful?

@@ -37,7 +37,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     }
     ImGui::SameLine();
     TimeWrapper formatTime;
-    formatTime.setMonth(viewedMonth);
+    formatTime.setUtcMonth(viewedMonth);
     std::string monthName = formatTime.getDynamicFmtString("{:%B}");
     ImGui::Button(monthName.append(std::string("##Month")).c_str(), ImVec2(96, 0));
     ImGui::SameLine();
@@ -71,7 +71,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     {
         if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(24, 24)) && month == viewedMonth)
         {
-            editorDate.getTime().setDate({viewedYear, viewedMonth, (unsigned int)dayDisplayNumber});
+            editorDate.getTime().setUtcDate({viewedYear, viewedMonth, (unsigned int)dayDisplayNumber});
             changedDate = true;
         }
         if (dayDisplayNumber == editorDate.getTime().getMonthDay())

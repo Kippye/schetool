@@ -172,7 +172,7 @@ struct BLF_Element<bool> : BLF_Base
 	Element<bool> getElement() const
 	{
 		TimeWrapper creationTime = info.getCreationTime();
-		return Element<bool>(SCH_BOOL, value, DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
+		return Element<bool>(SCH_BOOL, value, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
 	}
 
 	static void addDefinition(ObjectDefinitions& definitions)
@@ -203,7 +203,7 @@ struct BLF_Element<int> : BLF_Base
 	Element<int> getElement() const
 	{
 		TimeWrapper creationTime = info.getCreationTime();
-		return Element<int>(SCH_NUMBER, value, DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
+		return Element<int>(SCH_NUMBER, value, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
 	}
 
 	static void addDefinition(ObjectDefinitions& definitions)
@@ -234,7 +234,7 @@ struct BLF_Element<double> : BLF_Base
 	Element<double> getElement() const
 	{
 		TimeWrapper creationTime = info.getCreationTime();
-		return Element<double>(SCH_DECIMAL, value, DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
+		return Element<double>(SCH_DECIMAL, value, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
 	}
 
 	static void addDefinition(ObjectDefinitions& definitions)
@@ -265,7 +265,7 @@ struct BLF_Element<std::string> : BLF_Base
 	Element<std::string> getElement() const
 	{
 		TimeWrapper creationTime = info.getCreationTime();
-		return Element<std::string>(SCH_TEXT, value, DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
+		return Element<std::string>(SCH_TEXT, value, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
 	}
     
     static void addDefinition(ObjectDefinitions& definitions)
@@ -313,7 +313,7 @@ struct BLF_Element<SelectContainer> : BLF_Base
 	Element<SelectContainer> getElement() const
 	{
 		TimeWrapper creationTime = info.getCreationTime();
-		Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
+		Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
 		select.getValueReference().replaceSelection(getSelection());
 		return select;
 	}
@@ -367,7 +367,7 @@ struct BLF_Element<WeekdayContainer> : BLF_Base
 	Element<WeekdayContainer> getElement() const
 	{
 		TimeWrapper creationTime = info.getCreationTime();
-		Element<WeekdayContainer> weekday = Element<WeekdayContainer>(SCH_WEEKDAY, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
+		Element<WeekdayContainer> weekday = Element<WeekdayContainer>(SCH_WEEKDAY, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
 		weekday.getValueReference().replaceSelection(getSelection());
 		return weekday;
 	}
@@ -402,7 +402,7 @@ struct BLF_Element<TimeContainer> : BLF_Base
     Element<TimeContainer> getElement() const
     {
 		TimeWrapper creationTime = info.getCreationTime(); 
-		return Element<TimeContainer>(SCH_TIME, TimeContainer(hours, minutes), DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
+		return Element<TimeContainer>(SCH_TIME, TimeContainer(hours, minutes), DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
     }
 
     static void addDefinition(ObjectDefinitions& definitions)
@@ -446,7 +446,7 @@ struct BLF_Element<DateContainer> : BLF_Base
 		{
 			dateContainer.clear();
 		}
-		return Element<DateContainer>(SCH_DATE, dateContainer, DateContainer(creationTime), TimeContainer(creationTime.getClockTime()));
+		return Element<DateContainer>(SCH_DATE, dateContainer, DateContainer(creationTime), TimeContainer(creationTime.getLocalClockTime()));
 	}
 
     static void addDefinition(ObjectDefinitions& definitions)

@@ -12,6 +12,11 @@ struct is_duration : std::false_type{};
 template<class Rep, class Period>
 struct is_duration<duration<Rep, Period>> : std::true_type{};
 
+template<class T>
+struct is_time_point : std::false_type{};
+template<class Clock, class Duration>
+struct is_time_point<time_point<Clock, Duration>> : std::true_type{};
+
 inline const bool WEEK_START_MONDAY = 0;
 inline const bool WEEK_START_SUNDAY = 1;
 inline const bool ZERO_BASED = 0;
@@ -27,7 +32,7 @@ enum TIME_FORMAT
 class DateWrapper
 {
     private:
-        unsigned int m_year;
+        unsigned int m_year = 1970;
         unsigned int m_month = 1;
         unsigned int m_monthDay = 1;
     public:
@@ -38,6 +43,32 @@ class DateWrapper
         unsigned int getYear() const;
         unsigned int getMonth() const;
         unsigned int getMonthDay() const;
+
+        bool operator==(const DateWrapper& other) const
+        {
+            return getYear() == other.getYear()
+                && getMonth() == other.getMonth()
+                && getMonthDay() == other.getMonthDay();
+        }
+
+        bool operator!=(const DateWrapper& other) const
+        {
+            return !(*this == other);
+        }
+
+        friend bool operator<(const DateWrapper& left, const DateWrapper& right)
+        {
+            return left.getYear() < right.getYear() || (left.getYear() == right.getYear() 
+            && left.getMonth() < right.getMonth() || (left.getMonth() == right.getMonth()
+            && left.getMonthDay() < right.getMonthDay()));
+        }
+
+        friend bool operator>(const DateWrapper& left, const DateWrapper& right)
+        {
+            return left.getYear() > right.getYear() || (left.getYear() == right.getYear() 
+            && left.getMonth() > right.getMonth() || (left.getMonth() == right.getMonth()
+            && left.getMonthDay() > right.getMonthDay()));
+        }
 };
 
 class ClockTimeWrapper
@@ -51,6 +82,29 @@ class ClockTimeWrapper
 
         unsigned int getHours() const;
         unsigned int getMinutes() const;
+
+        bool operator==(const ClockTimeWrapper& other) const
+        {
+            return getHours() == other.getHours()
+                && getMinutes() == other.getMinutes();
+        }
+
+        bool operator!=(const ClockTimeWrapper& other) const
+        {
+            return !(*this == other);
+        }
+
+        friend bool operator<(const ClockTimeWrapper& left, const ClockTimeWrapper& right)
+        {
+            return left.getHours() < right.getHours() || (left.getHours () == right.getHours() 
+            && left.getMinutes() < right.getMinutes());
+        }
+
+        friend bool operator>(const ClockTimeWrapper& left, const ClockTimeWrapper& right)
+        {
+            return left.getHours() > right.getHours() || (left.getHours () == right.getHours() 
+            && left.getMinutes() > right.getMinutes());
+        }
 };
 
 class TimeWrapper
@@ -59,12 +113,42 @@ class TimeWrapper
         bool m_empty = true;
         utc_tp m_time; 
         
-        static std::time_t custom_timegm(const std::tm& t);
         static std::time_t time_to_utc_time_t(const DateWrapper& date, const ClockTimeWrapper& time) ;
-        // Constructs a disgusting tm struct.
-        // NOTE: All the inputs are assumed to be 1-based.
-        tm getTm(const DateWrapper& date, const ClockTimeWrapper& time) const;
-        void setTime(const DateWrapper& date, const ClockTimeWrapper& time);
+        template <typename Timepoint>
+        static DateWrapper getDate(const Timepoint& tp)
+        {
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getDate() only works with std::chrono::time_point types!");
+            return getTimeComponents(tp).first;
+        }
+        template <typename Timepoint>
+        static ClockTimeWrapper getClockTime(const Timepoint& tp)
+        {
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getClockTime() only works with std::chrono::time_point types!");
+            return getTimeComponents(tp).second;
+        }
+        template <typename Timepoint>
+        static unsigned int getMonthDay(const Timepoint& tp, bool basedness = ONE_BASED)
+        {
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getMonthDay() only works with std::chrono::time_point types!");
+            return basedness == ONE_BASED ? getDate(tp).getMonthDay() : getDate(tp).getMonthDay() - 1;
+        }
+        template <typename Timepoint>
+        static unsigned int getWeekDay(const Timepoint& tp, bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED)
+        {
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getWeekDay() only works with std::chrono::time_point types!");
+            auto zonedDays = floor<days>(tp);
+            year_month_weekday ymw = year_month_weekday(zonedDays);
+            unsigned int weekday = weekStart == WEEK_START_MONDAY ? ymw.weekday().iso_encoding() - 1 // The ISO encoding means Monday = 1,  Sunday = 7
+                : ymw.weekday().c_encoding(); // The C encoding means Sunday = 0, Saturday = 6
+
+            return basedness + weekday;
+        }
+        template <typename Timepoint>
+        static unsigned int getMonth(const Timepoint& tp, bool basedness = ONE_BASED)
+        {
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getMonth() only works with std::chrono::time_point types!");
+            return basedness == ONE_BASED ? getDate(tp).getMonth() : getDate(tp).getMonth() - 1;
+        }
     public:
         #ifdef PERFORM_UNIT_TESTS
         static void setCurrentTimeOverride(TimeWrapper time);
@@ -82,51 +166,73 @@ class TimeWrapper
         // TEMP
         TimeWrapper(unsigned int year, unsigned int month = 1, unsigned int monthDay = 1);
 
-        time_point<system_clock> getUtcTime() const;
-        local_time<seconds> getLocalTime(const std::string& timezoneName = "") const;
-        ClockTimeWrapper getClockTime() const;
-        DateWrapper getDate() const;
-        // Set the date while keeping the clock time the same
-        void setDate(const DateWrapper& date);
-
-        // Returns a string in one of the pre-existing formats: Date only, Time only or full. 
-        // Returns an empty string if the TimeWrapper is empty.
-        std::string getString(TIME_FORMAT = TIME_FORMAT_FULL, const std::optional<local_time<seconds>> time = std::nullopt) const;
-        // Format the time using the provided format string.
-        std::string getDynamicFmtString(const std::string_view& fmt, const std::optional<local_time<seconds>> time = std::nullopt) const;
         bool getIsEmpty() const;
         void clear();  
+
+        time_point<system_clock> getUtcTime() const;
+        local_time<seconds> getLocalTime(const std::string& timezoneName = "") const;
+
+        DateWrapper getUtcDate() const;
+        DateWrapper getLocalDate() const;
+        ClockTimeWrapper getUtcClockTime() const;
+        ClockTimeWrapper getLocalClockTime() const;
+
+        // Set the UTC date and clock time
+        void setUtcTime(const DateWrapper& date, const ClockTimeWrapper& time);
+        // Set the UTC date while keeping the clock time the same
+        void setUtcDate(const DateWrapper& date);
+
+        // ONE_BASED: Get the UTC month day (1..dayCount).
+        // ZERO_BASED: (0..dayCount - 1).
+        unsigned int getUtcMonthDay(bool basedness = ONE_BASED) const;
         // ONE_BASED: Get the month day (1..dayCount).
         // ZERO_BASED: (0..dayCount - 1).
         unsigned int getMonthDay(bool basedness = ONE_BASED) const;
         // ONE_BASED: Set the month day (1..dayCount).
         // ZERO_BASED: (0.. dayCount - 1).
         // NOTE: If the day provided is more than the days in the current month, the day will be set to it
-        void setMonthDay(unsigned int day, bool basedness = ONE_BASED);
+        void setUtcMonthDay(unsigned int day, bool basedness = ONE_BASED);
         // Add this number of days to the time.
         // Can be a negative number to subtract days.
         void addDays(int days);
 
+        // WEEK_START_MONDAY: Get the UTC weekday from MON to SUN.
+        // WEEK_START_SUNDAY: Get the UTC weekday from SUN to SAT.
+        // ONE_BASED: (1..7).
+        // ZERO_BASED: (0..6).
+        unsigned int getUtcWeekDay(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
         // WEEK_START_MONDAY: Get the weekday from MON to SUN.
         // WEEK_START_SUNDAY: Get the weekday from SUN to SAT.
         // ONE_BASED: (1..7).
         // ZERO_BASED: (0..6).
         unsigned int getWeekDay(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
 
+        // ONE_BASED: Get the UTC month (1..12).
+        // ZERO_BASED: (0..11).
+        unsigned int getUtcMonth(bool basedness = ONE_BASED) const; 
         // ONE_BASED: Get the month (1..12).
         // ZERO_BASED: (0..11).
         unsigned int getMonth(bool basedness = ONE_BASED) const;   
         // ONE_BASED: If the given month is < 1, it will be passed as 12. If it's > 12, it will passed as 1.
         // ZERO_BASED: If the given month is < 0, it will be set to 11. If it's > 11, it will be set to 0.
-        void setMonth(int month, bool basedness = ONE_BASED);
+        void setUtcMonth(int month, bool basedness = ONE_BASED);
         // Add this number of months to the time.
         // Can be a negative number to subtract.
         void addMonths(int months);
 
+        // Get the UTC year
+        unsigned int getUtcYear() const;
         // Get the year
         unsigned int getYear() const;
         // Set the year
-        void setYear(unsigned int year);
+        void setUtcYear(unsigned int year);
+
+        // Returns a string with this TimeWrapper's local time in the current time zone using one of the pre-existing formats: Date only, Time only or full. 
+        // Returns an empty string if the TimeWrapper is empty.
+        std::string getString(TIME_FORMAT = TIME_FORMAT_FULL) const;
+        // Format this TimeWrapper's local time in the current time zone using the provided format string.
+        // Returns an empty string if the TimeWrapper is empty.
+        std::string getDynamicFmtString(const std::string_view& fmt) const;
 
         template <typename Duration>
         static Duration::rep getDifference(const TimeWrapper& base, const TimeWrapper& subtracted)
@@ -155,6 +261,34 @@ class TimeWrapper
             return left.m_time > right.m_time;
         }
 
+        static std::pair<DateWrapper, ClockTimeWrapper> getTimeComponents(const local_time<seconds>& time);
+        static std::pair<DateWrapper, ClockTimeWrapper> getTimeComponents(const system_clock::time_point& time);
+
+        // Turn a time to a string using the format type.
+        // Returns a string in one of the pre-existing formats: Date only, Time only or full. 
+        template <typename Timepoint>
+        static std::string getString(const Timepoint& time, TIME_FORMAT fmtType = TIME_FORMAT_FULL)
+        {
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getString() only works with std::chrono::time_point types!");
+            switch(fmtType) 
+            {
+                case(TIME_FORMAT_DATE):
+                    return std::format("{:%d/%m/%Y}", time);
+                case(TIME_FORMAT_TIME):
+                    return std::format("{:%R}", time);
+                case(TIME_FORMAT_FULL):
+                default:
+                    return std::format("{:%d/%m/%Y %R}", time);
+            }
+        }
+
+        // Format the time using the provided format string.
+        template <typename Timepoint>
+        static std::string getDynamicFmtString(const Timepoint& time, const std::string_view& fmt)
+        {
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getDynamicFmtString() only works with std::chrono::time_point types!");
+            return std::vformat(fmt, std::make_format_args(time));
+        }
         // Gets the current system date and time
         static TimeWrapper getCurrentTime();
         // Gets the amount of minutes the current timezone is offset from UTC time (including DST).

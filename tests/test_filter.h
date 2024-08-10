@@ -75,8 +75,8 @@ TEST_CASE("FilterRule")
             FilterRule filter = FilterRule(DateContainer(time));
             CHECK(filter.checkPasses(&element) == true);
 
-            time.setMonthDay(13);
-            time.setMonth(1);
+            time.setUtcMonthDay(13);
+            time.setUtcMonth(1);
             element.setValue(time);
             CHECK(filter.checkPasses(&element) == false);
         }

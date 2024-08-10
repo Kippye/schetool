@@ -18,9 +18,9 @@ TEST_CASE("DateContainer")
 
     SECTION("Increment operators")
     {
-        dateContainer.getTime().setYear(2000);
-        dateContainer.getTime().setMonth(4);
-        dateContainer.getTime().setMonthDay(29);
+        dateContainer.getTime().setUtcYear(2000);
+        dateContainer.getTime().setUtcMonth(4);
+        dateContainer.getTime().setUtcMonthDay(29);
         dateContainer++;
         dateContainer++;
         // incremented to next month
