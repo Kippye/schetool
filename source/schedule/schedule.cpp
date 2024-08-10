@@ -1,13 +1,8 @@
 #include <vector>
-#include <ctime>
-#include <cstdio>
-#include <cstdlib>
-#include <string.h>
-#include <schedule.h>
-#include <main_menu_bar_gui.h>
-#include <edit_history_gui.h>
-#include <time.h>
-
+#include <string>
+#include "schedule.h"
+#include "main_menu_bar_gui.h"
+#include "edit_history_gui.h"
 #include "schedule_gui.h"
 
 Schedule::Schedule() : m_core(), m_editHistory(m_core)

@@ -104,7 +104,7 @@ void DateContainer::decrementYear()
 // It would be better to return a double or to get the difference in actual dates (maybe by setting both clock times to the same value?).
 int DateContainer::getDayDifference(const DateContainer& other) const
 {
-    return TimeWrapper::getDifference<days>(m_time, other.getTimeConst());
+    return TimeWrapper::getDifferenceUTC<days>(m_time, other.getTimeConst());
 }
 
 // STATIC

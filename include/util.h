@@ -7,7 +7,6 @@
 #include <deque>
 #include <string>
 #include <sstream>
-#include <ctime>
 
 class containers
 {
@@ -83,10 +82,6 @@ class mytime
 				}
 			}
 		}
-		static unsigned int get_month_day_count(const tm& time)
-		{
-			return get_month_day_count(time.tm_year + 1900, time.tm_mon + 1);
-		}
 
         static unsigned int get_year_day(unsigned int year, unsigned int month, unsigned int monthDay)
         {
@@ -100,9 +95,5 @@ class mytime
             yearDay += monthDay;
 
             return yearDay;
-        }
-        static unsigned int get_year_day(const tm& time)
-        {
-            return get_year_day(time.tm_year + 1900, time.tm_mon + 1, time.tm_mday);
         }
 };

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <ctime>
 #include "time_wrapper.h"
 
 struct TimeContainer
@@ -11,7 +10,6 @@ struct TimeContainer
 
     TimeContainer();
     TimeContainer(int h, int m);
-    TimeContainer(const tm& t);
     TimeContainer(const ClockTimeWrapper& clockTime);
     std::string getString() const;
     int getHours() const;

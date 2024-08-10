@@ -1,14 +1,11 @@
 #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <string.h>
+#include <string>
 #include <vector>
-#include <ctime>
 #include <numeric>
 #include "filter_rule.h"
 #include "weekday_container.h"
-#include <schedule_core.h>
-#include <element_base.h>
+#include "schedule_core.h"
+#include "element_base.h"
 
 // TEMP
 #include <iostream>

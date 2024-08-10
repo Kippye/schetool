@@ -1,6 +1,5 @@
 
 #include <array>
-#include <ctime>
 #include <iterator>
 #include <string>
 #include <cstdio>

@@ -1,5 +1,5 @@
-#include <ctime>
 #include "weekday_container.h"
+#include "time_wrapper.h"
 
 void WeekdayContainer::update(const SelectOptionChange& change, size_t optionCount)
 {
@@ -14,9 +14,7 @@ const std::set<size_t> WeekdayContainer::getSelection() const
 // STATIC
 WeekdayContainer WeekdayContainer::getCurrentSystemWeekday()
 {
-    time_t time = std::time(0);
-    tm now = *localtime(&time);
     WeekdayContainer currentWeekday;
-    currentWeekday.setSelected(now.tm_wday == 0 ? 6 : now.tm_wday - 1, true);
+    currentWeekday.setSelected(TimeWrapper::getCurrentTime().getWeekday(WEEK_START_MONDAY, ZERO_BASED), true);
     return currentWeekday;
 }
