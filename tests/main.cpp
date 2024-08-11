@@ -12,8 +12,6 @@
 #include "test_schedule_gui.h"
 #include "test_time_handler.h"
 
-Program program = Program();
-
 class testListener : public Catch::EventListenerBase 
 {
     public:
@@ -22,11 +20,13 @@ class testListener : public Catch::EventListenerBase
         void testRunStarting(Catch::TestRunInfo const&) override 
         {
             std::cout << "TESTS BEGIN" << std::endl;
+            std::setlocale(LC_ALL, "");
         }
 
         void testRunEnded(Catch::TestRunStats const& test) override
         {
             std::cout << "TESTS END" << std::endl;
+            Program program = Program();
             program.loop();
         }
 };

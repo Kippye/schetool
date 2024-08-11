@@ -295,18 +295,6 @@ std::string TimeWrapper::getDynamicFmtString(const std::string_view& fmt) const
 }
 
 
-std::pair<DateWrapper, ClockTimeWrapper> TimeWrapper::getTimeComponents(const local_time<seconds>& time)
-{
-    auto localDays = floor<days>(time);
-    return { DateWrapper(year_month_day(localDays)), ClockTimeWrapper(hh_mm_ss(floor<seconds>(time - localDays))) };
-}
-
-std::pair<DateWrapper, ClockTimeWrapper> TimeWrapper::getTimeComponents(const system_clock::time_point& time)
-{
-    auto timeDays = floor<days>(time);
-    return { DateWrapper(year_month_day(timeDays)), ClockTimeWrapper(hh_mm_ss(floor<seconds>(time - timeDays))) };
-}
-
 TimeWrapper TimeWrapper::getCurrentTime()
 {
     #ifdef PERFORM_UNIT_TESTS
@@ -315,7 +303,7 @@ TimeWrapper TimeWrapper::getCurrentTime()
         return testCurrentTimeOverride;
     }
     #endif
-    return TimeWrapper(utc_clock::to_sys(utc_clock::now()));
+    return TimeWrapper(system_clock::now());
 }
 
 int TimeWrapper::limitYearToValidRange(int year)

@@ -273,8 +273,13 @@ class TimeWrapper
             return left.m_time > right.m_time;
         }
 
-        static std::pair<DateWrapper, ClockTimeWrapper> getTimeComponents(const local_time<seconds>& time);
-        static std::pair<DateWrapper, ClockTimeWrapper> getTimeComponents(const system_clock::time_point& time);
+        template <typename Timepoint>
+        static std::pair<DateWrapper, ClockTimeWrapper> getTimeComponents(const Timepoint& time)
+        {
+            static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getTimeComponents() only works with std::chrono::time_point types!");
+            auto timeDays = floor<days>(time);
+            return { DateWrapper(year_month_day(timeDays)), ClockTimeWrapper(hh_mm_ss(floor<seconds>(time - timeDays))) };
+        }
 
         // Turn a time to a string using the format type.
         // Returns a string in one of the pre-existing formats: Date only, Time only or full. 

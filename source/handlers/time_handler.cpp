@@ -2,7 +2,8 @@
 
 void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule)
 {
-    ioHandler.fileReadEvent.addListener(fileReadListener);
+    ioHandler.fileReadEvent.addListener(fileOpenListener);
+    ioHandler.fileCreatedEvent.addListener(fileOpenListener);
     ioHandler.fileUnloadEvent.addListener(fileUnloadListener);
     m_schedule = &schedule;
 }
@@ -70,9 +71,9 @@ void TimeHandler::timeTick()
     if (m_lastTickTime.getIsEmpty()) { return; }
 
     TimeWrapper currentTime = TimeWrapper::getCurrentTime();
-
     // Apply any resets since the last tick time.
     applyResetsSince(m_lastTickTime);
+    m_lastTickTime = currentTime;
 }
 
 void TimeHandler::handleFileUnloaded()

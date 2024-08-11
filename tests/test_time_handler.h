@@ -98,4 +98,7 @@ TEST_CASE("TimeHandler")
         CHECK(schedule.getElementValue<bool>(1, 0) == true);
         CHECK(schedule.getElementValue<bool>(2, 0) == true);
     }
+
+    // For the love of all that is holy, it SUCKS that i need to do this.
+    TimeWrapper::testCurrentTimeOverride.clear();
 }

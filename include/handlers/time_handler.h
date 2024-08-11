@@ -11,7 +11,7 @@ class TimeHandler
         TimeWrapper m_lastTickTime = TimeWrapper();
         Schedule* m_schedule;
 
-        std::function<void(FileInfo)> fileReadListener = [&](FileInfo fileInfo)
+        std::function<void(FileInfo)> fileOpenListener = [&](FileInfo fileInfo)
         {
             applyResetsSinceEditTime(fileInfo.getScheduleEditTime());
         };

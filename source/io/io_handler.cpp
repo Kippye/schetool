@@ -166,11 +166,11 @@ bool IO_Handler::readSchedule(const char* name)
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
         m_schedule->sortColumns();
         m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(fs::path(relativePath)), readFileInfo->getScheduleEditTime());
-        fileReadEvent.invoke(m_currentFileInfo);
         sendFileInfoUpdates();
         m_startPageGui->setVisible(false);
         m_scheduleGui->setVisible(true);
         m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
+        fileReadEvent.invoke(m_currentFileInfo);
         return true;
     }
     else
@@ -187,11 +187,12 @@ bool IO_Handler::createNewSchedule(const char* name)
     if (writeSchedule(name)) // passes new list of file names to gui
     {
         fs::path createdFilePath = fs::path(makeRelativePathFromName(name));
-        m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(createdFilePath), DateContainer::getCurrentSystemDate().getTime());
+        m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(createdFilePath), TimeWrapper::getCurrentTime());
         sendFileInfoUpdates();
         passFileNamesToGui();
         m_startPageGui->setVisible(false);
         m_scheduleGui->setVisible(true);
+        fileCreatedEvent.invoke(m_currentFileInfo);
         return true;
     }
     return false;
@@ -331,7 +332,11 @@ void IO_Handler::openMostRecentFile()
         // the most recent file is a normal file, read it
         else
         {
-		    readSchedule(getLastEditedScheduleStemName().c_str());
+            if (!readSchedule(getLastEditedScheduleStemName().c_str()))
+            {
+                // Go to start page if there was a failure to read the file
+                goToStartPage();
+            }
         }
 	}
 	// There are no Schedule files. Open the Start Page so the user can create one from there or File->New.
