@@ -152,7 +152,11 @@ inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element) c
         case Comparison::IsRelativeToToday:
         {
             // TODO: Handle offsets as well, maybe.
-            return (value == DateContainer::getCurrentSystemDate());
+            // This is kind of weird, i know. Let me explain!
+            // The checked value is a DATE. It should have no time component and current time should not affect it. So we get the UTC date of the DateContainer's "timeless" TimeWrapper.
+            // The current time compared against is also a date, but it uses the TimeWrapper's time component and is local. 
+            // This way, when the local time is 23:59, its date will be A and when midnight comes, A + 1. The compared date stays the same.
+            return (value.getTimeConst().getDateUTC() == TimeWrapper::getCurrentTime().getLocalDate());
         }
         default: isComparisonValidForElement(element); return false;
     }
