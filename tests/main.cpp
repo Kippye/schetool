@@ -9,7 +9,6 @@
 #include "test_date_container.h" // must be tested before filters since filters use it
 #include "test_filter.h" // tested before FilterGroups since they are contained
 #include "test_filter_group.h"
-#include "test_schedule_gui.h"
 #include "test_time_handler.h"
 
 class testListener : public Catch::EventListenerBase 

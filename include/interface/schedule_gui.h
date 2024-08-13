@@ -1,9 +1,11 @@
 #pragma once
+#include <map>
 #include "element_editor_subgui.h"
 #include "filter_editor_subgui.h"
 #include "gui.h"
 #include "window.h"
 #include "input.h"
+#include "main_menu_bar_gui.h"
 #include "element_base.h"
 #include "select_container.h"
 #include "select_options.h"
@@ -14,10 +16,21 @@
 class ScheduleGui : public Gui
 {
     private:
+        // A map containing the texture IDs of gui textures.
+        // Each texture's ID will be set when the texture at gui creation.
+        inline static std::map<std::string, unsigned int> textures = 
+        {
+            { "icon_reset", 0 }
+        };
         const ScheduleCore& m_scheduleCore;
+        const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
+        bool m_openDateSelectPopup = false;
+        unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
+        TimeWrapper m_scheduleDateOverride = TimeWrapper();
         void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
+        static void loadTextures();
     public:
-        ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
+        ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui);
 
         // Events
         // setElementValue(column, row, value)

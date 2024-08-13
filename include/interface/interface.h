@@ -30,9 +30,11 @@ class Interface
 
 		void init(Window*, Input*);
         template <typename T, typename... Args>
-        void addGui(Args&&... args)
+        std::shared_ptr<T> addGui(Args&&... args)
         {
-            addGui(std::make_shared<T>(std::forward<Args>(args)...));
+            std::shared_ptr<T> gui = std::make_shared<T>(std::forward<Args>(args)...);
+            addGui(gui);
+            return gui;
         }
         template <typename T>
         std::shared_ptr<T> getGuiByID(const std::string& ID)

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "schedule_constants.h"
 #include "schedule_gui.h"
+#include "textures.h"
 #include "util.h"
 #include "element.h"
 #include "element_base.h"
@@ -14,20 +15,39 @@
 #include "gui_templates.h"
 #include <iostream>
 
-ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents) : m_scheduleCore(scheduleCore), Gui(ID) 
+ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui) : m_scheduleCore(scheduleCore), Gui(ID), m_mainMenuBarGui(mainMenuBarGui)
 {
+    loadTextures();
+
 	addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
 	addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
+}
+
+void ScheduleGui::loadTextures()
+{
+    TextureLoader textureLoader;
+    for (auto& textureName_ID : textures)
+    {
+        if (textureName_ID.second != 0) { continue; }
+        int _w, _h;
+        unsigned int ID;
+        // TODO: Allow different extensions
+        textureLoader.loadTextureData(std::string(textureName_ID.first).append(".png").c_str(), &_w, &_h, GUI_TEXTURE_DIR, false, &ID, true);
+        textures.at(textureName_ID.first) = ID;
+    }
 }
 
 void ScheduleGui::draw(Window& window, Input& input)
 {
     if (m_visible == false) { return; }
 
-    const float FILTER_SPACE_VERTICAL = 0.0f; // 48.0f;
-    const float SCHEDULE_OFFSET = 32.0f; // highestFilterCount * FILTER_SPACE_VERTICAL;
+    ImGuiStyle style = ImGui::GetStyle();
+    ImVec2 labelSize = ImGui::CalcTextSize("M", NULL, true);
+    float resetButtonSize = ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
+    const float SCHEDULE_TOP_BAR_HEIGHT = resetButtonSize + style.ItemSpacing.y * 2;
     const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
     const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
+    const float SCHEDULE_OFFSET = SCHEDULE_TOP_BAR_HEIGHT + 32.0f;
     const float CHILD_WINDOW_WIDTH = (float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 8);
     const float CHILD_WINDOW_HEIGHT = (float)(window.SCREEN_HEIGHT - SCHEDULE_OFFSET - ADD_ROW_BUTTON_HEIGHT - 16.0f);
     //ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
@@ -35,7 +55,34 @@ void ScheduleGui::draw(Window& window, Input& input)
 	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 
 	ImGui::Begin(m_ID.c_str(), NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
-		// TODO: For the schedule table, combine
+        // Add menu bar height as offset
+        if (m_mainMenuBarGui)
+        {
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + m_mainMenuBarGui->getHeight());
+        }
+        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)textures.at("icon_reset"), ImVec2(resetButtonSize, resetButtonSize)))
+        {
+            // TODO: Implement
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("View specific date"))
+        {
+            m_openDateSelectPopup = true;
+        }
+        if (ImGui::BeginPopup("Schedule Date Selector"))
+        {
+            TimeWrapper currentTime = TimeWrapper::getCurrentTime();
+            m_dateSelectorYear = currentTime.getYearUTC();
+            m_dateSelectorMonth = currentTime.getMonthUTC();
+            gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth);
+            ImGui::EndPopup();
+        }
+        if (m_openDateSelectPopup)
+        {
+            ImGui::OpenPopup("Schedule Date Selector");
+            m_openDateSelectPopup = false;
+        }
+        // TODO: For the schedule table, combine
 		// Reorderable, hideable, with headers & ImGuiTableFlags_ScrollY and background colours and context menus in body and custom headers
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_OFFSET));

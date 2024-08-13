@@ -10,9 +10,9 @@ Schedule::Schedule() : m_core(), m_editHistory(m_core)
 
 void Schedule::init(Input& input, Interface& interface)
 {
-    interface.addGui<ScheduleGui>("ScheduleGui", m_core, m_scheduleEvents);
+    auto scheduleGui = interface.addGui<ScheduleGui>("ScheduleGui", m_core, m_scheduleEvents, interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui"));
 
-    if (auto scheduleGui = interface.getGuiByID<ScheduleGui>("ScheduleGui"))
+    if (scheduleGui)
     {
         if (auto elementEditorSubGui = scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
         {

@@ -5,8 +5,8 @@
 
 struct TimeContainer
 {
-    int hours;
-    int minutes;
+    int hours = 0;
+    int minutes = 0;
 
     TimeContainer();
     TimeContainer(int h, int m);

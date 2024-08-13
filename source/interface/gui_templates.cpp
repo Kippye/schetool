@@ -19,11 +19,16 @@ bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, boo
 
 bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate, bool displayClearButton)
 {
+    return DateEditor(editorDate.getTime(), viewedYear, viewedMonth, displayDate, displayClearButton);
+}
+
+bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate, bool displayClearButton)
+{
     bool changedDate = false;
     if (displayDate)
     {
         // Display the date, with a minimum width for empty dates
-        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getString().c_str(), viewedYear, viewedMonth);
+        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getStringUTC().c_str(), viewedYear, viewedMonth);
     }
     if (displayClearButton && ImGui::Button("Clear"))
     {
@@ -71,10 +76,10 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     {
         if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(24, 24)) && month == viewedMonth)
         {
-            editorDate.getTime().setDateUTC({viewedYear, viewedMonth, (unsigned int)dayDisplayNumber});
+            editorDate.setDateUTC({viewedYear, viewedMonth, (unsigned int)dayDisplayNumber});
             changedDate = true;
         }
-        if (dayDisplayNumber == editorDate.getTime().getMonthDayUTC())
+        if (dayDisplayNumber == editorDate.getMonthDayUTC())
         {
             // TODO: Highlight this day as selected in the calendar
         }
