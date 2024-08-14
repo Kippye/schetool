@@ -87,8 +87,9 @@ void ScheduleGui::draw(Window& window, Input& input)
         }
         ImGui::SameLine();
         // Current date text
-        const std::string_view currentDateFmt = m_scheduleDateOverride.getMonthDayUTC() < 10 ? "{:%A,%e. %B %Y}" : "{:%A, %e. %B %Y}";
-        std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? TimeWrapper::getCurrentTime().getDynamicFmtString(currentDateFmt) : m_scheduleDateOverride.getDynamicFmtStringUTC(currentDateFmt);
+        const TimeWrapper& currentDate = m_scheduleDateOverride.getIsEmpty() == false ? m_scheduleDateOverride : TimeWrapper::getCurrentTime();
+        const std::string_view currentDateFmt = currentDate.getMonthDayUTC() < 10 ? "{:%A,%e. %B %Y}" : "{:%A, %e. %B %Y}";
+        std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? currentDate.getDynamicFmtString(currentDateFmt) : currentDate.getDynamicFmtStringUTC(currentDateFmt);
         // std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? TimeWrapper::getCurrentTime().getString(TIME_FORMAT_DATE) : m_scheduleDateOverride.getStringUTC(TIME_FORMAT_DATE);
         ImGui::PushFont(m_font32x);
         const float viewedDateTextWidth = ImGui::CalcTextSize(viewedDateText.c_str()).x;
