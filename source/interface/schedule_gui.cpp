@@ -74,7 +74,12 @@ void ScheduleGui::draw(Window& window, Input& input)
         }
         if (ImGui::BeginPopup("Schedule Date Selector"))
         {
-            gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth);
+            // Display date editor to edit m_scheduleDateOverride.
+            // If the current date was selected, just clear m_scheduleDateOverride again.
+            if (gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth) && m_scheduleDateOverride.getDateUTC() == TimeWrapper::getCurrentTime().getDateUTC())
+            {
+                m_scheduleDateOverride.clear();
+            }
             ImGui::EndPopup();
         }
         if (m_openDateSelectPopup)
@@ -255,6 +260,15 @@ void ScheduleGui::draw(Window& window, Input& input)
 					ImGui::TableNextRow();
 					for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 					{
+                        bool columnEditDisabled = false;
+                        // If viewing a different date and the column has a reset option then show it disabled 
+                        if (m_scheduleDateOverride.getIsEmpty() == false && m_scheduleCore.getColumn(column)->resetOption != ColumnResetOption::Never)
+                        {
+                            columnEditDisabled = true;
+                            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.25f);
+                        }
+
 						ImGui::TableSetColumnIndex(column);
 						// the buttons for removing rows are displayed in the first displayed column
 						if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0)
@@ -276,7 +290,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 						{
 							case(SCH_BOOL):
 							{
-                                bool newValue = m_scheduleCore.getElementValueConstRef<bool>(column, row);
+                                bool newValue = getElementValue<bool>(column, row, columnEditDisabled);
                                 if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
                                 {
                                     setElementValueBool.invoke(column, row, newValue);
@@ -285,7 +299,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_NUMBER):
 							{
-                                int newValue = m_scheduleCore.getElementValueConstRef<int>(column, row);
+                                int newValue = getElementValue<int>(column, row, columnEditDisabled);
                                 if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     setElementValueNumber.invoke(column, row, newValue);
@@ -294,7 +308,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_DECIMAL):
 							{
-                                double newValue = m_scheduleCore.getElementValueConstRef<double>(column, row);
+                                double newValue = getElementValue<double>(column, row, columnEditDisabled);
                                 if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     setElementValueDecimal.invoke(column, row, newValue);
@@ -303,7 +317,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_TEXT):
 							{
-                                std::string value = m_scheduleCore.getElementValueConstRef<std::string>(column, row);
+                                std::string value = getElementValue<std::string>(column, row, columnEditDisabled);
                                 std::string displayedValue = value;
 
                                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -318,7 +332,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                 // element to display the value as a wrapped, multiline text
                                 ImGui::TextWrapped("%s", displayedValue.c_str());
                                 // Open text editor if clicked while hovering the current column & row
-                                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::IsAnyItemHovered() == false)
+                                if (columnEditDisabled == false && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::IsAnyItemHovered() == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -344,7 +358,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_SELECT):
 							{
-                                SelectContainer value = m_scheduleCore.getElementValueConstRef<SelectContainer>(column, row);
+                                SelectContainer value = getElementValue<SelectContainer>(column, row, columnEditDisabled);
                                 auto selection = value.getSelection();
                                 const std::vector<std::string>& optionNames = m_scheduleCore.getColumn(column)->selectOptions.getOptions();
 
@@ -447,7 +461,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
                             case(SCH_WEEKDAY):
 							{
-                                WeekdayContainer value = m_scheduleCore.getElementValueConstRef<WeekdayContainer>(column, row);
+                                WeekdayContainer value = getElementValue<WeekdayContainer>(column, row, columnEditDisabled);
                                 auto selection = value.getSelection();
                                 const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
 
@@ -550,7 +564,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_TIME):
 							{
-                                TimeContainer value = m_scheduleCore.getElementValueConstRef<TimeContainer>(column, row);
+                                TimeContainer value = getElementValue<TimeContainer>(column, row, columnEditDisabled);
 
                                 // Button displaying the Time of the current Time element
                                 if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
@@ -578,7 +592,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							}
 							case(SCH_DATE):
 							{
-                                auto value = m_scheduleCore.getElementValueConstRef<DateContainer>(column, row);
+                                auto value = getElementValue<DateContainer>(column, row, columnEditDisabled);
                             
                                 // Button displaying the date of the current Date element
                                 if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(),
@@ -605,7 +619,13 @@ void ScheduleGui::draw(Window& window, Input& input)
                                 }
 								break;
 							}
+
 						}
+                        if (columnEditDisabled)
+                        {
+                            ImGui::PopItemFlag();
+                            ImGui::PopStyleVar();
+                        }
 
 						if (ImGui::IsItemHovered())
 						{

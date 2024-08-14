@@ -59,4 +59,9 @@ class ScheduleGui : public Gui
         Event<size_t> removeRow;
 
         void draw(Window& window, Input& input) override;
+        template <typename T>
+        T getElementValue(size_t column, size_t row, bool useDefaultValue) const
+        {
+            return useDefaultValue == true ? Element<T>::getDefaultValue() : m_scheduleCore.getElementValueConstRef<T>(column, row);
+        }
 };
