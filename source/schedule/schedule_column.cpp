@@ -160,23 +160,19 @@ size_t Column::getFilterGroupCount() const
     return m_filterGroupsPerType.at(type).size();
 }
 
-bool Column::checkElementPassesFilters(const ElementBase* element) const
-{
-    bool passes = true;
-
-    for (const auto& filterGroup: m_filterGroupsPerType.at(type))
-    {
-        passes = passes && filterGroup.checkPasses(element);
-    }
-
-    return passes;
-}
-
-bool Column::checkElementPassesFilters(size_t index) const
+bool Column::checkElementPassesFilters(size_t index, const TimeWrapper& currentTime) const
 {
     if (hasElement(index) == false) { return false; }
 
-    return checkElementPassesFilters(getElementConst(index));
+    bool passes = true;
+    const ElementBase* element = getElementConst(index);
+
+    for (const auto& filterGroup: m_filterGroupsPerType.at(type))
+    {
+        passes = passes && filterGroup.checkPasses(element, currentTime);
+    }
+
+    return passes;
 }
 
 bool Column::addFilterGroup(size_t groupIndex, const FilterGroup& filterGroup)

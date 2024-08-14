@@ -183,7 +183,7 @@ void TimeWrapper::setTimeUTC(const DateWrapper& date, const ClockTimeWrapper& ti
 
 void TimeWrapper::setDateUTC(const DateWrapper& date)
 {
-    setTimeUTC(date, getLocalClockTime());
+    setTimeUTC(date, getClockTimeUTC());
 }
 
 unsigned int TimeWrapper::getMonthDayUTC(bool basedness) const

@@ -115,13 +115,12 @@ struct Column
         size_t getFilterCount() const;
         size_t getFilterRuleCount() const;
 
-        // Uses the index to get the element itself (safer since it's more likely an element of the same type).
-        // Returns false if no element exists at the index.
+        // Uses the index to get the element itself.
+        // Returns false if no element exists at the index or the element doesn't pass at least one filter.
         // Returns true if the element passes all FilterGroups.
-        bool checkElementPassesFilters(size_t elementIndex) const;
-        // Returns true if the element passes all FilterGroups.
-        bool checkElementPassesFilters(const ElementBase* elementIndex) const;
-
+        // Optionally pass a TimeWrapper to use instead of TimeWrapper::getCurrentTime() in filters. 
+        bool checkElementPassesFilters(size_t elementIndex, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const;
+ 
         bool hasFilterGroupAt(size_t index) const;
         bool hasFilterAt(size_t groupIndex, size_t filterIndex) const;
 

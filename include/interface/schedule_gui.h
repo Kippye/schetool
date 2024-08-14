@@ -22,6 +22,8 @@ class ScheduleGui : public Gui
         {
             { "icon_reset", 0 }
         };
+        // TEMP?
+        ImFont* m_font32x;
         const ScheduleCore& m_scheduleCore;
         const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
         bool m_openDateSelectPopup = false;

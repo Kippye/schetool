@@ -19,6 +19,9 @@ ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, Sched
 {
     loadTextures();
 
+    // TEMP ?
+    m_font32x = ImGui::GetIO().Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 32.0f);
+
 	addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
 	addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 }
@@ -60,9 +63,9 @@ void ScheduleGui::draw(Window& window, Input& input)
         {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + m_mainMenuBarGui->getHeight());
         }
-        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)textures.at("icon_reset"), ImVec2(resetButtonSize, resetButtonSize)))
+        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)textures.at("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
         {
-            // TODO: Implement
+            m_scheduleDateOverride.clear();
         }
         ImGui::SameLine();
         if (ImGui::Button("View specific date"))
@@ -71,17 +74,27 @@ void ScheduleGui::draw(Window& window, Input& input)
         }
         if (ImGui::BeginPopup("Schedule Date Selector"))
         {
-            TimeWrapper currentTime = TimeWrapper::getCurrentTime();
-            m_dateSelectorYear = currentTime.getYearUTC();
-            m_dateSelectorMonth = currentTime.getMonthUTC();
             gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth);
             ImGui::EndPopup();
         }
         if (m_openDateSelectPopup)
         {
+            TimeWrapper currentTime = TimeWrapper::getCurrentTime();
+            m_dateSelectorYear = currentTime.getYearUTC();
+            m_dateSelectorMonth = currentTime.getMonthUTC();
             ImGui::OpenPopup("Schedule Date Selector");
             m_openDateSelectPopup = false;
         }
+        ImGui::SameLine();
+        // Current date text
+        const std::string_view currentDateFmt = m_scheduleDateOverride.getMonthDayUTC() < 10 ? "{:%A,%e. %B %Y}" : "{:%A, %e. %B %Y}";
+        std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? TimeWrapper::getCurrentTime().getDynamicFmtString(currentDateFmt) : m_scheduleDateOverride.getDynamicFmtStringUTC(currentDateFmt);
+        // std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? TimeWrapper::getCurrentTime().getString(TIME_FORMAT_DATE) : m_scheduleDateOverride.getStringUTC(TIME_FORMAT_DATE);
+        ImGui::PushFont(m_font32x);
+        const float viewedDateTextWidth = ImGui::CalcTextSize(viewedDateText.c_str()).x;
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2.0f - viewedDateTextWidth / 2.0f);
+        ImGui::Text("%s", viewedDateText.c_str());
+        ImGui::PopFont();
         // TODO: For the schedule table, combine
 		// Reorderable, hideable, with headers & ImGuiTableFlags_ScrollY and background colours and context menus in body and custom headers
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
@@ -227,10 +240,13 @@ void ScheduleGui::draw(Window& window, Input& input)
                     // CHECK FILTERS BEFORE DRAWING ROW
                     for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
                     {
-                        // check if the row's Element passes every FilterGroup in this Column
-                        if (m_scheduleCore.getColumn(column)->checkElementPassesFilters(row) == false)
+                        // Check if the row's Element passes every FilterGroup in this Column
+                        bool passesAllFilters = m_scheduleCore.getColumn(column)->checkElementPassesFilters(row, 
+                            m_scheduleDateOverride // Pass override date as current (Uses TimeWrapper::getCurrentTime() if it's empty)
+                        );  
+                        // fails to pass, don't show this row                            
+                        if (passesAllFilters == false)
                         {
-                            // fails to pass, don't show this row                            
                             goto do_not_draw_row;
                         }
                     }

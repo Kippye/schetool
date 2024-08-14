@@ -28,7 +28,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     if (displayDate)
     {
         // Display the date, with a minimum width for empty dates
-        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getStringUTC().c_str(), viewedYear, viewedMonth);
+        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getStringUTC(TIME_FORMAT_DATE).c_str(), viewedYear, viewedMonth);
     }
     if (displayClearButton && ImGui::Button("Clear"))
     {

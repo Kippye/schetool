@@ -14,7 +14,7 @@ class FilterGroup
     public:
         FilterGroup() = default;
         FilterGroup(const std::vector<Filter>& filters, const std::string& name = "Filter Group", LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::And);
-        bool checkPasses(const ElementBase* element) const;
+        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const;
         bool hasFilterAt(size_t index) const;
 
         Filter& getFilter(size_t index);
