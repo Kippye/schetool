@@ -13,6 +13,7 @@
 #include "interface.h"
 #include "schedule_column.h"
 #include "schedule_core.h"
+#include "schedule_gui.h"
 
 const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
@@ -22,6 +23,7 @@ class Schedule
         ScheduleEditHistory m_editHistory;
         ScheduleCore m_core;
         ScheduleEvents m_scheduleEvents;
+        std::shared_ptr<ScheduleGui> m_scheduleGui;
         std::string m_scheduleName;
 
         // input listeners AND gui listeners
@@ -347,6 +349,9 @@ class Schedule
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
         void setRow(size_t index, std::vector<ElementBase*> elementData);
         std::vector<size_t> getSortedRowIndices();
+
+        // Interface methods
+        void applyColumnTimeBasedReset(size_t columnIndex);
 
         // ELEMENTS.
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.

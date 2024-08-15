@@ -761,3 +761,8 @@ void ScheduleGui::displayColumnContextPopup(unsigned int columnIndex, ImGuiTable
 	if (ImGui::Button("Close"))
 		ImGui::CloseCurrentPopup();
 }
+
+void ScheduleGui::clearDateOverride()
+{
+    m_scheduleDateOverride.clear();
+}

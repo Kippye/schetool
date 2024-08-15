@@ -36,7 +36,7 @@ void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
     // Apply daily resets
     for (size_t columnIndex : columnsByResetOption.at(ColumnResetOption::Daily))
     {
-        m_schedule->resetColumn(columnIndex, false);
+        m_schedule->applyColumnTimeBasedReset(columnIndex);
     }
 
     // Enough days since previous time to get to the next week
@@ -44,7 +44,7 @@ void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
     {
         for (size_t columnIndex : columnsByResetOption.at(ColumnResetOption::Weekly))
         {
-            m_schedule->resetColumn(columnIndex, false);
+            m_schedule->applyColumnTimeBasedReset(columnIndex);
         }
     }
 
@@ -54,7 +54,7 @@ void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
     {
         for (size_t columnIndex : columnsByResetOption.at(ColumnResetOption::Monthly))
         {
-            m_schedule->resetColumn(columnIndex, false);
+            m_schedule->applyColumnTimeBasedReset(columnIndex);
         }
     }
 }

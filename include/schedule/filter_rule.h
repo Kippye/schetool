@@ -15,7 +15,7 @@ class FilterRule : public FilterRuleBase
             m_passValue = passValue;
         }
 
-        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const override
+        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const override
         {
             if (isComparisonValidForElement(element) == false) { return false; }
             // TODO: Check if the provided ElementBase is of the correct type.

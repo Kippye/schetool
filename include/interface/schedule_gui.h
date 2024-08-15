@@ -31,6 +31,11 @@ class ScheduleGui : public Gui
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
         void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
         static void loadTextures();
+        template <typename T>
+        T getElementValue(size_t column, size_t row, bool useDefaultValue) const
+        {
+            return useDefaultValue == true ? Element<T>::getDefaultValue() : m_scheduleCore.getElementValueConstRef<T>(column, row);
+        }
     public:
         ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui);
 
@@ -59,9 +64,5 @@ class ScheduleGui : public Gui
         Event<size_t> removeRow;
 
         void draw(Window& window, Input& input) override;
-        template <typename T>
-        T getElementValue(size_t column, size_t row, bool useDefaultValue) const
-        {
-            return useDefaultValue == true ? Element<T>::getDefaultValue() : m_scheduleCore.getElementValueConstRef<T>(column, row);
-        }
+        void clearDateOverride();
 };

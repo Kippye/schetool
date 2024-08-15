@@ -3,23 +3,22 @@
 #include "schedule.h"
 #include "main_menu_bar_gui.h"
 #include "edit_history_gui.h"
-#include "schedule_gui.h"
 
-Schedule::Schedule() : m_core(), m_editHistory(m_core)
+Schedule::Schedule() : m_core(), m_editHistory(m_core), m_scheduleGui(nullptr)
 {}
 
 void Schedule::init(Input& input, Interface& interface)
 {
-    auto scheduleGui = interface.addGui<ScheduleGui>("ScheduleGui", m_core, m_scheduleEvents, interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui"));
+    m_scheduleGui = interface.addGui<ScheduleGui>("ScheduleGui", m_core, m_scheduleEvents, interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui"));
 
-    if (scheduleGui)
+    if (m_scheduleGui)
     {
-        if (auto elementEditorSubGui = scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+        if (auto elementEditorSubGui = m_scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
         {
             elementEditorSubGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener); 
         }
 
-        if (auto filterEditorSubGui = scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
+        if (auto filterEditorSubGui = m_scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
         {
             filterEditorSubGui->addColumnFilterGroup.addListener(addFilterGroupListener);
             filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
@@ -36,26 +35,26 @@ void Schedule::init(Input& input, Interface& interface)
             }
         }
         
-        scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
-        scheduleGui->setElementValueNumber.addListener(setElementValueListenerNumber);
-        scheduleGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
-        scheduleGui->setElementValueText.addListener(setElementValueListenerText);
-        scheduleGui->setElementValueSelect.addListener(setElementValueListenerSelect);
-        scheduleGui->setElementValueWeekday.addListener(setElementValueListenerWeekday);
-        scheduleGui->setElementValueTime.addListener(setElementValueListenerTime);
-        scheduleGui->setElementValueDate.addListener(setElementValueListenerDate);
+        m_scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
+        m_scheduleGui->setElementValueNumber.addListener(setElementValueListenerNumber);
+        m_scheduleGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
+        m_scheduleGui->setElementValueText.addListener(setElementValueListenerText);
+        m_scheduleGui->setElementValueSelect.addListener(setElementValueListenerSelect);
+        m_scheduleGui->setElementValueWeekday.addListener(setElementValueListenerWeekday);
+        m_scheduleGui->setElementValueTime.addListener(setElementValueListenerTime);
+        m_scheduleGui->setElementValueDate.addListener(setElementValueListenerDate);
 
-        scheduleGui->addDefaultColumn.addListener(addDefaultColumnListener);
-        scheduleGui->removeColumn.addListener(removeColumnListener);
-        scheduleGui->resetColumn.addListener(resetColumnListener);
+        m_scheduleGui->addDefaultColumn.addListener(addDefaultColumnListener);
+        m_scheduleGui->removeColumn.addListener(removeColumnListener);
+        m_scheduleGui->resetColumn.addListener(resetColumnListener);
 
-        scheduleGui->setColumnType.addListener(setColumnTypeListener);
-        scheduleGui->setColumnSort.addListener(setColumnSortListener);
-        scheduleGui->setColumnName.addListener(setColumnNameListener);
-        scheduleGui->setColumnResetOption.addListener(setColumnResetOptionListener);
+        m_scheduleGui->setColumnType.addListener(setColumnTypeListener);
+        m_scheduleGui->setColumnSort.addListener(setColumnSortListener);
+        m_scheduleGui->setColumnName.addListener(setColumnNameListener);
+        m_scheduleGui->setColumnResetOption.addListener(setColumnResetOptionListener);
 
-        scheduleGui->addRow.addListener(addRowListener);
-        scheduleGui->removeRow.addListener(removeRowListener);
+        m_scheduleGui->addRow.addListener(addRowListener);
+        m_scheduleGui->removeRow.addListener(removeRowListener);
     }
     if (auto mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui"))
     {
@@ -464,4 +463,17 @@ void Schedule::setRow(size_t index, std::vector<ElementBase*> elementData)
 std::vector<size_t> Schedule::getSortedRowIndices()
 {
     return m_core.getSortedRowIndices();
+}
+
+
+void Schedule::applyColumnTimeBasedReset(size_t columnIndex)
+{
+    // Reset the column and do not add to history since the user didn't make the edit.
+    resetColumn(columnIndex, false);
+
+    // Reset the m_scheduleGui's date override just in case.
+    if (m_scheduleGui)
+    {
+        m_scheduleGui->clearDateOverride();
+    }
 }

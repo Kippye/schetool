@@ -51,7 +51,7 @@ class FilterRuleContainer
         // FilterRuleBase "API"
 
         //
-        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
+        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const
         {
             if (isEmpty()) { return false; }
             return m_filterRule->checkPasses(element, currentTime);
