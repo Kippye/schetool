@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(schetool VERSION 0.6.2)
+project(schetool VERSION 0.7.0)
 
 set(PROGRAM_NAME ${PROJECT_NAME})
 
