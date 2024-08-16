@@ -13,6 +13,7 @@
 #include "interface.h"
 #include "schedule_column.h"
 #include "schedule_core.h"
+#include "schedule_gui.h"
 
 const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
@@ -22,6 +23,7 @@ class Schedule
         ScheduleEditHistory m_editHistory;
         ScheduleCore m_core;
         ScheduleEvents m_scheduleEvents;
+        std::shared_ptr<ScheduleGui> m_scheduleGui;
         std::string m_scheduleName;
 
         // input listeners AND gui listeners
@@ -229,6 +231,15 @@ class Schedule
         {
             setColumnName(col, name);
         };
+        std::function<void(size_t, ColumnResetOption)> setColumnResetOptionListener = [&](size_t col, ColumnResetOption option)
+        {
+            setColumnResetOption(col, option);
+        };
+        // whole column modification
+        std::function<void(size_t, bool)> resetColumnListener = [&](size_t col, bool addToHistory)
+        {
+            resetColumn(col, addToHistory);
+        };
         // row modification
         std::function<void(size_t)> addRowListener = [&](size_t col)
         {
@@ -276,6 +287,7 @@ class Schedule
         void setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory = true);
         void setColumnName(size_t column, const std::string& name, bool addToHistory = true);
         void setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory = true);
+        void setColumnResetOption(size_t column, ColumnResetOption option, bool addToHistory = true);
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification, bool addToHistory = true);
@@ -326,7 +338,7 @@ class Schedule
             }
         }
         // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
-        void resetColumn(size_t index, SCHEDULE_TYPE type);
+        void resetColumn(size_t index, bool addToHistory);
 
         // ROWS
         size_t getRowCount();
@@ -337,6 +349,9 @@ class Schedule
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
         void setRow(size_t index, std::vector<ElementBase*> elementData);
         std::vector<size_t> getSortedRowIndices();
+
+        // Interface methods
+        void applyColumnTimeBasedReset(size_t columnIndex);
 
         // ELEMENTS.
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.

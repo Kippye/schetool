@@ -10,24 +10,11 @@ const LocalObjectTable& ObjectDefinitions::getObjectTableConst() const
     return m_objectTable;
 }
 
-tm BLF_ElementInfo::getCreationTime() const
-{
-    return tm {
-        0,
-        (int)creationMinutes,
-        (int)creationHours,
-        (int)creationMday,
-        (int)creationMonth,
-        (int)creationYear,
-        0,
-        0,
-        0
-    };
-}
-
 void DataConverter::setupObjectTable()
 {
     addObjectDefinition<BLF_Base>();
+    addObjectDefinition<BLF_Date>();
+    addObjectDefinition<BLF_FileInfo>();
     addObjectDefinition<BLF_ElementInfo>();
     
     addTypeObjectDefinitions<bool>();
@@ -64,6 +51,9 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
     FileWriteStream stream(path);
 
     DataTable data;
+
+    BLF_FileInfo fileInfo = BLF_FileInfo(DateContainer::getCurrentSystemDate().getTime());
+    data.insert(getObjectDefinition<BLF_FileInfo>().serialize(fileInfo));
 
     for (size_t c = 0; c < schedule.size(); c++)
     {
@@ -107,7 +97,7 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
     return 0;
 }
 
-int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
+std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 {
     std::vector<Column> scheduleCopy = schedule;
     // clear the provided copy just in case
@@ -118,6 +108,9 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
     auto file = File::fromData(stream);
 
     auto fileBody = file.deserializeBody(m_definitions.getObjectTableConst());
+
+    BLF_FileInfo fileInfo = *fileBody.data.groupby(m_definitions.get<BLF_FileInfo>()).begin();
+    FileInfo returnFileInfo = FileInfo(path, TimeWrapper(), fileInfo.editDate.getDate());
 
     std::map<size_t, SCHEDULE_TYPE> columnTypes = {};
 
@@ -311,5 +304,5 @@ int DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
         }
     }
 
-    return 0;
+    return returnFileInfo;
 }

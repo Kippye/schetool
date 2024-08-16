@@ -1,16 +1,16 @@
 #pragma once
 
 #include <string>
-#include <ctime>
+#include "time_wrapper.h"
 
 struct TimeContainer
 {
-    int hours;
-    int minutes;
+    int hours = 0;
+    int minutes = 0;
 
     TimeContainer();
     TimeContainer(int h, int m);
-    TimeContainer(const tm& t);
+    TimeContainer(const ClockTimeWrapper& clockTime);
     std::string getString() const;
     int getHours() const;
     int getMinutes() const;

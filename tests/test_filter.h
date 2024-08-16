@@ -10,12 +10,9 @@ TEST_CASE("FilterRule")
 {
     SECTION("Filtering different Element types")
     {
-        DateContainer creationDate = DateContainer();
-        TimeContainer creationTime = TimeContainer();
-
         SECTION("Bool filter")
         {
-            Element<bool> element = Element<bool>(SCH_BOOL, true, creationDate, creationTime);
+            Element<bool> element = Element<bool>(SCH_BOOL, true);
             FilterRule filter = FilterRule(true);
             CHECK(filter.checkPasses(&element) == true);
             
@@ -24,7 +21,7 @@ TEST_CASE("FilterRule")
         }
         SECTION("Number filter")
         {
-            Element<int> element = Element<int>(SCH_NUMBER, 4206969, creationDate, creationTime);
+            Element<int> element = Element<int>(SCH_NUMBER, 4206969);
             FilterRule filter = FilterRule(4206969);
             CHECK(filter.checkPasses(&element) == true);
 
@@ -33,7 +30,7 @@ TEST_CASE("FilterRule")
         }
         SECTION("Decimal filter")
         {
-            Element<double> element = Element<double>(SCH_DECIMAL, 152.6565, creationDate, creationTime);
+            Element<double> element = Element<double>(SCH_DECIMAL, 152.6565);
             FilterRule filter = FilterRule(152.6565);
             CHECK(filter.checkPasses(&element) == true);
 
@@ -42,7 +39,7 @@ TEST_CASE("FilterRule")
         }
         SECTION("Text filter")
         {
-            Element<std::string> element = Element<std::string>(SCH_TEXT, "schetool is Cool!", creationDate, creationTime);
+            Element<std::string> element = Element<std::string>(SCH_TEXT, "schetool is Cool!");
             FilterRule filter = FilterRule(std::string("schetool is Cool!"));
             CHECK(filter.checkPasses(&element) == true);
 
@@ -51,7 +48,7 @@ TEST_CASE("FilterRule")
         }
         // SECTION("Select filter")
         // {
-        //     Element<SelectContainer> element = Element<SelectContainer>(SCH_SELECT, SelectContainer(), creationDate, creationTime);
+        //     Element<SelectContainer> element = Element<SelectContainer>(SCH_SELECT, SelectContainer());
         //     SelectOptionChange selectOptionChange = SelectOptionChange();
         //     selectOptionChange.replace(OPTION_MODIFICATION_ADD, 0, 0);
         //     element.getValueReference().update(SelectOptionChange(), size_t optionCount)
@@ -62,7 +59,7 @@ TEST_CASE("FilterRule")
         // }
         // SECTION("Time filter")
         // {
-        //     Element<int> element = Element<int>(SCH_TIME, 4206969, creationDate, creationTime);
+        //     Element<int> element = Element<int>(SCH_TIME, 4206969);
         //     FilterRule filter = FilterRule(4206969);
         //     CHECK(filter.checkPasses(&element) == true);
         //     element.setValue(1234567);
@@ -70,16 +67,13 @@ TEST_CASE("FilterRule")
         // }
         SECTION("Date filter")
         {
-            tm time;
-            time.tm_mday = 25;
-            time.tm_mon = 4;
-            time.tm_year = 132;
-            Element<DateContainer> element = Element<DateContainer>(SCH_DATE, DateContainer(time), creationDate, creationTime);
+            TimeWrapper time = TimeWrapper(132, 4, 25);
+            Element<DateContainer> element = Element<DateContainer>(SCH_DATE, DateContainer(time));
             FilterRule filter = FilterRule(DateContainer(time));
             CHECK(filter.checkPasses(&element) == true);
 
-            time.tm_mday = 13;
-            time.tm_mon = 1;
+            time.setMonthDayUTC(13);
+            time.setMonthUTC(1);
             element.setValue(time);
             CHECK(filter.checkPasses(&element) == false);
         }
@@ -110,7 +104,7 @@ TEST_CASE("Filter")
     }
     SECTION("Filter operators")
     {
-        Element<std::string> element = Element<std::string>(SCH_TEXT, "PASS", DateContainer(), TimeContainer());
+        Element<std::string> element = Element<std::string>(SCH_TEXT, "PASS");
         FilterRule<std::string> failRule = FilterRule<std::string>("FAILURE");
         FilterRule<std::string> passRule = FilterRule<std::string>("PASS");
 

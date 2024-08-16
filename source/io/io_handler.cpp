@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <optional>
 #include <chrono>
 #include <limits>
 #include <io_handler.h>
@@ -47,34 +48,36 @@ std::string IO_Handler::makeRelativePathFromName(const char* name) const
     return std::string(SCHEDULES_SUBDIR_PATH).append(std::string(name)).append(std::string(SCHEDULE_FILE_EXTENSION));
 }
 
-void IO_Handler::setHaveFileOpen(bool haveFileOpen)
-{
-    m_haveFileOpen = haveFileOpen;
-    m_mainMenuBarGui->passHaveFileOpen(m_haveFileOpen);
-}
-
 void IO_Handler::passFileNamesToGui()
 {
     m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime(true));
     m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime(false));
 }
 
+void IO_Handler::sendFileInfoUpdates()
+{
+    m_windowManager->setTitleSuffix(std::string(" - ").append(m_currentFileInfo.getName()).c_str());
+    m_schedule->setName(m_currentFileInfo.getName());
+    m_mainMenuBarGui->passHaveFileOpen(m_currentFileInfo.empty() == false);
+}
+
 void IO_Handler::unloadCurrentFile()
 {
     m_schedule->clearSchedule();
     m_schedule->getEditHistoryMutable().clearEditHistory();
-    setCurrentFileName("");
-    setHaveFileOpen(false);
+    m_currentFileInfo.clear();
+    sendFileInfoUpdates();
+    fileUnloadEvent.invoke();
 }
 
 void IO_Handler::closeCurrentFile()
 {
-    if (m_haveFileOpen == false) { return; }
+    if (m_currentFileInfo.empty()) { return; }
 
     createAutosave();
-    if (isAutosave(m_currentFileName) == false)
+    if (isAutosave(m_currentFileInfo.getName()) == false)
     {
-        applyAutosaveToFile(m_currentFileName.c_str());
+        applyAutosaveToFile(m_currentFileInfo.getName().c_str());
     }
 
     unloadCurrentFile();
@@ -158,17 +161,23 @@ bool IO_Handler::readSchedule(const char* name)
     }
 
     m_schedule->getEditHistoryMutable().clearEditHistory();
-    if (m_converter.readSchedule(relativePath.c_str(), m_schedule->getAllColumnsMutable()) == 0)
+    if (std::optional<FileInfo> readFileInfo = m_converter.readSchedule(relativePath.c_str(), m_schedule->getAllColumnsMutable()))
     {
         std::cout << "Successfully read Schedule from file: " << relativePath << std::endl;
+        m_schedule->sortColumns();
+        m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(fs::path(relativePath)), readFileInfo->getScheduleEditTime());
+        sendFileInfoUpdates();
+        m_startPageGui->setVisible(false);
+        m_scheduleGui->setVisible(true);
+        m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
+        fileReadEvent.invoke(m_currentFileInfo);
+        return true;
     }
-    m_schedule->sortColumns();
-    setCurrentFileName(std::string(name));
-    setHaveFileOpen(true);
-    m_startPageGui->setVisible(false);
-    m_scheduleGui->setVisible(true);
-    m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
-    return true;
+    else
+    {
+        std::cout << "Failed when reading Schedule from file: " << relativePath << std::endl;
+        return false;
+    }
 }
 
 bool IO_Handler::createNewSchedule(const char* name)
@@ -177,11 +186,13 @@ bool IO_Handler::createNewSchedule(const char* name)
 
     if (writeSchedule(name)) // passes new list of file names to gui
     {
-        setCurrentFileName(std::string(name));
+        fs::path createdFilePath = fs::path(makeRelativePathFromName(name));
+        m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(createdFilePath), TimeWrapper::getCurrentTime());
+        sendFileInfoUpdates();
         passFileNamesToGui();
-        setHaveFileOpen(true);
         m_startPageGui->setVisible(false);
         m_scheduleGui->setVisible(true);
+        fileCreatedEvent.invoke(m_currentFileInfo);
         return true;
     }
     return false;
@@ -191,7 +202,7 @@ bool IO_Handler::createNewSchedule(const char* name)
 // NOTE: This can delete the currently open file. Is this the correct behaviour?
 bool IO_Handler::deleteSchedule(const char* name)
 {
-    if (m_haveFileOpen == false) { return false; }
+    if (m_currentFileInfo.empty()) { return false; }
 
     std::string relativePath = makeRelativePathFromName(name);
 
@@ -213,7 +224,7 @@ bool IO_Handler::deleteSchedule(const char* name)
     {
         passFileNamesToGui();
         // deleted the file that was open
-        if (m_currentFileName == name)
+        if (m_currentFileInfo.getName() == name)
         {
             unloadCurrentFile();
             m_scheduleGui->setVisible(false);
@@ -227,10 +238,10 @@ bool IO_Handler::deleteSchedule(const char* name)
 
 bool IO_Handler::renameCurrentFile(const std::string& newName)
 {
-    if (m_haveFileOpen == false) { return false; }
+    if (m_currentFileInfo.empty()) { return false; }
 
     fs::path schedulesPath = fs::path(SCHEDULES_SUBDIR_PATH);
-    fs::path pathToOpenFile = fs::path(makeRelativePathFromName(m_currentFileName.c_str()));
+    fs::path pathToOpenFile = fs::path(makeRelativePathFromName(m_currentFileInfo.getName().c_str()));
     fs::path pathToRenamedFile = fs::path(makeRelativePathFromName(newName.c_str()));
     bool schedulesDirWasCreated = false;
 
@@ -267,9 +278,15 @@ bool IO_Handler::renameCurrentFile(const std::string& newName)
 
     passFileNamesToGui();
 
-    setCurrentFileName(newName);
+    m_currentFileInfo.rename(newName);
+    sendFileInfoUpdates();
 
     return true;
+}
+
+FileInfo IO_Handler::getCurrentFileInfo() const
+{
+    return m_currentFileInfo;
 }
 
 void IO_Handler::openMostRecentFile()
@@ -295,11 +312,14 @@ void IO_Handler::openMostRecentFile()
             // The autosave has a base file, ask which to open
             if (std::filesystem::exists(fs::path(makeRelativePathFromName(fileBaseName.c_str()))))
             {
+                fs::path autosavePath = fs::path(makeRelativePathFromName(lastEditedScheduleName.c_str()));
+
+                // TODO: Make this nicer. Note that we can't pass the scheduleEditTime since the files aren't actually being loaded until the user chooses to.
                 m_autosavePopupGui->open(
-                    fileBaseName.c_str(),
-                    lastEditedScheduleName,
+                    FileInfo(fileBaseName, getFileEditTimeWrapped(fileBasePath), TimeWrapper()),
+                    FileInfo(lastEditedScheduleName, getFileEditTimeWrapped(autosavePath), TimeWrapper()),
                     getFileEditTimeString(fileBasePath),
-                    getFileEditTimeString(fs::path(makeRelativePathFromName(lastEditedScheduleName.c_str())))
+                    getFileEditTimeString(fs::path(autosavePath))
                 );
             }
             // Somehow there is only an autosave and no base file.
@@ -312,7 +332,11 @@ void IO_Handler::openMostRecentFile()
         // the most recent file is a normal file, read it
         else
         {
-		    readSchedule(getLastEditedScheduleStemName().c_str());
+            if (!readSchedule(getLastEditedScheduleStemName().c_str()))
+            {
+                // Go to start page if there was a failure to read the file
+                goToStartPage();
+            }
         }
 	}
 	// There are no Schedule files. Open the Start Page so the user can create one from there or File->New.
@@ -324,10 +348,10 @@ void IO_Handler::openMostRecentFile()
 
 bool IO_Handler::createAutosave()
 {
-    if (m_haveFileOpen == false) { return false; }
+    if (m_currentFileInfo.empty()) { return false; }
 
     // save to open file name if the open file is itself an autosave, otherwise get the autosave name from the base file name
-    std::string autosaveName = isAutosave(m_currentFileName) ? m_currentFileName : getFileAutosaveName(m_currentFileName.c_str());
+    std::string autosaveName = isAutosave(m_currentFileInfo.getName()) ? m_currentFileInfo.getName() : getFileAutosaveName(m_currentFileInfo.getName().c_str());
 
     if (writeSchedule(autosaveName.c_str()))
     {
@@ -379,39 +403,28 @@ long long IO_Handler::getFileEditTime(fs::path path)
     return fs::last_write_time(path).time_since_epoch().count();
 }
 
+TimeWrapper IO_Handler::getFileEditTimeWrapped(fs::path path)
+{
+    if (fs::exists(path) == false) { printf("IO_Handler::getFileEditTimeWrapped(%s): No file exists at the path\n", path.string().c_str()); return TimeWrapper(); }
+
+    const auto fileEditTime = fs::last_write_time(path);
+    std::chrono::system_clock::time_point systemTime;
+
+    #if defined(WIN32) && !defined(__clang__) // windows implementation using clock_cast (my version of clang / libc++ didn't have it either)
+    systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileEditTime);
+    #else // workaround without clock_cast
+    auto systemNow = std::chrono::system_clock::now();
+    auto fileNow = std::chrono::file_clock::now();
+    systemTime = std::chrono::time_point_cast<std::chrono::system_clock::duration>(fileEditTime - fileNow + systemNow);
+    #endif
+    return TimeWrapper(systemTime);
+}
+
 std::string IO_Handler::getFileEditTimeString(fs::path path)
 {
     if (fs::exists(path) == false) { printf("IO_Handler::getFileEditTimeString(%s): No file exists at the path\n", path.string().c_str()); return std::string(""); }
 
-    const auto fileEditTime = fs::last_write_time(path);
-    time_t time;
-
-    #if defined(WIN32) && !defined(__clang__) // windows implementation using clock_cast (my version of clang / libc++ didn't have it either)
-    const auto systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileEditTime);
-    time = std::chrono::system_clock::to_time_t(systemTime);
-    #else // workaround without clock_cast
-    auto systemNow = std::chrono::system_clock::now();
-    auto fileNow = std::chrono::file_clock::now();
-    auto systemTime = std::chrono::time_point_cast<std::chrono::system_clock::duration>(fileEditTime - fileNow + systemNow);
-    time = std::chrono::system_clock::to_time_t(systemTime);
-    #endif
-    char buf[128];
-    tm timeStruct = *localtime(&time);
-    strftime(buf, 128, "%x %X", &timeStruct);
-
-    return std::string(buf);
-}
-
-std::string IO_Handler::getOpenScheduleFilename()
-{
-    return m_currentFileName;
-}
-
-void IO_Handler::setCurrentFileName(const std::string& name)
-{
-    m_currentFileName = name;
-    m_schedule->setName(name);
-    m_windowManager->setTitleSuffix(std::string(" - ").append(m_schedule->getName()).c_str());
+    return getFileEditTimeWrapped(path).getString(TIME_FORMAT_FULL);
 }
 
 std::vector<std::string> IO_Handler::getScheduleStemNames(bool includeAutosaves)

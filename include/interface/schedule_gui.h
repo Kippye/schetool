@@ -1,9 +1,11 @@
 #pragma once
+#include <map>
 #include "element_editor_subgui.h"
 #include "filter_editor_subgui.h"
 #include "gui.h"
 #include "window.h"
 #include "input.h"
+#include "main_menu_bar_gui.h"
 #include "element_base.h"
 #include "select_container.h"
 #include "select_options.h"
@@ -14,10 +16,28 @@
 class ScheduleGui : public Gui
 {
     private:
+        // A map containing the texture IDs of gui textures.
+        // Each texture's ID will be set when the texture at gui creation.
+        inline static std::map<std::string, unsigned int> textures = 
+        {
+            { "icon_reset", 0 }
+        };
+        // TEMP?
+        ImFont* m_font32x;
         const ScheduleCore& m_scheduleCore;
+        const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
+        bool m_openDateSelectPopup = false;
+        unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
+        TimeWrapper m_scheduleDateOverride = TimeWrapper();
         void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
+        static void loadTextures();
+        template <typename T>
+        T getElementValue(size_t column, size_t row, bool useDefaultValue) const
+        {
+            return useDefaultValue == true ? Element<T>::getDefaultValue() : m_scheduleCore.getElementValueConstRef<T>(column, row);
+        }
     public:
-        ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
+        ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui);
 
         // Events
         // setElementValue(column, row, value)
@@ -36,9 +56,13 @@ class ScheduleGui : public Gui
         Event<size_t, SCHEDULE_TYPE>         setColumnType;
         Event<size_t, COLUMN_SORT>           setColumnSort;
         Event<size_t, std::string>    setColumnName;
+        Event<size_t, ColumnResetOption> setColumnResetOption;
+        // entire column modification
+        Event<size_t, bool> resetColumn;
         // row modification
         Event<size_t> addRow;
         Event<size_t> removeRow;
 
         void draw(Window& window, Input& input) override;
+        void clearDateOverride();
 };

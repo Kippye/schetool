@@ -15,7 +15,7 @@ class FilterRule : public FilterRuleBase
             m_passValue = passValue;
         }
 
-        bool checkPasses(const ElementBase* element) const override
+        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const override
         {
             if (isComparisonValidForElement(element) == false) { return false; }
             // TODO: Check if the provided ElementBase is of the correct type.
@@ -65,7 +65,7 @@ inline std::string FilterRule<DateContainer>::getString() const
 }
 
 template <>
-inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element) const
+inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
 {
     SelectContainer value = ((const Element<SelectContainer>*)element)->getValue();
 
@@ -96,7 +96,7 @@ inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element)
 }
 
 template <>
-inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element) const
+inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
 {
     WeekdayContainer value = ((const Element<WeekdayContainer>*)element)->getValue();
 
@@ -124,14 +124,14 @@ inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element
         }
         case Comparison::ContainsToday:
         {
-            return (value.contains(WeekdayContainer::getCurrentSystemWeekday()));
+            return (value.contains(WeekdayContainer::getCurrentSystemWeekday(currentTime)));
         }
         default: isComparisonValidForElement(element); return false;
     }
 }
 
 template <>
-inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element) const
+inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
 {
     DateContainer value = ((const Element<DateContainer>*)element)->getValue();
 
@@ -152,7 +152,11 @@ inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element) c
         case Comparison::IsRelativeToToday:
         {
             // TODO: Handle offsets as well, maybe.
-            return (value == DateContainer::getCurrentSystemDate());
+            // This is kind of weird, i know. Let me explain!
+            // The checked value is a DATE. It should have no time component and current time should not affect it. So we get the UTC date of the DateContainer's "timeless" TimeWrapper.
+            // The current time compared against is also a date, but it uses the TimeWrapper's time component and is local. 
+            // This way, when the local time is 23:59, its date will be A and when midnight comes, A + 1. The compared date stays the same.
+            return (value.getTimeConst().getDateUTC() == (currentTime.getIsEmpty() ? TimeWrapper::getCurrentTime() : currentTime).getLocalDate()); // Use the passed time as current unless it's empty
         }
         default: isComparisonValidForElement(element); return false;
     }

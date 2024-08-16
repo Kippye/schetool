@@ -13,7 +13,8 @@ Column::Column(const std::vector<ElementBase*>& rows,
         bool permanent,
         ScheduleColumnFlags flags,
         COLUMN_SORT sort,
-        const SelectOptions& selectOptions
+        const SelectOptions& selectOptions,
+        ColumnResetOption resetOption
 )
 {
     setupFiltersPerType();
@@ -24,6 +25,7 @@ Column::Column(const std::vector<ElementBase*>& rows,
     this->flags = flags;
     this->sort = sort;
     this->selectOptions = selectOptions;
+    this->resetOption = resetOption;
 }
 
 Column::Column(const Column& other)
@@ -35,6 +37,7 @@ Column::Column(const Column& other)
     flags = other.flags;
     sort = other.sort;
     selectOptions = other.selectOptions;
+    resetOption = other.resetOption;
 
     for (size_t i = 0; i < other.rows.size(); i++)
     {
@@ -157,23 +160,19 @@ size_t Column::getFilterGroupCount() const
     return m_filterGroupsPerType.at(type).size();
 }
 
-bool Column::checkElementPassesFilters(const ElementBase* element) const
-{
-    bool passes = true;
-
-    for (const auto& filterGroup: m_filterGroupsPerType.at(type))
-    {
-        passes = passes && filterGroup.checkPasses(element);
-    }
-
-    return passes;
-}
-
-bool Column::checkElementPassesFilters(size_t index) const
+bool Column::checkElementPassesFilters(size_t index, const TimeWrapper& currentTime) const
 {
     if (hasElement(index) == false) { return false; }
 
-    return checkElementPassesFilters(getElementConst(index));
+    bool passes = true;
+    const ElementBase* element = getElementConst(index);
+
+    for (const auto& filterGroup: m_filterGroupsPerType.at(type))
+    {
+        passes = passes && filterGroup.checkPasses(element, currentTime);
+    }
+
+    return passes;
 }
 
 bool Column::addFilterGroup(size_t groupIndex, const FilterGroup& filterGroup)

@@ -1,25 +1,20 @@
-#include <time_container.h>
+#include "time_container.h"
+#include "time_wrapper.h"
 
 TimeContainer::TimeContainer() {}
 TimeContainer::TimeContainer(int h, int m)
 {
     setTime(h, m);
 }
-TimeContainer::TimeContainer(const tm& t)
+
+TimeContainer::TimeContainer(const ClockTimeWrapper& clockTime)
 {
-    setTime(t.tm_hour, t.tm_min);
+    setTime(clockTime.getHours(), clockTime.getMinutes());
 }
 
 std::string TimeContainer::getString() const
 {
-    char output[1024];
-
-    tm outputTime;
-    outputTime.tm_hour = hours;
-    outputTime.tm_min = minutes;
-    std::strftime(output, sizeof(output), "%H:%M", &outputTime);
-
-    return std::string(output);
+    return TimeWrapper(ClockTimeWrapper(hours, minutes)).getStringUTC(TIME_FORMAT_TIME);
 }
 
 int TimeContainer::getHours() const 

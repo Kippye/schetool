@@ -6,13 +6,13 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include <window.h>
-#include <input.h>
-#include <gui.h>
-
 #include <string>
 #include <map>
 #include <memory>
+
+#include "window.h"
+#include "input.h"
+#include "gui.h"
 
 class Interface
 {
@@ -30,9 +30,11 @@ class Interface
 
 		void init(Window*, Input*);
         template <typename T, typename... Args>
-        void addGui(Args&&... args)
+        std::shared_ptr<T> addGui(Args&&... args)
         {
-            addGui(std::make_shared<T>(std::forward<Args>(args)...));
+            std::shared_ptr<T> gui = std::make_shared<T>(std::forward<Args>(args)...);
+            addGui(gui);
+            return gui;
         }
         template <typename T>
         std::shared_ptr<T> getGuiByID(const std::string& ID)
@@ -41,6 +43,14 @@ class Interface
             if (m_guis.find(ID) == m_guis.end())
             {
                 printf("Interface::getGuiByID(ID: %s): Failed to get a Gui with the ID. Returning shared_ptr to nullptr\n", ID.c_str());
+                if (m_guis.size() > 0)
+                {
+                    printf("Existing Guis are:\n");
+                    for (const auto& id_gui : m_guis)
+                    {
+                        printf("%s : %p\n", id_gui.first.c_str(), (void*)id_gui.second.get());
+                    }
+                }
                 return std::shared_ptr<T>(nullptr);
             }
             return std::dynamic_pointer_cast<T>(m_guis.at(ID));

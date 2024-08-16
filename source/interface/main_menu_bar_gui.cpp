@@ -164,6 +164,7 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 			}
 			ImGui::EndMenu();
 		}
+        m_height = ImGui::GetWindowHeight();
 	}
 	ImGui::EndMainMenuBar();
 
@@ -206,6 +207,11 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 		ImGui::OpenPopup("Confirm Schedule deletion");
 		m_openDeleteConfirmationModal = false;
 	}
+}
+
+float MainMenuBarGui::getHeight() const
+{
+    return m_height;
 }
 
 void MainMenuBarGui::newSchedule()

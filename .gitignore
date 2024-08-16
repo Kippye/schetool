@@ -4,6 +4,7 @@
 schetool/
 bin/
 build/
+build_*/
 obj/ 
 Debug/
 Release/

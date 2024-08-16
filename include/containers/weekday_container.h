@@ -2,6 +2,7 @@
 
 #include <string>
 #include "select_container.h"
+#include "time_wrapper.h"
 
 // A select container that holds one or up to 7 of the weekdays
 struct WeekdayContainer : public SelectContainer
@@ -22,5 +23,5 @@ struct WeekdayContainer : public SelectContainer
         void update(const SelectOptionChange& change, size_t optionCount);
         const std::set<size_t> getSelection() const;
 
-        static WeekdayContainer getCurrentSystemWeekday();
+        static WeekdayContainer getCurrentSystemWeekday(const TimeWrapper& currentTime = TimeWrapper::getCurrentTime());
 };

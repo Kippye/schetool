@@ -166,6 +166,12 @@ ColumnPropertyEdit::ColumnPropertyEdit(size_t column, COLUMN_PROPERTY editedProp
             m_columnData.sort = newData.sort;
             break;
         }
+        case(COLUMN_PROPERTY_RESET_OPTION):
+        {
+            m_previousColumnData.resetOption = previousData.resetOption;
+            m_columnData.resetOption = newData.resetOption;
+            break;
+        }
     }
 }
 
@@ -192,6 +198,11 @@ void ColumnPropertyEdit::revert(ScheduleCore& scheduleCore)
         case(COLUMN_PROPERTY_SORT):
         {
             scheduleCore.setColumnSort(m_column, m_previousColumnData.sort);
+            break;
+        }
+        case(COLUMN_PROPERTY_RESET_OPTION):
+        {
+            scheduleCore.setColumnResetOption(m_column, m_previousColumnData.resetOption);
             break;
         }
     }
@@ -223,6 +234,11 @@ void ColumnPropertyEdit::apply(ScheduleCore& scheduleCore)
             scheduleCore.setColumnSort(m_column, m_columnData.sort);
             break;
         }
+        case(COLUMN_PROPERTY_RESET_OPTION):
+        {
+            scheduleCore.setColumnResetOption(m_column, m_columnData.resetOption);
+            break;
+        }
     }
 
     m_isReverted = false;
@@ -231,6 +247,30 @@ void ColumnPropertyEdit::apply(ScheduleCore& scheduleCore)
 std::string ColumnPropertyEdit::getColumnName() const
 {
     return m_previousColumnData.name;
+}
+
+
+// ColumnResetEdit
+ColumnResetEdit::ColumnResetEdit(size_t column, const Column& columnData) : ScheduleEdit(ScheduleEditType::ColumnReset) 
+{
+    m_column = column;
+    m_columnData = Column(columnData);
+}
+
+void ColumnResetEdit::revert(ScheduleCore& scheduleCore)
+{
+    // reverting a reset means reapplying the old data
+    scheduleCore.setColumnElements(m_column, m_columnData);
+
+    m_isReverted = true;
+} 
+
+void ColumnResetEdit::apply(ScheduleCore& scheduleCore)
+{
+    // applying a reset means resetting again
+    scheduleCore.resetColumn(m_column, m_columnData.type);
+
+    m_isReverted = false;
 }
 
 

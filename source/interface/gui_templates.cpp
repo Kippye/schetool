@@ -1,4 +1,3 @@
-#include <regex>
 #include "imgui_stdlib.h"
 #include "gui_templates.h"
 #include "schedule_constants.h"
@@ -20,11 +19,16 @@ bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, boo
 
 bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate, bool displayClearButton)
 {
+    return DateEditor(editorDate.getTime(), viewedYear, viewedMonth, displayDate, displayClearButton);
+}
+
+bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate, bool displayClearButton)
+{
     bool changedDate = false;
     if (displayDate)
     {
         // Display the date, with a minimum width for empty dates
-        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getString().c_str(), viewedYear, viewedMonth);
+        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getStringUTC(TIME_FORMAT_DATE).c_str(), viewedYear, viewedMonth);
     }
     if (displayClearButton && ImGui::Button("Clear"))
     {
@@ -34,43 +38,35 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     // DATE / CALENDAR
     if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
     {
-        viewedMonth = viewedMonth == 0 ? 11 : viewedMonth - 1;
+        viewedMonth = viewedMonth == 1 ? 12 : viewedMonth - 1;
     }
     ImGui::SameLine();
-    char monthName[16];
-    tm formatTime;
-    formatTime.tm_mon = viewedMonth;
-    std::strftime(monthName, sizeof(monthName), "%B", &formatTime);
-    ImGui::Button(std::string(monthName).append(std::string("##Month")).c_str(), ImVec2(96, 0));
+    TimeWrapper formatTime;
+    formatTime.setMonthUTC(viewedMonth);
+    std::string monthName = formatTime.getDynamicFmtStringUTC("{:%B}");
+    ImGui::Button(monthName.append(std::string("##Month")).c_str(), ImVec2(96, 0));
     ImGui::SameLine();
     if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
     {
-        viewedMonth = viewedMonth == 11 ? 0 : viewedMonth + 1;
+        viewedMonth = viewedMonth == 12 ? 1 : viewedMonth + 1;
     }
-    int yearInput = viewedYear + 1900;
+    int yearInput = viewedYear;
     if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        viewedYear = DateContainer::convertToValidYear(yearInput);
+        viewedYear = TimeWrapper::limitYearToValidRange(yearInput);
     }
 
     // CALENDAR
     size_t dayIndex = 0;
     unsigned int daysInMonth = mytime::get_month_day_count(viewedYear, viewedMonth);
 
-    tm timeIn = tm{0, 0, 0, 1, (int)viewedMonth, (int)viewedYear};
-    time_t timeTemp = std::mktime(&timeIn);
-    tm firstOfTheMonth = *localtime(&timeTemp);
-
+    TimeWrapper firstOfTheMonth = TimeWrapper(viewedYear, viewedMonth, 1);
     // day of the week converted from Sun-Sat to Mon-Sun
-    int dayOfTheWeekFirst = firstOfTheMonth.tm_wday == 0 ? 6 : firstOfTheMonth.tm_wday - 1;
+    int dayOfTheWeekFirst = firstOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
 
-    timeIn = tm{0, 0, 0, (int)daysInMonth, (int)viewedMonth, (int)viewedYear};
-    timeTemp = std::mktime(&timeIn);
-    tm lastOfTheMonth;
-    lastOfTheMonth = *localtime(&timeTemp);
-
+    TimeWrapper lastOfTheMonth = TimeWrapper(viewedYear, viewedMonth, daysInMonth);
     // day of the week converted from Sun-Sat to Mon-Sun
-    int dayOfTheWeekLast = lastOfTheMonth.tm_wday == 0 ? 6 : lastOfTheMonth.tm_wday - 1;
+    int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
 
     unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
 
@@ -78,14 +74,12 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     // TODO: Handle selecting a day in the previous / next year
     auto addCalendarDay = [&](int month, int dayDisplayNumber)
     {
-        if (ImGui::Button(std::to_string(dayDisplayNumber).c_str(), ImVec2(24, 24)) && month == viewedMonth)
+        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(24, 24)) && month == viewedMonth)
         {
-            editorDate.setYear(viewedYear, false);
-            editorDate.setMonth(viewedMonth);
-            editorDate.setMonthDay(dayDisplayNumber); 
+            editorDate.setDateUTC({viewedYear, viewedMonth, (unsigned int)dayDisplayNumber});
             changedDate = true;
         }
-        if (dayDisplayNumber == editorDate.getTime().tm_mday)
+        if (dayDisplayNumber == editorDate.getMonthDayUTC())
         {
             // TODO: Highlight this day as selected in the calendar
         }
@@ -104,8 +98,8 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     // days from prev month
     for (size_t i = dayOfTheWeekFirst; i > 0; i--)
     {
-        int previousMonth = viewedMonth == 0 ? 11 : viewedMonth - 1;
-        addCalendarDay(previousMonth, mytime::get_month_day_count(previousMonth < 11 ? viewedYear : viewedYear - 1, previousMonth) - (i - 1));
+        int previousMonth = viewedMonth == 1 ? 12 : viewedMonth - 1;
+        addCalendarDay(previousMonth, mytime::get_month_day_count(previousMonth < 12 ? viewedYear : viewedYear - 1, previousMonth) - (i - 1));
     }
     // days of the viewed month
     for (size_t i = 0; i < daysInMonth; i++)
@@ -115,7 +109,7 @@ bool gui_templates::DateEditor(DateContainer& editorDate, unsigned int& viewedYe
     // days from next month
     for (size_t i = 0; i < 6 - dayOfTheWeekLast; i++)
     {
-        int nextMonth = viewedMonth == 11 ? 0 : viewedMonth + 1;
+        int nextMonth = viewedMonth == 12 ? 1 : viewedMonth + 1;
         addCalendarDay(nextMonth, i + 1);
     }
 
@@ -153,18 +147,18 @@ void gui_templates::TextWithBackground(const ImVec2& size, const char *fmt, ...)
 bool gui_templates::TimeEditor(TimeContainer& editorTime)
 {
     bool madeEdits = false;
-    tm formatTime;
-    formatTime.tm_hour = editorTime.getHours();
-    char hourBuf[3];
-    std::strftime(hourBuf, sizeof(hourBuf), "%H", &formatTime);
+    TimeWrapper hourFormatTime = TimeWrapper(ClockTimeWrapper(editorTime.getHours(), 0));
+    // NOTE: Usually we would get local time for displaying but here we are only using the TimeWrapper as a formatting tool, the same time can be stored and formatted.
+    std::string hourString = hourFormatTime.getDynamicFmtStringUTC("{:%H}");
+    auto hourBuf = hourString.data();
     ImGui::SetNextItemWidth(24);
-    if (ImGui::InputText("##TimeEditorHours", hourBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
+    if (ImGui::InputText("##TimeEditorHours", hourBuf, sizeof(hourBuf), ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
     {
         int hourValue = 0;
 
         std::string hourStr = std::string(hourBuf);
 
-        if (hourStr.find_first_not_of("0123456789") == std::string::npos)
+        if (hourStr.empty() == false && hourStr.find_first_not_of("0123456789") == std::string::npos)
         {
             hourValue = std::stoi(hourBuf);
         }
@@ -172,17 +166,18 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
         madeEdits = true;
     }
     ImGui::SameLine();
-    formatTime.tm_min = editorTime.getMinutes();
-    char minBuf[3];
-    std::strftime(minBuf, sizeof(minBuf), "%M", &formatTime);
+    TimeWrapper minFormatTime = TimeWrapper(ClockTimeWrapper(0, editorTime.getMinutes()));
+    // NOTE: Read above
+    std::string minString = minFormatTime.getDynamicFmtStringUTC("{:%M}");
+    auto minBuf = minString.data();
     ImGui::SetNextItemWidth(24);
-    if (ImGui::InputText("##TimeEditorMinutes", minBuf, 3, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
+    if (ImGui::InputText("##TimeEditorMinutes", minBuf, sizeof(minBuf), ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll, gui_callbacks::filterNumbers))
     {
         int minValue = 0;
 
         std::string minStr = std::string(minBuf);
 
-        if (minStr.find_first_not_of("0123456789") == std::string::npos)
+        if (minStr.empty() == false && minStr.find_first_not_of("0123456789") == std::string::npos)
         {
             minValue = std::stoi(minBuf);
         }

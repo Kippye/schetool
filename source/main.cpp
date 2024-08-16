@@ -31,6 +31,7 @@ Program::Program()
 	render.init(&windowManager, &interface);
 	schedule.init(input, interface);
 	ioHandler.init(&schedule, &windowManager, input, interface);
+    timeHandler.init(ioHandler, schedule);
 
 	schedule.createDefaultSchedule();
 
@@ -49,6 +50,7 @@ void Program::loop()
 		}
 		render.render();
 		ioHandler.addToAutosaveTimer(render.deltaTime);
+        timeHandler.timeTick();
 
 		glfwPollEvents();
 	}

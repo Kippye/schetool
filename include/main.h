@@ -1,12 +1,13 @@
 #pragma once
 
-#include <io_handler.h>
-#include <window.h>
-#include <textures.h>
-#include <render.h>
-#include <input.h>
-#include <schedule.h>
-#include <interface.h>
+#include "io_handler.h"
+#include "window.h"
+#include "textures.h"
+#include "render.h"
+#include "input.h"
+#include "schedule.h"
+#include "interface.h"
+#include "time_handler.h"
 
 class Program
 {
@@ -18,6 +19,7 @@ class Program
 		Input input;
 		Interface interface;
 		Schedule schedule;
+        TimeHandler timeHandler;
 
 		bool programWillClose = false;
 		bool quitProgram = false;

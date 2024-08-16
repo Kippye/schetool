@@ -4,6 +4,8 @@
 #include <type_traits>
 #include "element_base.h"
 #include "select_container.h"
+#include "time_container.h"
+#include "date_container.h"
 #include "weekday_container.h"
 
 template <typename T>
@@ -13,7 +15,10 @@ class Element : public ElementBase
         T m_value;
     public:
         Element(){}
-        Element(SCHEDULE_TYPE type, const T& value, const DateContainer& creationDate, const TimeContainer& creationTime) : ElementBase(type, creationDate, creationTime)
+        // Create an Element.
+        // NOTE: Make sure that the SCHEDULE_TYPE matches the template type T!
+        // If creationTime is not provided, it's assumed that the element was just created and the current time will be used.
+        Element(SCHEDULE_TYPE type, const T& value, const TimeWrapper& creationTime = TimeWrapper::getCurrentTime()) : ElementBase(type, creationTime)
         {
             m_value = value;
         }
@@ -74,4 +79,54 @@ class Element : public ElementBase
         {
             m_value = value;
         }
+
+        static T getDefaultValue();
 };
+
+template <>
+inline bool Element<bool>::getDefaultValue()
+{
+    return false;
+}
+
+template <>
+inline int Element<int>::getDefaultValue()
+{
+    return 0;
+}
+
+template <>
+inline double Element<double>::getDefaultValue()
+{  
+    return 0.0;
+}
+
+template <>
+inline std::string Element<std::string>::getDefaultValue()
+{
+    return "";
+}
+
+template <>
+inline SelectContainer Element<SelectContainer>::getDefaultValue()
+{
+    return SelectContainer();
+}
+
+template <>
+inline WeekdayContainer Element<WeekdayContainer>::getDefaultValue()
+{
+    return WeekdayContainer();
+}
+
+template <>
+inline TimeContainer Element<TimeContainer>::getDefaultValue()
+{
+    return TimeContainer();
+}
+
+template <>
+inline DateContainer Element<DateContainer>::getDefaultValue()
+{
+    return DateContainer();
+}

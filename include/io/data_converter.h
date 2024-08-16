@@ -1,7 +1,9 @@
 #pragma once
 #include <iterator>
+#include <optional>
 #include <map>
 #include "blf/include/blf.hpp"
+#include "file_info.h"
 #include "element_base.h"
 #include "time_container.h"
 #include "date_container.h"
@@ -54,6 +56,58 @@ struct BLF_Base
     }
 };
 
+struct BLF_Date : BLF_Base
+{
+	static constexpr const char* getName()
+	{
+		return "BLF_Date";
+	}
+
+	unsigned int year;
+	unsigned int month;
+	unsigned int monthDay;
+
+	BLF_Date() : year(1900), month(1), monthDay(1) 
+	{}
+	BLF_Date(const TimeWrapper& date) : year(date.getYearUTC()), month(date.getMonthUTC()), monthDay(date.getMonthDayUTC())
+	{}
+
+	TimeWrapper getDate() const
+	{
+		return TimeWrapper(DateWrapper(year, month, monthDay));
+	}
+
+	static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_Date>(getName(),
+			arg("year", &BLF_Date::year),
+			arg("month", &BLF_Date::month),
+			arg("monthDay", &BLF_Date::monthDay)
+		));
+	}
+};
+
+struct BLF_FileInfo : BLF_Base
+{
+	static constexpr const char* getName()
+	{
+		return "BLF_FileInfo";
+	}
+
+	BLF_Date editDate;
+
+	BLF_FileInfo() {}
+	BLF_FileInfo(const TimeWrapper& fileEditDate) : editDate(fileEditDate)
+	{}
+
+	static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_FileInfo>(getName(),
+			arg("editDate", &BLF_FileInfo::editDate, definitions.get<BLF_Date>())
+		));
+	}
+};
+
 struct BLF_ElementInfo : BLF_Base
 {
     static constexpr const char* getName()
@@ -69,14 +123,20 @@ struct BLF_ElementInfo : BLF_Base
     BLF_ElementInfo() {}
     BLF_ElementInfo(const ElementBase* element)
     {
-        creationYear = element->getCreationDate().getTime().tm_year;
-        creationMonth = element->getCreationDate().getTime().tm_mon;
-        creationMday = element->getCreationDate().getTime().tm_mday;
-        creationHours = element->getCreationTime().hours;
-        creationMinutes = element->getCreationTime().minutes;
+        creationYear = element->getCreationTime().getYearUTC();
+        creationMonth = element->getCreationTime().getMonthUTC();
+        creationMday = element->getCreationTime().getMonthDayUTC();
+        creationHours = element->getCreationTime().getClockTimeUTC().getHours();
+        creationMinutes = element->getCreationTime().getClockTimeUTC().getMinutes();
     }
 
-    tm getCreationTime() const;
+    TimeWrapper getCreationTime() const
+    {
+        return TimeWrapper(
+            DateWrapper(creationYear, creationMonth, creationMday),
+            ClockTimeWrapper(creationHours, creationMinutes)
+        );         
+    }
 
     static void addDefinition(ObjectDefinitions& definitions)
     {
@@ -103,110 +163,106 @@ struct BLF_Element<bool> : BLF_Base
     BLF_ElementInfo info;
     bool value;
 
-    BLF_Element() {}
-    BLF_Element(const Element<bool>* element) : info(element)
-    {
-        value = element->getValue();
-    }
-        
-    Element<bool> getElement() const
-    {
-        tm creationTime = info.getCreationTime();
-        return Element<bool>(SCH_BOOL, value, DateContainer(creationTime), TimeContainer(creationTime));
-    }
+	BLF_Element() {}
+	BLF_Element(const Element<bool>* element) : info(element)
+	{
+		value = element->getValue();
+	}
+	 
+	Element<bool> getElement() const
+	{
+		return Element<bool>(SCH_BOOL, value, info.getCreationTime());
+	}
 
-    static void addDefinition(ObjectDefinitions& definitions)
-    {
-        definitions.add(definitions.getObjectTable().define<BLF_Element<bool>>(getName(),
-            arg("info", &BLF_Element<bool>::info, definitions.get<BLF_ElementInfo>()),
-            arg("value", &BLF_Element<bool>::value)
-        ));
-    }
+	static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_Element<bool>>(getName(),
+			arg("info", &BLF_Element<bool>::info, definitions.get<BLF_ElementInfo>()),
+			arg("value", &BLF_Element<bool>::value)
+		));
+	}
 };
 
 template <>
 struct BLF_Element<int> : BLF_Base
 {
-    static constexpr const char* getName()
-    {
-        return "BLF_Element_int";
-    }        
-    BLF_ElementInfo info;
-    int value;
+	static constexpr const char* getName()
+	{
+		return "BLF_Element_int";
+	}        
+	BLF_ElementInfo info;
+	int value;
 
-    BLF_Element() {}
-    BLF_Element(const Element<int>* element) : info(element)
-    {
-        value = element->getValue();
-    }
+	BLF_Element() {}
+	BLF_Element(const Element<int>* element) : info(element)
+	{
+		value = element->getValue();
+	}
 
-    Element<int> getElement() const
-    {
-        tm creationTime = info.getCreationTime();
-        return Element<int>(SCH_NUMBER, value, DateContainer(creationTime), TimeContainer(creationTime));
-    }
+	Element<int> getElement() const
+	{
+		return Element<int>(SCH_NUMBER, value, info.getCreationTime());
+	}
 
-    static void addDefinition(ObjectDefinitions& definitions)
-    {
-        definitions.add(definitions.getObjectTable().define<BLF_Element<int>>(getName(),
-            arg("info", &BLF_Element<int>::info, definitions.get<BLF_ElementInfo>()),
-            arg("value", &BLF_Element<int>::value)
-        ));
-    }
+	static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_Element<int>>(getName(),
+			arg("info", &BLF_Element<int>::info, definitions.get<BLF_ElementInfo>()),
+			arg("value", &BLF_Element<int>::value)
+		));
+	}
 };
 
 template <>
 struct BLF_Element<double> : BLF_Base
 {
-    static constexpr const char* getName()
-    {
-        return "BLF_Element_double";
-    }        
-    BLF_ElementInfo info;
-    double value;
+	static constexpr const char* getName()
+	{
+		return "BLF_Element_double";
+	}        
+	BLF_ElementInfo info;
+	double value;
 
-    BLF_Element() {}
-    BLF_Element(const Element<double>* element) : info(element)
-    {
-        value = element->getValue();
-    }
+	BLF_Element() {}
+	BLF_Element(const Element<double>* element) : info(element)
+	{
+		value = element->getValue();
+	}
 
-    Element<double> getElement() const
-    {
-        tm creationTime = info.getCreationTime();
-        return Element<double>(SCH_DECIMAL, value, DateContainer(creationTime), TimeContainer(creationTime));
-    }
+	Element<double> getElement() const
+	{
+		return Element<double>(SCH_DECIMAL, value, info.getCreationTime());
+	}
 
-    static void addDefinition(ObjectDefinitions& definitions)
-    {
-        definitions.add(definitions.getObjectTable().define<BLF_Element<double>>(getName(),
-            arg("info", &BLF_Element<double>::info, definitions.get<BLF_ElementInfo>()),
-            arg("value", &BLF_Element<double>::value)
-        ));
-    }
+	static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_Element<double>>(getName(),
+			arg("info", &BLF_Element<double>::info, definitions.get<BLF_ElementInfo>()),
+			arg("value", &BLF_Element<double>::value)
+		));
+	}
 };
 
 template <>
 struct BLF_Element<std::string> : BLF_Base
 {
-    static constexpr const char* getName()
-    {
-        return "BLF_Element_string";
-    }        
-    BLF_ElementInfo info;
-    std::string value;
+	static constexpr const char* getName()
+	{
+		return "BLF_Element_string";
+	}        
+	BLF_ElementInfo info;
+	std::string value;
 
-    BLF_Element() {}
-    BLF_Element(const Element<std::string>* element) : info(element)
-    {
-        value = element->getValue();
-    }
+	BLF_Element() {}
+	BLF_Element(const Element<std::string>* element) : info(element)
+	{
+		value = element->getValue();
+	}
 
-    Element<std::string> getElement() const
-    {
-        tm creationTime = info.getCreationTime();
-        return Element<std::string>(SCH_TEXT, value, DateContainer(creationTime), TimeContainer(creationTime));
-    }
+	Element<std::string> getElement() const
+	{
+		return Element<std::string>(SCH_TEXT, value, info.getCreationTime());
+	}
     
     static void addDefinition(ObjectDefinitions& definitions)
     {
@@ -250,13 +306,12 @@ struct BLF_Element<SelectContainer> : BLF_Base
         return selection;
     }
 
-    Element<SelectContainer> getElement() const
-    {
-        tm creationTime = info.getCreationTime();
-        Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
-        select.getValueReference().replaceSelection(getSelection());
-        return select;
-    }
+	Element<SelectContainer> getElement() const
+	{
+		Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), info.getCreationTime());
+		select.getValueReference().replaceSelection(getSelection());
+		return select;
+	}
 
     static void addDefinition(ObjectDefinitions& definitions)
     {
@@ -304,13 +359,12 @@ struct BLF_Element<WeekdayContainer> : BLF_Base
         return selection;
     }
 
-    Element<WeekdayContainer> getElement() const
-    {
-        tm creationTime = info.getCreationTime();
-        Element<WeekdayContainer> weekday = Element<WeekdayContainer>(SCH_WEEKDAY, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
-        weekday.getValueReference().replaceSelection(getSelection());
-        return weekday;
-    }
+	Element<WeekdayContainer> getElement() const
+	{
+		Element<WeekdayContainer> weekday = Element<WeekdayContainer>(SCH_WEEKDAY, WeekdayContainer(), info.getCreationTime());
+		weekday.getValueReference().replaceSelection(getSelection());
+		return weekday;
+	}
 
     static void addDefinition(ObjectDefinitions& definitions)
     {
@@ -341,8 +395,7 @@ struct BLF_Element<TimeContainer> : BLF_Base
 
     Element<TimeContainer> getElement() const
     {
-        tm creationTime = info.getCreationTime(); 
-        return Element<TimeContainer>(SCH_TIME, TimeContainer(hours, minutes), DateContainer(creationTime), TimeContainer(creationTime));
+		return Element<TimeContainer>(SCH_TIME, TimeContainer(hours, minutes), info.getCreationTime());
     }
 
     static void addDefinition(ObjectDefinitions& definitions)
@@ -371,27 +424,22 @@ struct BLF_Element<DateContainer> : BLF_Base
     BLF_Element() {}
     BLF_Element(const Element<DateContainer>* element) : info(element)
     {
-        tm dateTime = element->getValue().getTime();
+        TimeWrapper dateTime = element->getValue().getTime();
         empty = element->getValue().getIsEmpty();
-        year = dateTime.tm_year;
-        month = dateTime.tm_mon;
-        mday = dateTime.tm_mday;
+        year = dateTime.getYearUTC();
+        month = dateTime.getMonthUTC();
+        mday = dateTime.getMonthDayUTC();
     }
 
-    Element<DateContainer> getElement() const
-    {
-        tm creationTime = info.getCreationTime();
-        tm dateTime;
-        dateTime.tm_year = year;
-        dateTime.tm_mon = month;
-        dateTime.tm_mday = mday;
-        DateContainer dateContainer = DateContainer(dateTime);
-        if (empty)
-        {
-            dateContainer.clear();
-        }
-        return Element<DateContainer>(SCH_DATE, dateContainer, DateContainer(creationTime), TimeContainer(creationTime));
-    }
+	Element<DateContainer> getElement() const
+	{
+		DateContainer dateContainer = DateContainer(TimeWrapper(DateWrapper(year, month, mday)));
+		if (empty)
+		{
+			dateContainer.clear();
+		}
+		return Element<DateContainer>(SCH_DATE, dateContainer, info.getCreationTime());
+	}
 
     static void addDefinition(ObjectDefinitions& definitions)
     {
@@ -418,7 +466,7 @@ struct BLF_FilterRule : BLF_Base
     BLF_FilterRule() {}
     BLF_FilterRule(SCHEDULE_TYPE type, const FilterRule<T>& filterRule)
     {
-        Element<T> element = Element<T>(type, filterRule.getPassValue(), DateContainer(), TimeContainer());
+        Element<T> element = Element<T>(type, filterRule.getPassValue(), TimeWrapper());
         passValueElement = BLF_Element<T>(&element);
 
         comparison = (int)filterRule.getComparison();
@@ -685,6 +733,7 @@ struct BLF_Column : BLF_Base
     int flags;
     int sort;
     bool selectOptionsMutable;
+    int resetOption;
     std::vector<std::string> selectOptions = {};
     std::vector<BLF_Element<T>> elements = {};
     std::vector<BLF_FilterGroup<T>> filterGroups = {};
@@ -699,6 +748,7 @@ struct BLF_Column : BLF_Base
         this->flags = column->flags;
         this->sort = (int)column->sort;
         this->selectOptionsMutable = column->selectOptions.getIsMutable();
+        this->resetOption = (int)column->resetOption;
 
         selectOptions = column->selectOptions.getOptions();
 
@@ -735,7 +785,8 @@ struct BLF_Column : BLF_Base
             permanent,
             (ScheduleColumnFlags)flags,
             (COLUMN_SORT)sort,
-            columnSelectOptions
+            columnSelectOptions,
+            (ColumnResetOption)resetOption
         );
 
         // add filter groups to the column
@@ -755,6 +806,7 @@ struct BLF_Column : BLF_Base
             arg("name", &BLF_Column<T>::name),
             arg("permanent", &BLF_Column<T>::permanent),
             arg("flags", &BLF_Column<T>::flags),
+            arg("resetSetting", &BLF_Column<T>::resetOption),
             arg("sort", &BLF_Column<T>::sort),
             arg("selectOptionsMutable", &BLF_Column<T>::selectOptionsMutable),
             arg("selectOptions", &BLF_Column<T>::selectOptions),
@@ -854,5 +906,6 @@ class DataConverter
         // Write the Columns of a Schedule to a file at the given path.
         int writeSchedule(const char* path, const std::vector<Column>&);
         // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The function creates a copy of the provided vector, but modifies the argument directly. If the function fails at any point, it will be reset to the copy created at the start.
-        int readSchedule(const char* path, std::vector<Column>&);
+        // Returns a partial FileInfo if successful.
+        std::optional<FileInfo> readSchedule(const char* path, std::vector<Column>&);
 };

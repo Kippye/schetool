@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(schetool VERSION 0.6.2)
+project(schetool VERSION 0.7.0)
 
 set(PROGRAM_NAME ${PROJECT_NAME})
 
@@ -59,7 +59,7 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
         message(STATUS "~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
     ENDIF()
 ELSEIF (CMAKE_GENERATOR MATCHES "Visual Studio")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:${CPP_VERSION}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:${CPP_VERSION} /bigobj") # Pass /bigobj to avoid C1128 for data_converter.cpp due to its templates.
     message(STATUS "~~ Set Visual Studio compile flags to: ${CMAKE_CXX_FLAGS}")
 ENDIF()
 message(STATUS "~~ Finished setting compile flags")
@@ -132,13 +132,16 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/main.cpp"
     "${SCHETOOL_SRC}/${CONSTANTS_DIR}/schedule_constants.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/date_container.cpp"
+    "${SCHETOOL_SRC}/${CONTAINERS_DIR}/file_info.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/select_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/select_options.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_container.cpp"
+    "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_wrapper.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/weekday_container.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/textures.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/time_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/window.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/autosave_popup_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/edit_history_gui.cpp"

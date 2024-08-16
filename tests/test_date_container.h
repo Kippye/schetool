@@ -3,7 +3,6 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
 #include "date_container.h"
-#include <iostream>
 
 TEST_CASE("DateContainer")
 {
@@ -11,51 +10,24 @@ TEST_CASE("DateContainer")
     // TODO: Basic tests 
 
     /* Test functions:
-        setYear()
-        setMonth()
-        setMonthDay()
         getString()
         getDayDifference()
         operator++
         operator--
     */
 
-    SECTION("Functions setMonthDay, setMonth, setYear")
-    {
-        dateContainer.setYear(1999, true);
-        CHECK(dateContainer.getYear(true) == 1999);
-
-        dateContainer.setMonth(6);
-        CHECK(dateContainer.getMonth() == 6);
-        dateContainer.setMonth(12);
-        CHECK(dateContainer.getMonth() == 0);
-        dateContainer.setMonth(-5);
-        CHECK(dateContainer.getMonth() == 11);
-        // clamping to month day count
-        dateContainer.setMonth(1);
-        dateContainer.setMonthDay(35);
-        CHECK(dateContainer.getMonthDay() == 28);
-
-        dateContainer.setMonth(2);
-        dateContainer.setMonthDay(31);
-        // set year to leap year
-        dateContainer.setYear(2000, true);
-        // setting month std::mins to new month day count
-        dateContainer.setMonth(1);
-        // february has 29 days in leap year
-        CHECK(dateContainer.getMonthDay() == 29);
-    }
-
     SECTION("Increment operators")
     {
-        dateContainer.setYear(2000, true);
-        dateContainer.setMonth(3);
-        dateContainer.setMonthDay(29);
+        dateContainer.getTime().setYearUTC(2000);
+        dateContainer.getTime().setMonthUTC(4);
+        dateContainer.getTime().setMonthDayUTC(29);
         dateContainer++;
         dateContainer++;
-        CHECK(dateContainer.getMonth() == 4);
-        CHECK(dateContainer.getMonthDay() == 1);
-        CHECK((--dateContainer).getMonthDay() == 30);
+        // incremented to next month
+        CHECK(dateContainer.getTime().getMonth() == 5);
+        CHECK(dateContainer.getTime().getMonthDay() == 1);
+        // decrement back to last month
+        CHECK((--dateContainer).getTime().getMonthDay() == 30);
     }
 
     SECTION("Function getString() as relative")

@@ -58,6 +58,7 @@ class DeleteModalSubGui : public Gui
 class MainMenuBarGui : public Gui
 {
     private:
+        float m_height = 0.0f;
         bool m_openNewNameModal = false;
         bool m_openRenameModal = false;
         bool m_openDeleteConfirmationModal = false;
@@ -76,6 +77,7 @@ class MainMenuBarGui : public Gui
         Event<> saveEvent;
 
         void draw(Window& window, Input& input) override;
+        float getHeight() const;
         void closeModal();
         void passFileNames(const std::vector<std::string>& fileNames);
         void passHaveFileOpen(bool haveFileOpen);

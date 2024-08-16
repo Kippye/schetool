@@ -1,14 +1,11 @@
 #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <string.h>
+#include <string>
 #include <vector>
-#include <ctime>
 #include <numeric>
 #include "filter_rule.h"
 #include "weekday_container.h"
-#include <schedule_core.h>
-#include <element_base.h>
+#include "schedule_core.h"
+#include "element_base.h"
 
 // TEMP
 #include <iostream>
@@ -154,14 +151,11 @@ void ScheduleCore::addColumn(size_t index, const Column& column)
 
 void ScheduleCore::addDefaultColumn(size_t index)
 {
-    time_t t = std::time(nullptr);
-    tm creationTime = *std::localtime(&t);
-
     Column addedColumn = Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Text"), false);
 
     for (size_t i = 0; i < getRowCount(); i++)
     {
-        addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+        addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), TimeWrapper::getCurrentTime()));
     }
     m_schedule.insert(m_schedule.begin() + index, addedColumn);
 
@@ -203,10 +197,10 @@ const Column* ScheduleCore::getColumn(size_t column) const
     return &m_schedule.at(column);
 }
 
-void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
+bool ScheduleCore::setColumnElements(size_t index, const Column& columnData)
 {
-    if (existsColumnAtIndex(index) == false) { return; }
-    if (getColumn(index)->type != columnData.type) { printf("ScheduleCore::setColumnElements: The target Column and columnData types must match but are %d and %d\n", getColumn(index)->type, columnData.type); return; }
+    if (existsColumnAtIndex(index) == false) { return false; }
+    if (getColumn(index)->type != columnData.type) { printf("ScheduleCore::setColumnElements: The target Column and columnData types must match but are %d and %d\n", getColumn(index)->type, columnData.type); return false; }
 
     for (size_t row = 0; row < getRowCount(); row++)
     {
@@ -265,6 +259,8 @@ void ScheduleCore::setColumnElements(size_t index, const Column& columnData)
             }
         }
     }
+
+    return true;
 }
 
 bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
@@ -272,27 +268,15 @@ bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type)
     if (existsColumnAtIndex(column) == false){ return false; }
     if (getColumn(column)->permanent == true) { printf("ScheduleCore::setColumnType tried to set type of a permanent Column at %zu! Returning.\n", column); return false; }
 
-    // HACK y
-    m_schedule.at(column).selectOptions.clearListeners();
-    if (type == SCH_SELECT)
-    {
-        m_schedule.at(column).selectOptions.setIsMutable(true);
-    }
-
     // TODO: try to convert types..? i guess there's no point in doing that. only really numbers could be turned into text.
     // reset values to defaults of the (new?) type
     resetColumn(column, type);
-    // read resetColumn description for why this is run after
-    m_schedule.at(column).type = type;
-    // NOTE!!! must sort AFTER this because otherwise we're doing some REALLY sus things. Sorting a column that contains X type values as if it was a Y type column. REALLY bad.
-    sortColumns();
     return true;
 }
 
 bool ScheduleCore::setColumnName(size_t column, const std::string& name)
 {
     if (existsColumnAtIndex(column) == false) { return false; }
-    Column previousData = Column(m_schedule.at(column));
 
     m_schedule.at(column).name = name;
     return true;
@@ -301,10 +285,17 @@ bool ScheduleCore::setColumnName(size_t column, const std::string& name)
 bool ScheduleCore::setColumnSort(size_t column, COLUMN_SORT sortDirection)
 {
     if (existsColumnAtIndex(column) == false) { return false; }
-    Column previousData = Column(m_schedule.at(column));
 
     m_schedule.at(column).sort = sortDirection;
     sortColumns();
+    return true;
+}
+
+bool ScheduleCore::setColumnResetOption(size_t column, ColumnResetOption option)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+
+    m_schedule.at(column).resetOption = option;
     return true;
 }
 
@@ -419,10 +410,10 @@ bool ScheduleCore::removeColumnFilterRule(size_t column, size_t groupIndex, size
 void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
 {
     Column& column = *getMutableColumn(index);
-    size_t rowCount = column.rows.size();
+    // HACK y
+    column.selectOptions.clearListeners();
 
-    time_t t = std::time(nullptr);
-    tm creationTime = *std::localtime(&t);
+    size_t rowCount = column.rows.size();
 
     switch(type) 
     {
@@ -430,7 +421,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<bool>(type, false, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<bool>(type, Element<bool>::getDefaultValue()), false);
             }
             break;
         }
@@ -438,7 +429,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<int>(type, 0, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<int>(type, Element<int>::getDefaultValue()), false);
             }
             break;
         }
@@ -446,7 +437,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<double>(type, 0, DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<double>(type, Element<double>::getDefaultValue()), false);
             }  
             break;
         }
@@ -454,7 +445,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<std::string>(type, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<std::string>(type, Element<std::string>::getDefaultValue()), false);
             }     
             break;
         }
@@ -462,11 +453,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                if (column.selectOptions.getIsMutable() == true)
-                {
-                    column.selectOptions.clearOptions();
-                }
-                auto selectElement = new Element<SelectContainer>(type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                auto selectElement = new Element<SelectContainer>(type, Element<SelectContainer>::getDefaultValue());
                 column.selectOptions.addListener(row, selectElement->getValueReference());
                 setElement(index, row, (ElementBase*)selectElement, false);
             }     
@@ -476,7 +463,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                auto weekdayElement = new Element<WeekdayContainer>(type, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                auto weekdayElement = new Element<WeekdayContainer>(type, Element<WeekdayContainer>::getDefaultValue());
                 setElement(index, row, (ElementBase*)weekdayElement, false);
             }     
             break;
@@ -485,7 +472,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<TimeContainer>(type, TimeContainer(0, 0), DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<TimeContainer>(type, Element<TimeContainer>::getDefaultValue()), false);
             }
             break;
         }   
@@ -493,7 +480,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
-                setElement(index, row, (ElementBase*)new Element<DateContainer>(type, DateContainer(), DateContainer(creationTime), TimeContainer(creationTime)), false);
+                setElement(index, row, (ElementBase*)new Element<DateContainer>(type, Element<DateContainer>::getDefaultValue()), false);
             }
             break;
         }
@@ -503,6 +490,9 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
             break;
         }
     }
+
+    column.type = type;
+    sortColumns();
 }
 
 
@@ -530,52 +520,50 @@ void ScheduleCore::addRow(size_t index)
     {
         Column& column = m_schedule[i];
         std::vector<ElementBase*>& columnValues = column.rows;
-        time_t t = std::time(nullptr);
-        tm creationTime = *std::localtime(&t);
 
         switch(column.type)
         {
             case(SCH_BOOL):
             {
-                columnValues.insert(columnValues.begin() + index, new Element<bool>(column.type, false, DateContainer(creationTime), TimeContainer(creationTime)));
+                columnValues.insert(columnValues.begin() + index, new Element<bool>(column.type, Element<bool>::getDefaultValue()));
                 break;
             }
             case(SCH_NUMBER):
             {
-                columnValues.insert(columnValues.begin() + index, new Element<int>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
+                columnValues.insert(columnValues.begin() + index, new Element<int>(column.type, Element<int>::getDefaultValue()));
                 break;
             }
             case(SCH_DECIMAL):
             {
-                columnValues.insert(columnValues.begin() + index, new Element<double>(column.type, 0, DateContainer(creationTime), TimeContainer(creationTime)));
+                columnValues.insert(columnValues.begin() + index, new Element<double>(column.type, Element<double>::getDefaultValue()));
                 break;
             }
             case(SCH_TEXT):
             {
-                columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, std::string(""), DateContainer(creationTime), TimeContainer(creationTime)));
+                columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, Element<std::string>::getDefaultValue()));
                 break;
             }
             case(SCH_SELECT):
             {
-                Element<SelectContainer>* selectElement = new Element<SelectContainer>(column.type, SelectContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                Element<SelectContainer>* selectElement = new Element<SelectContainer>(column.type, Element<SelectContainer>::getDefaultValue());
                 columnValues.insert(columnValues.begin() + index, selectElement);
                 column.selectOptions.addListener(index, selectElement->getValueReference());
                 break;
             }
             case(SCH_WEEKDAY):
             {
-                Element<WeekdayContainer>* weekdayElement = new Element<WeekdayContainer>(column.type, WeekdayContainer(), DateContainer(creationTime), TimeContainer(creationTime));
+                Element<WeekdayContainer>* weekdayElement = new Element<WeekdayContainer>(column.type, Element<WeekdayContainer>::getDefaultValue());
                 columnValues.insert(columnValues.begin() + index, weekdayElement);
                 break;
             }
             case(SCH_TIME):
             { 
-                columnValues.insert(columnValues.begin() + index, new Element<TimeContainer>(column.type, TimeContainer(0, 0), DateContainer(creationTime), TimeContainer(creationTime)));      
+                columnValues.insert(columnValues.begin() + index, new Element<TimeContainer>(column.type, Element<TimeContainer>::getDefaultValue()));      
                 break;
             }
             case(SCH_DATE):
             { 
-                columnValues.insert(columnValues.begin() + index, new Element<DateContainer>(column.type, DateContainer(), DateContainer(creationTime), TimeContainer(creationTime)));      
+                columnValues.insert(columnValues.begin() + index, new Element<DateContainer>(column.type, Element<DateContainer>::getDefaultValue()));      
                 break;
             }
             default:
