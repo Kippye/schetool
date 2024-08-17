@@ -624,6 +624,15 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
 		//ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popup->Pos, autoFitSize, &popup->AutoPosLastDirection, r_outer, m_avoidRect, ImGuiPopupPositionPolicy_Default));
 		//return FindBestWindowPosForPopupEx(window->Pos, window->Size, &window->AutoPosLastDirection, r_outer, ImRect(window->Pos, window->Pos), ImGuiPopupPositionPolicy_Default); // Ideally we'd disable r_avoid here
 
+        bool groupEnabled = m_filterGroupState.getFilterGroup().getIsEnabled();
+        if (ImGui::Checkbox("##FilterGroupEnabled", &groupEnabled))
+        {
+            m_filterGroupState.getFilterGroup().setEnabled(groupEnabled);
+            setColumnFilterGroupEnabled.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), groupEnabled);
+        }
+
+        ImGui::SameLine(); // Enabled checkbox before name input
+
         std::string groupName = m_filterGroupState.getFilterGroup().getName();
         groupName.reserve(schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
         char* buf = groupName.data();
@@ -637,7 +646,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             setColumnFilterGroupName.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), m_filterGroupState.getFilterGroup().getName()); 
         }
 
-        ImGui::SameLine();
+        ImGui::SameLine(); // Remove button after name input
 
         if (ImGui::SmallButton("X##RemoveFilterGroup"))
         {

@@ -55,6 +55,10 @@ class Schedule
         {
             setColumnFilterGroupOperator(col, groupIndex, logicalOperator);
         };
+        std::function<void(size_t, size_t, bool)> setFilterGroupEnabledListener = [&](size_t col, size_t groupIndex, bool enabled)
+        {
+            setColumnFilterGroupEnabled(col, groupIndex, enabled);
+        };
         std::function<void(size_t, size_t)> removeFilterGroupListener = [&](size_t col, size_t groupIndex)
         {
             removeColumnFilterGroup(col, groupIndex);
@@ -296,6 +300,7 @@ class Schedule
         void removeColumnFilterGroup(size_t column, size_t groupIndex, bool addToHistory = true);
         void setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name, bool addToHistory = true);
         void setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator, bool addToHistory = true);
+        void setColumnFilterGroupEnabled(size_t column, size_t groupIndex, bool enabled, bool addToHistory = true);
 
         void addColumnFilter(size_t column, size_t groupIndex, Filter filter, bool addToHistory = true);
         void removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, bool addToHistory = true);

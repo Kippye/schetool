@@ -158,12 +158,21 @@ void ScheduleGui::draw(Window& window, Input& input)
                     {
                         for (size_t i = 0; i < columnFilterGroups.size(); i++)
                         {
+                            const auto& filterGroup = currentColumn->getFilterGroupConst(i);
+                            if (filterGroup.getIsEnabled() == false)
+                            {
+                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::inactiveAlpha);
+                            }
                             // FilterGroup button with its name
-                            if (ImGui::Button(currentColumn->getFilterGroupConst(i).getName().append("##").append(std::to_string(column)).append(";").append(std::to_string(i)).c_str(), ImVec2(buttonWidth, 0)))
+                            if (ImGui::Button(filterGroup.getName().append("##").append(std::to_string(column)).append(";").append(std::to_string(i)).c_str(), ImVec2(buttonWidth, 0)))
                             {
                                 openFilterEditor = true;
                                 editorGroupIndex = i;
                                 itemAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+                            }
+                            if (filterGroup.getIsEnabled() == false)
+                            {
+                                ImGui::PopStyleVar();
                             }
 
                             if (sameLine && i < currentColumn->getFilterGroupCount() - 1)
@@ -266,7 +275,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                         {
                             columnEditDisabled = true;
                             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.25f);
+                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
                         }
 
 						ImGui::TableSetColumnIndex(column);

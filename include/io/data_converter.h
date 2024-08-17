@@ -635,6 +635,7 @@ struct BLF_FilterGroup : BLF_Base
     }
     int logicalOperator;
     std::string name;
+    bool enabled;
     std::vector<BLF_Filter<T>> filters = {};
     BLF_FilterGroup() {}
 
@@ -642,6 +643,7 @@ struct BLF_FilterGroup : BLF_Base
     {
         this->logicalOperator = (int)filterGroup.getOperatorType();
         this->name = filterGroup.getName();
+        this->enabled = filterGroup.getIsEnabled();
 
         for (size_t i = 0; i < filterGroup.getFilterCount(); i++)
         {
@@ -651,7 +653,7 @@ struct BLF_FilterGroup : BLF_Base
 
     FilterGroup getFilterGroup() const
     {
-        FilterGroup filterGroup = FilterGroup({}, name, (LogicalOperatorEnum)logicalOperator);
+        FilterGroup filterGroup = FilterGroup({}, name, (LogicalOperatorEnum)logicalOperator, enabled);
 
         for (const BLF_Filter<T>& blfFilter: filters)
         {
@@ -666,6 +668,7 @@ struct BLF_FilterGroup : BLF_Base
         definitions.add(definitions.getObjectTable().define<BLF_FilterGroup<T>>(getName(),
             arg("logicalOperator", &BLF_FilterGroup<T>::logicalOperator),
             arg("name", &BLF_FilterGroup<T>::name),
+            arg("enabled", &BLF_FilterGroup<T>::enabled),
             arg("filters", &BLF_FilterGroup<T>::filters, definitions.get<BLF_Filter<T>>())
         ));
     }

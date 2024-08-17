@@ -41,6 +41,10 @@ namespace gui_colors
         ImVec4(94.0f / 255.0f, 60.0f / 255.0f, 188.0f / 255.0f, 1),
         ImVec4(216.0f / 255.0f, 188.0f / 255.0f, 47.0f / 255.0f, 1),
     };
+    // Use for elements that can be interacted with but are inactive in some way.
+    const float inactiveAlpha = 0.5f;
+    // Use for elements that are completely disabled.
+    const float disabledAlpha = 0.25f;
 }
 
 namespace gui_sizes

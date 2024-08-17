@@ -24,6 +24,7 @@ void Schedule::init(Input& input, Interface& interface)
             filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
             filterEditorSubGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
             filterEditorSubGui->setColumnFilterGroupOperator.addListener(setFilterGroupOperatorListener);
+            filterEditorSubGui->setColumnFilterGroupEnabled.addListener(setFilterGroupEnabledListener);
             filterEditorSubGui->addColumnFilter.addListener(addFilterListener);
             filterEditorSubGui->setColumnFilterOperator.addListener(setFilterOperatorListener);
             filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener);
@@ -327,30 +328,51 @@ void Schedule::removeColumnFilterGroup(size_t column, size_t groupIndex, bool ad
 
 void Schedule::setColumnFilterGroupName(size_t columnIndex, size_t groupIndex, const std::string& name, bool addToHistory)
 {
-    LogicalOperatorEnum logicalOperator = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex).getOperatorType();
-    std::string prevName = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex).getName();
+    const auto& filterGroup = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex);
+    LogicalOperatorEnum logicalOperator = filterGroup.getOperatorType();
+    std::string prevName = filterGroup.getName();
+    bool enabled = filterGroup.getIsEnabled();
 
     if (m_core.setColumnFilterGroupName(columnIndex, groupIndex, name))
     {
         if (addToHistory)
         {
             // edit for name, keep operator the same
-            m_editHistory.addEdit<FilterGroupChangeEdit>(columnIndex, groupIndex, logicalOperator, logicalOperator, prevName, name);
+            m_editHistory.addEdit<FilterGroupChangeEdit>(columnIndex, groupIndex, logicalOperator, prevName, enabled, filterGroup);
         }
     }
 }
 
 void Schedule::setColumnFilterGroupOperator(size_t columnIndex, size_t groupIndex, LogicalOperatorEnum logicalOperator, bool addToHistory)
 {
-    std::string name = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex).getName();
-    LogicalOperatorEnum prevOperator = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex).getOperatorType();
+    const auto& filterGroup = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex);
+    LogicalOperatorEnum prevOperator = filterGroup.getOperatorType();
+    std::string name = filterGroup.getName();
+    bool enabled = filterGroup.getIsEnabled();
 
     if (m_core.setColumnFilterGroupOperator(columnIndex, groupIndex, logicalOperator))
     {
         if (addToHistory)
         {
             // edit for operator, keep name the same
-            m_editHistory.addEdit<FilterGroupChangeEdit>(columnIndex, groupIndex, prevOperator, logicalOperator, name, name);
+            m_editHistory.addEdit<FilterGroupChangeEdit>(columnIndex, groupIndex, prevOperator, name, enabled, filterGroup);
+        }
+    }
+}
+
+void Schedule::setColumnFilterGroupEnabled(size_t columnIndex, size_t groupIndex, bool enabled, bool addToHistory)
+{
+    const auto& filterGroup = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex);
+    LogicalOperatorEnum logicalOperator = filterGroup.getOperatorType();
+    std::string name = filterGroup.getName();
+    bool prevEnabled = filterGroup.getIsEnabled();
+
+    if (m_core.setColumnFilterGroupEnabled(columnIndex, groupIndex, enabled))
+    {
+        if (addToHistory)
+        {
+            // edit for operator, keep name the same
+            m_editHistory.addEdit<FilterGroupChangeEdit>(columnIndex, groupIndex, logicalOperator, name, prevEnabled, filterGroup);
         }
     }
 }

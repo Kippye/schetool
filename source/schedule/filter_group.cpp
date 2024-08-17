@@ -1,12 +1,15 @@
 #include <stdexcept>
 #include "filter_group.h"
 
-FilterGroup::FilterGroup(const std::vector<Filter>& filters, const std::string& name, LogicalOperatorEnum logicalOperator) 
-: m_filters(filters), m_name(name), m_operator(logicalOperator)
+FilterGroup::FilterGroup(const std::vector<Filter>& filters, const std::string& name, LogicalOperatorEnum logicalOperator, bool enabled) 
+: m_filters(filters), m_name(name), m_operator(logicalOperator), m_enabled(enabled)
 {}
 
 bool FilterGroup::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
 {
+    // If the FilterGroup is disabled, it will always return true as if it wasn't there.
+    if (m_enabled == false) { return true; }
+
     bool passes = true; // true by default so having 0 filters returns true
 
     for (size_t i = 0; i < m_filters.size(); i++)
@@ -64,6 +67,16 @@ void FilterGroup::setName(const std::string& name)
 std::string FilterGroup::getName() const
 {
     return m_name;
+}
+
+void FilterGroup::setEnabled(bool enabled)
+{
+    m_enabled = enabled;
+}
+
+bool FilterGroup::getIsEnabled() const
+{
+    return m_enabled;
 }
 
 void FilterGroup::setOperator(LogicalOperatorEnum newOperator)

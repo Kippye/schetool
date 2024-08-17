@@ -9,10 +9,10 @@ class Filter
 {
     private:
         std::vector<FilterRuleContainer> m_rules = {};
-        LogicalOperator m_operator = LogicalOperatorEnum::And;
+        LogicalOperator m_operator = LogicalOperatorEnum::Or;
     public:
         Filter() = default;
-        Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::And);
+        Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::Or);
 
         bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const;
 

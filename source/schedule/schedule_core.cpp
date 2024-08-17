@@ -369,6 +369,15 @@ bool ScheduleCore::setColumnFilterGroupOperator(size_t column, size_t groupIndex
     return true;
 }
 
+bool ScheduleCore::setColumnFilterGroupEnabled(size_t column, size_t groupIndex, bool enabled)
+{
+    if (existsColumnAtIndex(column) == false) { return false; }
+    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) { return false; }
+
+    getMutableColumn(column)->getFilterGroup(groupIndex).setEnabled(enabled);
+    return true;
+}
+
 bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, const Filter& filter)
 {
     if (existsColumnAtIndex(column) == false) { return false; }

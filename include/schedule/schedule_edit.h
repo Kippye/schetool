@@ -281,10 +281,12 @@ class FilterGroupChangeEdit : public FilterEditBase
     private:
         LogicalOperatorEnum m_previousOperator;
         std::string m_previousName;
+        bool m_previousEnabled;
         LogicalOperatorEnum m_newOperator;
         std::string m_newName;
+        bool m_newEnabled;
     public:
-        FilterGroupChangeEdit(size_t column, size_t filterGroupIndex, LogicalOperatorEnum previousOperator, LogicalOperatorEnum newOperator, const std::string& previousName, const std::string& newName);
+        FilterGroupChangeEdit(size_t column, size_t filterGroupIndex, LogicalOperatorEnum prevOperator, const std::string& prevName, bool prevEnabled, const FilterGroup& current);
 
         size_t getFilterIndex() const
         {
@@ -301,6 +303,11 @@ class FilterGroupChangeEdit : public FilterEditBase
             return m_previousName;
         }
 
+        bool getPrevEnabled() const
+        {
+            return m_previousEnabled;
+        }
+
         LogicalOperatorEnum getNewOperator() const
         {
             return m_newOperator;
@@ -311,10 +318,16 @@ class FilterGroupChangeEdit : public FilterEditBase
             return m_newName;
         }
 
+        bool getNewEnabled() const
+        {
+            return m_newEnabled;
+        }
+
         void revert(ScheduleCore& scheduleCore) override
         {
             scheduleCore.setColumnFilterGroupOperator(m_columnIndex, m_filterGroupIndex, m_previousOperator);
             scheduleCore.setColumnFilterGroupName(m_columnIndex, m_filterGroupIndex, m_previousName);
+            scheduleCore.setColumnFilterGroupEnabled(m_columnIndex, m_filterGroupIndex, m_previousEnabled);
             m_isReverted = true;
         }
 
@@ -322,6 +335,7 @@ class FilterGroupChangeEdit : public FilterEditBase
         {
             scheduleCore.setColumnFilterGroupOperator(m_columnIndex, m_filterGroupIndex, m_newOperator);
             scheduleCore.setColumnFilterGroupName(m_columnIndex, m_filterGroupIndex, m_newName);
+            scheduleCore.setColumnFilterGroupEnabled(m_columnIndex, m_filterGroupIndex, m_newEnabled);
             m_isReverted = false;
         }
 };

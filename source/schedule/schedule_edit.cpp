@@ -292,13 +292,15 @@ FilterGroupAddOrRemoveEdit::FilterGroupAddOrRemoveEdit(bool isRemove, size_t col
 }
 
 // FilterGroupChangeEdit
-FilterGroupChangeEdit::FilterGroupChangeEdit(size_t column, size_t filterGroupIndex, LogicalOperatorEnum previousOperator, LogicalOperatorEnum newOperator, const std::string& previousName, const std::string& newName)
+FilterGroupChangeEdit::FilterGroupChangeEdit(size_t column, size_t filterGroupIndex, LogicalOperatorEnum prevOperator, const std::string& prevName, bool prevEnabled, const FilterGroup& current)
 : FilterEditBase(ScheduleEditType::FilterGroupChange, column, filterGroupIndex)
 {
-    m_previousOperator = previousOperator;
-    m_newOperator = newOperator;
-    m_previousName = previousName;
-    m_newName = newName;
+    m_previousOperator = prevOperator;
+    m_newOperator = current.getOperatorType();
+    m_previousName = prevName;
+    m_newName = current.getName();
+    m_previousEnabled = prevEnabled;
+    m_newEnabled = current.getIsEnabled();
 }
 
 // FilterAddOrRemoveEdit

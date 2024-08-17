@@ -85,12 +85,13 @@ void EditHistoryGui::draw(Window& window, Input& input)
                 {
                     auto filterGroupChangeEdit = std::dynamic_pointer_cast<FilterGroupChangeEdit>(editHistory[i]);
                     bool operatorChanged = filterGroupChangeEdit->getPrevOperator() != filterGroupChangeEdit->getNewOperator();
+                    bool enabledChanged = filterGroupChangeEdit->getPrevEnabled() != filterGroupChangeEdit->getNewEnabled();
                     sprintf(buf, "Edit filter group #%zu of Column %zu %s (%s -> %s) ##%zu", 
                         filterGroupChangeEdit->getFilterGroupIndex(),
                         filterGroupChangeEdit->getColumnIndex(),
-                        operatorChanged ? "operator" : "name",
-                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getPrevOperator()) : filterGroupChangeEdit->getPrevName().c_str(),
-                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getNewOperator()) : filterGroupChangeEdit->getNewName().c_str(),
+                        operatorChanged ? "operator" : (enabledChanged ? "enabled" : "name"),
+                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getPrevOperator()) : (enabledChanged ? std::to_string(filterGroupChangeEdit->getPrevEnabled()).c_str() : filterGroupChangeEdit->getPrevName().c_str()),
+                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getNewOperator()) : (enabledChanged ? std::to_string(filterGroupChangeEdit->getNewEnabled()).c_str() : filterGroupChangeEdit->getNewName().c_str()),
                         i);
                     break;
                 }

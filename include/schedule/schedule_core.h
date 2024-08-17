@@ -56,6 +56,7 @@ class ScheduleCore
         bool removeColumnFilterGroup(size_t column, size_t groupIndex);
         bool setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name);
         bool setColumnFilterGroupOperator(size_t column, size_t groupIndex, LogicalOperatorEnum logicalOperator);
+        bool setColumnFilterGroupEnabled(size_t column, size_t groupIndex, bool enabled);
 
         bool addColumnFilter(size_t column, size_t groupIndex, size_t filterIndex, const Filter& filter);
         // Use the count as the filter index
