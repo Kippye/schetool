@@ -35,7 +35,8 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
         editorDate.clear();
         changedDate = true;
     }
-    // DATE / CALENDAR
+
+    // MONTH SELECTION
     if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
     {
         viewedMonth = viewedMonth == 1 ? 12 : viewedMonth - 1;
@@ -50,13 +51,15 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     {
         viewedMonth = viewedMonth == 12 ? 1 : viewedMonth + 1;
     }
+
+    // YEAR INPUT
     int yearInput = viewedYear;
     if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         viewedYear = TimeWrapper::limitYearToValidRange(yearInput);
     }
 
-    // CALENDAR
+    // MONTH DAYS
     size_t dayIndex = 0;
     unsigned int daysInMonth = mytime::get_month_day_count(viewedYear, viewedMonth);
 
@@ -70,19 +73,33 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
 
     unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
 
-    // TODO: Handle selecting a day in the previous / next month
-    // TODO: Handle selecting a day in the previous / next year
     auto addCalendarDay = [&](int month, int dayDisplayNumber)
     {
-        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(24, 24)) && month == viewedMonth)
+        unsigned int pushedColorCount = 0;
+        unsigned int pushedVarCount = 0;
+        // Highlight the selected day in its correct month
+        if (editorDate.getIsEmpty() == false && (DateWrapper(viewedYear, month, dayDisplayNumber) == editorDate.getDateUTC()))
         {
-            editorDate.setDateUTC({viewedYear, viewedMonth, (unsigned int)dayDisplayNumber});
+            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered));
+            pushedColorCount++;
+        }
+        // Display days from other months as slightly darker, even if selected
+        if (month != viewedMonth)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
+            pushedVarCount++;
+        }
+        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(24, 24)))
+        {
+            unsigned int selectedDayYear = viewedYear;
+            if (viewedMonth == 1 && month == 12) { selectedDayYear--; } // Viewing january and clicked a day from previous year's december
+            else if (viewedMonth == 12 && month == 1) { selectedDayYear++; } // Viewing december and clicked a day from next month's january
+            editorDate.setDateUTC({selectedDayYear, (unsigned int)month, (unsigned int)dayDisplayNumber});
             changedDate = true;
         }
-        if (dayDisplayNumber == editorDate.getMonthDayUTC())
-        {
-            // TODO: Highlight this day as selected in the calendar
-        }
+        ImGui::PopStyleColor(pushedColorCount);
+        ImGui::PopStyleVar(pushedVarCount);
+
         // sameline when not the last day of the week and not the last day of the month (trailing sameline = bad)
         if ((dayIndex + 1) % 7 != 0 && dayIndex < totalDisplayedDays)
         {
