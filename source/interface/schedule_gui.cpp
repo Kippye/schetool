@@ -652,10 +652,27 @@ void ScheduleGui::draw(Window& window, Input& input)
         skip_schedule_table:
 		ImGui::EndChild();
 		ImGui::SameLine();
+        bool addColumnButtonDisabled = false;
+        if (m_scheduleCore.getColumnCount() >= schedule_consts::COLUMN_MAX_COUNT)
+        {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
+            addColumnButtonDisabled = true;
+        }
 		if (ImGui::Button("+", ImVec2(ADD_COLUMN_BUTTON_WIDTH, (float)(CHILD_WINDOW_HEIGHT))))
 		{
 			addDefaultColumn.invoke(m_scheduleCore.getColumnCount());
 		}
+        if (addColumnButtonDisabled)
+        {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+            if (ImGui::BeginItemTooltip())
+            {
+                ImGui::Text("Adding too many columns is not good for you!");
+                ImGui::EndTooltip();
+            }
+        }
 		if (ImGui::Button("Add row", ImVec2((float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 26), ADD_ROW_BUTTON_HEIGHT)))
 		{
 			addRow.invoke(m_scheduleCore.getRowCount());
