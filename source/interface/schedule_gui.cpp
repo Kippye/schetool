@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdio>
 #include <algorithm>
+#include <format>
 #include "schedule_constants.h"
 #include "schedule_gui.h"
 #include "textures.h"
@@ -190,11 +191,12 @@ void ScheduleGui::draw(Window& window, Input& input)
                     }
                     else
                     {
-                        if (ImGui::Button(std::to_string(columnFilterGroups.size()).append(" filter groups").append("##OpenFilterGroupListButton").c_str()))
+                        if (ImGui::Button(std::format("{} filter groups##OpenFilterGroupListButton{}", columnFilterGroups.size(), column).c_str()))
                         {
+                            m_filterGroupListColumn = column;
                             ImGui::OpenPopup("FilterGroupListPopup");
                         }
-                        if (ImGui::BeginPopup("FilterGroupListPopup"))
+                        if (m_filterGroupListColumn == column && ImGui::BeginPopup("FilterGroupListPopup"))
                         {
                             drawFilterGroupButtons(false, ImGui::CalcTextSize("M").x * schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
                             ImGui::EndPopup();

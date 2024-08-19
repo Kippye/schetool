@@ -28,6 +28,7 @@ class ScheduleGui : public Gui
         const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
         bool m_openDateSelectPopup = false;
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
+        unsigned int m_filterGroupListColumn = 0;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
         void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
         static void loadTextures();
