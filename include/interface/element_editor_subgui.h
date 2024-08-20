@@ -16,6 +16,9 @@ class ElementEditorSubGui : public Gui
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;
         bool m_madeEdits = false; 
+        std::string m_draggedOptionID = "";
+        bool m_hasOptionBeenDragged = false;
+        ImVec2 m_dragLastMousePos = ImVec2(0, 0);
         int m_editorColumn = -1;
         int m_editorRow = -1;
         unsigned int m_viewedYear = 0;

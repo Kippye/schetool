@@ -119,29 +119,56 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 						ImGui::SameLine();
 					}
 
-					std::string optionName = std::string(optionNames[i]);
+					std::string optionButtonID = std::string(optionNames[i]).append("##EditorOption");
+                    bool prevSelected = selected;
 
-					if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
+					if (ImGui::Selectable(optionButtonID.c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
 					{
-						m_editorSelect.setSelected(i, selected);
-						m_madeEdits = true;
+                        // Don't change option selection when drag is ended
+                        if (m_draggedOptionID == optionButtonID && m_hasOptionBeenDragged)
+                        {
+                            selected = prevSelected;
+                        }
+                        else
+                        {
+                            m_editorSelect.setSelected(i, selected);
+                            m_madeEdits = true;
+                        }
 					}
 
 					// drag to reorder options
 					if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
 					{
-						if (ImGui::IsItemActive() && !ImGui::IsItemHovered())
-						{
-							size_t i_next = i + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
-							if (i_next >= 0 && i_next < optionNames.size())
-							{
-								modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next));
-								m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
-								m_madeEdits = true;
-								ImGui::ResetMouseDragDelta();
-								break;
-							}
-						}
+                        // ImGui::IsItemToggledSelection()
+                        if (ImGui::IsItemActive())
+                        {
+                            if (optionButtonID != m_draggedOptionID)
+                            {
+                                m_hasOptionBeenDragged = false;
+                                m_dragLastMousePos = ImGui::GetMousePos();
+                                m_draggedOptionID = optionButtonID;
+                            }
+                            
+                            if (!ImGui::IsItemHovered())
+                            {
+                                size_t i_next = i + ((ImGui::GetMousePos() - m_dragLastMousePos).y < 0.f ? -1 : 1);
+                                if (i_next >= 0 && i_next < optionNames.size())
+                                {
+                                    m_hasOptionBeenDragged = true;
+                                    modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next));
+                                    m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                    m_madeEdits = true;
+                                    m_dragLastMousePos = ImGui::GetMousePos();
+                                }
+                            }
+                        }
+                        // Drag ended
+                        else if (m_draggedOptionID == optionButtonID)
+                        {
+                            m_draggedOptionID = "";
+                            m_hasOptionBeenDragged = false;
+                            m_dragLastMousePos = ImVec2(0, 0);
+                        }
 					}
 				}
 
