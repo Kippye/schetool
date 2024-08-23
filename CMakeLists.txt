@@ -115,6 +115,7 @@ set(HANDLERS_DIR    "handlers")
 set(INTERFACE_DIR   "interface")
 set(IO_DIR          "io")
 set(SCHEDULE_DIR    "schedule")
+set(UTIL_DIR    "util")
 
 target_include_directories(${PROGRAM_NAME} 
     PUBLIC "include" 
@@ -125,12 +126,13 @@ target_include_directories(${PROGRAM_NAME}
     PUBLIC "include/${INTERFACE_DIR}"
     PUBLIC "include/${IO_DIR}"
     PUBLIC "include/${SCHEDULE_DIR}"
+    PUBLIC "include/${UTIL_DIR}"
     PUBLIC "libs"
     PUBLIC "libs/stb")
 
 target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/main.cpp"
-    "${SCHETOOL_SRC}/${CONSTANTS_DIR}/schedule_constants.cpp"
+    "${SCHETOOL_SRC}/${CONSTANTS_DIR}/filter_constants.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/date_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/file_info.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/select_container.cpp"

@@ -1,14 +1,11 @@
 #pragma once
 #include <map>
-#include "element_editor_subgui.h"
-#include "filter_editor_subgui.h"
 #include "gui.h"
 #include "window.h"
 #include "input.h"
 #include "main_menu_bar_gui.h"
 #include "element_base.h"
 #include "select_container.h"
-#include "select_options.h"
 #include "schedule_events.h"
 #include "schedule_core.h"
 #include "schedule_column.h"

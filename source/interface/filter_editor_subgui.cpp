@@ -1,6 +1,7 @@
 #include "filter_editor_subgui.h"
 #include "gui_templates.h"
-#include "schedule_constants.h"
+#include "gui_constants.h"
+#include "filter_constants.h"
 
 using filter_consts::TypeComparisonInfo;
 
@@ -113,6 +114,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
             {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
+            ImGui::SetNextItemWidth(gui_sizes::filter_editor::ruleComparisonComboWidth);
             if (ImGui::BeginCombo("##filterRuleEditorComparison", filter_consts::comparisonStrings.at(currentComparison)))
             {
                 for (size_t i = 0; i < comparisonInfo.names.size(); i++)
@@ -301,7 +303,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
                 if (newComparison != Comparison::IsEmpty && newComparison != Comparison::ContainsToday)
                 {
                     auto selection = value.getSelection();
-                    const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
+                    const std::vector<std::string>& optionNames = general_consts::weekdayNames;
                     // Options
                     for (size_t i = 0; i < optionNames.size(); i++)
                     {
@@ -374,15 +376,57 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input)
                 if (newComparison != Comparison::IsEmpty)
                 {
                     ImGui::SameLine();
-                    gui_templates::TextWithBackground("%s##filterRuleEditor", newComparison == Comparison::IsRelativeToToday ? "Today" : value.getString().c_str());
+                    int pushedStyleVars = 0;
+                    if (m_filterRuleState.getFilterRule().getDateCompareCurrent())
+                    {
+                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::inactiveAlpha);
+                        pushedStyleVars++;
+                    }
+                    if (ImGui::Button(std::format("{}##filterRuleEditorDatePassValue", value.getString().c_str()).c_str()))
+                    {
+                        m_filterRuleState.getFilterRule().setDatePassCompareCurrent(false);
+                        if (m_editing == true)
+                        {
+                            filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<DateContainer>());
+                            invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                        }
+                    }
+                    ImGui::PopStyleVar(pushedStyleVars);
+                    pushedStyleVars = 0;
+                    ImGui::SameLine();
+                    if (!m_filterRuleState.getFilterRule().getDateCompareCurrent())
+                    {
+                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::inactiveAlpha);
+                        pushedStyleVars++;
+                    }
+                    if (ImGui::Button("Today##filterRuleEditorDateTodayButton"))
+                    {
+                        m_filterRuleState.getFilterRule().setDatePassCompareCurrent(true);
+                        if (m_editing == true)
+                        {
+                            filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<DateContainer>());
+                            invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                        }
+                    }
+                    ImGui::PopStyleVar(pushedStyleVars);
+                    pushedStyleVars = 0;
                 }
 
                 if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth, false, false))
                 {
-                    // Choosing a specific date makes the filter no longer relative
-                    m_filterRuleState.getFilterRule().setComparison(Comparison::Is);
+                    // Choosing a specific date makes an "IsEmpty" filter default to the "Is" comparison
+                    if (newComparison == Comparison::IsEmpty)
+                    {
+                        m_filterRuleState.getFilterRule().setComparison(Comparison::Is);
+                    }
+                    // If the user selects a specific date they probably don't want the filter to compare to the current date anymore
+                    if (m_filterRuleState.getFilterRule().getDateCompareCurrent() == true)
+                    {
+                        m_filterRuleState.getFilterRule().setDatePassCompareCurrent(false);
+                    }
 
                     m_filterRuleState.getFilterRule().setPassValue(value);
+
                     if (m_editing == true)
                     {
                         filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<DateContainer>());
@@ -554,9 +598,10 @@ void FilterRuleEditorSubGui::openCreate(SCHEDULE_TYPE type, const std::string& c
         }
         case(SCH_DATE):
         {
-            // default date comparison to IsRelativeToToday
+            // default date comparison to be "is Today"
             FilterRule<DateContainer> dateRule = FilterRule<DateContainer>(DateContainer::getCurrentSystemDate());
-            dateRule.setComparison(Comparison::IsRelativeToToday);
+            dateRule.setComparison(Comparison::Is);
+            dateRule.setDatePassCompareCurrent(true);
             m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), dateRule);
             break;
         }
@@ -634,9 +679,9 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
         ImGui::SameLine(); // Enabled checkbox before name input
 
         std::string groupName = m_filterGroupState.getFilterGroup().getName();
-        groupName.reserve(schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
+        groupName.reserve(filter_consts::FILTER_GROUP_NAME_MAX_LENGTH);
         char* buf = groupName.data();
-        if (ImGui::InputText("##FilterGroupNameInput", buf, schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH))
+        if (ImGui::InputText("##FilterGroupNameInput", buf, filter_consts::FILTER_GROUP_NAME_MAX_LENGTH))
         {
             m_filterGroupState.getFilterGroup().setName(buf);
         }
@@ -659,7 +704,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
             
             ImVec2 ruleTextSize = ImGui::CalcTextSize(filter.getRule(ruleIndex).getString().c_str());
-            ImVec2 ruleButtonSize = ImVec2(std::min(ruleTextSize.x + ImGui::GetStyle().ItemInnerSpacing.x * 2, ImGui::GetContentRegionAvail().x - gui_sizes::filterRuleButtonWidthOffset), 0.0f);
+            ImVec2 ruleButtonSize = ImVec2(std::min(ruleTextSize.x + ImGui::GetStyle().ItemInnerSpacing.x * 2, ImGui::GetContentRegionAvail().x - gui_sizes::filter_editor::ruleButtonWidthOffset), 0.0f);
 
             if (ImGui::Button(filter.getRule(ruleIndex).getString().append("##").append(std::to_string(filterIndex)).append(";").append(std::to_string(ruleIndex)).c_str(), ruleButtonSize))
             {
@@ -694,9 +739,9 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
                     // display operator between each rule except the last
                     if (r < filter.getRules().size() - 1)
                     {
-                        if (ImGui::BeginCombo(std::string("##FilterOperator").append(std::to_string(f)).append(";").append(std::to_string(r)).c_str(), schedule_consts::logicalOperatorStrings.at(filter.getOperatorType())))
+                        if (ImGui::BeginCombo(std::string("##FilterOperator").append(std::to_string(f)).append(";").append(std::to_string(r)).c_str(), filter_consts::logicalOperatorStrings.at(filter.getOperatorType())))
                         {
-                            for (const auto& [logicalOperator, operatorString]: schedule_consts::logicalOperatorStrings)
+                            for (const auto& [logicalOperator, operatorString]: filter_consts::logicalOperatorStrings)
                             {
                                 bool isSelected = filter.getOperatorType() == logicalOperator;
                                 if (ImGui::Selectable(operatorString, isSelected))
@@ -733,9 +778,9 @@ void FilterEditorSubGui::draw(Window& window, Input& input)
             // display operator between each Filter except the last
             if (f < m_filterGroupState.getFilterGroup().getFilters().size() - 1)
             {
-                if (ImGui::BeginCombo(std::string("##FilterGroupOperator").append(std::to_string(f)).c_str(), schedule_consts::logicalOperatorStrings.at(m_filterGroupState.getFilterGroup().getOperatorType())))
+                if (ImGui::BeginCombo(std::string("##FilterGroupOperator").append(std::to_string(f)).c_str(), filter_consts::logicalOperatorStrings.at(m_filterGroupState.getFilterGroup().getOperatorType())))
                 {
-                    for (const auto& [logicalOperator, operatorString]: schedule_consts::logicalOperatorStrings)
+                    for (const auto& [logicalOperator, operatorString]: filter_consts::logicalOperatorStrings)
                     {
                         bool isSelected = m_filterGroupState.getFilterGroup().getOperatorType() == logicalOperator;
                         if (ImGui::Selectable(operatorString, isSelected))

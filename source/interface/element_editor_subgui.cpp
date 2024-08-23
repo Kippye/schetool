@@ -2,6 +2,7 @@
 #include "element_editor_subgui.h"
 #include "gui_templates.h"
 #include "schedule_constants.h"
+#include "gui_constants.h"
 
 ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore) : m_scheduleCore(scheduleCore), Gui(ID) 
 {}
@@ -178,7 +179,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 			{
 				auto selection = m_editorWeekday.getSelection();
 				size_t selectedCount = selection.size();
-				const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
+				const std::vector<std::string>& optionNames = general_consts::weekdayNames;
 
 				std::vector<size_t> selectionIndices = {};
 

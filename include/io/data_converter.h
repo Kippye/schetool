@@ -461,7 +461,8 @@ struct BLF_FilterRule : BLF_Base
         return "BLF_FilterRule";
     }
     BLF_Element<T> passValueElement;
-    int comparison;
+    int comparison = 0;
+    bool dateCompareToCurrent = false;
 
     BLF_FilterRule() {}
     BLF_FilterRule(SCHEDULE_TYPE type, const FilterRule<T>& filterRule)
@@ -470,12 +471,14 @@ struct BLF_FilterRule : BLF_Base
         passValueElement = BLF_Element<T>(&element);
 
         comparison = (int)filterRule.getComparison();
+        dateCompareToCurrent = filterRule.getDateCompareCurrent();
     }
 
     FilterRule<T> getFilterRule() const
     {
         FilterRule<T> filter = FilterRule<T>(passValueElement.getElement().getValue());
         filter.setComparison((Comparison)comparison);
+        filter.setDatePassCompareCurrent(dateCompareToCurrent);
         return filter;
     }
 
@@ -483,7 +486,8 @@ struct BLF_FilterRule : BLF_Base
     {
         definitions.add(definitions.getObjectTable().define<BLF_FilterRule<T>>(getName(),
             arg("passValueElement", &BLF_FilterRule<T>::passValueElement, definitions.get<BLF_Element<T>>()),
-            arg("comparison", &BLF_FilterRule<T>::comparison)
+            arg("comparison", &BLF_FilterRule<T>::comparison),
+            arg("dateCompareToCurrent", &BLF_FilterRule<T>::dateCompareToCurrent)
         ));
     }
 };

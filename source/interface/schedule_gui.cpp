@@ -7,14 +7,11 @@
 #include <format>
 #include "schedule_constants.h"
 #include "schedule_gui.h"
+#include "element_editor_subgui.h"
+#include "filter_editor_subgui.h"
 #include "textures.h"
-#include "util.h"
-#include "element.h"
-#include "element_base.h"
-#include "filter_rule.h"
-#include "schedule.h"
 #include "gui_templates.h"
-#include <iostream>
+#include "gui_constants.h"
 
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui) : m_scheduleCore(scheduleCore), Gui(ID), m_mainMenuBarGui(mainMenuBarGui)
 {
@@ -198,7 +195,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                         }
                         if (m_filterGroupListColumn == column && ImGui::BeginPopup("FilterGroupListPopup"))
                         {
-                            drawFilterGroupButtons(false, ImGui::CalcTextSize("M").x * schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
+                            drawFilterGroupButtons(false, ImGui::CalcTextSize("M").x * filter_consts::FILTER_GROUP_NAME_MAX_LENGTH);
                             ImGui::EndPopup();
                         }
                     }
@@ -474,7 +471,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
                                 WeekdayContainer value = getElementValue<WeekdayContainer>(column, row, columnEditDisabled);
                                 auto selection = value.getSelection();
-                                const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
+                                const std::vector<std::string>& optionNames = general_consts::weekdayNames;
 
                                 std::vector<int> selectionIndices = {};
 

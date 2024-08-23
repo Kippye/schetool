@@ -1,6 +1,7 @@
 #include "imgui_stdlib.h"
 #include "gui_templates.h"
-#include "schedule_constants.h"
+#include "gui_constants.h"
+#include "util.h"
 
 bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, bool captureKeyboardFocus)
 {
@@ -45,7 +46,29 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     TimeWrapper formatTime;
     formatTime.setMonthUTC(viewedMonth);
     std::string monthName = formatTime.getDynamicFmtStringUTC("{:%B}");
-    ImGui::Button(monthName.append(std::string("##Month")).c_str(), ImVec2(96, 0));
+    ImGui::SetNextItemWidth(gui_sizes::date_editor::monthNameComboWidth);
+    if (ImGui::BeginCombo("##DateEditorMonth", monthName.c_str(), ImGuiComboFlags_NoArrowButton))
+    {
+        for (size_t i = 1; i <= 12; i++)
+        {
+            bool isSelected = i == viewedMonth;
+
+            formatTime.setMonthUTC(i);
+            monthName = formatTime.getDynamicFmtStringUTC("{:%B}");
+            if (ImGui::Selectable(monthName.c_str(), isSelected))
+            {
+                viewedMonth = i;
+            }
+
+            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+            if (isSelected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
     ImGui::SameLine();
     if (ImGui::ArrowButton("##NextMonth", ImGuiDir_Right))
     {
@@ -54,9 +77,20 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
 
     // YEAR INPUT
     int yearInput = viewedYear;
-    if (ImGui::InputInt("##YearInput", &yearInput, 1, 1, ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::Button("-", gui_sizes::date_editor::yearIncrementButtonSize))
+    {
+        viewedYear = TimeWrapper::limitYearToValidRange(viewedYear - 1);
+    }
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(gui_sizes::date_editor::yearInputWidth);
+    if (ImGui::InputInt("##YearInput", &yearInput, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         viewedYear = TimeWrapper::limitYearToValidRange(yearInput);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("+", gui_sizes::date_editor::yearIncrementButtonSize))
+    {
+        viewedYear = TimeWrapper::limitYearToValidRange(viewedYear + 1);
     }
 
     // MONTH DAYS
@@ -89,7 +123,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
             pushedVarCount++;
         }
-        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(24, 24)))
+        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), gui_sizes::date_editor::monthDayButtonSize))
         {
             unsigned int selectedDayYear = viewedYear;
             if (viewedMonth == 1 && month == 12) { selectedDayYear--; } // Viewing january and clicked a day from previous year's december
@@ -103,7 +137,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
         // sameline when not the last day of the week and not the last day of the month (trailing sameline = bad)
         if ((dayIndex + 1) % 7 != 0 && dayIndex < totalDisplayedDays)
         {
-            ImGui::SameLine();
+            ImGui::SameLine(0, gui_sizes::date_editor::monthDayButtonSpacing.x);
         }
         dayIndex++;
     };
