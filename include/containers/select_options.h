@@ -71,6 +71,7 @@ class SelectOptions
         bool removeOption(const std::string& option);
         bool removeOption(size_t option);
         bool moveOption(size_t firstIndex, size_t secondIndex);
+        bool renameOption(size_t option, const std::string& name);
         void replaceOptions(const std::vector<std::string>& options);
         void clearOptions();
         void setIsMutable(bool to);

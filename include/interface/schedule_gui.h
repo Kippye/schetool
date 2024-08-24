@@ -17,6 +17,7 @@ class ScheduleGui : public Gui
         // Each texture's ID will be set when the texture at gui creation.
         inline static std::map<std::string, unsigned int> textures = 
         {
+            { "icon_edit", 0 },
             { "icon_reset", 0 }
         };
         // TEMP?

@@ -190,6 +190,18 @@ bool SelectOptions::moveOption(size_t firstIndex, size_t secondIndex)
     return true;
 }
 
+bool SelectOptions::renameOption(size_t index, const std::string& name)
+{
+    if (index < m_options.size() == false) { return false; }
+    if (name.empty()) { return false; }
+
+    m_lastModification.replace(OPTION_MODIFICATION_RENAME, index, index);
+    m_options.at(index) = name;
+    updateListeners();
+
+    return true;
+}
+
 void SelectOptions::replaceOptions(const std::vector<std::string>& options)
 {
     m_lastModification.replace(OPTION_MODIFICATION_REPLACE, 0, 0);

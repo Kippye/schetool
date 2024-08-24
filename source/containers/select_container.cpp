@@ -112,6 +112,10 @@ void SelectContainer::update(const SelectOptionChange& lastChange, size_t option
             }
             break;
         }
+        case (OPTION_MODIFICATION_RENAME):
+        {
+            // The container only cares about the index of the option, which has not changed.
+        }
         case (OPTION_MODIFICATION_REPLACE):
         {
             // TODO HOW??

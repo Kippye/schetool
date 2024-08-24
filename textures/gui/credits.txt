@@ -1,0 +1,2 @@
+icon_reset.png - CoreyGinnivan, https://www.svgrepo.com/svg/343263/reset
+icon_edit.png - Konstantin Filatov, https://www.svgrepo.com/svg/521620/edit
