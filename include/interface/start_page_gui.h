@@ -27,6 +27,6 @@ class StartPageGui : public Gui
 
         Event<std::string> openScheduleFileEvent;
 
-        void draw(Window& window, Input& input) override;
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         void passFileNames(const std::vector<std::string>& fileNames);
 };

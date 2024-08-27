@@ -1,7 +1,7 @@
 #include "autosave_popup_gui.h"
 #include "gui_templates.h"
 
-void AutosavePopupGui::draw(Window& window, Input& input)
+void AutosavePopupGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
     ImVec2 popupSize = ImVec2(256.0f, 0.0f);
     ImGui::SetNextWindowContentSize(popupSize);

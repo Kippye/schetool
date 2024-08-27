@@ -10,6 +10,8 @@
 #include <map>
 #include <memory>
 
+#include "textures.h"
+#include "gui_textures.h"
 #include "window.h"
 #include "input.h"
 #include "gui.h"
@@ -19,6 +21,7 @@ class Interface
 	private:
 		Window* m_windowManager;
 		Input* m_input;
+        std::unique_ptr<GuiTextures> m_guiTextures;
 		std::map<std::string, std::shared_ptr<Gui>> m_guis = {};
 
 		void addGui(std::shared_ptr<Gui> gui);
@@ -28,7 +31,7 @@ class Interface
 		ImGuiIO* imGuiIO;
 		ImGuiContext* imGui;
 
-		void init(Window*, Input*);
+		void init(Window*, Input*, TextureLoader&);
         template <typename T, typename... Args>
         std::shared_ptr<T> addGui(Args&&... args)
         {

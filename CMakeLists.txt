@@ -140,6 +140,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_wrapper.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/weekday_container.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/textures.cpp"

@@ -16,7 +16,7 @@ class TextInputModalSubGui : public Gui
     public:
         TextInputModalSubGui(const char* ID, const char* popupName = "Text input", const char* acceptButtonText = "Accept", size_t textMaxLength = 48, bool showCloseButton = true);
 
-        void draw(Window& window, Input& input) override; 
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override; 
         void open();
         virtual void invokeEvent(const std::string& text);
 };
@@ -51,7 +51,7 @@ class DeleteModalSubGui : public Gui
 
         Event<std::string> deleteScheduleEvent;
 
-        void draw(Window& window, Input& input) override;
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         void setAffectedScheduleName(const std::string& name);
 };
 
@@ -76,7 +76,7 @@ class MainMenuBarGui : public Gui
         Event<> redoEvent;
         Event<> saveEvent;
 
-        void draw(Window& window, Input& input) override;
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         float getHeight() const;
         void closeModal();
         void passFileNames(const std::vector<std::string>& fileNames);

@@ -7,7 +7,7 @@
 ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore) : m_scheduleCore(scheduleCore), Gui(ID) 
 {}
 
-void ElementEditorSubGui::draw(Window& window, Input& input)
+void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
 	// give old current open state to the last frame's state
 	m_openLastFrame = m_openThisFrame;
@@ -123,6 +123,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 					std::string optionButtonID = std::string(optionNames[i]).append("##EditorOption");
                     bool prevSelected = selected;
 
+                    ImGui::SetNextItemAllowOverlap();
 					if (ImGui::Selectable(optionButtonID.c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
 					{
                         // Don't change option selection when drag is ended
@@ -171,6 +172,19 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
                             m_dragLastMousePos = ImVec2(0, 0);
                         }
 					}
+
+                    ImGui::SameLine();
+                    ImGui::SetCursorPosX(ImGui::GetContentRegionMax().x - gui_sizes::element_editor::selectOptionEditButtonSize.x);
+                    // Edit option button
+                    if (ImGui::ImageButton(std::format("EditSelectOption{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_edit"), gui_sizes::element_editor::selectOptionEditButtonSize - ImGui::GetStyle().FramePadding * 2.0f))
+                    {
+                        // TODO: Open option editor popup
+                        // if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui"))
+                        // {
+                        //     deleteModalSubGui->setAffectedScheduleName(m_fileNames[i]);
+                        // }
+                        // m_openDeleteConfirmationModal = true;
+                    }
 				}
 
 				break;

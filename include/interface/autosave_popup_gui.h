@@ -19,6 +19,6 @@ class AutosavePopupGui : public Gui
         Event<> openAutosaveEvent;
         Event<> ignoreAutosaveOpenFileEvent;
 
-        void draw(Window& window, Input& input) override;
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         void open(const FileInfo& baseInfo, const FileInfo& autosaveInfo, const std::string& baseEditTime, const std::string& autosaveEditTime);
 };

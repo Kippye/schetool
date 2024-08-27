@@ -356,7 +356,7 @@ class FilterRuleEditorSubGui : public Gui
         Event<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
         Event<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
 
-        void draw(Window& window, Input& input) override;
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         // open the editor to edit a pre-existing FilterRule
         void openEdit(SCHEDULE_TYPE type, const std::string& columnName, size_t filterIndex, size_t ruleIndex, const ImRect& avoidRect);
         // open the editor to add a new FilterRule to a Filter
@@ -405,7 +405,7 @@ class FilterEditorSubGui : public Gui
 
         Event<size_t, size_t, size_t, size_t> removeColumnFilterRule;
 
-        void draw(Window& window, Input& input) override;
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         void drawRuleEditor();
         // open the editor to edit a pre-existing FilterGroup
         void openGroupEdit(size_t column, size_t filterGroupIndex, const ImRect& avoidRect);

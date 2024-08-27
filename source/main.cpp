@@ -25,9 +25,11 @@ Program::Program()
 	// TODO: load user preferences here!
 
 	// setup and initialize components
-	windowManager.init(&textureLoader);
+	windowManager.init();
+    textureLoader.init();
+    windowManager.loadIcon(textureLoader);
 	input.init(&windowManager);
-	interface.init(&windowManager, &input);
+	interface.init(&windowManager, &input, textureLoader);
 	render.init(&windowManager, &interface);
 	schedule.init(input, interface);
 	ioHandler.init(&schedule, &windowManager, input, interface);

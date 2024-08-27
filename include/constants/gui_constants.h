@@ -36,6 +36,10 @@ namespace gui_sizes
         const float yearInputWidth = 108.0f;
         const ImVec2 yearIncrementButtonSize = ImVec2(22, 22);
     };
+    namespace element_editor
+    {
+        const ImVec2 selectOptionEditButtonSize = ImVec2(18, 18);
+    };
     namespace filter_editor
     {
         const float ruleButtonWidthOffset = 30.0f;

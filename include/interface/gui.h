@@ -12,6 +12,7 @@
 #include "event.h"
 #include "window.h"
 #include "input.h"
+#include "gui_textures.h"
 
 class Gui
 {
@@ -30,7 +31,7 @@ class Gui
         std::string getID() const;
         bool getVisible() const;
         void setVisible(bool visible);
-        virtual void draw(Window& window, Input& input);
+        virtual void draw(Window& window, Input& input, GuiTextures& guiTextures);
         void addSubGui(Gui* subGui);
         template <typename T>
         std::shared_ptr<T> getSubGui(const std::string& ID)

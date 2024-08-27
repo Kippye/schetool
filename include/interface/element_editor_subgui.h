@@ -37,7 +37,7 @@ class ElementEditorSubGui : public Gui
         // modifyColumnSelectOptions
         Event<size_t, SelectOptionsModification> modifyColumnSelectOptions;
 
-        void draw(Window& window, Input& input) override;
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         // Update the element editor before editing a new Element.
         // NOTE: Sets m_madeEdits = false
         void open(size_t column, size_t row, SCHEDULE_TYPE type, const ImRect& avoidRect);

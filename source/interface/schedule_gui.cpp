@@ -9,14 +9,11 @@
 #include "schedule_gui.h"
 #include "element_editor_subgui.h"
 #include "filter_editor_subgui.h"
-#include "textures.h"
 #include "gui_templates.h"
 #include "gui_constants.h"
 
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui) : m_scheduleCore(scheduleCore), Gui(ID), m_mainMenuBarGui(mainMenuBarGui)
 {
-    loadTextures();
-
     // TEMP ?
     m_font32x = ImGui::GetIO().Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 32.0f);
 
@@ -24,21 +21,7 @@ ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, Sched
 	addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 }
 
-void ScheduleGui::loadTextures()
-{
-    TextureLoader textureLoader;
-    for (auto& textureName_ID : textures)
-    {
-        if (textureName_ID.second != 0) { continue; }
-        int _w, _h;
-        unsigned int ID;
-        // TODO: Allow different extensions
-        textureLoader.loadTextureData(std::string(textureName_ID.first).append(".png").c_str(), &_w, &_h, GUI_TEXTURE_DIR, false, &ID, true);
-        textures.at(textureName_ID.first) = ID;
-    }
-}
-
-void ScheduleGui::draw(Window& window, Input& input)
+void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
     if (m_visible == false) { return; }
 
@@ -61,7 +44,7 @@ void ScheduleGui::draw(Window& window, Input& input)
         {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + m_mainMenuBarGui->getHeight());
         }
-        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)textures.at("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
+        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
         {
             m_scheduleDateOverride.clear();
         }
@@ -137,7 +120,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                     {
                         if (filterEditor->getColumn() == column)
                         {
-                            filterEditor->draw(window, input);
+                            filterEditor->draw(window, input, guiTextures);
                         }
                     }
 
@@ -354,7 +337,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
@@ -457,7 +440,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
@@ -560,7 +543,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
@@ -588,7 +571,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
@@ -617,7 +600,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {

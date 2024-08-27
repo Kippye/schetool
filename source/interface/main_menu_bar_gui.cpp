@@ -9,7 +9,7 @@ TextInputModalSubGui::TextInputModalSubGui(const char* ID, const char* popupName
     m_showCloseButton = showCloseButton;
 }
 
-void TextInputModalSubGui::draw(Window& window, Input& input)
+void TextInputModalSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
 	float nameInputWidth = ImGui::CalcTextSize(std::string(m_textMaxLength + 2, 'a').c_str()).x;
 
@@ -62,7 +62,7 @@ void RenameModalSubGui::invokeEvent(const std::string& text)
     renameScheduleEvent.invoke(text);
 }
 
-void DeleteModalSubGui::draw(Window& window, Input& input)
+void DeleteModalSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
 	ImGui::SetNextWindowSize(ImVec2(386.0f, 100.0f));
 	if (ImGui::BeginPopupModal("Confirm Schedule deletion", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
@@ -112,7 +112,7 @@ MainMenuBarGui::MainMenuBarGui(const char* ID) : Gui(ID)
 	addSubGui(new DeleteModalSubGui("DeleteModalSubGui"));
 }
 
-void MainMenuBarGui::draw(Window& window, Input& input)
+void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
     if (ImGui::BeginMainMenuBar())
 	{
@@ -174,7 +174,7 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 
 	if (auto newNameModalSubGui = getSubGui<NewNameModalSubGui>("NewNameModalSubGui"))
 	{
-		newNameModalSubGui->draw(window, input);
+		newNameModalSubGui->draw(window, input, guiTextures);
         if (m_openNewNameModal)
         {
             newNameModalSubGui->open();
@@ -184,12 +184,12 @@ void MainMenuBarGui::draw(Window& window, Input& input)
 
     if (auto renameModalSubGui = getSubGui<RenameModalSubGui>("RenameModalSubGui"))
 	{
-		renameModalSubGui->draw(window, input);
+		renameModalSubGui->draw(window, input, guiTextures);
 	}
 
 	if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui"))
 	{
-		deleteModalSubGui->draw(window, input);
+		deleteModalSubGui->draw(window, input, guiTextures);
 	}
 
 	// if (m_openNewNameModal)
