@@ -22,6 +22,8 @@ enum SelectColor_
     SelectColor_Purple  = 1 << 6,
     SelectColor_Pink    = 1 << 7,
     SelectColor_Red     = 1 << 8,
+    
+    SelectColor_Last    = 1 << 9,
 };
 
 namespace gui_colors

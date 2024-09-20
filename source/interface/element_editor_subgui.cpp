@@ -80,6 +80,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 				// add new options
 				if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
 				{
+                    const SelectOptions& selectOptions = m_scheduleCore.getColumnSelectOptions(m_editorColumn);
+
 					std::string str;
 					str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
 					char* buf = str.data();
@@ -88,14 +90,27 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 					{
 						if (std::string(buf).empty() == false)
 						{
+                            SelectColor addedOptionColor = SelectColor_White;
+                            // If there is a previous select option, get the "next" color from its color.
+                            if (selectOptions.getOptionCount() > 0)
+                            {
+                                SelectColor lastOptionColor = selectOptions.getOptions().back().color;
+                                // Add 1 to the last color if it's 0, otherwise multiply by 2 or loop around to 0 if needed.
+                                addedOptionColor = lastOptionColor == 0 ? 1 : (lastOptionColor * 2 < SelectColor_Last ? lastOptionColor * 2 : 0);
+                            } 
 							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_ADD)
-								.firstIndex(0)
-								.options({SelectOption(std::string(buf), SelectColor_White)}));
-							m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
-							m_editorSelect.setSelected(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
-							m_madeEdits = true;
-							// NOTE: break here because otherwise the start and end of the function kind of go out of sync
-							break;
+								.options({SelectOption(std::string(buf), addedOptionColor)}));
+							// HACK: There's currently no way of knowing that the option was successfully added.
+                            // We just check the things that we can and if they are true, assume that it did succeed.
+                            if ((selectOptions.getLastUpdateInfo().firstIndex == selectOptions.getOptionCount() - 1 && selectOptions.getLastUpdateInfo().type == OPTION_MODIFICATION_ADD)
+                                && selectOptions.getOptions().back().name == buf)
+                            {
+                                m_editorSelect.update(selectOptions.getLastUpdateInfo(), selectOptions.getOptionCount());
+                                m_editorSelect.setSelected(selectOptions.getOptions().size() - 1, true);
+                                m_madeEdits = true;
+                                // NOTE: break here because otherwise the start and end of the function kind of go out of sync
+                                break;
+                            }
 						}
 					}
 				}

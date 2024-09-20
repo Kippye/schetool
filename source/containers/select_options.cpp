@@ -6,7 +6,7 @@ std::string SelectOptionsModification::getDataString() const
 {
     // return std::format("SelectOptionsModification: {\n   Type: {}\n    First index: {}\n    Second index: {}\n    Name: {}\n    Color: {}\n    Options (count): {}\n}", m_type, m_firstIndex, m_secondIndex.value_or("N/A"), m_name, m_color, m_options->size());
 
-    return("SelectOptionsModification::getDataString() is unimplemented!");
+    return("SelectOptionsModification::getDataString() is unimplemented!\n");
 }
 
 // Declared in select_container.h
@@ -139,7 +139,15 @@ bool SelectOptions::getIsMutable() const
 }
 
 bool SelectOptions::addOption(const SelectOption& option)
-{   
+{
+    // Select options can't have identical names.
+    for (const auto& selectOption : m_options)
+    {
+        if (selectOption.name == option.name)
+        {
+            return false;
+        }
+    }
     m_lastUpdateInfo.replace(OPTION_MODIFICATION_ADD, m_options.size(), m_options.size());
     m_options.push_back(option);
     updateListeners();
@@ -192,6 +200,14 @@ bool SelectOptions::renameOption(size_t index, const std::string& name)
 {
     if (index < m_options.size() == false) { return false; }
     if (name.empty()) { return false; }
+    // Select options can't have identical names.
+    for (const auto& selectOption : m_options)
+    {
+        if (selectOption.name == name)
+        {
+            return false;
+        }
+    }
 
     m_lastUpdateInfo.replace(OPTION_MODIFICATION_RENAME, index, index);
     m_options.at(index).name = name;
