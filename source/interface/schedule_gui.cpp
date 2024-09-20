@@ -388,8 +388,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
-                                    // TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
-                                    if (ImGui::ButtonEx(std::string(options[selectionIndices[i]].name).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                                    if (gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
                                         // left clicking opens the editor like the user would expect
                                         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
@@ -420,7 +419,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                     {
                                         ImGui::SameLine();
                                     }
-                                    // ImGui::PopStyleColor(1);
                                 }
 
                                 // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
@@ -491,8 +489,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
-                                    ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::dayColors[selectionIndices[i]]);
-                                    if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                                    if (gui_templates::SelectOptionButton(SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]}, std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
                                         // left clicking opens the editor like the user would expect
                                         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
@@ -523,7 +520,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                     {
                                         ImGui::SameLine();
                                     }
-                                    ImGui::PopStyleColor(1);
                                 }
 
                                 // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock

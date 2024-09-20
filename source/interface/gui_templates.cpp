@@ -239,6 +239,47 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
     return madeEdits;
 }
 
+bool gui_templates::SelectOptionButton(const SelectOption &selectOption, const char *idLabel, ImVec2 size, ImGuiButtonFlags flags)
+{
+    size_t pushedColorCount = 0;
+    ImVec4 baseColor = gui_colors::selectOptionColors.at(selectOption.color);
+    gui_helpers::PushStyleColorHsl(ImGuiCol_Button, baseColor); pushedColorCount++;
+    gui_helpers::PushStyleColorHsl(ImGuiCol_ButtonHovered, gui_color_calculations::getHoverColorFromBase(baseColor)); pushedColorCount++;
+    gui_helpers::PushStyleColorHsl(ImGuiCol_ButtonActive, gui_color_calculations::getActiveColorFromBase(baseColor)); pushedColorCount++;
+    ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorBlack); pushedColorCount++;
+
+    gui_color_calculations::getHoverColorFromBase(gui_colors::selectOptionColors.at(SelectColor_Blue));
+
+    if (ImGui::ButtonEx(std::string(selectOption.name).append(idLabel).c_str(), ImVec2(0, 0), flags))
+    {
+        ImGui::PopStyleColor(pushedColorCount);
+        return true;
+    }
+    ImGui::PopStyleColor(pushedColorCount);
+
+    return false;
+}
+
+bool gui_templates::SelectOptionSelectable(const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size, ImGuiSelectableFlags flags)
+{
+    size_t pushedColorCount = 0;
+    ImVec4 baseColor = gui_colors::selectOptionColors.at(selectOption.color);
+    // Use base color if selected or disabled color if not selected
+    gui_helpers::PushStyleColorHsl(ImGuiCol_Header, *selected ? baseColor : gui_color_calculations::getDisabledColorFromBase(baseColor)); pushedColorCount++;
+    gui_helpers::PushStyleColorHsl(ImGuiCol_HeaderHovered, gui_color_calculations::getHoverColorFromBase(baseColor)); pushedColorCount++;
+    gui_helpers::PushStyleColorHsl(ImGuiCol_HeaderActive, gui_color_calculations::getActiveColorFromBase(baseColor)); pushedColorCount++;
+    ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorBlack); pushedColorCount++;
+    if (ImGui::Selectable(std::string(selectOption.name).append(idLabel).c_str(), true, flags, size))
+    {
+        *selected = !*selected;
+        ImGui::PopStyleColor(pushedColorCount);
+        return true;
+    }
+    ImGui::PopStyleColor(pushedColorCount);
+
+    return false;
+}
+
 int gui_callbacks::filterNumbers(ImGuiInputTextCallbackData* data)
 {
 	if (data->EventChar > 47 && data->EventChar < 58)
@@ -257,4 +298,134 @@ int gui_callbacks::filterAlphanumerics(ImGuiInputTextCallbackData* data)
 		return 0;
 	}
 	return 1;
+}
+
+void gui_helpers::PushStyleColorHsl(ImGuiCol color, ImVec4 hslColor)
+{
+    ImGui::PushStyleColor(color, gui_color_calculations::hslToRgb(hslColor));
+}
+
+void gui_color_calculations::rgbToHsl(float r, float g, float b, float &out_h, float &out_s, float &out_l)
+{  
+    float max = std::max(std::max(r, g), b);
+    float min = std::min(std::min(r, g), b);
+
+    out_h = out_s = out_l = (max + min) / 2;
+
+    if (max == min) 
+    {
+        out_h = out_s = 0; // achromatic
+    }
+    else 
+    {
+        float d = max - min;
+        out_s = (out_l > 0.5) ? d / (2 - max - min) : d / (max + min);
+
+        if (max == r) 
+        {
+            out_h = (g - b) / d + (g < b ? 6 : 0);
+        }
+        else if (max == g) 
+        {
+            out_h = (b - r) / d + 2;
+        }
+        else if (max == b) 
+        {
+            out_h = (r - g) / d + 4;
+        }
+
+        out_h /= 6;
+    }
+}
+
+ImVec4 gui_color_calculations::rgbToHsl(ImVec4 rgb)
+{
+    float h, s, l;
+    rgbToHsl(rgb.x, rgb.y, rgb.z, h, s, l);
+    return ImVec4(h, s, l, rgb.w);
+}
+
+void gui_color_calculations::hslToRgb(float h, float s, float l, float &out_r, float &out_g, float &out_b)
+{
+    /*
+    * Converts a HUE to r, g or b.
+    * returns float in the range [0, 1].
+    */
+    auto hue2rgb = [](float p, float q, float t) 
+    {
+        if (t < 0) 
+            t += 1;
+        if (t > 1) 
+            t -= 1;
+        if (t < 1./6) 
+            return p + (q - p) * 6 * t;
+        if (t < 1./2) 
+            return q;
+        if (t < 2./3)   
+            return p + (q - p) * (2.f/3 - t) * 6;     
+        return p;
+    };
+
+    if (0 == s) 
+    {
+        out_r = out_g = out_b = l; // achromatic
+    }
+    else 
+    {
+        float q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        float p = 2 * l - q;
+        out_r = hue2rgb(p, q, h + 1./3);
+        out_g = hue2rgb(p, q, h);
+        out_b = hue2rgb(p, q, h - 1./3);
+    }
+}
+
+ImVec4 gui_color_calculations::hslToRgb(ImVec4 hsl)
+{
+    float r, g, b;
+    hslToRgb(hsl.x, hsl.y, hsl.z, r, g, b);
+    return ImVec4(r, g, b, hsl.w);
+}
+
+ImVec4 gui_color_calculations::getHoverColorFromBase(ImVec4 base)
+{
+    int light = base.z * 100;
+
+    if (light <= 30) // Make dark color brighter
+    {
+        light += 5; 
+    }
+    else // Darken bright colors
+    {
+        light -= 5;
+    }
+    return ImVec4(base.x, base.y, light / 100.0f, base.w);
+}
+ImVec4 gui_color_calculations::getActiveColorFromBase(ImVec4 base)
+{
+    int light = base.z * 100;
+
+    if (light <= 30) // Make dark colors a lot brighter
+    {
+        light += 20; 
+    }
+    else // Darken bright colors a lot
+    {
+        light -= 20;
+    }
+    return ImVec4(base.x, base.y, light / 100.0f, base.w);
+}
+ImVec4 gui_color_calculations::getDisabledColorFromBase(ImVec4 base)
+{
+    int light = base.z * 100;
+
+    int light_sub = 40; // For colors whose L is in the range 60-100, subtract 40 from it
+
+    if (light < 60) // For colors whose L is below 60, gradually reduce the subtracted amount down to a minimum of 10
+    {
+        light_sub = std::max(40 - ((60 - light_sub) / 20) * 10, 10);
+    }
+ 
+    light = std::max(light - light_sub, 0); 
+    return ImVec4(base.x, base.y, light / 100.0f, base.w);
 }

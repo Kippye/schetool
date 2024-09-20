@@ -26,38 +26,44 @@ enum SelectColor_
 
 namespace gui_colors
 {
-    const ImVec4 dayColors[7] =
+    // Select option colors in HSL (w is not really used but could be alpha).
+    const std::map<SelectColor, ImVec4> selectOptionColors = 
     {
-        ImVec4(0.0f / 255.0f, 62.0f / 255.0f, 186.0f / 255.0f, 1),
-        ImVec4(198.0f / 255.0f, 138.0f / 255.0f, 0.0f / 255.0f, 1),
-        ImVec4(0.0f / 255.0f, 160.0f / 255.0f, 16.0f / 255.0f, 1),
-        ImVec4(86.0f / 255.0f, 47.0f / 255.0f, 0.0f / 255.0f, 1),
-        ImVec4(181.0f / 255.0f, 43.0f / 255.0f, 43.0f / 255.0f, 1),
-        ImVec4(94.0f / 255.0f, 60.0f / 255.0f, 188.0f / 255.0f, 1),
-        ImVec4(216.0f / 255.0f, 188.0f / 255.0f, 47.0f / 255.0f, 1),
+        {SelectColor_White,     {0.00f / 360, 0.00f, 0.92f, 255}},
+        {SelectColor_Gray,      {0.00f / 360, 0.00f, 0.65f, 255}},
+        {SelectColor_Brown,     {20.0f / 360, 0.22f, 0.47f, 255}},
+        {SelectColor_Orange,    {19.0f / 360, 0.61f, 0.60f, 255}},
+        {SelectColor_Yellow,    {47.0f / 360, 0.61f, 0.60f, 255}},
+        {SelectColor_Green,     {123.f / 360, 0.48f, 0.64f, 255}},
+        {SelectColor_Blue,      {197.f / 360, 0.50f, 0.63f, 255}},
+        {SelectColor_Purple,    {270.f / 360, 0.50f, 0.63f, 255}},
+        {SelectColor_Pink,      {325.f / 360, 0.43f, 0.72f, 255}},
+        {SelectColor_Red,       {0.00f / 360, 0.58f, 0.65f, 255}},
     };
-    const std::map<SelectColor, ImColor> selectOptionColors = 
+    // Colors of the days (equivalent select colors)
+    const SelectColor dayColors[7] =
     {
-        {SelectColor_White,     {216, 216, 216, 255}},
-        {SelectColor_Gray,      {155, 155, 155, 255}},
-        {SelectColor_Brown,     {135, 99, 78, 255}},
-        {SelectColor_Orange,    {255, 172, 117, 255}},
-        {SelectColor_Yellow,    {255, 233, 124, 255}},
-        {SelectColor_Green,     {75, 130, 55, 255}},
-        {SelectColor_Blue,      {99, 167, 216, 255}},
-        {SelectColor_Purple,    {151, 80, 183, 255}},
-        {SelectColor_Pink,      {255, 132, 228, 255}},
-        {SelectColor_Red,       {229, 91, 91, 255}},
+        SelectColor_Blue,
+        SelectColor_Orange,
+        SelectColor_Green,
+        SelectColor_Brown,
+        SelectColor_Red,
+        SelectColor_Purple,
+        SelectColor_Yellow,
     };
     // Use for elements that can be interacted with but are inactive in some way.
     const float inactiveAlpha = 0.5f;
     // Use for elements that are completely disabled.
     const float disabledAlpha = 0.25f;
+    const ImVec4 textColorBlack = {10.0f / 255, 10.0f / 255, 10.0f / 255, 1};
 }
 
 namespace gui_sizes
 {
     const ImVec2 emptyLabelSize = ImVec2(64, 0);
+    // The biggest width that a select option selectable will likely need. 
+    // NOTE: Needs to be manually recalculated whenever schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH is changed. Calculation: ImGui::CalcTextSize(std::string(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, 'W').c_str()).x);
+    const float selectOptionSelectableWidth = 142;
     namespace date_editor
     {
         const ImVec2 monthDayButtonSize = ImVec2(24, 24);
