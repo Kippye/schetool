@@ -1,6 +1,6 @@
 #include "weekday_container.h"
 
-void WeekdayContainer::update(const SelectOptionChange& change, size_t optionCount)
+void WeekdayContainer::update(const SelectOptionUpdateInfo& change, size_t optionCount)
 {
     // do nothing, weekday options can't be changed
 }

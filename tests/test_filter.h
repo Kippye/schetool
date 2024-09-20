@@ -49,9 +49,9 @@ TEST_CASE("FilterRule")
         // SECTION("Select filter")
         // {
         //     Element<SelectContainer> element = Element<SelectContainer>(SCH_SELECT, SelectContainer());
-        //     SelectOptionChange selectOptionChange = SelectOptionChange();
-        //     selectOptionChange.replace(OPTION_MODIFICATION_ADD, 0, 0);
-        //     element.getValueReference().update(SelectOptionChange(), size_t optionCount)
+        //     SelectOptionUpdateInfo SelectOptionUpdateInfo = SelectOptionUpdateInfo();
+        //     SelectOptionUpdateInfo.replace(OPTION_MODIFICATION_ADD, 0, 0);
+        //     element.getValueReference().update(SelectOptionUpdateInfo(), size_t optionCount)
         //     FilterRule filter = FilterRule(4206969);
         //     CHECK(filter.checkPasses(&element) == true);
         //     element.setValue(1234567);

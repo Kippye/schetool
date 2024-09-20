@@ -40,7 +40,7 @@ void SelectContainer::replaceSelection(const std::set<size_t>& selection)
 }
 
 // Update the SelectContainer to recorrect its indices after a modification to the attached SelectOptions
-void SelectContainer::update(const SelectOptionChange& lastChange, size_t optionCount)
+void SelectContainer::update(const SelectOptionUpdateInfo& lastChange, size_t optionCount)
 {
     m_optionCount = optionCount;
 
@@ -115,10 +115,17 @@ void SelectContainer::update(const SelectOptionChange& lastChange, size_t option
         case (OPTION_MODIFICATION_RENAME):
         {
             // The container only cares about the index of the option, which has not changed.
+            break;
+        }
+        case (OPTION_MODIFICATION_RECOLOR):
+        {
+            // The container only cares about the index of the option, which has not changed.
+            break;
         }
         case (OPTION_MODIFICATION_REPLACE):
         {
             // TODO HOW??
+            break;
         }
         case (OPTION_MODIFICATION_CLEAR):
         {

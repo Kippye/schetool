@@ -192,7 +192,7 @@ void ColumnPropertyEdit::revert(ScheduleCore& scheduleCore)
         }
         case(COLUMN_PROPERTY_SELECT_OPTIONS):
         {
-            scheduleCore.modifyColumnSelectOptions(m_column, SelectOptionsModification(OPTION_MODIFICATION_REPLACE).optionNames(m_previousColumnData.selectOptions.getOptions()));
+            scheduleCore.modifyColumnSelectOptions(m_column, SelectOptionsModification(OPTION_MODIFICATION_REPLACE).options(m_previousColumnData.selectOptions.getOptions()));
             break;
         }
         case(COLUMN_PROPERTY_SORT):
@@ -226,7 +226,7 @@ void ColumnPropertyEdit::apply(ScheduleCore& scheduleCore)
         }
         case(COLUMN_PROPERTY_SELECT_OPTIONS):
         {
-            scheduleCore.modifyColumnSelectOptions(m_column, SelectOptionsModification(OPTION_MODIFICATION_REPLACE).optionNames(m_columnData.selectOptions.getOptions()));
+            scheduleCore.modifyColumnSelectOptions(m_column, SelectOptionsModification(OPTION_MODIFICATION_REPLACE).options(m_columnData.selectOptions.getOptions()));
             break;
         }
         case(COLUMN_PROPERTY_SORT):

@@ -20,7 +20,7 @@ struct WeekdayContainer : public SelectContainer
             return m_selection != other.getSelection();    
         }
 
-        void update(const SelectOptionChange& change, size_t optionCount);
+        void update(const SelectOptionUpdateInfo& change, size_t optionCount);
         const std::set<size_t> getSelection() const;
 
         static WeekdayContainer getCurrentSystemWeekday(const TimeWrapper& currentTime = TimeWrapper::getCurrentTime());

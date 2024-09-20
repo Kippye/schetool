@@ -319,7 +319,7 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
                 for (FilterRuleContainer& filterRule : filter.getRules())
                 {
                     SelectContainer updatedValue = filterRule.getPassValue<SelectContainer>();
-                    updatedValue.update(getColumnSelectOptions(column).getLastChange(), getColumnSelectOptions(column).getOptionCount());
+                    updatedValue.update(getColumnSelectOptions(column).getLastUpdateInfo(), getColumnSelectOptions(column).getOptionCount());
                     filterRule.setPassValue(updatedValue);
                 }
             }

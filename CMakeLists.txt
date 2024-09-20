@@ -115,7 +115,7 @@ set(HANDLERS_DIR    "handlers")
 set(INTERFACE_DIR   "interface")
 set(IO_DIR          "io")
 set(SCHEDULE_DIR    "schedule")
-set(UTIL_DIR    "util")
+set(UTIL_DIR        "util")
 
 target_include_directories(${PROGRAM_NAME} 
     PUBLIC "include" 

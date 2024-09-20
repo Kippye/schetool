@@ -351,23 +351,23 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							{
                                 SelectContainer value = getElementValue<SelectContainer>(column, row, columnEditDisabled);
                                 auto selection = value.getSelection();
-                                const std::vector<std::string>& optionNames = m_scheduleCore.getColumn(column)->selectOptions.getOptions();
+                                const std::vector<SelectOption>& options = m_scheduleCore.getColumn(column)->selectOptions.getOptions();
 
                                 std::vector<int> selectionIndices = {};
 
                                 // error fix attempt: there should never be more selected that options
-                                while (selection.size() > optionNames.size())
+                                while (selection.size() > options.size())
                                 {
-                                    printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), optionNames.size());
+                                    printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), options.size());
                                     selection.erase(--selection.end());
                                 }
 
                                 for (size_t s: selection)
                                 {
                                     // error fix attempt: there should never be selection indices that are >= optionNames.size()
-                                    if (s >= optionNames.size())
+                                    if (s >= options.size())
                                     {
-                                        printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, optionNames.size());
+                                        printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, options.size());
                                         selection.erase(s);
                                     }
                                 }
@@ -389,7 +389,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
                                     // TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
-                                    if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                                    if (ImGui::ButtonEx(std::string(options[selectionIndices[i]].name).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
                                         // left clicking opens the editor like the user would expect
                                         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
@@ -415,8 +415,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         ImGui::EndTooltip();
                                     }
 
-                                    displayedChars += optionNames[selectionIndices[i]].length();
-                                    if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
+                                    displayedChars += options[selectionIndices[i]].name.length();
+                                    if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - options[selectionIndices[i]].name.length()) * pixelsPerCharacter / columnWidth))
                                     {
                                         ImGui::SameLine();
                                     }

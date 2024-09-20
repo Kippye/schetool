@@ -17,13 +17,11 @@ GLuint GuiTextures::getOrLoad(const std::string& guiRelativePath)
     
     fs::path fullPath = m_guiTextureFolder;
     fullPath.append(guiRelativePath);
-    printf("Full path: %s\n", fullPath.string().c_str());
     auto texturePath = m_textureLoader.existsTextureAtPath(fullPath);
 
     // A texture was found at the path with some extension.
     if (texturePath.has_value())
     {
-        printf("Has value?! The value is: %s\n", texturePath->string().c_str());
         int w, h;
         GLuint ID;
         m_textureLoader.loadTextureData(texturePath.value(), &w, &h, &ID);
@@ -31,7 +29,7 @@ GLuint GuiTextures::getOrLoad(const std::string& guiRelativePath)
         return ID;
     }
 
-    printf("Returning missing texture %d\n", m_textureLoader.getMissingTexture());
+    printf("GuiTextures::getOrLoad(%s): Texture not found at path. Returning missing texture %d\n", guiRelativePath.c_str(), m_textureLoader.getMissingTexture());
     // Return the missing texture if there was no other result.
     return m_textureLoader.getMissingTexture();
 }

@@ -253,9 +253,9 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                 if (newComparison != Comparison::IsEmpty)
                 {
                     auto selection = value.getSelection();
-                    const std::vector<std::string>& optionNames = m_scheduleCore.getColumnSelectOptions(m_filterGroupState.getColumnIndex()).getOptions();
+                    const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_filterGroupState.getColumnIndex()).getOptions();
                     // Options
-                    for (size_t i = 0; i < optionNames.size(); i++)
+                    for (size_t i = 0; i < options.size(); i++)
                     {
                         bool selected = selection.find(i) != selection.end();
 
@@ -277,7 +277,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
 
                         ImGui::SameLine();
 
-                        std::string optionName = std::string(optionNames[i]);
+                        std::string optionName = std::string(options[i].name);
 
                         if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
                         {

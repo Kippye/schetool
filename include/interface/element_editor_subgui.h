@@ -28,6 +28,12 @@ class ElementEditorSubGui : public Gui
         DateContainer m_editorDate;
         SelectContainer m_editorSelect;
         WeekdayContainer m_editorWeekday;
+
+        // Used to automatically focus the input textbox one frame after it was made visible. Set to false after doing so!
+        bool m_giveSelectOptionNameInputFocus = false;
+        bool m_editingSelectOptionName = false;
+        size_t m_editedOptionIndex = 0;
+        
         ImRect m_avoidRect;
         ImVec2 m_textInputBoxSize = ImVec2(0, 0);
     public:
