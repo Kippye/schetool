@@ -16,6 +16,8 @@ void DataConverter::setupObjectTable()
     addObjectDefinition<BLF_Date>();
     addObjectDefinition<BLF_FileInfo>();
     addObjectDefinition<BLF_ElementInfo>();
+    addObjectDefinition<BLF_SelectOption>();
+    addObjectDefinition<BLF_SelectOptions>();
     
     addTypeObjectDefinitions<bool>();
     addTypeObjectDefinitions<int>();

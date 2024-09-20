@@ -37,7 +37,7 @@ TEST_CASE("FilterGroup")
         // false OR true = true
         Filter passFilter = Filter({FilterRuleContainer(failRule), FilterRuleContainer(passRule)}, LogicalOperatorEnum::Or);
         // true AND false = false
-        Filter failFilter = Filter({FilterRuleContainer(passIsNotRule), FilterRuleContainer(failRule)});
+        Filter failFilter = Filter({FilterRuleContainer(passIsNotRule), FilterRuleContainer(failRule)}, LogicalOperatorEnum::And);
 
         SECTION("One fail Filter")
         {

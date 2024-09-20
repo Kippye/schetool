@@ -1,6 +1,6 @@
 #pragma once
 #include "time_wrapper.h"
-#include "schedule_constants.h"
+#include "general_constants.h"
 
 class ElementBase
 {

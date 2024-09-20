@@ -461,7 +461,8 @@ struct BLF_FilterRule : BLF_Base
         return "BLF_FilterRule";
     }
     BLF_Element<T> passValueElement;
-    int comparison;
+    int comparison = 0;
+    bool dateCompareToCurrent = false;
 
     BLF_FilterRule() {}
     BLF_FilterRule(SCHEDULE_TYPE type, const FilterRule<T>& filterRule)
@@ -470,12 +471,14 @@ struct BLF_FilterRule : BLF_Base
         passValueElement = BLF_Element<T>(&element);
 
         comparison = (int)filterRule.getComparison();
+        dateCompareToCurrent = filterRule.getDateCompareCurrent();
     }
 
     FilterRule<T> getFilterRule() const
     {
         FilterRule<T> filter = FilterRule<T>(passValueElement.getElement().getValue());
         filter.setComparison((Comparison)comparison);
+        filter.setDatePassCompareCurrent(dateCompareToCurrent);
         return filter;
     }
 
@@ -483,7 +486,8 @@ struct BLF_FilterRule : BLF_Base
     {
         definitions.add(definitions.getObjectTable().define<BLF_FilterRule<T>>(getName(),
             arg("passValueElement", &BLF_FilterRule<T>::passValueElement, definitions.get<BLF_Element<T>>()),
-            arg("comparison", &BLF_FilterRule<T>::comparison)
+            arg("comparison", &BLF_FilterRule<T>::comparison),
+            arg("dateCompareToCurrent", &BLF_FilterRule<T>::dateCompareToCurrent)
         ));
     }
 };
@@ -722,6 +726,77 @@ constexpr const char* BLF_FilterGroup<DateContainer>::getName()
     return "BLF_FilterGroup_DateContainer";
 }
 
+struct BLF_SelectOption : BLF_Base
+{
+	static constexpr const char* getName()
+	{
+		return "BLF_SelectOption";
+	}
+
+    std::string name = "";
+    int colorEnum = 0;
+
+    BLF_SelectOption() {}
+    BLF_SelectOption(const SelectOption& selectOption)
+    {
+        name = selectOption.name;
+        colorEnum = selectOption.color;
+    }
+
+    SelectOption getOption() const
+    {
+        return SelectOption(name, colorEnum);
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_SelectOption>(getName(),
+			arg("name", &BLF_SelectOption::name),
+			arg("colorEnum", &BLF_SelectOption::colorEnum)
+		));
+	}
+};
+
+struct BLF_SelectOptions : BLF_Base
+{
+	static constexpr const char* getName()
+	{
+		return "BLF_SelectOptions";
+	}
+
+    std::vector<BLF_SelectOption> options = {};
+    bool isMutable = true;
+
+    BLF_SelectOptions() {}
+    BLF_SelectOptions(const SelectOptions& selectOptions)
+    {
+        isMutable = selectOptions.getIsMutable();
+        for (size_t i = 0; i < selectOptions.getOptions().size(); i++)
+        {
+            options.push_back(BLF_SelectOption(selectOptions.getOptions()[i]));
+        }
+    }
+
+    SelectOptions getOptions() const
+    {
+        std::vector<SelectOption> normalOptions = {};
+        for (size_t i = 0; i < options.size(); i++)
+        {
+            normalOptions.push_back(options[i].getOption());
+        }
+        SelectOptions selectOptions = SelectOptions(normalOptions);
+        selectOptions.setIsMutable(isMutable);
+        return selectOptions;
+    }
+
+    static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_SelectOptions>(getName(),
+			arg("options", &BLF_SelectOptions::options, definitions.get<BLF_SelectOption>())
+		));
+	}
+};
+
 template <typename T>
 struct BLF_Column : BLF_Base
 {
@@ -735,9 +810,8 @@ struct BLF_Column : BLF_Base
     bool permanent;
     int flags;
     int sort;
-    bool selectOptionsMutable;
     int resetOption;
-    std::vector<std::string> selectOptions = {};
+    BLF_SelectOptions selectOptions;
     std::vector<BLF_Element<T>> elements = {};
     std::vector<BLF_FilterGroup<T>> filterGroups = {};
     BLF_Column() {}
@@ -750,10 +824,9 @@ struct BLF_Column : BLF_Base
         this->permanent = column->permanent;
         this->flags = column->flags;
         this->sort = (int)column->sort;
-        this->selectOptionsMutable = column->selectOptions.getIsMutable();
         this->resetOption = (int)column->resetOption;
 
-        selectOptions = column->selectOptions.getOptions();
+        selectOptions = BLF_SelectOptions(column->selectOptions);
 
         for (ElementBase* elementBase: column->rows)
         {
@@ -768,12 +841,10 @@ struct BLF_Column : BLF_Base
 
     Column getColumn() const
     {
-        std::vector<ElementBase*> rows = {};
-
         // set up SelectOptions
-        SelectOptions columnSelectOptions = SelectOptions(selectOptions);
-        columnSelectOptions.setIsMutable(selectOptionsMutable);
+        SelectOptions columnSelectOptions = selectOptions.getOptions();
 
+        std::vector<ElementBase*> rows = {};
         // add elements to rows
         for (size_t row = 0; row < elements.size(); row++)
         {
@@ -809,10 +880,9 @@ struct BLF_Column : BLF_Base
             arg("name", &BLF_Column<T>::name),
             arg("permanent", &BLF_Column<T>::permanent),
             arg("flags", &BLF_Column<T>::flags),
-            arg("resetSetting", &BLF_Column<T>::resetOption),
             arg("sort", &BLF_Column<T>::sort),
-            arg("selectOptionsMutable", &BLF_Column<T>::selectOptionsMutable),
-            arg("selectOptions", &BLF_Column<T>::selectOptions),
+            arg("resetOption", &BLF_Column<T>::resetOption),
+            arg("selectOptions", &BLF_Column<T>::selectOptions, definitions.get<BLF_SelectOptions>()),
             arg("elements", &BLF_Column<T>::elements, definitions.get<BLF_Element<T>>()),
             arg("filterGroups", &BLF_Column<T>::filterGroups, definitions.get<BLF_FilterGroup<T>>())
         ));

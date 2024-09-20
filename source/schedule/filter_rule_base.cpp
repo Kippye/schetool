@@ -41,3 +41,13 @@ void FilterRuleBase::setComparison(Comparison comparison)
 {
     m_comparison = comparison;
 }
+
+bool FilterRuleBase::getDateCompareCurrent() const
+{
+    return false;
+}
+
+void FilterRuleBase::setDatePassCompareCurrent(bool shouldCompareToCurrent)
+{
+    m_dateCompareCurrent = shouldCompareToCurrent;
+}

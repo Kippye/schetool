@@ -4,11 +4,15 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
-#include "util.h"
+#include "select_options.h"
 #include "time_container.h"
 #include "date_container.h"
 
-const std::string GUI_TEXTURE_DIR = "textures/gui/";
+namespace gui_callbacks
+{
+    int filterNumbers(ImGuiInputTextCallbackData* data);
+    int filterAlphanumerics(ImGuiInputTextCallbackData* data);
+}
 
 namespace gui_templates
 {
@@ -19,36 +23,42 @@ namespace gui_templates
     bool DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate = true, bool displayClearButton = true);
     // Displays a time editor, applies edits to the provided TimeContainer&. Returns true if the TimeContainer was modified.
     bool TimeEditor(TimeContainer& editorTime);
+    // Displays a button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Returns true if the button was clicked.
+    bool SelectOptionButton(const SelectOption& selectOption, const char* idLabel, ImVec2 size = ImVec2(0, 0), ImGuiButtonFlags flags = ImGuiButtonFlags_None);
+    bool SelectOptionSelectable(const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size = ImVec2(0, 0), ImGuiSelectableFlags flags = ImGuiSelectableFlags_None);
+
     void TextWithBackground(const char* fmt, ...);
     void TextWithBackground(const ImVec2& size, const char* fmt, ...);
 }
 
-namespace gui_callbacks
+namespace gui_helpers
 {
-    int filterNumbers(ImGuiInputTextCallbackData* data);
-    int filterAlphanumerics(ImGuiInputTextCallbackData* data);
+    // Push a style color that is automatically converted from HSL to RGB.
+    void PushStyleColorHsl(ImGuiCol color, ImVec4 hslColor);
 }
 
-namespace gui_colors
+namespace gui_color_calculations
 {
-    const ImVec4 dayColors[7] =
-    {
-        ImVec4(0.0f / 255.0f, 62.0f / 255.0f, 186.0f / 255.0f, 1),
-        ImVec4(198.0f / 255.0f, 138.0f / 255.0f, 0.0f / 255.0f, 1),
-        ImVec4(0.0f / 255.0f, 160.0f / 255.0f, 16.0f / 255.0f, 1),
-        ImVec4(86.0f / 255.0f, 47.0f / 255.0f, 0.0f / 255.0f, 1),
-        ImVec4(181.0f / 255.0f, 43.0f / 255.0f, 43.0f / 255.0f, 1),
-        ImVec4(94.0f / 255.0f, 60.0f / 255.0f, 188.0f / 255.0f, 1),
-        ImVec4(216.0f / 255.0f, 188.0f / 255.0f, 47.0f / 255.0f, 1),
-    };
-    // Use for elements that can be interacted with but are inactive in some way.
-    const float inactiveAlpha = 0.5f;
-    // Use for elements that are completely disabled.
-    const float disabledAlpha = 0.25f;
-}
+    // Color conversion functions from:
+    // https://gist.github.com/ciembor/1494530
 
-namespace gui_sizes
-{
-    const ImVec2 emptyLabelSize = ImVec2(64, 0);
-    const float filterRuleButtonWidthOffset = 30.0f;
+    /*
+    * Converts an RGB color value to HSL. Conversion formula
+    * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+    * Assumes r, g, and b are contained in the range [0, 1] and
+    * returns HSL in the range [0, 1].
+    */
+    void rgbToHsl(float r, float g, float b, float &out_h, float &out_s, float &out_v);
+    ImVec4 rgbToHsl(ImVec4 rgb);
+    /*
+    * Converts an HSL color value to RGB. Conversion formula
+    * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
+    * Assumes h, s, and l are contained in the range [0, 1] and
+    * returns RGB in the range [0, 1].
+    */
+    void hslToRgb(float h, float s, float l, float &out_r, float &out_g, float &out_b);
+    ImVec4 hslToRgb(ImVec4 hsl);
+    ImVec4 getHoverColorFromBase(ImVec4 base);
+    ImVec4 getActiveColorFromBase(ImVec4 base);
+    ImVec4 getDisabledColorFromBase(ImVec4 base);
 }

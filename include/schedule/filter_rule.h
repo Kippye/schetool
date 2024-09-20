@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util_types.h"
 #include "filter_rule_base.h"
 #include "element.h"
 
@@ -23,11 +24,31 @@ class FilterRule : public FilterRuleBase
             {
                 case Comparison::Is:
                 {
-                    return (((const Element<T>*)element)->getValue() == m_passValue);
+                    if constexpr(has_operator_equal<T>::value)
+                        return (((const Element<T>*)element)->getValue() == m_passValue);
+                    else
+                        return false;
                 }
                 case Comparison::IsNot:
                 {
-                    return (((const Element<T>*)element)->getValue() != m_passValue);
+                    if constexpr(has_operator_equal<T>::value)
+                        return (((const Element<T>*)element)->getValue() != m_passValue);
+                    else
+                        return false;
+                }
+                case Comparison::IsLessThan:
+                {
+                    if constexpr(has_operator_less<T>::value)
+                        return (((const Element<T>*)element)->getValue() < m_passValue);
+                    else
+                        return false;
+                }
+                case Comparison::IsMoreThan:
+                {
+                    if constexpr(has_operator_less<T>::value)
+                        return (((const Element<T>*)element)->getValue() > m_passValue);
+                    else
+                        return false;
                 }
                 default: isComparisonValidForElement(element); return false;
             }
@@ -51,6 +72,14 @@ class FilterRule : public FilterRuleBase
         {
             m_passValue = passValue;
         }
+        bool getDateCompareCurrent() const override
+        {
+            return false;
+        }
+        void setDatePassCompareCurrent(bool shouldCompareToCurrent) override
+        {
+            m_dateCompareCurrent = false;
+        }
 };
 
 template <>
@@ -58,10 +87,6 @@ inline DateContainer FilterRule<DateContainer>::getPassValue() const
 {
     switch (m_comparison)
     {
-        case Comparison::IsRelativeToToday:
-        {
-            return DateContainer::getCurrentSystemDate();
-        }
         case Comparison::IsEmpty:
         {
             return DateContainer(TimeWrapper());
@@ -71,14 +96,30 @@ inline DateContainer FilterRule<DateContainer>::getPassValue() const
 }
 
 template <>
+inline bool FilterRule<DateContainer>::getDateCompareCurrent() const
+{
+    return m_dateCompareCurrent;
+}
+
+template <>
+inline void FilterRule<DateContainer>::setDatePassCompareCurrent(bool shouldCompareToCurrent)
+{
+    m_dateCompareCurrent = shouldCompareToCurrent;
+}
+
+template <>
 inline std::string FilterRule<DateContainer>::getString() const
 {
-    std::string filterString = std::string(filter_consts::comparisonStrings.at(m_comparison));
-    if (m_comparison != Comparison::IsEmpty)
+    // empty has no value at the end
+    if (m_comparison == Comparison::IsEmpty)
     {
-        filterString.append(" ").append(getPassValue().getString(m_comparison == Comparison::IsRelativeToToday));
+        return std::string(filter_consts::comparisonStrings.at(m_comparison));
     }
-    return filterString;
+    // comparison string + (date / Today)
+    else
+    {
+        return std::format("{} {}", filter_consts::comparisonStrings.at(m_comparison), m_dateCompareCurrent ? "Today" : getPassValue().getString(false));
+    }
 }
 
 template <>
@@ -156,24 +197,39 @@ inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element, c
     {
         case Comparison::Is:
         {
-            return (value == m_passValue);
+            if (m_dateCompareCurrent)
+                // This is kind of weird, i know. Let me explain!
+                // The checked value is a DATE. It should have no time component and current time should not affect it. So we get the UTC date of the DateContainer's "timeless" TimeWrapper.
+                // The current time compared against is also a date, but it uses the TimeWrapper's time component and is local. 
+                // This way, when the local time is 23:59, its date will be A and when midnight comes, A + 1. The compared date stays the same.
+                return value.getTimeConst().getDateUTC() == (currentTime.getIsEmpty() ? TimeWrapper::getCurrentTime() : currentTime).getLocalDate(); // Use the passed time as current unless it's empty
+            else
+                return (value == m_passValue);
         }
         case Comparison::IsNot:
         {
-            return (value != m_passValue);
+            if (m_dateCompareCurrent)
+                return value.getTimeConst().getDateUTC() != (currentTime.getIsEmpty() ? TimeWrapper::getCurrentTime() : currentTime).getLocalDate(); // Use the passed time as current unless it's empty
+            else
+                return (value != m_passValue);        
+        }
+        case Comparison::IsLessThan:
+        {
+            if (m_dateCompareCurrent)
+                return value.getTimeConst().getDateUTC() < (currentTime.getIsEmpty() ? TimeWrapper::getCurrentTime() : currentTime).getLocalDate(); // Use the passed time as current unless it's empty
+            else
+                return (value < m_passValue);
+        }
+        case Comparison::IsMoreThan:
+        {
+            if (m_dateCompareCurrent)
+                return value.getTimeConst().getDateUTC() > (currentTime.getIsEmpty() ? TimeWrapper::getCurrentTime() : currentTime).getLocalDate(); // Use the passed time as current unless it's empty
+            else
+                return (value > m_passValue);
         }
         case Comparison::IsEmpty:
         {
             return (value.getIsEmpty());
-        }
-        case Comparison::IsRelativeToToday:
-        {
-            // TODO: Handle offsets as well, maybe.
-            // This is kind of weird, i know. Let me explain!
-            // The checked value is a DATE. It should have no time component and current time should not affect it. So we get the UTC date of the DateContainer's "timeless" TimeWrapper.
-            // The current time compared against is also a date, but it uses the TimeWrapper's time component and is local. 
-            // This way, when the local time is 23:59, its date will be A and when midnight comes, A + 1. The compared date stays the same.
-            return (value.getTimeConst().getDateUTC() == (currentTime.getIsEmpty() ? TimeWrapper::getCurrentTime() : currentTime).getLocalDate()); // Use the passed time as current unless it's empty
         }
         default: isComparisonValidForElement(element); return false;
     }

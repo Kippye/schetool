@@ -12,7 +12,7 @@ StartPageGui::StartPageGui(const char* ID) : Gui(ID)
     addSubGui(new StartPageNewNameModalSubGui("StartPageNewNameModalSubGui"));
 }
 
-void StartPageGui::draw(Window& window, Input& input)
+void StartPageGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
     if (m_visible == false) { return; }
 
@@ -39,7 +39,7 @@ void StartPageGui::draw(Window& window, Input& input)
 
     if (auto nameModalSubGui = getSubGui<StartPageNewNameModalSubGui>("StartPageNewNameModalSubGui"))
 	{
-		nameModalSubGui->draw(window, input);
+		nameModalSubGui->draw(window, input, guiTextures);
 
         if (m_openScheduleNameModal)
         {

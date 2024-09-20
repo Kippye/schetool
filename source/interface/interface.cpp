@@ -1,15 +1,15 @@
 #include <iostream>
 #include "interface.h"
 #include "start_page_gui.h"
-#include "schedule_gui.h"
 #include "main_menu_bar_gui.h"
 #include "edit_history_gui.h"
 #include "autosave_popup_gui.h"
 
-void Interface::init(Window* windowManager, Input* input)
+void Interface::init(Window* windowManager, Input* input, TextureLoader& textureLoader)
 {
 	m_windowManager = windowManager;
 	m_input = input;
+    m_guiTextures = std::make_unique<GuiTextures>(textureLoader);
 
     IMGUI_CHECKVERSION();
 	// imgui setup
@@ -45,7 +45,7 @@ void Interface::draw()
 
     for (auto &id_gui : m_guis)
     {
-        id_gui.second->draw(*m_windowManager, *m_input);
+        id_gui.second->draw(*m_windowManager, *m_input, *m_guiTextures.get());
     }
 
 	guiHovered = imGuiIO->WantCaptureMouse;

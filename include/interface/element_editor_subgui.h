@@ -28,6 +28,15 @@ class ElementEditorSubGui : public Gui
         DateContainer m_editorDate;
         SelectContainer m_editorSelect;
         WeekdayContainer m_editorWeekday;
+
+        // Used to automatically focus the input textbox one frame after it was made visible. Set to false after doing so!
+        bool m_giveSelectOptionNameInputFocus = false;
+        bool m_editingSelectOptionName = false;
+        size_t m_editedOptionIndex = 0;
+
+        // Select option color chooser: index of the select option being modified
+        size_t m_colorChooserOptionIndex = 0;
+        
         ImRect m_avoidRect;
         ImVec2 m_textInputBoxSize = ImVec2(0, 0);
     public:
@@ -37,7 +46,7 @@ class ElementEditorSubGui : public Gui
         // modifyColumnSelectOptions
         Event<size_t, SelectOptionsModification> modifyColumnSelectOptions;
 
-        void draw(Window& window, Input& input) override;
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         // Update the element editor before editing a new Element.
         // NOTE: Sets m_madeEdits = false
         void open(size_t column, size_t row, SCHEDULE_TYPE type, const ImRect& avoidRect);

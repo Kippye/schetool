@@ -5,15 +5,16 @@
 
 enum OPTION_MODIFICATION
 {
-    /* NOTE: OPTION_MODIFICATION_ADD doesn't update the SelectOptionChange since Selects don't need to be updated. */
     OPTION_MODIFICATION_ADD,
     OPTION_MODIFICATION_REMOVE,
     OPTION_MODIFICATION_MOVE,
+    OPTION_MODIFICATION_RENAME,
+    OPTION_MODIFICATION_RECOLOR,
     OPTION_MODIFICATION_REPLACE,
-    OPTION_MODIFICATION_CLEAR,
+    OPTION_MODIFICATION_CLEAR
 };
 
-struct SelectOptionChange
+struct SelectOptionUpdateInfo
 {
     OPTION_MODIFICATION type = OPTION_MODIFICATION_ADD;
     size_t firstIndex = 0;
@@ -110,6 +111,6 @@ struct SelectContainer
         const std::set<size_t> getSelection() const;
         void replaceSelection(const std::set<size_t>& selection);
         void setSelected(size_t index, bool selected);
-        void update(const SelectOptionChange& change, size_t optionCount);
+        void update(const SelectOptionUpdateInfo& change, size_t optionCount);
         bool contains(const SelectContainer& other) const;
 };

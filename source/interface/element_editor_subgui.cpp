@@ -2,11 +2,12 @@
 #include "element_editor_subgui.h"
 #include "gui_templates.h"
 #include "schedule_constants.h"
+#include "gui_constants.h"
 
 ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore) : m_scheduleCore(scheduleCore), Gui(ID) 
 {}
 
-void ElementEditorSubGui::draw(Window& window, Input& input)
+void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
 	// give old current open state to the last frame's state
 	m_openLastFrame = m_openThisFrame;
@@ -54,7 +55,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 			{
 				auto selection = m_editorSelect.getSelection();
 				size_t selectedCount = selection.size();
-				const std::vector<std::string>& optionNames = m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptions();
+				const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptions();
 
 				std::vector<size_t> selectionIndices = {};
 
@@ -68,19 +69,19 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				
 				for (size_t i = 0; i < selectedCount; i++)
 				{
-					// TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
-					if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##EditorSelectedOption").append(std::to_string(i)).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+					if (gui_templates::SelectOptionButton(options[selectionIndices[i]], "##EditorSelectedOption", ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
 					{
 						m_editorSelect.setSelected(selectionIndices[i], false);
 						m_madeEdits = true;
 					}
 					ImGui::SameLine();
-					// ImGui::PopStyleColor(1);
 				}
 
 				// add new options
 				if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
 				{
+                    const SelectOptions& selectOptions = m_scheduleCore.getColumnSelectOptions(m_editorColumn);
+
 					std::string str;
 					str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
 					char* buf = str.data();
@@ -89,20 +90,33 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 					{
 						if (std::string(buf).empty() == false)
 						{
+                            SelectColor addedOptionColor = SelectColor_White;
+                            // If there is a previous select option, get the "next" color from its color.
+                            if (selectOptions.getOptionCount() > 0)
+                            {
+                                SelectColor lastOptionColor = selectOptions.getOptions().back().color;
+                                // Add 1 to the last color if it's 0, otherwise multiply by 2 or loop around to 0 if needed.
+                                addedOptionColor = lastOptionColor == 0 ? 1 : (lastOptionColor * 2 < SelectColor_Last ? lastOptionColor * 2 : 0);
+                            } 
 							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_ADD)
-								.firstIndex(0)
-								.optionNames(std::vector<std::string>{std::string(buf)}));
-							m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
-							m_editorSelect.setSelected(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptions().size() - 1, true);
-							m_madeEdits = true;
-							// NOTE: break here because otherwise the start and end of the function kind of go out of sync
-							break;
+								.options({SelectOption(std::string(buf), addedOptionColor)}));
+							// HACK: There's currently no way of knowing that the option was successfully added.
+                            // We just check the things that we can and if they are true, assume that it did succeed.
+                            if ((selectOptions.getLastUpdateInfo().firstIndex == selectOptions.getOptionCount() - 1 && selectOptions.getLastUpdateInfo().type == OPTION_MODIFICATION_ADD)
+                                && selectOptions.getOptions().back().name == buf)
+                            {
+                                m_editorSelect.update(selectOptions.getLastUpdateInfo(), selectOptions.getOptionCount());
+                                m_editorSelect.setSelected(selectOptions.getOptions().size() - 1, true);
+                                m_madeEdits = true;
+                                // NOTE: break here because otherwise the start and end of the function kind of go out of sync
+                                break;
+                            }
 						}
 					}
 				}
 
 				// display existing options
-				for (size_t i = 0; i < optionNames.size(); i++)
+				for (size_t i = 0; i < options.size(); i++)
 				{
 					bool selected = selection.find(i) != selection.end();
 
@@ -111,7 +125,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
 						{
 							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
-							m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+							m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
 							m_madeEdits = true;
 							// break because the whole thing must be restarted now
 							goto break_select_case;
@@ -119,25 +133,54 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 						ImGui::SameLine();
 					}
 
-					std::string optionButtonID = std::string(optionNames[i]).append("##EditorOption");
-                    bool prevSelected = selected;
+                    std::string optionButtonID = std::string(options[i].name).append("##EditorOption");
 
-					if (ImGui::Selectable(optionButtonID.c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
-					{
-                        // Don't change option selection when drag is ended
-                        if (m_draggedOptionID == optionButtonID && m_hasOptionBeenDragged)
+                    // Draw a name input in place of the usual selectable
+                    if (m_editingSelectOptionName && m_editedOptionIndex == i)
+                    {
+                        std::string name = options[i].name;
+                        name.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
+                        char* buf = name.data();
+
+                        if (m_giveSelectOptionNameInputFocus)
                         {
-                            selected = prevSelected;
+                            ImGui::SetKeyboardFocusHere(0);
+                            m_giveSelectOptionNameInputFocus = false;
                         }
-                        else
+
+                        ImGui::SetNextItemWidth(gui_sizes::selectOptionSelectableWidth);
+                        if (ImGui::InputText("##SelectOptionNameInput", buf, schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue, gui_callbacks::filterAlphanumerics))
                         {
-                            m_editorSelect.setSelected(i, selected);
-                            m_madeEdits = true;
+                            modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_RENAME).firstIndex(m_editedOptionIndex).name(buf));
+                            m_editingSelectOptionName = false;
                         }
-					}
+
+                        if (ImGui::IsItemDeactivated())
+                        {
+                            m_editingSelectOptionName = false;
+                        }
+                    }
+                    // Draw the selectable for this select option
+                    else
+                    {
+                        bool prevSelected = selected;
+                        if (gui_templates::SelectOptionSelectable(options[i], "##EditorOption", &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0), ImGuiSelectableFlags_DontClosePopups))
+                        {
+                            // Don't change option selection when drag is ended
+                            if (m_draggedOptionID == optionButtonID && m_hasOptionBeenDragged)
+                            {
+                                selected = prevSelected;
+                            }
+                            else
+                            {
+                                m_editorSelect.setSelected(i, selected);
+                                m_madeEdits = true;
+                            }
+                        }
+                    }
 
 					// drag to reorder options
-					if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
+					if (m_editingSelectOptionName == false && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
 					{
                         // ImGui::IsItemToggledSelection()
                         if (ImGui::IsItemActive())
@@ -152,11 +195,11 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
                             if (!ImGui::IsItemHovered())
                             {
                                 size_t i_next = i + ((ImGui::GetMousePos() - m_dragLastMousePos).y < 0.f ? -1 : 1);
-                                if (i_next >= 0 && i_next < optionNames.size())
+                                if (i_next >= 0 && i_next < options.size())
                                 {
                                     m_hasOptionBeenDragged = true;
                                     modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next));
-                                    m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastChange(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                    m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
                                     m_madeEdits = true;
                                     m_dragLastMousePos = ImGui::GetMousePos();
                                 }
@@ -170,6 +213,36 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
                             m_dragLastMousePos = ImVec2(0, 0);
                         }
 					}
+
+                    ImGui::SameLine();
+                    // Edit name button
+                    if (ImGui::ImageButton(std::format("EditSelectOptionName{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_edit"), gui_sizes::element_editor::selectOptionEditButtonSize - ImGui::GetStyle().FramePadding * 2.0f))
+                    {
+                        m_editingSelectOptionName = true;
+                        m_giveSelectOptionNameInputFocus = true;
+                        m_editedOptionIndex = i;
+                    }
+                    ImGui::SameLine();
+                    // Edit color button
+                    if (ImGui::ColorButton(std::format("##EditSelectOptionColor{}", i).c_str(), gui_color_calculations::hslToRgb(gui_colors::selectOptionColors.at(options[i].color)), ImGuiColorEditFlags_NoTooltip))
+                    {
+                        m_colorChooserOptionIndex = i;
+                        ImGui::OpenPopup("SelectOptionColorChooserPopup");
+                    }
+                    // Color chooser popup, shows a list of available select option colors.
+                    if (m_colorChooserOptionIndex == i && ImGui::BeginPopup("SelectOptionColorChooserPopup"))
+                    {
+                        // Draw buttons for all possible select option colors
+                        for (auto [colorEnum, colorHsl] : gui_colors::selectOptionColors)
+                        {
+                            if (ImGui::ColorButton(std::format("##ColorChooserPopupColor{}", colorEnum).c_str(), gui_color_calculations::hslToRgb(colorHsl), ImGuiColorEditFlags_NoTooltip))
+                            {
+                                modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_RECOLOR).firstIndex(i).color(colorEnum));
+                                ImGui::CloseCurrentPopup();
+                            }
+                        }
+                        ImGui::EndPopup();
+                    }
 				}
 
 				break;
@@ -178,7 +251,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 			{
 				auto selection = m_editorWeekday.getSelection();
 				size_t selectedCount = selection.size();
-				const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
+				const std::vector<std::string>& optionNames = general_consts::weekdayNames;
 
 				std::vector<size_t> selectionIndices = {};
 
@@ -192,8 +265,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				
 				for (size_t i = 0; i < selectedCount; i++)
 				{
-					ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::dayColors[selectionIndices[i]]);
-					if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##EditorSelectedOption").append(std::to_string(i)).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+					if (gui_templates::SelectOptionButton(SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]}, std::format("##EditorSelectedOption{}", i).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
 					{
 						m_editorWeekday.setSelected(selectionIndices[i], false);
 						m_madeEdits = true;
@@ -203,7 +275,6 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
                     {
 					    ImGui::SameLine();
                     }
-					ImGui::PopStyleColor(1);
 				}
 
 				// display existing options
@@ -211,15 +282,11 @@ void ElementEditorSubGui::draw(Window& window, Input& input)
 				{
 					bool selected = selection.find(i) != selection.end();
 
-					std::string optionName = std::string(optionNames[i]);
-
-                    ImGui::PushStyleColor(ImGuiCol_Header, gui_colors::dayColors[i]);
-					if (ImGui::Selectable(optionName.append("##EditorOption").append(std::to_string(i)).c_str(), &selected, ImGuiSelectableFlags_DontClosePopups, ImVec2(0, 0)))
+                    if (gui_templates::SelectOptionSelectable(SelectOption{optionNames[i], gui_colors::dayColors[i]}, std::format("##EditorOption{}", i).c_str(), &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0), ImGuiSelectableFlags_DontClosePopups))
 					{
 						m_editorWeekday.setSelected(i, selected);
 						m_madeEdits = true;
 					}
-                    ImGui::PopStyleColor(1);
 				}
 
 				break;
@@ -249,6 +316,7 @@ void ElementEditorSubGui::open(size_t column, size_t row, SCHEDULE_TYPE type, co
 	m_avoidRect = avoidRect;
 
 	m_madeEdits = false;
+    m_editingSelectOptionName = false;
 
 	ImGui::OpenPopup("Editor");
 }

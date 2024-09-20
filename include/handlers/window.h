@@ -24,7 +24,6 @@ enum CURSOR_TYPE
 class Window
 {
 	private:
-		TextureLoader* m_textureLoader;
 		std::string m_titleBase = "";
 		std::string m_title = "";
         // window events
@@ -44,12 +43,14 @@ class Window
 		bool shouldClose = false;
         Event<> windowCloseEvent;
         // window functions
+        // load and set the window's icon
+        void loadIcon(TextureLoader& textureLoader);
         void setCursor(CURSOR_TYPE _cursor);
         void setTitle(const std::string& title);
         void setTitleSuffix(const std::string& suffix);
         std::string getTitle();
         // lifecycle functions
-        void init(TextureLoader*);
+        void init();
         void terminate();
 
         // input events

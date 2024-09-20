@@ -1,9 +1,10 @@
 #include <cstdio>
-#include <edit_history_gui.h>
-#include <schedule_edit.h>
-#include <schedule_constants.h>
+#include "edit_history_gui.h"
+#include "schedule_edit.h"
+#include "schedule_constants.h"
+#include "filter_constants.h"
 
-void EditHistoryGui::draw(Window& window, Input& input)
+void EditHistoryGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
     if (ImGui::Begin("Edit History", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -90,8 +91,8 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         filterGroupChangeEdit->getFilterGroupIndex(),
                         filterGroupChangeEdit->getColumnIndex(),
                         operatorChanged ? "operator" : (enabledChanged ? "enabled" : "name"),
-                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getPrevOperator()) : (enabledChanged ? std::to_string(filterGroupChangeEdit->getPrevEnabled()).c_str() : filterGroupChangeEdit->getPrevName().c_str()),
-                        operatorChanged ? schedule_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getNewOperator()) : (enabledChanged ? std::to_string(filterGroupChangeEdit->getNewEnabled()).c_str() : filterGroupChangeEdit->getNewName().c_str()),
+                        operatorChanged ? filter_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getPrevOperator()) : (enabledChanged ? std::to_string(filterGroupChangeEdit->getPrevEnabled()).c_str() : filterGroupChangeEdit->getPrevName().c_str()),
+                        operatorChanged ? filter_consts::logicalOperatorStrings.at(filterGroupChangeEdit->getNewOperator()) : (enabledChanged ? std::to_string(filterGroupChangeEdit->getNewEnabled()).c_str() : filterGroupChangeEdit->getNewName().c_str()),
                         i);
                     break;
                 }
@@ -113,8 +114,8 @@ void EditHistoryGui::draw(Window& window, Input& input)
                         filterChangeEdit->getFilterIndex(),
                         filterChangeEdit->getFilterGroupIndex(),
                         filterChangeEdit->getColumnIndex(),
-                        schedule_consts::logicalOperatorStrings.at(filterChangeEdit->getPrevOperator()),
-                        schedule_consts::logicalOperatorStrings.at(filterChangeEdit->getNewOperator()),
+                        filter_consts::logicalOperatorStrings.at(filterChangeEdit->getPrevOperator()),
+                        filter_consts::logicalOperatorStrings.at(filterChangeEdit->getNewOperator()),
                         i);
                     break;
                 }

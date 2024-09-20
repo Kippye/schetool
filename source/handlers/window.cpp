@@ -7,9 +7,8 @@ extern "C" {
 #include <window.h>
 #include <generated/program_info.h>
 
-void Window::init(TextureLoader* textureLoader)
+void Window::init()
 {
-	m_textureLoader = textureLoader;
 	m_titleBase = program_info::PROGRAM_NAME;
 	m_titleBase = m_titleBase.append(" ").append(program_info::ProgramVersion::getCurrent()
 		.getString()
@@ -17,10 +16,6 @@ void Window::init(TextureLoader* textureLoader)
 		.append(std::string(" (DEBUG) "))
 		#endif
 	);
-
-	// #ifdef DEBUG
-	// m_titleBase = m_titleBase.append()
-	// #endif
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -51,18 +46,6 @@ void Window::init(TextureLoader* textureLoader)
 		std::cout << "Could not initialize GLAD ( not glad :( )" << std::endl;
 		return;
 	}
-
-	// load and set the window's icon
-	GLFWimage images[1] = { GLFWimage() } ;
-	images[0].pixels = m_textureLoader->loadTextureData("icon.png", &images[0].width, &images[0].height, m_textureLoader->textureFolder, false);
-    if (images[0].pixels)
-    {
-        glfwSetWindowIcon(window, 1, images);
-    }
-    else
-    {
-        printf("Window::init(..): Failed to load program icon from path: %s\n", (m_textureLoader->textureFolder + "icon.png").c_str());
-    }
 
 	// load and create cursors
 	// cursors[NORMAL] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
@@ -124,6 +107,20 @@ void Window::init(TextureLoader* textureLoader)
         self->windowCloseEvent.invoke();
 		std::cout << "Program close requested." << std::endl;
 	};
+}
+
+void Window::loadIcon(TextureLoader& textureLoader)
+{
+	GLFWimage images[1] = { GLFWimage() } ;
+	images[0].pixels = textureLoader.loadTextureData(textureLoader.getRelativePathFromTextureFolder("icon.png"), &images[0].width, &images[0].height, nullptr, false);
+    if (images[0].pixels)
+    {
+        glfwSetWindowIcon(window, 1, images);
+    }
+    else
+    {
+        printf("Window::init(..): Failed to load program icon from path: %s\n", (textureLoader.textureFolder + "icon.png").c_str());
+    }
 }
 
 void Window::setCursor(CURSOR_TYPE cursor)

@@ -26,7 +26,7 @@ void Gui::setVisible(bool visible)
     m_visible = visible;
 }
 
-void Gui::draw(Window& window, Input& input)
+void Gui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
 }
 

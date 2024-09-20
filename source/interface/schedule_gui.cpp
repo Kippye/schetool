@@ -7,19 +7,13 @@
 #include <format>
 #include "schedule_constants.h"
 #include "schedule_gui.h"
-#include "textures.h"
-#include "util.h"
-#include "element.h"
-#include "element_base.h"
-#include "filter_rule.h"
-#include "schedule.h"
+#include "element_editor_subgui.h"
+#include "filter_editor_subgui.h"
 #include "gui_templates.h"
-#include <iostream>
+#include "gui_constants.h"
 
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui) : m_scheduleCore(scheduleCore), Gui(ID), m_mainMenuBarGui(mainMenuBarGui)
 {
-    loadTextures();
-
     // TEMP ?
     m_font32x = ImGui::GetIO().Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 32.0f);
 
@@ -27,21 +21,7 @@ ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, Sched
 	addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 }
 
-void ScheduleGui::loadTextures()
-{
-    TextureLoader textureLoader;
-    for (auto& textureName_ID : textures)
-    {
-        if (textureName_ID.second != 0) { continue; }
-        int _w, _h;
-        unsigned int ID;
-        // TODO: Allow different extensions
-        textureLoader.loadTextureData(std::string(textureName_ID.first).append(".png").c_str(), &_w, &_h, GUI_TEXTURE_DIR, false, &ID, true);
-        textures.at(textureName_ID.first) = ID;
-    }
-}
-
-void ScheduleGui::draw(Window& window, Input& input)
+void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
     if (m_visible == false) { return; }
 
@@ -64,7 +44,7 @@ void ScheduleGui::draw(Window& window, Input& input)
         {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + m_mainMenuBarGui->getHeight());
         }
-        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)textures.at("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
+        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
         {
             m_scheduleDateOverride.clear();
         }
@@ -140,7 +120,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                     {
                         if (filterEditor->getColumn() == column)
                         {
-                            filterEditor->draw(window, input);
+                            filterEditor->draw(window, input, guiTextures);
                         }
                     }
 
@@ -198,7 +178,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                         }
                         if (m_filterGroupListColumn == column && ImGui::BeginPopup("FilterGroupListPopup"))
                         {
-                            drawFilterGroupButtons(false, ImGui::CalcTextSize("M").x * schedule_consts::FILTER_GROUP_NAME_MAX_LENGTH);
+                            drawFilterGroupButtons(false, ImGui::CalcTextSize("M").x * filter_consts::FILTER_GROUP_NAME_MAX_LENGTH);
                             ImGui::EndPopup();
                         }
                     }
@@ -357,7 +337,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
@@ -371,23 +351,23 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
                                 SelectContainer value = getElementValue<SelectContainer>(column, row, columnEditDisabled);
                                 auto selection = value.getSelection();
-                                const std::vector<std::string>& optionNames = m_scheduleCore.getColumn(column)->selectOptions.getOptions();
+                                const std::vector<SelectOption>& options = m_scheduleCore.getColumn(column)->selectOptions.getOptions();
 
                                 std::vector<int> selectionIndices = {};
 
                                 // error fix attempt: there should never be more selected that options
-                                while (selection.size() > optionNames.size())
+                                while (selection.size() > options.size())
                                 {
-                                    printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), optionNames.size());
+                                    printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), options.size());
                                     selection.erase(--selection.end());
                                 }
 
                                 for (size_t s: selection)
                                 {
                                     // error fix attempt: there should never be selection indices that are >= optionNames.size()
-                                    if (s >= optionNames.size())
+                                    if (s >= options.size())
                                     {
-                                        printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, optionNames.size());
+                                        printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, options.size());
                                         selection.erase(s);
                                     }
                                 }
@@ -408,8 +388,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
-                                    // TODO: colors later ImGui::PushStyleColor(ImGuiCol_Button, m_dayColours[i]);
-                                    if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                                    if (gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
                                         // left clicking opens the editor like the user would expect
                                         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
@@ -435,12 +414,11 @@ void ScheduleGui::draw(Window& window, Input& input)
                                         ImGui::EndTooltip();
                                     }
 
-                                    displayedChars += optionNames[selectionIndices[i]].length();
-                                    if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
+                                    displayedChars += options[selectionIndices[i]].name.length();
+                                    if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - options[selectionIndices[i]].name.length()) * pixelsPerCharacter / columnWidth))
                                     {
                                         ImGui::SameLine();
                                     }
-                                    // ImGui::PopStyleColor(1);
                                 }
 
                                 // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
@@ -460,7 +438,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
@@ -474,7 +452,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 							{
                                 WeekdayContainer value = getElementValue<WeekdayContainer>(column, row, columnEditDisabled);
                                 auto selection = value.getSelection();
-                                const std::vector<std::string>& optionNames = schedule_consts::weekdayNames;
+                                const std::vector<std::string>& optionNames = general_consts::weekdayNames;
 
                                 std::vector<int> selectionIndices = {};
 
@@ -511,8 +489,7 @@ void ScheduleGui::draw(Window& window, Input& input)
 
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
-                                    ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::dayColors[selectionIndices[i]]);
-                                    if (ImGui::ButtonEx(std::string(optionNames[selectionIndices[i]]).append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                                    if (gui_templates::SelectOptionButton(SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]}, std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
                                         // left clicking opens the editor like the user would expect
                                         if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
@@ -543,7 +520,6 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     {
                                         ImGui::SameLine();
                                     }
-                                    ImGui::PopStyleColor(1);
                                 }
 
                                 // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
@@ -563,7 +539,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
@@ -591,7 +567,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {
@@ -620,7 +596,7 @@ void ScheduleGui::draw(Window& window, Input& input)
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
                                     if (column == editorColumn && row == editorRow)
                                     {
-                                        elementEditor->draw(window, input);
+                                        elementEditor->draw(window, input, guiTextures);
                                         // was editing this Element, made edits and just closed the editor. apply the edits
                                         if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
                                         {

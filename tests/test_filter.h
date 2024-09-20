@@ -49,9 +49,9 @@ TEST_CASE("FilterRule")
         // SECTION("Select filter")
         // {
         //     Element<SelectContainer> element = Element<SelectContainer>(SCH_SELECT, SelectContainer());
-        //     SelectOptionChange selectOptionChange = SelectOptionChange();
-        //     selectOptionChange.replace(OPTION_MODIFICATION_ADD, 0, 0);
-        //     element.getValueReference().update(SelectOptionChange(), size_t optionCount)
+        //     SelectOptionUpdateInfo SelectOptionUpdateInfo = SelectOptionUpdateInfo();
+        //     SelectOptionUpdateInfo.replace(OPTION_MODIFICATION_ADD, 0, 0);
+        //     element.getValueReference().update(SelectOptionUpdateInfo(), size_t optionCount)
         //     FilterRule filter = FilterRule(4206969);
         //     CHECK(filter.checkPasses(&element) == true);
         //     element.setValue(1234567);
@@ -67,7 +67,7 @@ TEST_CASE("FilterRule")
         // }
         SECTION("Date filter")
         {
-            TimeWrapper time = TimeWrapper(132, 4, 25);
+            TimeWrapper time = TimeWrapper(2032, 4, 25);
             Element<DateContainer> element = Element<DateContainer>(SCH_DATE, DateContainer(time));
             FilterRule filter = FilterRule(DateContainer(time));
             CHECK(filter.checkPasses(&element) == true);

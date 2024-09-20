@@ -71,6 +71,16 @@ class FilterRuleContainer
             if (isEmpty()) { return; }
             m_filterRule->setComparison(comparison);
         }
+        bool getDateCompareCurrent() const
+        {
+            if (isEmpty()) { return false; }
+            return m_filterRule->getDateCompareCurrent();
+        }
+        void setDatePassCompareCurrent(bool shouldCompareToCurrent)
+        {
+            if (isEmpty()) { return; }
+            m_filterRule->setDatePassCompareCurrent(shouldCompareToCurrent);
+        }
 
         template <typename T>
         FilterRuleContainer& fill(const FilterRule<T>& filterRule)
@@ -84,7 +94,7 @@ class FilterRuleContainer
         {
             if (isEmpty()) 
             { 
-                printf("FilterRuleContainer::getAs(): Container is empty!\n"); 
+                printf("FilterRuleContainer::getAsType(): Container is empty!\n"); 
                 return FilterRule<T>(T()); 
             }
             return *std::dynamic_pointer_cast<FilterRule<T>>(m_filterRule);

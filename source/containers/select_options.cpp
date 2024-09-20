@@ -1,26 +1,16 @@
-#include <select_options.h>
-#include <util.h>
+#include <format>
+#include "select_options.h"
+#include "util.h"
 
 std::string SelectOptionsModification::getDataString() const
 {
-    char buffer[2048];
-    if (m_optionNames.size() > 0)
-    {
-        sprintf(buffer, "SelectOptionsModification: {\n   Type: %d\n   First index: %zu\n   Second index: %zu\n   Option name count: %zu\n   First name: %s\n}\n", m_type, m_firstIndex, m_secondIndex, m_optionNames.size(), m_optionNames[0].c_str());
-    }
-    else
-    {
-        sprintf(buffer, "SelectOptionsModification: {\n   Type: %d\n   First index: %zu\n   Second index: %zu\n   No option names.\n}\n", m_type, m_firstIndex, m_secondIndex);
-    }
+    // return std::format("SelectOptionsModification: {\n   Type: {}\n    First index: {}\n    Second index: {}\n    Name: {}\n    Color: {}\n    Options (count): {}\n}", m_type, m_firstIndex, m_secondIndex.value_or("N/A"), m_name, m_color, m_options->size());
 
-    std::string s = std::string(buffer);
-    s.shrink_to_fit();
-
-    return s;
+    return("SelectOptionsModification::getDataString() is unimplemented!\n");
 }
 
 // Declared in select_container.h
-void SelectOptionChange::replace(OPTION_MODIFICATION type, size_t firstIndex, size_t secondIndex)
+void SelectOptionUpdateInfo::replace(OPTION_MODIFICATION type, size_t firstIndex, size_t secondIndex)
 {
     this->type = type;
     this->firstIndex = firstIndex;
@@ -33,7 +23,7 @@ SelectOptions::SelectOptions()
 
 }
 
-SelectOptions::SelectOptions(const std::vector<std::string>& options)
+SelectOptions::SelectOptions(const std::vector<SelectOption>& options)
 {
     m_options = options;
 }
@@ -43,12 +33,12 @@ void SelectOptions::updateListeners()
     // std::cout << "Invoking callback for " << m_listeners.size() << " listeners" << std::endl;
     for (SelectContainer* listener: m_listeners)
     {
-        listener->update(m_lastModification, m_options.size());
+        listener->update(m_lastUpdateInfo, m_options.size());
     }
 }
 
 
-const std::vector<std::string>& SelectOptions::getOptions() const
+const std::vector<SelectOption>& SelectOptions::getOptions() const
 {
     return m_options;
 }
@@ -58,9 +48,9 @@ size_t SelectOptions::getOptionCount() const
     return m_options.size();
 }
 
-const SelectOptionChange& SelectOptions::getLastChange() const
+const SelectOptionUpdateInfo& SelectOptions::getLastUpdateInfo() const
 {
-    return m_lastModification;
+    return m_lastUpdateInfo;
 }
 
 bool SelectOptions::applyModification(const SelectOptionsModification& modification)
@@ -69,12 +59,12 @@ bool SelectOptions::applyModification(const SelectOptionsModification& modificat
     {
         case(OPTION_MODIFICATION_ADD):
         {
-            if (modification.m_optionNames.size() == 0)
+            if (modification.m_options.has_value() == false)
             {
-                std::cout << "SelectOptions::applyModification: Failed to add Select option because no name was provided" << std::endl;
+                std::cout << "SelectOptions::applyModification: Failed to add Select option because no options were provided" << std::endl;
                 return false;
             }
-            return addOption(modification.m_optionNames[0]);
+            return addOption(modification.m_options.value()[0]);
         }
         case(OPTION_MODIFICATION_REMOVE):
         { 
@@ -82,7 +72,15 @@ bool SelectOptions::applyModification(const SelectOptionsModification& modificat
         }
         case(OPTION_MODIFICATION_MOVE):
         { 
-            return moveOption(modification.m_firstIndex, modification.m_secondIndex);
+            return moveOption(modification.m_firstIndex, modification.m_secondIndex.value());
+        }
+        case(OPTION_MODIFICATION_RENAME):
+        { 
+            return renameOption(modification.m_firstIndex, modification.m_name.value());
+        }
+        case(OPTION_MODIFICATION_RECOLOR):
+        { 
+            return recolorOption(modification.m_firstIndex, modification.m_color.value());
         }
         case(OPTION_MODIFICATION_CLEAR):
         { 
@@ -91,7 +89,7 @@ bool SelectOptions::applyModification(const SelectOptionsModification& modificat
         }
         case(OPTION_MODIFICATION_REPLACE):
         { 
-            replaceOptions(modification.m_optionNames);
+            replaceOptions(modification.m_options.value());
             break;
         }
     }
@@ -140,21 +138,29 @@ bool SelectOptions::getIsMutable() const
     return m_mutable;
 }
 
-bool SelectOptions::addOption(const std::string& option)
-{   
-    m_lastModification.replace(OPTION_MODIFICATION_ADD, m_options.size(), m_options.size());
+bool SelectOptions::addOption(const SelectOption& option)
+{
+    // Select options can't have identical names.
+    for (const auto& selectOption : m_options)
+    {
+        if (selectOption.name == option.name)
+        {
+            return false;
+        }
+    }
+    m_lastUpdateInfo.replace(OPTION_MODIFICATION_ADD, m_options.size(), m_options.size());
     m_options.push_back(option);
     updateListeners();
     return true;
 }
 
-bool SelectOptions::removeOption(const std::string& option)
+bool SelectOptions::removeOption(const SelectOption& option)
 {
     for (int i = m_options.size() - 1; i >= 0; i--)
     {
-        if (m_options[i] == option)
+        if (m_options[i].name.compare(option.name) == 0)
         {
-            m_lastModification.replace(OPTION_MODIFICATION_REMOVE, i, i);
+            m_lastUpdateInfo.replace(OPTION_MODIFICATION_REMOVE, i, i);
             m_options.erase(m_options.begin() + i);
             break;
         }
@@ -172,7 +178,7 @@ bool SelectOptions::removeOption(size_t option)
 {
     if (option < m_options.size() == false) { return false; }
 
-    m_lastModification.replace(OPTION_MODIFICATION_REMOVE, option, option);
+    m_lastUpdateInfo.replace(OPTION_MODIFICATION_REMOVE, option, option);
     m_options.erase(m_options.begin() + option);
     updateListeners();
 
@@ -183,23 +189,54 @@ bool SelectOptions::moveOption(size_t firstIndex, size_t secondIndex)
 {
     if (firstIndex < m_options.size() == false || secondIndex < m_options.size() == false) { return false; }
 
-    m_lastModification.replace(OPTION_MODIFICATION_MOVE, firstIndex, secondIndex);
+    m_lastUpdateInfo.replace(OPTION_MODIFICATION_MOVE, firstIndex, secondIndex);
     containers::move(m_options, firstIndex, secondIndex);
     updateListeners();
 
     return true;
 }
 
-void SelectOptions::replaceOptions(const std::vector<std::string>& options)
+bool SelectOptions::renameOption(size_t index, const std::string& name)
 {
-    m_lastModification.replace(OPTION_MODIFICATION_REPLACE, 0, 0);
+    if (index < m_options.size() == false) { return false; }
+    if (name.empty()) { return false; }
+    // Select options can't have identical names.
+    for (const auto& selectOption : m_options)
+    {
+        if (selectOption.name == name)
+        {
+            return false;
+        }
+    }
+
+    m_lastUpdateInfo.replace(OPTION_MODIFICATION_RENAME, index, index);
+    m_options.at(index).name = name;
+    updateListeners();
+
+    return true;
+}
+
+bool SelectOptions::recolorOption(size_t index, SelectColor color)
+{
+    if (index < m_options.size() == false) { return false; }
+
+    m_lastUpdateInfo.replace(OPTION_MODIFICATION_RECOLOR, index, index);
+    m_options.at(index).color = color;
+    updateListeners();
+
+    return true;
+}
+
+void SelectOptions::replaceOptions(const std::vector<SelectOption>& options)
+{
+    m_lastUpdateInfo.replace(OPTION_MODIFICATION_REPLACE, 0, 0);
     m_options = options;
     updateListeners();
 }
 
 void SelectOptions::clearOptions()
 {
-    m_lastModification.replace(OPTION_MODIFICATION_CLEAR, 0, 0);
+    m_lastUpdateInfo.replace(OPTION_MODIFICATION_CLEAR, 0, 0);
     m_options.clear();
     updateListeners();
 }
