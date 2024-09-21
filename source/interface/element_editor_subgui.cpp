@@ -229,9 +229,16 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                         m_colorChooserOptionIndex = i;
                         ImGui::OpenPopup("SelectOptionColorChooserPopup");
                     }
+                    ImRect colorChooserButtonAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
                     // Color chooser popup, shows a list of available select option colors.
                     if (m_colorChooserOptionIndex == i && ImGui::BeginPopup("SelectOptionColorChooserPopup"))
                     {
+                        ImGuiWindow* popup = ImGui::GetCurrentWindow();
+                        ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
+                        ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
+                        ImVec2 popupPos = ImVec2(popup->Pos.x, colorChooserButtonAvoidRect.Min.y - ImGui::GetStyle().WindowPadding.y);
+                        ImGui::SetWindowPos(ImGui::FindBestWindowPosForPopupEx(popupPos, autoFitSize, &popup->AutoPosLastDirection, r_outer, colorChooserButtonAvoidRect, ImGuiPopupPositionPolicy_Default));
+
                         // Draw buttons for all possible select option colors
                         for (auto [colorEnum, colorHsl] : gui_colors::selectOptionColors)
                         {
