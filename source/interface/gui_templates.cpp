@@ -250,14 +250,14 @@ bool gui_templates::SelectOptionButton(const SelectOption &selectOption, const c
     gui_helpers::PushStyleColorHsl(ImGuiCol_ButtonActive, gui_color_calculations::getActiveColorFromBase(baseColor)); pushedColorCount++;
     ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorBlack); pushedColorCount++;
     size_t pushedStyleVarCount = 0;
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f); pushedStyleVarCount++;
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, gui_style_vars::labelButtonRounding); pushedStyleVarCount++;
     if (ImGui::ButtonEx(std::string(selectOption.name).append(idLabel).c_str(), ImVec2(0, 0), flags))
     {
         buttonPressed = true;
     }
     ImGui::PopStyleColor(pushedColorCount);
     ImGui::PopStyleVar(pushedStyleVarCount);
-    
+
     return buttonPressed;
 }
 
@@ -273,7 +273,7 @@ bool gui_templates::SelectOptionSelectable(const SelectOption& selectOption, con
     gui_helpers::PushStyleColorHsl(ImGuiCol_ButtonActive, gui_color_calculations::getActiveColorFromBase(baseColor)); pushedColorCount++;
     ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorBlack); pushedColorCount++;
     size_t pushedStyleVarCount = 0;
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f); pushedStyleVarCount++;
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, gui_style_vars::labelButtonRounding); pushedStyleVarCount++;
     if (ImGui::ButtonEx(std::string(selectOption.name).append(idLabel).c_str(), size, flags))
     {
         *selected = !*selected;

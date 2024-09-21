@@ -120,19 +120,6 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 				{
 					bool selected = selection.find(i) != selection.end();
 
-					if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
-					{
-						if (ImGui::SmallButton(std::string("X##").append(std::to_string(i)).c_str()))
-						{
-							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
-							m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
-							m_madeEdits = true;
-							// break because the whole thing must be restarted now
-							goto break_select_case;
-						}
-						ImGui::SameLine();
-					}
-
                     std::string optionButtonID = std::string(options[i].name).append("##EditorOption");
 
                     // Draw a name input in place of the usual selectable
@@ -164,6 +151,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     else
                     {
                         bool prevSelected = selected;
+                        ImGui::SetNextItemAllowOverlap();
                         if (gui_templates::SelectOptionSelectable(options[i], "##EditorOption", &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0)))
                         {
                             // Don't change option selection when drag is ended
@@ -177,6 +165,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 m_madeEdits = true;
                             }
                         }
+                        const float optionButtonHeight = ImGui::GetItemRectSize().y;
+                        const float optionButtonRectMaxX = ImGui::GetItemRectMax().x;
 
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
                         {
@@ -187,6 +177,27 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             m_editingSelectOptionName = true;
                             m_giveSelectOptionNameInputFocus = true;
                             m_editedOptionIndex = i;
+                        }
+                        // Show a remove button on the right when hovered, only if the options are mutable
+                        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem) && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
+                        {
+                            float removeButtonSize = optionButtonHeight; //ImGui::GetFrameHeight();
+                            ImGui::SameLine();
+                            float previousCursorPosX = ImGui::GetCursorPosX();
+                            ImGui::SetCursorScreenPos(ImVec2(optionButtonRectMaxX - removeButtonSize, ImGui::GetCursorScreenPos().y));
+                            size_t pushedColorCount = 0;
+                            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
+                            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
+                            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
+                            if (ImGui::ImageButtonEx(ImGui::GetID(std::format("##RemoveSelectOption{}", i).c_str()), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeButtonSize, removeButtonSize) - ImGui::GetStyle().FramePadding * 2.0f, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)))
+                            {
+                                modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
+                                m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                m_madeEdits = true;
+                                // break because the whole thing must be restarted now
+                                goto break_select_case;
+                            }
+                            ImGui::PopStyleColor(pushedColorCount);
                         }
                     }
 

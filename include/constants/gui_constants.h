@@ -85,4 +85,9 @@ namespace gui_sizes
     }
 }
 
+namespace gui_style_vars
+{
+    const float labelButtonRounding = 4.0f;
+}
+
 #endif
