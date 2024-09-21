@@ -198,26 +198,23 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 				{
 					ImGui::TableSetColumnIndex(column);
 					const char* columnName = ImGui::TableGetColumnName(column); // get name passed to TableSetupColumn()
+                    bool isColumnHeaderHovered = (ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
 					ImGui::PushID(column);
-					// sort button!
-					if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+                    float headerCursorY = ImGui::GetCursorPosY();
+                    size_t pushedStyleVars = 0;
+					// HIDE the sort button if the column header is not hovered and the column does not have a sort direction applied
+                    if (isColumnHeaderHovered == false && m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE)
 					{
-						setColumnSort.invoke(column, m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
+                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+                        pushedStyleVars++;
 					}
-					ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-					// close button
-					// permanent columns can't be removed so there's no need for a remove button
-					if (m_scheduleCore.getColumn(column)->permanent == false)
-					{
-						if (ImGui::Button("X##removecolumn", ImVec2(20.0, 20.0)))
-						{
-							removeColumn.invoke(column);
-                            ImGui::PopID();
-                            ImGui::EndTable();
-                            goto skip_schedule_table;
-						}
-						ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-					}
+                    // sort button!
+                    if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+                    {
+                        setColumnSort.invoke(column, m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
+                    }
+                    ImGui::PopStyleVar(pushedStyleVars);
+                    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					ImGui::TableHeader(columnName);
 					// column header context menu
                     if (ImGui::BeginPopupContextItem("#ColumnEdit"))
@@ -225,6 +222,29 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 						displayColumnContextPopup(column, tableFlags);
                         ImGui::EndPopup();
                     }
+					// Show a close button on the right when hovered
+					// permanent columns can't be removed so there's no need for a remove button
+					if (isColumnHeaderHovered && m_scheduleCore.getColumn(column)->permanent == false)
+					{
+                        // This is how the arrow button's size is calculated
+                        float headerButtonSize = ImGui::GetFrameHeight();
+                        // SameLine() can't be used after a TableHeader so the position has to be calculated manually.
+                        ImGui::SetCursorPosX(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column).Max.x - headerButtonSize - 12.0f);
+                        ImGui::SetCursorPosY(headerCursorY);
+                        size_t pushedColorCount = 0;
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
+                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
+                        if (ImGui::ImageButtonEx(ImGui::GetID("##RemoveColumn"), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(headerButtonSize, headerButtonSize) - style.FramePadding * 2.0f, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)))
+						{
+							removeColumn.invoke(column);
+                            ImGui::PopStyleColor(pushedColorCount);
+                            ImGui::PopID();
+                            ImGui::EndTable();
+                            goto skip_schedule_table;
+						}
+                        ImGui::PopStyleColor(pushedColorCount);
+					}
 					ImGui::PopID();
 				}
 
