@@ -36,6 +36,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
     const float CHILD_WINDOW_HEIGHT = (float)(window.SCREEN_HEIGHT - SCHEDULE_OFFSET - ADD_ROW_BUTTON_HEIGHT - 16.0f);
     //ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
 	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
+	ImGui::SetNextWindowContentSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT) - style.WindowPadding * 2.0f);
 	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 
 	ImGui::Begin(m_ID.c_str(), NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
@@ -82,19 +83,17 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2.0f - viewedDateTextWidth / 2.0f);
         ImGui::Text("%s", viewedDateText.c_str());
         ImGui::PopFont();
-        // TODO: For the schedule table, combine
-		// Reorderable, hideable, with headers & ImGuiTableFlags_ScrollY and background colours and context menus in body and custom headers
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_OFFSET));
 		ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
-			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
+			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX;
             // avoid imgui 0 column abort by not beginning the table at all if there are no columns in the schedule
             if (m_scheduleCore.getColumnCount() == 0)
             {
                 goto skip_schedule_table;
             }
-			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags))
-			{ 
+			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags, ImGui::GetContentRegionAvail()))
+			{
 				for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 				{
 					ImGui::TableSetupColumn(m_scheduleCore.getColumn(column)->name.c_str());
