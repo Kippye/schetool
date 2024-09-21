@@ -164,31 +164,29 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     else
                     {
                         bool prevSelected = selected;
-                        if (gui_templates::SelectOptionSelectable(options[i], "##EditorOption", &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0), ImGuiSelectableFlags_DontClosePopups | ImGuiSelectableFlags_AllowDoubleClick))
+                        if (gui_templates::SelectOptionSelectable(options[i], "##EditorOption", &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0)))
                         {
-                            // Double clicking to rename the select option
-                            if (ImGui::IsMouseDoubleClicked(0))
+                            // Don't change option selection when drag is ended
+                            if (m_draggedOptionID == optionButtonID && m_hasOptionBeenDragged)
                             {
-                                // Since i can't make double clicking do nothing (without some complicated stuffery), the option just gets its selection set again on the second click.
-                                m_editorSelect.setSelected(i, selected);
-                                // Start editing this select option's name
-                                m_editingSelectOptionName = true;
-                                m_giveSelectOptionNameInputFocus = true;
-                                m_editedOptionIndex = i;
+                                selected = prevSelected;
                             }
                             else
                             {
-                                // Don't change option selection when drag is ended
-                                if (m_draggedOptionID == optionButtonID && m_hasOptionBeenDragged)
-                                {
-                                    selected = prevSelected;
-                                }
-                                else
-                                {
-                                    m_editorSelect.setSelected(i, selected);
-                                    m_madeEdits = true;
-                                }
+                                m_editorSelect.setSelected(i, selected);
+                                m_madeEdits = true;
                             }
+                        }
+
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+                        {
+                            // Since i can't make double clicking do nothing (without some complicated stuffery), the option just gets its selection set again on the second click.
+                            selected = !selected;
+                            m_editorSelect.setSelected(i, selected);
+                            // Start editing this select option's name
+                            m_editingSelectOptionName = true;
+                            m_giveSelectOptionNameInputFocus = true;
+                            m_editedOptionIndex = i;
                         }
                     }
 

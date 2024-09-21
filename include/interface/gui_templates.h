@@ -25,7 +25,8 @@ namespace gui_templates
     bool TimeEditor(TimeContainer& editorTime);
     // Displays a button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Returns true if the button was clicked.
     bool SelectOptionButton(const SelectOption& selectOption, const char* idLabel, ImVec2 size = ImVec2(0, 0), ImGuiButtonFlags flags = ImGuiButtonFlags_None);
-    bool SelectOptionSelectable(const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size = ImVec2(0, 0), ImGuiSelectableFlags flags = ImGuiSelectableFlags_None);
+    // Displays a selectable button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Toggles selected when the button is clicked. Returns true if the button was clicked.
+    bool SelectOptionSelectable(const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size = ImVec2(0, 0), ImGuiSelectableFlags flags = ImGuiButtonFlags_None);
 
     void TextWithBackground(const char* fmt, ...);
     void TextWithBackground(const ImVec2& size, const char* fmt, ...);
