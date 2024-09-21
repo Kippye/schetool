@@ -105,7 +105,9 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                 {
                     ImGui::TableSetColumnIndex(column);
 
-                    if (ImGui::SmallButton(std::string("+##addFilterGroup").append(std::to_string(column)).c_str()))
+                    const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+                    float addFilterButtonSize = ImGui::CalcItemSize(ImVec2(0.0f, 0.0f), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f).y;
+                    if (ImGui::Button(std::format("+##addFilterGroup{}", column).c_str(), ImVec2(addFilterButtonSize, addFilterButtonSize)))
                     {
                         // display the FilterGroup editor to add a filter group to this Column
                         if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
@@ -113,7 +115,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                             filterEditor->createGroupAndEdit(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                         }
                     }
-                    const float addButtonWidth = ImGui::GetItemRectSize().x;
                         
                     if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                     {

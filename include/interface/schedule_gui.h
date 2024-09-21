@@ -13,8 +13,6 @@
 class ScheduleGui : public Gui
 {
     private:
-        // A map containing the texture IDs of gui textures.
-        // Each texture's ID will be set when the texture at gui creation.
         // TEMP?
         ImFont* m_font32x;
         const ScheduleCore& m_scheduleCore;
