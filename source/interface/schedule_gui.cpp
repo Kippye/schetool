@@ -284,12 +284,20 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 						// the buttons for removing rows are displayed in the first displayed column
 						if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0)
 						{
+                            size_t pushedStyleVars = 0;
+                            // HIDE the row remove button unless the row is hovered
+                            if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex())
+                            {
+                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+                                pushedStyleVars++;
+                            }
 							if (ImGui::Button(std::string("X##").append(std::to_string(row)).c_str(), ImVec2(26.0, 26.0)))
 							{
 								removeRow.invoke(row);
 								// break because this row can't be drawn anymore, it was removed.
 								break;
 							}
+                            ImGui::PopStyleVar(pushedStyleVars);
 							ImGui::SameLine();
 						}
 
