@@ -58,6 +58,7 @@ namespace gui_colors
     // Use for elements that are completely disabled.
     const float disabledAlpha = 0.25f;
     const ImVec4 textColorBlack = {10.0f / 255, 10.0f / 255, 10.0f / 255, 1};
+    const ImVec4 colorInvisible = {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
 namespace gui_sizes

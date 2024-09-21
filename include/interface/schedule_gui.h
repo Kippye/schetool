@@ -54,6 +54,8 @@ class ScheduleGui : public Gui
         Event<size_t> addRow;
         Event<size_t> removeRow;
 
+        bool isEditableElementClicked(bool isEditingDisabled) const;
+
         void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         void clearDateOverride();
 };
