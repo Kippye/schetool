@@ -343,14 +343,14 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 // {
                                 //     ImGui::SetKeyboardFocusHere();
                                 // }
-                                // TEMP HACK Workaround to not lose focus instantly when clicking?
-                                if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1)
-                                {
-                                    ImGui::SetKeyboardFocusHere();
-                                }
                                 if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     setElementValueNumber.invoke(column, row, newValue);
+                                }
+                                // TEMP HACK Workaround to not lose focus instantly when clicking?
+                                if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1)
+                                {
+                                    ImGui::SetKeyboardFocusHere(-1);
                                 }
                                 ImGui::PopStyleColor();
 								break;
@@ -359,14 +359,14 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							{
                                 double newValue = getElementValue<double>(column, row, columnEditDisabled);
                                 ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
-                                // TEMP HACK Workaround to not lose focus instantly when clicking?
-                                if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1)
-                                {
-                                    ImGui::SetKeyboardFocusHere();
-                                }
                                 if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     setElementValueDecimal.invoke(column, row, newValue);
+                                }
+                                // TEMP HACK Workaround to not lose focus instantly when clicking?
+                                if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1)
+                                {
+                                    ImGui::SetKeyboardFocusHere(-1);
                                 }
                                 ImGui::PopStyleColor();
 								break;
@@ -451,15 +451,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 float pixelsPerCharacter = 12.0f;
                                 float columnWidth = ImGui::GetColumnWidth(column);
 
-                                if (isEditableElementClicked(columnEditDisabled))
-                                {
-                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                                    {
-                                        elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                                        elementEditor->setEditorValue(value);
-                                    }
-                                }
-
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
                                     if (gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
@@ -476,6 +467,14 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                     if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - options[selectionIndices[i]].name.length()) * pixelsPerCharacter / columnWidth))
                                     {
                                         ImGui::SameLine();
+                                    }
+                                }
+                                if (isEditableElementClicked(columnEditDisabled))
+                                {
+                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                    {
+                                        elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                        elementEditor->setEditorValue(value);
                                     }
                                 }
                                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -532,16 +531,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 float pixelsPerCharacter = 12.0f;
                                 float columnWidth = ImGui::GetColumnWidth(column);
 
-                                // left clicking anywhere in the cell opens the editor
-                                if (isEditableElementClicked(columnEditDisabled))
-                                {
-                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                                    {
-                                        elementEditor->open(column, row, SCH_WEEKDAY, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                                        elementEditor->setEditorValue(value);
-                                    }
-                                }
-
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
                                     if (gui_templates::SelectOptionButton(SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]}, std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
@@ -558,6 +547,15 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                     if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
                                     {
                                         ImGui::SameLine();
+                                    }
+                                }
+                                // left clicking anywhere in the cell opens the editor
+                                if (isEditableElementClicked(columnEditDisabled))
+                                {
+                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                    {
+                                        elementEditor->open(column, row, SCH_WEEKDAY, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                        elementEditor->setEditorValue(value);
                                     }
                                 }
                                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -578,6 +576,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							case(SCH_TIME):
 							{
                                 TimeContainer value = getElementValue<TimeContainer>(column, row, columnEditDisabled);
+                                ImGui::Text("%s", value.getString().c_str());
                                 if (isEditableElementClicked(columnEditDisabled))
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -586,7 +585,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         elementEditor->open(column, row, SCH_TIME, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                                     }
                                 }
-                                ImGui::Text("%s", value.getString().c_str());
                                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                 {
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
@@ -606,6 +604,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							{
                                 auto value = getElementValue<DateContainer>(column, row, columnEditDisabled);
                             
+                                // Display the date of the current Date element
+                                ImGui::Text("%s", value.getString().c_str());
                                 if (isEditableElementClicked(columnEditDisabled))
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -614,8 +614,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         elementEditor->open(column, row, SCH_DATE, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                                     }
                                 }
-                                // Display the date of the current Date element
-                                ImGui::Text("%s", value.getString().c_str());
                                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                 {
                                     auto [editorColumn, editorRow] = elementEditor->getCoordinates();
