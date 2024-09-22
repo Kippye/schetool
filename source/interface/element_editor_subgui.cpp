@@ -179,7 +179,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             m_editedOptionIndex = i;
                         }
                         // Show a remove button on the right when hovered, only if the options are mutable
-                        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem) && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
+                        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
                         {
                             float removeButtonSize = optionButtonHeight; //ImGui::GetFrameHeight();
                             ImGui::SameLine();
@@ -194,6 +194,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
                                 m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
                                 m_madeEdits = true;
+                                ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
                                 goto break_select_case;
                             }
