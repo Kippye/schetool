@@ -283,17 +283,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 					ImGui::TableNextRow();
 					for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 					{
-                        bool columnEditDisabled = false;
-                        // If viewing a different date and the column has a reset option then show it disabled 
-                        if (m_scheduleDateOverride.getIsEmpty() == false && m_scheduleCore.getColumn(column)->resetOption != ColumnResetOption::Never)
-                        {
-                            columnEditDisabled = true;
-                            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
-                        }
-
 						ImGui::TableSetColumnIndex(column);
-						// the buttons for removing rows are displayed in the first displayed column
+						// Row remove buttons are displayed in the first displayed column
 						if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0)
 						{
                             size_t pushedStyleVars = 0;
@@ -313,6 +304,15 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							ImGui::SameLine();
 						}
 
+                        bool columnEditDisabled = false;
+                        // If viewing a different date and the column has a reset option then show it disabled 
+                        if (m_scheduleDateOverride.getIsEmpty() == false && m_scheduleCore.getColumn(column)->resetOption != ColumnResetOption::Never)
+                        {
+                            columnEditDisabled = true;
+                            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
+                        }
+
 						SCHEDULE_TYPE columnType = m_scheduleCore.getColumn(column)->type;
 						// TODO: i could probably reduce the code repetition here
 						ImGui::SetNextItemWidth(-FLT_MIN);
@@ -327,8 +327,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 {
                                     setElementValueBool.invoke(column, row, newValue);
                                 }
-                                // I will make an exception for this. To avoid the infamous Double Check™ this will have an additional check for whether the item is being hovered. Happy now?
-                                if (isEditableElementClicked(columnEditDisabled) && ImGui::IsItemHovered() == false)
+                                // I will make an exception for this. To avoid the infamous Double Check™ this will have an additional check for whether any item (cough cough, remove row button) is being hovered. Happy now?
+                                if (isEditableElementClicked(columnEditDisabled) && ImGui::IsAnyItemHovered() == false)
                                 {
                                     setElementValueBool.invoke(column, row, !newValue);
                                 }
