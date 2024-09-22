@@ -85,7 +85,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 					std::string str;
 					str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
 					char* buf = str.data();
-					//ImGui::InputText(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), buf, value.capacity());
+                    ImGui::SetNextItemWidth(gui_sizes::selectOptionSelectableWidth); // Reuse this size for the input as well.
 					if (ImGui::InputText("##EditorOptionInput", buf, schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
 					{
 						if (std::string(buf).empty() == false)
