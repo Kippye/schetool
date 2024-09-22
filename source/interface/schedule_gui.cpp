@@ -241,7 +241,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                         // This is how the arrow button's size is calculated
                         float headerButtonSize = ImGui::GetFrameHeight();
                         // SameLine() can't be used after a TableHeader so the position has to be calculated manually.
-                        ImGui::SetCursorPosX(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column).Max.x - headerButtonSize - 12.0f);
+                        ImGui::SetCursorScreenPos(ImVec2(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column).Max.x - headerButtonSize - 12.0f, ImGui::GetCursorScreenPos().y));
                         ImGui::SetCursorPosY(headerCursorY);
                         size_t pushedColorCount = 0;
                         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
