@@ -339,7 +339,12 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							{
                                 int newValue = getElementValue<int>(column, row, columnEditDisabled);
                                 ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
-                                if (isEditableElementClicked(columnEditDisabled))
+                                // if (isEditableElementClicked(columnEditDisabled))
+                                // {
+                                //     ImGui::SetKeyboardFocusHere();
+                                // }
+                                // TEMP HACK Workaround to not lose focus instantly when clicking?
+                                if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1)
                                 {
                                     ImGui::SetKeyboardFocusHere();
                                 }
@@ -354,7 +359,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							{
                                 double newValue = getElementValue<double>(column, row, columnEditDisabled);
                                 ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
-                                if (isEditableElementClicked(columnEditDisabled))
+                                // TEMP HACK Workaround to not lose focus instantly when clicking?
+                                if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1)
                                 {
                                     ImGui::SetKeyboardFocusHere();
                                 }
@@ -465,13 +471,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                             setElementValueSelect.invoke(column, row, value); 
                                         }
                                     }
-                                    // HACK to make this show when any of the options is hovered
-                                    if (i != selectedCount - 1 && ImGui::IsItemHovered())
-                                    {
-                                        ImGui::BeginTooltip();
-                                        ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
-                                        ImGui::EndTooltip();
-                                    }
 
                                     displayedChars += options[selectionIndices[i]].name.length();
                                     if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - options[selectionIndices[i]].name.length()) * pixelsPerCharacter / columnWidth))
@@ -553,13 +552,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                             value.setSelected(selectionIndices[i], false);
                                             setElementValueSelect.invoke(column, row, value); 
                                         }
-                                    }
-                                    // HACK to make this show when any of the options is hovered
-                                    if (i != selectedCount - 1 && ImGui::IsItemHovered())
-                                    {
-                                        ImGui::BeginTooltip();
-                                        ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
-                                        ImGui::EndTooltip();
                                     }
 
                                     displayedChars += optionNames[selectionIndices[i]].length();
@@ -647,12 +639,12 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                             ImGui::PopStyleVar();
                         }
 
-						if (ImGui::IsItemHovered())
-						{
-							ImGui::BeginTooltip();
-							ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
-							ImGui::EndTooltip();
-						}
+						// if (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex())
+						// {
+						// 	ImGui::BeginTooltip();
+						// 	ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
+						// 	ImGui::EndTooltip();
+						// }
 					}
                     // END OF for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount(); unsortedRow++)
                     do_not_draw_row:
