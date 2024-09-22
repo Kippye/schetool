@@ -57,8 +57,14 @@ namespace gui_colors
     const float inactiveAlpha = 0.5f;
     // Use for elements that are completely disabled.
     const float disabledAlpha = 0.25f;
+    // RGB color for black text
     const ImVec4 textColorBlack = {10.0f / 255, 10.0f / 255, 10.0f / 255, 1};
+    // RGB invisible color
     const ImVec4 colorInvisible = {0.0f, 0.0f, 0.0f, 0.0f};
+    // RGB color for active table cells
+    // TODO: After changing the whole theme, this will be a lighter white than usual.
+    // Currently it's darker because text is still white.
+    const ImVec4 colorTableCellActive = {0.6f, 0.6f, 0.6f, 1.0f};
 }
 
 namespace gui_sizes

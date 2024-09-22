@@ -316,6 +316,15 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 						SCHEDULE_TYPE columnType = m_scheduleCore.getColumn(column)->type;
 						// TODO: i could probably reduce the code repetition here
 						ImGui::SetNextItemWidth(-FLT_MIN);
+
+                        // Hightlight the table cell that is currently being edited in the element editor subgui
+                        if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                        {
+                            if (elementEditor->getOpenThisFrame() && std::pair<size_t, size_t>(column, row) == elementEditor->getCoordinates())
+                            {
+	                            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(gui_colors::colorTableCellActive));
+                            }
+                        }
  
 						switch(columnType)
 						{
