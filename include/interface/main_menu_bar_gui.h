@@ -1,6 +1,8 @@
 #pragma once
 
 #include "imgui.h"
+#include "interface_style.h"
+#include "gui_constants.h"
 #include "gui.h"
 #include "window.h"
 #include "input.h"
@@ -62,6 +64,7 @@ class MainMenuBarGui : public Gui
         bool m_openNewNameModal = false;
         bool m_openRenameModal = false;
         bool m_openDeleteConfirmationModal = false;
+        std::shared_ptr<const InterfaceStyleHandler> m_styleHandler = nullptr;
         bool m_haveFileOpen = false;
         std::vector<std::string> m_fileNames = {};
 
@@ -69,12 +72,15 @@ class MainMenuBarGui : public Gui
         void newSchedule();
         void displayScheduleList(); 
     public:
-        MainMenuBarGui(const char* ID);
+        MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler);
 
         Event<std::string> openScheduleFileEvent;
+        Event<> saveEvent;
+
         Event<> undoEvent;
         Event<> redoEvent;
-        Event<> saveEvent;
+
+        Event<GuiStyle> setGuiStyleEvent;
 
         void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         float getHeight() const;

@@ -62,4 +62,7 @@ namespace gui_color_calculations
     ImVec4 getHoverColorFromBase(ImVec4 base);
     ImVec4 getActiveColorFromBase(ImVec4 base);
     ImVec4 getDisabledColorFromBase(ImVec4 base);
+    // Calculate a likely suitable table cell highlight color (RGB) based on the text color (RGB) and window background color (RGB).
+    // Essentially gets the average of those two colors.
+    ImVec4 getTableCellHighlightColor(ImVec4 backgroundColor, ImVec4 fontColor);
 }

@@ -10,6 +10,7 @@
 #include <map>
 #include <memory>
 
+#include "interface_style.h"
 #include "textures.h"
 #include "gui_textures.h"
 #include "window.h"
@@ -21,6 +22,7 @@ class Interface
 	private:
 		Window* m_windowManager;
 		Input* m_input;
+        std::shared_ptr<InterfaceStyleHandler> m_styleHandler = std::make_shared<InterfaceStyleHandler>();
         std::unique_ptr<GuiTextures> m_guiTextures;
 		std::map<std::string, std::shared_ptr<Gui>> m_guis = {};
 
@@ -32,6 +34,10 @@ class Interface
 		ImGuiContext* imGui;
 
 		void init(Window*, Input*, TextureLoader&);
+        // Passthrough function to InterFaceStyleHandler to set and apply the current style.
+        void setStyle(GuiStyle style);
+        // Get the currently applied style
+        GuiStyle getCurrentStyle() const;
         template <typename T, typename... Args>
         std::shared_ptr<T> addGui(Args&&... args)
         {

@@ -26,6 +26,9 @@ enum SelectColor_
     SelectColor_Last    = 1 << 9,
 };
 
+// Full definition in interface_style.cpp
+enum class GuiStyle;
+
 namespace gui_colors
 {
     // Select option colors in HSL (w is not really used but could be alpha).
@@ -61,10 +64,6 @@ namespace gui_colors
     const ImVec4 textColorBlack = {10.0f / 255, 10.0f / 255, 10.0f / 255, 1};
     // RGB invisible color
     const ImVec4 colorInvisible = {0.0f, 0.0f, 0.0f, 0.0f};
-    // RGB color for active table cells
-    // TODO: After changing the whole theme, this will be a lighter white than usual.
-    // Currently it's darker because text is still white.
-    const ImVec4 colorTableCellActive = {0.6f, 0.6f, 0.6f, 1.0f};
 }
 
 namespace gui_sizes

@@ -104,8 +104,9 @@ void DeleteModalSubGui::setAffectedScheduleName(const std::string& name)
 }
 
 
-MainMenuBarGui::MainMenuBarGui(const char* ID) : Gui(ID)
+MainMenuBarGui::MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler) : Gui(ID)
 {
+    m_styleHandler = styleHandler;
 	// add subguis
 	addSubGui(new NewNameModalSubGui("NewNameModalSubGui"));
 	addSubGui(new RenameModalSubGui("RenameModalSubGui"));
@@ -162,6 +163,32 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 			{
 				redoEvent.invoke();
 			}
+			ImGui::EndMenu();
+		}
+        if (ImGui::BeginMenu("Preferences"))
+		{
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Interface theme");
+            ImGui::SameLine();
+            if (ImGui::BeginCombo("##StyleSelectDropdown", m_styleHandler->styleDefinitions.at(m_styleHandler->getCurrentStyle()).name))
+            {
+                for (const auto& [styleEnum, styleDefinition] : m_styleHandler->styleDefinitions)
+                {
+                    bool isSelected = styleEnum == m_styleHandler->getCurrentStyle();
+                    if (ImGui::Selectable(styleDefinition.name, isSelected))
+                    {
+                        setGuiStyleEvent.invoke(styleEnum);
+                    }
+
+                    // Set the initial focus when opening the combo (scroll here)
+                    if (isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
 			ImGui::EndMenu();
 		}
         m_height = ImGui::GetWindowHeight();

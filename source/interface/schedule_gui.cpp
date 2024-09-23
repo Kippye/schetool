@@ -322,7 +322,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                         {
                             if (elementEditor->getOpenThisFrame() && std::pair<size_t, size_t>(column, row) == elementEditor->getCoordinates())
                             {
-	                            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(gui_colors::colorTableCellActive));
+	                            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(gui_color_calculations::getTableCellHighlightColor(style.Colors[ImGuiCol_WindowBg], style.Colors[ImGuiCol_Text])));
                             }
                         }
  

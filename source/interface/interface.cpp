@@ -20,14 +20,27 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
 	ImGui_ImplOpenGL3_Init("#version 430");
 	imGuiIO->Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 16.0f);
 
+    // Apply the default style
+    m_styleHandler->applyStyle(m_styleHandler->getDefaultStyle());
+
 	// ADD GUIS
     addGui<StartPageGui>("StartPageGui");
-	addGui<MainMenuBarGui>("MainMenuBarGui");
+	addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler)->setGuiStyleEvent.addListener([&](GuiStyle style) { setStyle(style); });
     // simple popups
     addGui<AutosavePopupGui>("AutosavePopupGui");
 	#if DEBUG
 	addGui<EditHistoryGui>("EditHistoryGui");
 	#endif
+}
+
+void Interface::setStyle(GuiStyle style)
+{
+    m_styleHandler->applyStyle(style);
+}
+
+GuiStyle Interface::getCurrentStyle() const
+{
+    return m_styleHandler->getCurrentStyle();
 }
 
 void Interface::addGui(std::shared_ptr<Gui> gui)
@@ -51,7 +64,9 @@ void Interface::draw()
 	guiHovered = imGuiIO->WantCaptureMouse;
 	guiFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 
-	//ImGui::ShowDemoWindow();
+    #ifdef DEBUG
+	ImGui::ShowDemoWindow();
+    #endif
 	ImGui::Render();
 	
 	// check for right / middle click defocus
