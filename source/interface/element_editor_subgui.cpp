@@ -86,7 +86,11 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 					str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
 					char* buf = str.data();
                     ImGui::SetNextItemWidth(gui_sizes::selectOptionSelectableWidth); // Reuse this size for the input as well.
-					if (ImGui::InputText("##EditorOptionInput", buf, schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+                    if (m_openLastFrame == false) // Give the option name input keyboard focus if the editor was just opened
+                    {
+                        ImGui::SetKeyboardFocusHere();
+                    }
+					if (ImGui::InputText("##EditorOptionInput", buf, schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue))
 					{
 						if (std::string(buf).empty() == false)
 						{
@@ -114,6 +118,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 						}
 					}
 				}
+                // if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
+                // OK i give up doing this for now
+                // Maybe future me can finger this out.. TODO!
+                // if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !m_giveSelectOptionNameInputFocus)
+                // {
+                //     printf("Regave focus!\n");
+                //     ImGui::ActivateItemByID(ImGui::GetItemID());
+                // }
 
 				// display existing options
 				for (size_t i = 0; i < options.size(); i++)
