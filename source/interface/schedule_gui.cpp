@@ -646,12 +646,12 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                             ImGui::PopStyleVar();
                         }
 
-						// if (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex())
-						// {
-						// 	ImGui::BeginTooltip();
-						// 	ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
-						// 	ImGui::EndTooltip();
-						// }
+						if (columnEditDisabled == true && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex())
+						{
+							ImGui::BeginTooltip();
+							ImGui::Text("This column cannot be edited when viewing a different date\nbecause it has a reset option different from 'Never'.");
+							ImGui::EndTooltip();
+						}
 					}
                     // END OF for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount(); unsortedRow++)
                     do_not_draw_row:

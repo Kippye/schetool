@@ -135,7 +135,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 			{
 				newSchedule();
 			}
-			if (ImGui::BeginMenu("Open", "CTRL+O"))
+			if (ImGui::BeginMenu("Open", m_fileNames.empty() == false))
 			{
 				displayScheduleList();
 			}
