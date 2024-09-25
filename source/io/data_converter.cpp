@@ -1,5 +1,8 @@
 #include "data_converter.h"
 
+using namespace blf;
+using namespace blf::file;
+
 LocalObjectTable& ObjectDefinitions::getObjectTable()
 {
     return m_objectTable;

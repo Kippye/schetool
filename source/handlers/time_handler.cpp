@@ -11,7 +11,7 @@ void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule)
 void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
 {
     TimeWrapper currentTime = TimeWrapper::getCurrentTime();
-    int daysSince = TimeWrapper::getDifference<days>(currentTime, previousTime);
+    int daysSince = TimeWrapper::getDifference<std::chrono::days>(currentTime, previousTime);
 
     // Same or previous date, don't reset
     if (daysSince < 1) { return; }
@@ -48,7 +48,7 @@ void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
         }
     }
 
-    int monthsSince = TimeWrapper::getDifference<months>(currentTime, previousTime);
+    int monthsSince = TimeWrapper::getDifference<std::chrono::months>(currentTime, previousTime);
     // New month
     if (monthsSince > 0)
     {

@@ -23,13 +23,13 @@ const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinit
         colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.16f, 0.16f, 0.16f, 0.51f);
         colors[ImGuiCol_MenuBarBg]              = ImVec4(0.54f, 0.68f, 0.90f, 1.00f);
         colors[ImGuiCol_CheckMark]              = ImVec4(0.23f, 0.23f, 0.23f, 1.00f);
-        colors[ImGuiCol_Button]                 = ImVec4(0.71f, 0.86f, 0.92f, 1.00f);
-        colors[ImGuiCol_ButtonHovered]          = ImVec4(0.68f, 0.81f, 0.88f, 1.00f);
-        colors[ImGuiCol_ButtonActive]           = ImVec4(0.56f, 0.68f, 0.73f, 1.00f);
+        colors[ImGuiCol_Button]                 = ImVec4(0.85f, 0.92f, 0.93f, 1.00f);
+        colors[ImGuiCol_ButtonHovered]          = ImVec4(0.79f, 0.86f, 0.87f, 1.00f);
+        colors[ImGuiCol_ButtonActive]           = ImVec4(0.66f, 0.71f, 0.72f, 1.00f);
         colors[ImGuiCol_Header]                 = ImVec4(0.48f, 0.73f, 0.78f, 0.31f);
         colors[ImGuiCol_HeaderHovered]          = ImVec4(0.50f, 0.77f, 0.82f, 0.80f);
         colors[ImGuiCol_HeaderActive]           = ImVec4(0.55f, 0.84f, 0.90f, 1.00f);
-        colors[ImGuiCol_TableHeaderBg]          = ImVec4(0.15f, 0.56f, 0.65f, 0.31f);
+        colors[ImGuiCol_TableHeaderBg]          = ImVec4(0.48f, 0.73f, 0.78f, 0.31f);
         colors[ImGuiCol_TableBorderLight]       = ImVec4(0.77f, 0.77f, 0.77f, 1.00f);
         colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.84f, 0.83f, 0.83f, 0.53f);
         colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.64f, 0.64f, 0.64f, 1.00f);

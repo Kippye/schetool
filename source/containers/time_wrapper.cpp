@@ -1,8 +1,6 @@
 #include "time_wrapper.h"
 
 #include <chrono>
-#include <iostream>
-#include <format>
 
 #include "util.h"
 
@@ -137,8 +135,6 @@ local_time<seconds> TimeWrapper::getLocalTime(const std::string& timezoneName) c
     {
         applyLocalTimeOffsetFromUTC(localTime);
     }
-    #else
-    // std::cout << "UTC offset: " << zonedTime.get_info().offset << std::endl;
     #endif
 
     return localTime;

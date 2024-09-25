@@ -57,12 +57,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
         {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + m_mainMenuBarGui->getHeight());
         }
-        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
-        {
-            m_scheduleDateOverride.clear();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("View specific date"))
+        if (ImGui::Button("View specific date", ImVec2(0, resetButtonSize)))
         {
             m_openDateSelectPopup = true;
         }
@@ -84,17 +79,30 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
             ImGui::OpenPopup("Schedule Date Selector");
             m_openDateSelectPopup = false;
         }
+        // Show a reset button when viewing a different date
+        if (m_scheduleDateOverride.getIsEmpty() == false)
+        {
+            ImGui::SameLine();
+            if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
+            {
+                m_scheduleDateOverride.clear();
+            }
+        }
         ImGui::SameLine();
         // Current date text
         const TimeWrapper& currentDate = m_scheduleDateOverride.getIsEmpty() == false ? m_scheduleDateOverride : TimeWrapper::getCurrentTime();
         const std::string_view currentDateFmt = currentDate.getMonthDayUTC() < 10 ? "{:%A,%e. %B %Y}" : "{:%A, %e. %B %Y}";
         std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? currentDate.getDynamicFmtString(currentDateFmt) : currentDate.getDynamicFmtStringUTC(currentDateFmt);
-        // std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? TimeWrapper::getCurrentTime().getString(TIME_FORMAT_DATE) : m_scheduleDateOverride.getStringUTC(TIME_FORMAT_DATE);
         ImGui::PushFont(m_font32x);
         const float viewedDateTextWidth = ImGui::CalcTextSize(viewedDateText.c_str()).x;
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2.0f - viewedDateTextWidth / 2.0f);
+        auto currentTimeUTC = TimeWrapper::getCurrentTime().getTimeUTC();
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_scheduleDateOverride.getIsEmpty() ? 1.0f 
+            : 0.25f + std::abs(std::sin(std::chrono::milliseconds(std::chrono::floor<std::chrono::milliseconds>(currentTimeUTC) - std::chrono::floor<std::chrono::days>(currentTimeUTC)).count() / 800.f)));
         ImGui::Text("%s", viewedDateText.c_str());
+        ImGui::PopStyleVar();
         ImGui::PopFont();
+
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_OFFSET));
 		ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
