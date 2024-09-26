@@ -322,9 +322,14 @@ void gui_helpers::PushStyleColorHsl(ImGuiCol color, ImVec4 hslColor)
     ImGui::PushStyleColor(color, gui_color_calculations::hslToRgb(hslColor));
 }
 
+float gui_size_calculations::getTextButtonWidth(const char* label)
+{
+    return ImGui::CalcTextSize(label, NULL, true).x;
+}
+
 float gui_size_calculations::getSelectOptionSelectableWidth()
 {
-    float labelWidth = ImGui::CalcTextSize(std::string(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, 'W').c_str(), NULL, true).x;
+    float labelWidth = getTextButtonWidth(std::string(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, 'W').c_str());
     return labelWidth + ImGui::GetStyle().FramePadding.x * 2.0f;
 }
 

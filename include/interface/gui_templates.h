@@ -42,6 +42,7 @@ namespace gui_helpers
 
 namespace gui_size_calculations
 {
+    float getTextButtonWidth(const char* label);
     float getSelectOptionSelectableWidth();
 };
 
