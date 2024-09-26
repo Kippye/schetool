@@ -687,7 +687,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
         // ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
         // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
         // ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-        if (ImGui::ImageButtonEx(ImGui::GetID("##RemoveFilterGroup"), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeGroupButtonSize, removeGroupButtonSize) - ImGui::GetStyle().FramePadding * 2.0f, ImVec2(), ImVec2(1.0f, 1.0f), ImVec4(), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)))
+        if (gui_templates::ImageButtonStyleColored("##RemoveFilterGroup", (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeGroupButtonSize, removeGroupButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
         {
             removeColumnFilterGroup.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex());
             ImGui::CloseCurrentPopup();
@@ -713,7 +713,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
             ImGui::SameLine();
             const float removeRuleButtonSize = ImGui::GetItemRectSize().y;
             // Remove FilterRule button
-            if (ImGui::ImageButtonEx(ImGui::GetID(std::format("##RemoveFilterRule{}", ruleIndex).c_str()), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeRuleButtonSize, removeRuleButtonSize) - ImGui::GetStyle().FramePadding * 2.0f, ImVec2(), ImVec2(1.0f, 1.0f), ImVec4(), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)))
+            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveFilterRule{}", ruleIndex).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeRuleButtonSize, removeRuleButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
             {
                 m_filterGroupState.getFilterGroup().getFilter(filterIndex).removeRule(ruleIndex);
                 removeColumnFilterRule.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), filterIndex, ruleIndex);
@@ -765,7 +765,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
                 ImGui::SameLine(ImGui::GetWindowWidth() - 30);
                 // Remove filter button
                 const float removeFilterButtonSize = ImGui::GetItemRectSize().y;
-                if (ImGui::ImageButtonEx(ImGui::GetID(std::format("##RemoveFilter{}", f).c_str()), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeFilterButtonSize, removeFilterButtonSize) - ImGui::GetStyle().FramePadding * 2.0f, ImVec2(), ImVec2(1.0f, 1.0f), ImVec4(), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)))
+                if (gui_templates::ImageButtonStyleColored(std::format("##RemoveFilter{}", f).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeFilterButtonSize, removeFilterButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
                 {
                     m_filterGroupState.getFilterGroup().removeFilter(f);
                     removeColumnFilter.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), f);

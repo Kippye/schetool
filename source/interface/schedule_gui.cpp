@@ -39,7 +39,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 
     ImGuiStyle style = ImGui::GetStyle();
     ImVec2 labelSize = ImGui::CalcTextSize("M", NULL, true);
-    float resetButtonSize = ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
+    // Preset button size because it uses a preset size texture variant
+    const float resetButtonSize = 24.0f; //ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
     const float SCHEDULE_TOP_BAR_HEIGHT = resetButtonSize + style.ItemSpacing.y * 2;
     const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
     const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
@@ -83,10 +84,12 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
         if (m_scheduleDateOverride.getIsEmpty() == false)
         {
             ImGui::SameLine();
-            if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+            if (gui_templates::ImageButtonStyleColored("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset_24px"), ImVec2(resetButtonSize, resetButtonSize)))
             {
                 m_scheduleDateOverride.clear();
             }
+            ImGui::PopStyleVar();
         }
         ImGui::SameLine();
         // Current date text
@@ -255,7 +258,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
                         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
                         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-                        if (ImGui::ImageButtonEx(ImGui::GetID("##RemoveColumn"), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(headerButtonSize, headerButtonSize) - style.FramePadding * 2.0f, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f), ImVec4(0.0f, 0.0f, 0.0f, 0.0f), ImVec4(1.0f, 1.0f, 1.0f, 1.0f)))
+                        if (gui_templates::ImageButtonStyleColored("##RemoveColumn", (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(headerButtonSize, headerButtonSize) - style.FramePadding * 2.0f))
 						{
 							removeColumn.invoke(column);
                             ImGui::PopStyleColor(pushedColorCount);

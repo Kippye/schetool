@@ -195,6 +195,11 @@ void gui_templates::TextWithBackground(const ImVec2& size, const char *fmt, ...)
     ImGui::PopItemFlag();
 }
 
+bool gui_templates::ImageButtonStyleColored(const char *idLabel, ImTextureID textureID, ImVec2 size, ImVec2 uv0, ImVec2 uv1, ImVec4 bgColor)
+{
+    return ImGui::ImageButtonEx(ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_Text));
+}
+
 bool gui_templates::TimeEditor(TimeContainer& editorTime)
 {
     bool madeEdits = false;
