@@ -87,29 +87,33 @@ namespace gui_style_vars
     const float labelButtonRounding = 4.0f;
 }
 
-enum class FontScale
+enum class FontSize
 {
-    // Fonts are scaled down to 0.75x
+    // Font size of 8px
     Small,
-    // Fonts are left their original size at 1.0x scaling
+    // Font size of 16px
     Normal,
-    // Fonts are scaled up to 1.25x
+    // Font size of 24px
+    Big,
+    // Font size of 32px
     Large
 };
 
 namespace gui_fonts
 {
-    const std::map<FontScale, const char*> fontScaleNames =
+    const std::map<FontSize, const char*> fontSizeNames =
     {
-        {FontScale::Small, "Small"},
-        {FontScale::Normal, "Normal"},
-        {FontScale::Large, "Large"},
+        {FontSize::Small, "Small"},
+        {FontSize::Normal, "Normal"},
+        {FontSize::Big, "Big"},
+        {FontSize::Large, "Large"},
     };
-    const std::map<FontScale, float> fontScaleMultipliers =
+    const std::map<FontSize, size_t> fontSizePixelSizes =
     {
-        {FontScale::Small, 0.75f},
-        {FontScale::Normal, 1.0f},
-        {FontScale::Large, 1.25f},
+        {FontSize::Small, 8},
+        {FontSize::Normal, 16},
+        {FontSize::Big, 24},
+        {FontSize::Large, 32},
     };
 }
 

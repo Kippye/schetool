@@ -13,8 +13,6 @@
 class ScheduleGui : public Gui
 {
     private:
-        // TEMP?
-        ImFont* m_font32x;
         const ScheduleCore& m_scheduleCore;
         const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
         bool m_openDateSelectPopup = false;

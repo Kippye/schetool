@@ -19,14 +19,20 @@ struct GuiStyleDefinition
 class InterfaceStyleHandler
 {
     private:
+        static std::map<FontSize, ImFont*> loadedFonts;
         const GuiStyle m_defaultStyle = (GuiStyle)0;
         GuiStyle m_currentStyle;
-        FontScale m_currentFontScale = FontScale::Normal;
+        static FontSize currentFontSize;
     public:
         static const std::map<GuiStyle, GuiStyleDefinition> styleDefinitions;
+        void loadFontSizes(const char* fontPath);
         void applyStyle(GuiStyle style);
         GuiStyle getCurrentStyle() const;
         GuiStyle getDefaultStyle() const;
-        FontScale getFontScale() const;
-        void setFontScale(FontScale fontScale);
+        // Changes the internal state of the current FontSize.
+        // To actually apply the font size, push a font before drawing gui elements.
+        void setFontSize(FontSize fontSize);
+        static FontSize getFontSize();
+        // Get the font data for the given size or nullptr if there is none.
+        static ImFont* getFontData(FontSize fontSize);
 };

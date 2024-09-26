@@ -81,7 +81,7 @@ class MainMenuBarGui : public Gui
         Event<> redoEvent;
 
         Event<GuiStyle> setGuiStyleEvent;
-        Event<FontScale> setFontScaleEvent;
+        Event<FontSize> setFontScaleEvent;
 
         void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         float getHeight() const;

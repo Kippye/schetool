@@ -194,14 +194,14 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             ImGui::Text("Font scale");
             ImGui::SameLine();
             ImGui::SetCursorPosX(styleSelectDropdownX);
-            if (ImGui::BeginCombo("##FontScaleSelectDropdown", gui_fonts::fontScaleNames.at(m_styleHandler->getFontScale())))
+            if (ImGui::BeginCombo("##FontSizeSelectDropdown", gui_fonts::fontSizeNames.at(m_styleHandler->getFontSize())))
             {
-                for (const auto& [fontScaleEnum, scaleMultiplier] : gui_fonts::fontScaleMultipliers)
+                for (const auto& [fontSizeEnum, fontSizeName] : gui_fonts::fontSizeNames)
                 {
-                    bool isSelected = fontScaleEnum == m_styleHandler->getFontScale();
-                    if (ImGui::Selectable(gui_fonts::fontScaleNames.at(fontScaleEnum), isSelected))
+                    bool isSelected = fontSizeEnum == m_styleHandler->getFontSize();
+                    if (ImGui::Selectable(fontSizeName, isSelected))
                     {
-                        setFontScaleEvent.invoke(fontScaleEnum);
+                        setFontScaleEvent.invoke(fontSizeEnum);
                     }
 
                     // Set the initial focus when opening the combo (scroll here)

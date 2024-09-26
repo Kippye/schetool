@@ -7,6 +7,8 @@ enum class GuiStyle
     Dark
 };
 
+std::map<FontSize, ImFont*> InterfaceStyleHandler::loadedFonts = {};
+
 // NOTE: Do NOT make styles have each other as their base style, it will cause an endless loop -_-
 const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinitions =
 {
@@ -62,6 +64,16 @@ const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinit
     }}},
 };
 
+FontSize InterfaceStyleHandler::currentFontSize = FontSize::Normal;
+
+void InterfaceStyleHandler::loadFontSizes(const char* fontPath)
+{
+    for (FontSize fontSize = FontSize::Small; fontSize <= FontSize::Large; fontSize = (FontSize)((int)fontSize + 1))
+    {
+        loadedFonts.insert_or_assign(fontSize, ImGui::GetIO().Fonts->AddFontFromFileTTF(fontPath, gui_fonts::fontSizePixelSizes.at(fontSize)));
+    }
+}
+
 void InterfaceStyleHandler::applyStyle(GuiStyle style)
 {
     // The style has no definition. It probably shouldn't be applied.
@@ -92,13 +104,22 @@ GuiStyle InterfaceStyleHandler::getDefaultStyle() const
     return m_defaultStyle;
 }
 
-FontScale InterfaceStyleHandler::getFontScale() const
+FontSize InterfaceStyleHandler::getFontSize()
 {
-    return m_currentFontScale;
+    return currentFontSize;
 }
 
-void InterfaceStyleHandler::setFontScale(FontScale fontScale)
+void InterfaceStyleHandler::setFontSize(FontSize fontSize)
 {
-    ImGui::GetIO().FontGlobalScale = gui_fonts::fontScaleMultipliers.at(fontScale);
-    m_currentFontScale = fontScale;
+    currentFontSize = fontSize;
+}
+
+ImFont* InterfaceStyleHandler::getFontData(FontSize fontSize)
+{
+    if (loadedFonts.contains(fontSize) == false)
+    {
+        return nullptr;
+    }
+
+    return loadedFonts.at(fontSize);
 }
