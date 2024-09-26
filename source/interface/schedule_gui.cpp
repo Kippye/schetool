@@ -305,7 +305,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
                                 pushedStyleVars++;
                             }
-							if (ImGui::Button(std::string("X##").append(std::to_string(row)).c_str(), ImVec2(26.0, 26.0)))
+                            const float rowRemoveButtonSize = ImGui::CalcTextSize("X").y; //+ style.FramePadding.y * 2.0f;
+							if (gui_templates::ImageButtonStyleColored(std::format("X##{}", row).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove_16px"), ImVec2(rowRemoveButtonSize, rowRemoveButtonSize)))
 							{
 								removeRow.invoke(row);
 								// break because this row can't be drawn anymore, it was removed.
