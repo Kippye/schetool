@@ -111,7 +111,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_OFFSET));
 		ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
-			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX;
+			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX;
             // avoid imgui 0 column abort by not beginning the table at all if there are no columns in the schedule
             if (m_scheduleCore.getColumnCount() == 0)
             {
@@ -119,6 +119,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
             }
 			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags, ImGui::GetContentRegionAvail()))
 			{
+                ImGui::GetCurrentTable()->DisableDefaultContextMenu = true;
 				for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 				{
 					ImGui::TableSetupColumn(m_scheduleCore.getColumn(column)->name.c_str());
@@ -241,13 +242,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                     ImGui::PopStyleVar(pushedStyleVars);
                     ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					ImGui::TableHeader(columnName);
+                    ImGuiID tableHeaderID = ImGui::GetItemID();
                     ImGuiTable* currentTable = ImGui::GetCurrentTable();
-					// column header context menu
-                    if (ImGui::BeginPopupContextItem("#ColumnEdit"))
-                    {
-						displayColumnContextPopup(column, currentTable, tableFlags);
-                        ImGui::EndPopup();
-                    }
 					// Show a close button on the right when hovered
 					// permanent columns can't be removed so there's no need for a remove button
 					if (isColumnHeaderHovered && m_scheduleCore.getColumn(column)->permanent == false)
@@ -271,6 +267,16 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 						}
                         ImGui::PopStyleColor(pushedColorCount);
 					}
+					// column header context menu
+                    if (isColumnHeaderHovered && (ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonLeft) || ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonRight)) && (ImGui::IsAnyItemHovered() == false || ImGui::GetHoveredID() == tableHeaderID))
+                    {
+                        ImGui::TableOpenContextMenu(column);
+                    }
+                    if (ImGui::GetCurrentTable()->ContextPopupColumn == column && ImGui::TableBeginContextMenuPopup(ImGui::GetCurrentTable()))
+                    {
+						displayColumnContextPopup(column, currentTable, tableFlags);
+                        ImGui::EndPopup();
+                    }
 					ImGui::PopID();
 				}
 
