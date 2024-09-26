@@ -21,7 +21,7 @@ class ScheduleGui : public Gui
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
-        void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
+        void displayColumnContextPopup(unsigned int column, ImGuiTable* table, ImGuiTableFlags tableFlags);
         template <typename T>
         T getElementValue(size_t column, size_t row, bool useDefaultValue) const
         {

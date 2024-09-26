@@ -21,9 +21,12 @@ class InterfaceStyleHandler
     private:
         const GuiStyle m_defaultStyle = (GuiStyle)0;
         GuiStyle m_currentStyle;
+        FontScale m_currentFontScale = FontScale::Normal;
     public:
         static const std::map<GuiStyle, GuiStyleDefinition> styleDefinitions;
         void applyStyle(GuiStyle style);
         GuiStyle getCurrentStyle() const;
         GuiStyle getDefaultStyle() const;
+        FontScale getFontScale() const;
+        void setFontScale(FontScale fontScale);
 };

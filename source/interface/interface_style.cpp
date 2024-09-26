@@ -91,3 +91,14 @@ GuiStyle InterfaceStyleHandler::getDefaultStyle() const
 {
     return m_defaultStyle;
 }
+
+FontScale InterfaceStyleHandler::getFontScale() const
+{
+    return m_currentFontScale;
+}
+
+void InterfaceStyleHandler::setFontScale(FontScale fontScale)
+{
+    ImGui::GetIO().FontGlobalScale = gui_fonts::fontScaleMultipliers.at(fontScale);
+    m_currentFontScale = fontScale;
+}

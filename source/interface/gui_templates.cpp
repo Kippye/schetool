@@ -1,5 +1,6 @@
 #include "imgui_stdlib.h"
 #include "gui_templates.h"
+#include "schedule_constants.h"
 #include "gui_constants.h"
 #include "util.h"
 
@@ -29,12 +30,16 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     if (displayDate)
     {
         // Display the date, with a minimum width for empty dates
-        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getStringUTC(TIME_FORMAT_DATE).c_str(), viewedYear, viewedMonth);
+        TextWithBackground(editorDate.getIsEmpty() ? ImVec2(ImGui::CalcTextSize("01.01.1990").x + ImGui::GetStyle().FramePadding.x * 2.0f, 0) : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getStringUTC(TIME_FORMAT_DATE).c_str(), viewedYear, viewedMonth);
     }
-    if (displayClearButton && ImGui::Button("Clear"))
+    if (displayClearButton)
     {
-        editorDate.clear();
-        changedDate = true;
+        ImGui::SameLine();
+        if (ImGui::Button("Clear"))
+        {
+            editorDate.clear();
+            changedDate = true;
+        }
     }
 
     // MONTH SELECTION
@@ -74,10 +79,11 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     {
         viewedMonth = viewedMonth == 12 ? 1 : viewedMonth + 1;
     }
+    const ImVec2 incrementButtonSize = ImGui::GetItemRectSize();
 
     // YEAR INPUT
     int yearInput = viewedYear;
-    if (ImGui::Button("-", gui_sizes::date_editor::yearIncrementButtonSize))
+    if (ImGui::Button("-", incrementButtonSize))
     {
         viewedYear = TimeWrapper::limitYearToValidRange(viewedYear - 1);
     }
@@ -88,7 +94,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
         viewedYear = TimeWrapper::limitYearToValidRange(yearInput);
     }
     ImGui::SameLine();
-    if (ImGui::Button("+", gui_sizes::date_editor::yearIncrementButtonSize))
+    if (ImGui::Button("+", incrementButtonSize))
     {
         viewedYear = TimeWrapper::limitYearToValidRange(viewedYear + 1);
     }
@@ -106,6 +112,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
 
     unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
+    const float monthDayButtonSize = ImGui::GetContentRegionAvail().x / 7.0f - (6 * gui_sizes::date_editor::monthDayButtonSpacing.x);
 
     auto addCalendarDay = [&](int month, int dayDisplayNumber)
     {
@@ -123,7 +130,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
             pushedVarCount++;
         }
-        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), gui_sizes::date_editor::monthDayButtonSize))
+        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(monthDayButtonSize, monthDayButtonSize)))
         {
             unsigned int selectedDayYear = viewedYear;
             if (viewedMonth == 1 && month == 12) { selectedDayYear--; } // Viewing january and clicked a day from previous year's december
@@ -313,6 +320,12 @@ int gui_callbacks::filterAlphanumerics(ImGuiInputTextCallbackData* data)
 void gui_helpers::PushStyleColorHsl(ImGuiCol color, ImVec4 hslColor)
 {
     ImGui::PushStyleColor(color, gui_color_calculations::hslToRgb(hslColor));
+}
+
+float gui_size_calculations::getSelectOptionSelectableWidth()
+{
+    float labelWidth = ImGui::CalcTextSize(std::string(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, 'W').c_str(), NULL, true).x;
+    return labelWidth + ImGui::GetStyle().FramePadding.x * 2.0f;
 }
 
 void gui_color_calculations::rgbToHsl(float r, float g, float b, float &out_h, float &out_s, float &out_l)

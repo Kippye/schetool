@@ -275,7 +275,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                             setCurrentOptionSelected(selected);
                         }
                         ImGui::SameLine();
-                        if (gui_templates::SelectOptionSelectable(options[i], std::format("##EditorOption{}", i).c_str(), &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0), ImGuiSelectableFlags_DontClosePopups))
+                        if (gui_templates::SelectOptionSelectable(options[i], std::format("##EditorOption{}", i).c_str(), &selected, ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0), ImGuiSelectableFlags_DontClosePopups))
                         {
                             setCurrentOptionSelected(selected);
                         }
@@ -321,7 +321,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                             setCurrentOptionSelected(selected);
                         }
                         ImGui::SameLine();
-                        if (gui_templates::SelectOptionSelectable(SelectOption{optionNames[i], gui_colors::dayColors[i]}, std::format("##EditorOption{}", i).c_str(), &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0), ImGuiSelectableFlags_DontClosePopups))
+                        if (gui_templates::SelectOptionSelectable(SelectOption{optionNames[i], gui_colors::dayColors[i]}, std::format("##EditorOption{}", i).c_str(), &selected, ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0), ImGuiSelectableFlags_DontClosePopups))
                         {
                             setCurrentOptionSelected(selected);
                         }

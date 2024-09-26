@@ -38,21 +38,14 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
     if (m_visible == false) { return; }
 
     ImGuiStyle style = ImGui::GetStyle();
-    ImVec2 labelSize = ImGui::CalcTextSize("M", NULL, true);
-    // Preset button size because it uses a preset size texture variant
-    const float resetButtonSize = 24.0f; //ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
-    const float SCHEDULE_TOP_BAR_HEIGHT = resetButtonSize + style.ItemSpacing.y * 2;
-    const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
-    const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
-    const float SCHEDULE_OFFSET = SCHEDULE_TOP_BAR_HEIGHT + 32.0f;
-    const float CHILD_WINDOW_WIDTH = (float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 8);
-    const float CHILD_WINDOW_HEIGHT = (float)(window.SCREEN_HEIGHT - SCHEDULE_OFFSET - ADD_ROW_BUTTON_HEIGHT - 16.0f);
     //ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
 	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
 	ImGui::SetNextWindowContentSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT) - style.WindowPadding * 2.0f);
 	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 
 	ImGui::Begin(m_ID.c_str(), NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
+        // Preset button size because it uses a preset size texture variant
+        const float resetButtonSize = 24.0f; //ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
         // Add menu bar height as offset
         if (m_mainMenuBarGui)
         {
@@ -100,11 +93,20 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
         const float viewedDateTextWidth = ImGui::CalcTextSize(viewedDateText.c_str()).x;
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2.0f - viewedDateTextWidth / 2.0f);
         auto currentTimeUTC = TimeWrapper::getCurrentTime().getTimeUTC();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(ImGui::GetStyle().WindowPadding.x, 3.0f));
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_scheduleDateOverride.getIsEmpty() ? 1.0f 
             : 0.25f + std::abs(std::sin(std::chrono::milliseconds(std::chrono::floor<std::chrono::milliseconds>(currentTimeUTC) - std::chrono::floor<std::chrono::days>(currentTimeUTC)).count() / 800.f)));
-        ImGui::Text("%s", viewedDateText.c_str());
-        ImGui::PopStyleVar();
+        gui_templates::TextWithBackground("%s", viewedDateText.c_str());
+        ImGui::PopStyleVar(2);
         ImGui::PopFont();
+
+        const float scheduleHeaderTextHeight = ImGui::GetItemRectSize().y;
+        const float SCHEDULE_TOP_BAR_HEIGHT = scheduleHeaderTextHeight;// + style.ItemSpacing.y * 2;
+        const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
+        const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
+        const float SCHEDULE_OFFSET = SCHEDULE_TOP_BAR_HEIGHT + 32.0f;
+        const float CHILD_WINDOW_WIDTH = (float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 8);
+        const float CHILD_WINDOW_HEIGHT = (float)(window.SCREEN_HEIGHT - SCHEDULE_OFFSET - ADD_ROW_BUTTON_HEIGHT - 16.0f);
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
 	    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_OFFSET));
@@ -239,10 +241,11 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                     ImGui::PopStyleVar(pushedStyleVars);
                     ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 					ImGui::TableHeader(columnName);
+                    ImGuiTable* currentTable = ImGui::GetCurrentTable();
 					// column header context menu
                     if (ImGui::BeginPopupContextItem("#ColumnEdit"))
                     {
-						displayColumnContextPopup(column, tableFlags);
+						displayColumnContextPopup(column, currentTable, tableFlags);
                         ImGui::EndPopup();
                     }
 					// Show a close button on the right when hovered
@@ -703,12 +706,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
     ImGui::End();
 }
 
-void ScheduleGui::displayColumnContextPopup(unsigned int columnIndex, ImGuiTableFlags tableFlags)
+void ScheduleGui::displayColumnContextPopup(unsigned int columnIndex, ImGuiTable* table, ImGuiTableFlags tableFlags)
 {
-	// FIXME TODO STUPID HACK !!
-	ImGuiTable* table = ImGui::GetCurrentContext()->Tables.GetByIndex(0) ;
-	//ImGui::TableFindByID(ImGui::GetID("ScheduleTable"));
-
     const Column& column = *m_scheduleCore.getColumn(columnIndex);
 
 	// renaming
@@ -742,6 +741,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int columnIndex, ImGuiTable
     }
 
     // Reset setting dropdown
+    ImGui::AlignTextToFramePadding();
     ImGui::Text("Reset column:");
     ImGui::SameLine();
     if (ImGui::BeginCombo("##ColumnResetSetting", schedule_consts::columnResetOptionStrings.at(column.resetOption)))

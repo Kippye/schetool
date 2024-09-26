@@ -25,7 +25,9 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
 
 	// ADD GUIS
     addGui<StartPageGui>("StartPageGui");
-	addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler)->setGuiStyleEvent.addListener([&](GuiStyle style) { setStyle(style); });
+	auto mainMenuBarGui = addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler);
+    mainMenuBarGui->setGuiStyleEvent.addListener([&](GuiStyle style) { setStyle(style); });
+    mainMenuBarGui->setFontScaleEvent.addListener([&](FontScale fontScale) { m_styleHandler->setFontScale(fontScale); });
     // simple popups
     addGui<AutosavePopupGui>("AutosavePopupGui");
 	#if DEBUG

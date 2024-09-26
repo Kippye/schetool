@@ -85,7 +85,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 					std::string str;
 					str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
 					char* buf = str.data();
-                    ImGui::SetNextItemWidth(gui_sizes::selectOptionSelectableWidth); // Reuse this size for the input as well.
+                    ImGui::SetNextItemWidth(gui_size_calculations::getSelectOptionSelectableWidth());
                     if (m_openLastFrame == false) // Give the option name input keyboard focus if the editor was just opened
                     {
                         ImGui::SetKeyboardFocusHere();
@@ -147,7 +147,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             m_giveSelectOptionNameInputFocus = false;
                         }
 
-                        ImGui::SetNextItemWidth(gui_sizes::selectOptionSelectableWidth);
+                        ImGui::SetNextItemWidth(gui_size_calculations::getSelectOptionSelectableWidth());
                         if (ImGui::InputText("##SelectOptionNameInput", buf, schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue, gui_callbacks::filterAlphanumerics))
                         {
                             modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_RENAME).firstIndex(m_editedOptionIndex).name(buf));
@@ -164,7 +164,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     {
                         bool prevSelected = selected;
                         ImGui::SetNextItemAllowOverlap();
-                        if (gui_templates::SelectOptionSelectable(options[i], "##EditorOption", &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0)))
+                        if (gui_templates::SelectOptionSelectable(options[i], "##EditorOption", &selected, ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0)))
                         {
                             // Don't change option selection when drag is ended
                             if (m_draggedOptionID == optionButtonID && m_hasOptionBeenDragged)
@@ -324,7 +324,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 				{
 					bool selected = selection.find(i) != selection.end();
 
-                    if (gui_templates::SelectOptionSelectable(SelectOption{optionNames[i], gui_colors::dayColors[i]}, std::format("##EditorOption{}", i).c_str(), &selected, ImVec2(gui_sizes::selectOptionSelectableWidth, 0), ImGuiSelectableFlags_DontClosePopups))
+                    if (gui_templates::SelectOptionSelectable(SelectOption{optionNames[i], gui_colors::dayColors[i]}, std::format("##EditorOption{}", i).c_str(), &selected, ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0), ImGuiSelectableFlags_DontClosePopups))
 					{
 						m_editorWeekday.setSelected(i, selected);
 						m_madeEdits = true;

@@ -40,6 +40,11 @@ namespace gui_helpers
     void PushStyleColorHsl(ImGuiCol color, ImVec4 hslColor);
 }
 
+namespace gui_size_calculations
+{
+    float getSelectOptionSelectableWidth();
+};
+
 namespace gui_color_calculations
 {
     // Color conversion functions from:

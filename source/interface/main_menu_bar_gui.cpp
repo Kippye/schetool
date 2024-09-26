@@ -170,6 +170,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Interface theme");
             ImGui::SameLine();
+            const float styleSelectDropdownX = ImGui::GetCursorPosX();
             if (ImGui::BeginCombo("##StyleSelectDropdown", m_styleHandler->styleDefinitions.at(m_styleHandler->getCurrentStyle()).name))
             {
                 for (const auto& [styleEnum, styleDefinition] : m_styleHandler->styleDefinitions)
@@ -178,6 +179,29 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
                     if (ImGui::Selectable(styleDefinition.name, isSelected))
                     {
                         setGuiStyleEvent.invoke(styleEnum);
+                    }
+
+                    // Set the initial focus when opening the combo (scroll here)
+                    if (isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Font scale");
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(styleSelectDropdownX);
+            if (ImGui::BeginCombo("##FontScaleSelectDropdown", gui_fonts::fontScaleNames.at(m_styleHandler->getFontScale())))
+            {
+                for (const auto& [fontScaleEnum, scaleMultiplier] : gui_fonts::fontScaleMultipliers)
+                {
+                    bool isSelected = fontScaleEnum == m_styleHandler->getFontScale();
+                    if (ImGui::Selectable(gui_fonts::fontScaleNames.at(fontScaleEnum), isSelected))
+                    {
+                        setFontScaleEvent.invoke(fontScaleEnum);
                     }
 
                     // Set the initial focus when opening the combo (scroll here)

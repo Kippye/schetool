@@ -69,20 +69,11 @@ namespace gui_colors
 namespace gui_sizes
 {
     const ImVec2 emptyLabelSize = ImVec2(64, 0);
-    // The biggest width that a select option selectable will likely need. 
-    // NOTE: Needs to be manually recalculated whenever schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH is changed. Calculation: ImGui::CalcTextSize(std::string(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, 'W').c_str()).x);
-    const float selectOptionSelectableWidth = 142;
     namespace date_editor
     {
-        const ImVec2 monthDayButtonSize = ImVec2(24, 24);
         const ImVec2 monthDayButtonSpacing = ImVec2(0.0f, 0.0f);
         const float monthNameComboWidth = 108.0f;
         const float yearInputWidth = 108.0f;
-        const ImVec2 yearIncrementButtonSize = ImVec2(22, 22);
-    };
-    namespace element_editor
-    {
-        const ImVec2 selectOptionEditButtonSize = ImVec2(18, 18);
     };
     namespace filter_editor
     {
@@ -94,6 +85,32 @@ namespace gui_sizes
 namespace gui_style_vars
 {
     const float labelButtonRounding = 4.0f;
+}
+
+enum class FontScale
+{
+    // Fonts are scaled down to 0.75x
+    Small,
+    // Fonts are left their original size at 1.0x scaling
+    Normal,
+    // Fonts are scaled up to 1.25x
+    Large
+};
+
+namespace gui_fonts
+{
+    const std::map<FontScale, const char*> fontScaleNames =
+    {
+        {FontScale::Small, "Small"},
+        {FontScale::Normal, "Normal"},
+        {FontScale::Large, "Large"},
+    };
+    const std::map<FontScale, float> fontScaleMultipliers =
+    {
+        {FontScale::Small, 0.75f},
+        {FontScale::Normal, 1.0f},
+        {FontScale::Large, 1.25f},
+    };
 }
 
 #endif
