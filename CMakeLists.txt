@@ -153,6 +153,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/gui_templates.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/interface.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/interface_style.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/start_page_gui.cpp"
@@ -167,7 +168,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_core.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit_history.cpp"
-    # "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
+    "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
 )
 
 target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags 

@@ -1,5 +1,6 @@
 #include "imgui_stdlib.h"
 #include "gui_templates.h"
+#include "schedule_constants.h"
 #include "gui_constants.h"
 #include "util.h"
 
@@ -29,12 +30,16 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     if (displayDate)
     {
         // Display the date, with a minimum width for empty dates
-        TextWithBackground(editorDate.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getStringUTC(TIME_FORMAT_DATE).c_str(), viewedYear, viewedMonth);
+        TextWithBackground(editorDate.getIsEmpty() ? ImVec2(ImGui::CalcTextSize("01.01.1990").x + ImGui::GetStyle().FramePadding.x * 2.0f, 0) : ImVec2(0, 0), "%s##DateEditorDisplay%zu%zu", editorDate.getStringUTC(TIME_FORMAT_DATE).c_str(), viewedYear, viewedMonth);
     }
-    if (displayClearButton && ImGui::Button("Clear"))
+    if (displayClearButton)
     {
-        editorDate.clear();
-        changedDate = true;
+        ImGui::SameLine();
+        if (ImGui::Button("Clear"))
+        {
+            editorDate.clear();
+            changedDate = true;
+        }
     }
 
     // MONTH SELECTION
@@ -74,10 +79,11 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     {
         viewedMonth = viewedMonth == 12 ? 1 : viewedMonth + 1;
     }
+    const ImVec2 incrementButtonSize = ImGui::GetItemRectSize();
 
     // YEAR INPUT
     int yearInput = viewedYear;
-    if (ImGui::Button("-", gui_sizes::date_editor::yearIncrementButtonSize))
+    if (ImGui::Button("-", incrementButtonSize))
     {
         viewedYear = TimeWrapper::limitYearToValidRange(viewedYear - 1);
     }
@@ -88,7 +94,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
         viewedYear = TimeWrapper::limitYearToValidRange(yearInput);
     }
     ImGui::SameLine();
-    if (ImGui::Button("+", gui_sizes::date_editor::yearIncrementButtonSize))
+    if (ImGui::Button("+", incrementButtonSize))
     {
         viewedYear = TimeWrapper::limitYearToValidRange(viewedYear + 1);
     }
@@ -106,6 +112,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
 
     unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
+    const float monthDayButtonSize = ImGui::GetContentRegionAvail().x / 7.0f - (6 * gui_sizes::date_editor::monthDayButtonSpacing.x);
 
     auto addCalendarDay = [&](int month, int dayDisplayNumber)
     {
@@ -123,7 +130,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
             pushedVarCount++;
         }
-        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), gui_sizes::date_editor::monthDayButtonSize))
+        if (ImGui::Button(std::to_string(dayDisplayNumber).append("##").append(std::to_string(month)).c_str(), ImVec2(monthDayButtonSize, monthDayButtonSize)))
         {
             unsigned int selectedDayYear = viewedYear;
             if (viewedMonth == 1 && month == 12) { selectedDayYear--; } // Viewing january and clicked a day from previous year's december
@@ -195,6 +202,11 @@ void gui_templates::TextWithBackground(const ImVec2& size, const char *fmt, ...)
     ImGui::PopItemFlag();
 }
 
+bool gui_templates::ImageButtonStyleColored(const char *idLabel, ImTextureID textureID, ImVec2 size, ImVec2 uv0, ImVec2 uv1, ImVec4 bgColor, ImGuiButtonFlags buttonFlags)
+{
+    return ImGui::ImageButtonEx(ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonFlags);
+}
+
 bool gui_templates::TimeEditor(TimeContainer& editorTime)
 {
     bool madeEdits = false;
@@ -241,43 +253,48 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime)
 
 bool gui_templates::SelectOptionButton(const SelectOption &selectOption, const char *idLabel, ImVec2 size, ImGuiButtonFlags flags)
 {
+    bool buttonPressed = false;
     size_t pushedColorCount = 0;
     ImVec4 baseColor = gui_colors::selectOptionColors.at(selectOption.color);
+
     gui_helpers::PushStyleColorHsl(ImGuiCol_Button, baseColor); pushedColorCount++;
     gui_helpers::PushStyleColorHsl(ImGuiCol_ButtonHovered, gui_color_calculations::getHoverColorFromBase(baseColor)); pushedColorCount++;
     gui_helpers::PushStyleColorHsl(ImGuiCol_ButtonActive, gui_color_calculations::getActiveColorFromBase(baseColor)); pushedColorCount++;
     ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorBlack); pushedColorCount++;
-
-    gui_color_calculations::getHoverColorFromBase(gui_colors::selectOptionColors.at(SelectColor_Blue));
-
+    size_t pushedStyleVarCount = 0;
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, gui_style_vars::labelButtonRounding); pushedStyleVarCount++;
     if (ImGui::ButtonEx(std::string(selectOption.name).append(idLabel).c_str(), ImVec2(0, 0), flags))
     {
-        ImGui::PopStyleColor(pushedColorCount);
-        return true;
+        buttonPressed = true;
     }
     ImGui::PopStyleColor(pushedColorCount);
+    ImGui::PopStyleVar(pushedStyleVarCount);
 
-    return false;
+    return buttonPressed;
 }
 
-bool gui_templates::SelectOptionSelectable(const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size, ImGuiSelectableFlags flags)
+bool gui_templates::SelectOptionSelectable(const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size, ImGuiButtonFlags flags)
 {
+    bool selectablePressed = false;
     size_t pushedColorCount = 0;
     ImVec4 baseColor = gui_colors::selectOptionColors.at(selectOption.color);
+
     // Use base color if selected or disabled color if not selected
-    gui_helpers::PushStyleColorHsl(ImGuiCol_Header, *selected ? baseColor : gui_color_calculations::getDisabledColorFromBase(baseColor)); pushedColorCount++;
-    gui_helpers::PushStyleColorHsl(ImGuiCol_HeaderHovered, gui_color_calculations::getHoverColorFromBase(baseColor)); pushedColorCount++;
-    gui_helpers::PushStyleColorHsl(ImGuiCol_HeaderActive, gui_color_calculations::getActiveColorFromBase(baseColor)); pushedColorCount++;
+    gui_helpers::PushStyleColorHsl(ImGuiCol_Button, *selected ? baseColor : gui_color_calculations::getDisabledColorFromBase(baseColor)); pushedColorCount++;
+    gui_helpers::PushStyleColorHsl(ImGuiCol_ButtonHovered, gui_color_calculations::getHoverColorFromBase(baseColor)); pushedColorCount++;
+    gui_helpers::PushStyleColorHsl(ImGuiCol_ButtonActive, gui_color_calculations::getActiveColorFromBase(baseColor)); pushedColorCount++;
     ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorBlack); pushedColorCount++;
-    if (ImGui::Selectable(std::string(selectOption.name).append(idLabel).c_str(), true, flags, size))
+    size_t pushedStyleVarCount = 0;
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, gui_style_vars::labelButtonRounding); pushedStyleVarCount++;
+    if (ImGui::ButtonEx(std::string(selectOption.name).append(idLabel).c_str(), size, flags))
     {
         *selected = !*selected;
-        ImGui::PopStyleColor(pushedColorCount);
-        return true;
+        selectablePressed = true;
     }
     ImGui::PopStyleColor(pushedColorCount);
+    ImGui::PopStyleVar(pushedStyleVarCount);
 
-    return false;
+    return selectablePressed;
 }
 
 int gui_callbacks::filterNumbers(ImGuiInputTextCallbackData* data)
@@ -303,6 +320,17 @@ int gui_callbacks::filterAlphanumerics(ImGuiInputTextCallbackData* data)
 void gui_helpers::PushStyleColorHsl(ImGuiCol color, ImVec4 hslColor)
 {
     ImGui::PushStyleColor(color, gui_color_calculations::hslToRgb(hslColor));
+}
+
+float gui_size_calculations::getTextButtonWidth(const char* label)
+{
+    return ImGui::CalcTextSize(label, NULL, true).x;
+}
+
+float gui_size_calculations::getSelectOptionSelectableWidth()
+{
+    float labelWidth = getTextButtonWidth(std::string(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, 'W').c_str());
+    return labelWidth + ImGui::GetStyle().FramePadding.x * 2.0f;
 }
 
 void gui_color_calculations::rgbToHsl(float r, float g, float b, float &out_h, float &out_s, float &out_l)
@@ -428,4 +456,10 @@ ImVec4 gui_color_calculations::getDisabledColorFromBase(ImVec4 base)
  
     light = std::max(light - light_sub, 0); 
     return ImVec4(base.x, base.y, light / 100.0f, base.w);
+}
+
+ImVec4 gui_color_calculations::getTableCellHighlightColor(ImVec4 backgroundColor, ImVec4 fontColor)
+{
+    ImVec4 sum = ImVec4(backgroundColor.x + fontColor.x, backgroundColor.y + fontColor.y, backgroundColor.z + fontColor.z, backgroundColor.w);
+    return ImVec4(sum.x / 2.0f, sum.y / 2.0f, sum.z / 2.0f, sum.w);
 }

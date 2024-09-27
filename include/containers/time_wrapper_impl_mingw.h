@@ -1,6 +1,6 @@
 #pragma once
 
-#include <iostream>
+// #include <iostream>
 #include <chrono>
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -14,6 +14,7 @@
 #include <timezoneapi.h>
 #include <datetimeapi.h>
 
+// This using is FINE since only time_wrapper.cpp includes this file and it already uses this namespace anyway.
 using namespace std::chrono;
 
 // Expects the time zone to be the same as in getTimeZoneOffsetMinutesUTC().

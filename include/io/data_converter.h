@@ -11,22 +11,20 @@
 #include "weekday_container.h"
 #include "schedule_column.h"
 #include "element.h"
-using namespace blf;
-using namespace blf::file;
 
 struct BLF_Base;
 
 class ObjectDefinitions
 {
     private:
-        std::map<std::string, const std::shared_ptr<ObjectDefinition>> m_localObjectDefinitions = {};
-        LocalObjectTable m_objectTable;
+        std::map<std::string, const std::shared_ptr<blf::ObjectDefinition>> m_localObjectDefinitions = {};
+        blf::LocalObjectTable m_objectTable;
     public:
-        LocalObjectTable& getObjectTable();
-        const LocalObjectTable& getObjectTableConst() const;
+        blf::LocalObjectTable& getObjectTable();
+        const blf::LocalObjectTable& getObjectTableConst() const;
 
         template <typename T>
-        void add(LocalObjectDefinition<T>& definition)
+        void add(blf::LocalObjectDefinition<T>& definition)
         {
             static_assert(std::is_base_of_v<BLF_Base, T> == true);
             if (m_localObjectDefinitions.contains(definition.getName()))
@@ -34,13 +32,13 @@ class ObjectDefinitions
                 printf("ObjectDefinitions::add(definition): Tried to add duplicate object definition with name %s\n", definition.getName().getBuffer());
                 return;
             }
-            m_localObjectDefinitions.insert({definition.getName(), std::make_shared<LocalObjectDefinition<T>>(definition)});
+            m_localObjectDefinitions.insert({definition.getName(), std::make_shared<blf::LocalObjectDefinition<T>>(definition)});
         }
         template <typename T>
-        const LocalObjectDefinition<T>& get()
+        const blf::LocalObjectDefinition<T>& get()
         {
             static_assert(std::is_base_of_v<BLF_Base, T> == true);
-            return *std::dynamic_pointer_cast<LocalObjectDefinition<T>>(m_localObjectDefinitions.at(T::getName()));
+            return *std::dynamic_pointer_cast<blf::LocalObjectDefinition<T>>(m_localObjectDefinitions.at(T::getName()));
         }
 };
 
@@ -80,9 +78,9 @@ struct BLF_Date : BLF_Base
 	static void addDefinition(ObjectDefinitions& definitions)
 	{
 		definitions.add(definitions.getObjectTable().define<BLF_Date>(getName(),
-			arg("year", &BLF_Date::year),
-			arg("month", &BLF_Date::month),
-			arg("monthDay", &BLF_Date::monthDay)
+			blf::arg("year", &BLF_Date::year),
+			blf::arg("month", &BLF_Date::month),
+			blf::arg("monthDay", &BLF_Date::monthDay)
 		));
 	}
 };
@@ -103,7 +101,7 @@ struct BLF_FileInfo : BLF_Base
 	static void addDefinition(ObjectDefinitions& definitions)
 	{
 		definitions.add(definitions.getObjectTable().define<BLF_FileInfo>(getName(),
-			arg("editDate", &BLF_FileInfo::editDate, definitions.get<BLF_Date>())
+			blf::arg("editDate", &BLF_FileInfo::editDate, definitions.get<BLF_Date>())
 		));
 	}
 };
@@ -141,11 +139,11 @@ struct BLF_ElementInfo : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_ElementInfo>(getName(), 
-            arg("creationYear", &BLF_ElementInfo::creationYear),
-            arg("creationMonth", &BLF_ElementInfo::creationMonth),
-            arg("creationMday", &BLF_ElementInfo::creationMday),
-            arg("creationHours", &BLF_ElementInfo::creationHours),
-            arg("creationMinutes", &BLF_ElementInfo::creationMinutes)
+            blf::arg("creationYear", &BLF_ElementInfo::creationYear),
+            blf::arg("creationMonth", &BLF_ElementInfo::creationMonth),
+            blf::arg("creationMday", &BLF_ElementInfo::creationMday),
+            blf::arg("creationHours", &BLF_ElementInfo::creationHours),
+            blf::arg("creationMinutes", &BLF_ElementInfo::creationMinutes)
         ));
     }
 };
@@ -177,8 +175,8 @@ struct BLF_Element<bool> : BLF_Base
 	static void addDefinition(ObjectDefinitions& definitions)
 	{
 		definitions.add(definitions.getObjectTable().define<BLF_Element<bool>>(getName(),
-			arg("info", &BLF_Element<bool>::info, definitions.get<BLF_ElementInfo>()),
-			arg("value", &BLF_Element<bool>::value)
+			blf::arg("info", &BLF_Element<bool>::info, definitions.get<BLF_ElementInfo>()),
+			blf::arg("value", &BLF_Element<bool>::value)
 		));
 	}
 };
@@ -207,8 +205,8 @@ struct BLF_Element<int> : BLF_Base
 	static void addDefinition(ObjectDefinitions& definitions)
 	{
 		definitions.add(definitions.getObjectTable().define<BLF_Element<int>>(getName(),
-			arg("info", &BLF_Element<int>::info, definitions.get<BLF_ElementInfo>()),
-			arg("value", &BLF_Element<int>::value)
+			blf::arg("info", &BLF_Element<int>::info, definitions.get<BLF_ElementInfo>()),
+			blf::arg("value", &BLF_Element<int>::value)
 		));
 	}
 };
@@ -237,8 +235,8 @@ struct BLF_Element<double> : BLF_Base
 	static void addDefinition(ObjectDefinitions& definitions)
 	{
 		definitions.add(definitions.getObjectTable().define<BLF_Element<double>>(getName(),
-			arg("info", &BLF_Element<double>::info, definitions.get<BLF_ElementInfo>()),
-			arg("value", &BLF_Element<double>::value)
+			blf::arg("info", &BLF_Element<double>::info, definitions.get<BLF_ElementInfo>()),
+			blf::arg("value", &BLF_Element<double>::value)
 		));
 	}
 };
@@ -267,8 +265,8 @@ struct BLF_Element<std::string> : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_Element<std::string>>(getName(),
-            arg("info", &BLF_Element<std::string>::info, definitions.get<BLF_ElementInfo>()),
-            arg("value", &BLF_Element<std::string>::value)
+            blf::arg("info", &BLF_Element<std::string>::info, definitions.get<BLF_ElementInfo>()),
+            blf::arg("value", &BLF_Element<std::string>::value)
         ));
     }
 };
@@ -316,8 +314,8 @@ struct BLF_Element<SelectContainer> : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_Element<SelectContainer>>(getName(),
-            arg("info", &BLF_Element<SelectContainer>::info, definitions.get<BLF_ElementInfo>()),
-            arg("selectionIndices", &BLF_Element<SelectContainer>::selectionIndices)
+            blf::arg("info", &BLF_Element<SelectContainer>::info, definitions.get<BLF_ElementInfo>()),
+            blf::arg("selectionIndices", &BLF_Element<SelectContainer>::selectionIndices)
         ));
     }
 };
@@ -369,8 +367,8 @@ struct BLF_Element<WeekdayContainer> : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_Element<WeekdayContainer>>(getName(),
-            arg("info", &BLF_Element<WeekdayContainer>::info, definitions.get<BLF_ElementInfo>()),
-            arg("selectionIndices", &BLF_Element<WeekdayContainer>::selectionIndices)
+            blf::arg("info", &BLF_Element<WeekdayContainer>::info, definitions.get<BLF_ElementInfo>()),
+            blf::arg("selectionIndices", &BLF_Element<WeekdayContainer>::selectionIndices)
         ));
     }
 };
@@ -401,9 +399,9 @@ struct BLF_Element<TimeContainer> : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_Element<TimeContainer>>(getName(),
-            arg("info", &BLF_Element<TimeContainer>::info, definitions.get<BLF_ElementInfo>()),
-            arg("hours", &BLF_Element<TimeContainer>::hours),
-            arg("minutes", &BLF_Element<TimeContainer>::minutes)
+            blf::arg("info", &BLF_Element<TimeContainer>::info, definitions.get<BLF_ElementInfo>()),
+            blf::arg("hours", &BLF_Element<TimeContainer>::hours),
+            blf::arg("minutes", &BLF_Element<TimeContainer>::minutes)
         ));
     }
 };
@@ -444,11 +442,11 @@ struct BLF_Element<DateContainer> : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_Element<DateContainer>>(getName(),
-            arg("info", &BLF_Element<DateContainer>::info, definitions.get<BLF_ElementInfo>()),
-            arg("empty", &BLF_Element<DateContainer>::empty),
-            arg("year", &BLF_Element<DateContainer>::year),
-            arg("month", &BLF_Element<DateContainer>::month),
-            arg("mday", &BLF_Element<DateContainer>::mday)
+            blf::arg("info", &BLF_Element<DateContainer>::info, definitions.get<BLF_ElementInfo>()),
+            blf::arg("empty", &BLF_Element<DateContainer>::empty),
+            blf::arg("year", &BLF_Element<DateContainer>::year),
+            blf::arg("month", &BLF_Element<DateContainer>::month),
+            blf::arg("mday", &BLF_Element<DateContainer>::mday)
         ));
     }
 };
@@ -485,9 +483,9 @@ struct BLF_FilterRule : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_FilterRule<T>>(getName(),
-            arg("passValueElement", &BLF_FilterRule<T>::passValueElement, definitions.get<BLF_Element<T>>()),
-            arg("comparison", &BLF_FilterRule<T>::comparison),
-            arg("dateCompareToCurrent", &BLF_FilterRule<T>::dateCompareToCurrent)
+            blf::arg("passValueElement", &BLF_FilterRule<T>::passValueElement, definitions.get<BLF_Element<T>>()),
+            blf::arg("comparison", &BLF_FilterRule<T>::comparison),
+            blf::arg("dateCompareToCurrent", &BLF_FilterRule<T>::dateCompareToCurrent)
         ));
     }
 };
@@ -576,8 +574,8 @@ struct BLF_Filter : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_Filter<T>>(getName(),
-            arg("logicalOperator", &BLF_Filter<T>::logicalOperator),
-            arg("rules", &BLF_Filter<T>::rules, definitions.get<BLF_FilterRule<T>>())
+            blf::arg("logicalOperator", &BLF_Filter<T>::logicalOperator),
+            blf::arg("rules", &BLF_Filter<T>::rules, definitions.get<BLF_FilterRule<T>>())
         ));
     }
 };
@@ -670,10 +668,10 @@ struct BLF_FilterGroup : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_FilterGroup<T>>(getName(),
-            arg("logicalOperator", &BLF_FilterGroup<T>::logicalOperator),
-            arg("name", &BLF_FilterGroup<T>::name),
-            arg("enabled", &BLF_FilterGroup<T>::enabled),
-            arg("filters", &BLF_FilterGroup<T>::filters, definitions.get<BLF_Filter<T>>())
+            blf::arg("logicalOperator", &BLF_FilterGroup<T>::logicalOperator),
+            blf::arg("name", &BLF_FilterGroup<T>::name),
+            blf::arg("enabled", &BLF_FilterGroup<T>::enabled),
+            blf::arg("filters", &BLF_FilterGroup<T>::filters, definitions.get<BLF_Filter<T>>())
         ));
     }
 };
@@ -751,8 +749,8 @@ struct BLF_SelectOption : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
 	{
 		definitions.add(definitions.getObjectTable().define<BLF_SelectOption>(getName(),
-			arg("name", &BLF_SelectOption::name),
-			arg("colorEnum", &BLF_SelectOption::colorEnum)
+			blf::arg("name", &BLF_SelectOption::name),
+			blf::arg("colorEnum", &BLF_SelectOption::colorEnum)
 		));
 	}
 };
@@ -792,7 +790,7 @@ struct BLF_SelectOptions : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
 	{
 		definitions.add(definitions.getObjectTable().define<BLF_SelectOptions>(getName(),
-			arg("options", &BLF_SelectOptions::options, definitions.get<BLF_SelectOption>())
+			blf::arg("options", &BLF_SelectOptions::options, definitions.get<BLF_SelectOption>())
 		));
 	}
 };
@@ -875,16 +873,16 @@ struct BLF_Column : BLF_Base
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_Column<T>>(getName(),
-            arg("index", &BLF_Column<T>::index),
-            arg("type", &BLF_Column<T>::type),
-            arg("name", &BLF_Column<T>::name),
-            arg("permanent", &BLF_Column<T>::permanent),
-            arg("flags", &BLF_Column<T>::flags),
-            arg("sort", &BLF_Column<T>::sort),
-            arg("resetOption", &BLF_Column<T>::resetOption),
-            arg("selectOptions", &BLF_Column<T>::selectOptions, definitions.get<BLF_SelectOptions>()),
-            arg("elements", &BLF_Column<T>::elements, definitions.get<BLF_Element<T>>()),
-            arg("filterGroups", &BLF_Column<T>::filterGroups, definitions.get<BLF_FilterGroup<T>>())
+            blf::arg("index", &BLF_Column<T>::index),
+            blf::arg("type", &BLF_Column<T>::type),
+            blf::arg("name", &BLF_Column<T>::name),
+            blf::arg("permanent", &BLF_Column<T>::permanent),
+            blf::arg("flags", &BLF_Column<T>::flags),
+            blf::arg("sort", &BLF_Column<T>::sort),
+            blf::arg("resetOption", &BLF_Column<T>::resetOption),
+            blf::arg("selectOptions", &BLF_Column<T>::selectOptions, definitions.get<BLF_SelectOptions>()),
+            blf::arg("elements", &BLF_Column<T>::elements, definitions.get<BLF_Element<T>>()),
+            blf::arg("filterGroups", &BLF_Column<T>::filterGroups, definitions.get<BLF_FilterGroup<T>>())
         ));
     }
 };
@@ -961,7 +959,7 @@ class DataConverter
             addObjectDefinition<BLF_Column<T>>();
         }
         template <typename T>
-        const LocalObjectDefinition<T>& getObjectDefinition()
+        const blf::LocalObjectDefinition<T>& getObjectDefinition()
         {
             return m_definitions.get<T>();
         }
@@ -970,7 +968,7 @@ class DataConverter
 
         // Adds the Column (and its elements, filters, etc to the provided DataTable), assuming that the Columns (and their elements, filters) are of the provided type.
         template <typename T>
-        void addColumnToData(DataTable& data, const Column& column, size_t columnIndex)
+        void addColumnToData(blf::file::DataTable& data, const Column& column, size_t columnIndex)
         {
             BLF_Column<T> blfColumn = BLF_Column<T>(&column, columnIndex);
             data.insert(getObjectDefinition<BLF_Column<T>>().serialize(blfColumn));

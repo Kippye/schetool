@@ -14,11 +14,20 @@
 
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui) : m_scheduleCore(scheduleCore), Gui(ID), m_mainMenuBarGui(mainMenuBarGui)
 {
-    // TEMP ?
-    m_font32x = ImGui::GetIO().Fonts->AddFontFromFileTTF("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf", 32.0f);
-
 	addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
 	addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
+}
+
+// Checks if the current table cell was clicked to edit.
+// NOTE: This very much assumes that the function was called from a valid point in a table!
+// Actual applied checks:
+// 1. Editing this column isn't disabled
+// 2. The left mouse button was clicked
+// 3. The current column and row are being hovered
+// 4. A column resize border is NOT being hovered
+bool ScheduleGui::isEditableElementClicked(bool isEditingDisabled) const
+{
+    return isEditingDisabled == false && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1;
 }
 
 void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
@@ -26,33 +35,34 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
     if (m_visible == false) { return; }
 
     ImGuiStyle style = ImGui::GetStyle();
-    ImVec2 labelSize = ImGui::CalcTextSize("M", NULL, true);
-    float resetButtonSize = ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
-    const float SCHEDULE_TOP_BAR_HEIGHT = resetButtonSize + style.ItemSpacing.y * 2;
-    const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
-    const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
-    const float SCHEDULE_OFFSET = SCHEDULE_TOP_BAR_HEIGHT + 32.0f;
-    const float CHILD_WINDOW_WIDTH = (float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 8);
-    const float CHILD_WINDOW_HEIGHT = (float)(window.SCREEN_HEIGHT - SCHEDULE_OFFSET - ADD_ROW_BUTTON_HEIGHT - 16.0f);
     //ImGui::SetNextWindowSizeConstraints(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT), ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
 	ImGui::SetNextWindowSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT));
+	ImGui::SetNextWindowContentSize(ImVec2((float)window.SCREEN_WIDTH, (float)window.SCREEN_HEIGHT) - style.WindowPadding * 2.0f);
 	ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 
 	ImGui::Begin(m_ID.c_str(), NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
         // Add menu bar height as offset
         if (m_mainMenuBarGui)
         {
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + m_mainMenuBarGui->getHeight());
+            ImGui::SetCursorPosY(m_mainMenuBarGui->getHeight());
         }
-        if (ImGui::ImageButton("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset"), ImVec2(resetButtonSize, resetButtonSize) - style.FramePadding * 2.0f))
-        {
-            m_scheduleDateOverride.clear();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("View specific date"))
+        // Current date text
+        const TimeWrapper& currentDate = m_scheduleDateOverride.getIsEmpty() == false ? m_scheduleDateOverride : TimeWrapper::getCurrentTime();
+        const std::string_view currentDateFmt = currentDate.getMonthDayUTC() < 10 ? "{:%A,%e. %B %Y}" : "{:%A, %e. %B %Y}";
+        std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? currentDate.getDynamicFmtString(currentDateFmt) : currentDate.getDynamicFmtStringUTC(currentDateFmt);
+        ImGui::PushFont(InterfaceStyleHandler::getFontData(InterfaceStyleHandler::getFontSize() == FontSize::Large ? FontSize::Large : (FontSize)((int)InterfaceStyleHandler::getFontSize() + 1)));
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2.0f - gui_size_calculations::getTextButtonWidth(viewedDateText.c_str()) / 2.0f);
+        auto currentTimeUTC = TimeWrapper::getCurrentTime().getTimeUTC();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(ImGui::GetStyle().WindowPadding.x, 0.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, m_scheduleDateOverride.getIsEmpty() ? 1.0f 
+            : 0.25f + std::abs(std::sin(std::chrono::milliseconds(std::chrono::floor<std::chrono::milliseconds>(currentTimeUTC) - std::chrono::floor<std::chrono::days>(currentTimeUTC)).count() / 800.f)));
+        if (ImGui::Button(std::format("{}##ScheduleViewDateButton", viewedDateText).c_str()))
         {
             m_openDateSelectPopup = true;
         }
+        const float scheduleHeaderTextHeight = ImGui::GetItemRectSize().y;
+        ImGui::PopStyleVar(2);
+        ImGui::PopFont();
         if (ImGui::BeginPopup("Schedule Date Selector"))
         {
             // Display date editor to edit m_scheduleDateOverride.
@@ -71,30 +81,39 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
             ImGui::OpenPopup("Schedule Date Selector");
             m_openDateSelectPopup = false;
         }
-        ImGui::SameLine();
-        // Current date text
-        const TimeWrapper& currentDate = m_scheduleDateOverride.getIsEmpty() == false ? m_scheduleDateOverride : TimeWrapper::getCurrentTime();
-        const std::string_view currentDateFmt = currentDate.getMonthDayUTC() < 10 ? "{:%A,%e. %B %Y}" : "{:%A, %e. %B %Y}";
-        std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? currentDate.getDynamicFmtString(currentDateFmt) : currentDate.getDynamicFmtStringUTC(currentDateFmt);
-        // std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true ? TimeWrapper::getCurrentTime().getString(TIME_FORMAT_DATE) : m_scheduleDateOverride.getStringUTC(TIME_FORMAT_DATE);
-        ImGui::PushFont(m_font32x);
-        const float viewedDateTextWidth = ImGui::CalcTextSize(viewedDateText.c_str()).x;
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2.0f - viewedDateTextWidth / 2.0f);
-        ImGui::Text("%s", viewedDateText.c_str());
-        ImGui::PopFont();
-        // TODO: For the schedule table, combine
-		// Reorderable, hideable, with headers & ImGuiTableFlags_ScrollY and background colours and context menus in body and custom headers
+        // Show a reset button when viewing a different date
+        // Preset button size because it uses a preset size texture variant
+        const float resetButtonSize = 24.0f; //ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
+        if (m_scheduleDateOverride.getIsEmpty() == false)
+        {
+            ImGui::SameLine();
+            ImGui::SetCursorPosY(ImGui::GetItemRectMin().y + ImGui::GetItemRectSize().y / 2.0f - resetButtonSize / 2.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+            if (gui_templates::ImageButtonStyleColored("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset_24px"), ImVec2(resetButtonSize, resetButtonSize)))
+            {
+                m_scheduleDateOverride.clear();
+            }
+            ImGui::PopStyleVar();
+        }
+
+        const float SCHEDULE_TOP_BAR_HEIGHT = scheduleHeaderTextHeight + m_mainMenuBarGui->getHeight();// + style.ItemSpacing.y * 2;
+        const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
+        const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
+        const float CHILD_WINDOW_WIDTH = (float)(window.SCREEN_WIDTH - ADD_COLUMN_BUTTON_WIDTH - 8);
+        const float CHILD_WINDOW_HEIGHT = (float)(window.SCREEN_HEIGHT - SCHEDULE_TOP_BAR_HEIGHT - ADD_ROW_BUTTON_HEIGHT - 16.0f);
+
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-	    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_OFFSET));
+	    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_TOP_BAR_HEIGHT));
 		ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
-			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_Borders;
+			ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX;
             // avoid imgui 0 column abort by not beginning the table at all if there are no columns in the schedule
             if (m_scheduleCore.getColumnCount() == 0)
             {
                 goto skip_schedule_table;
             }
-			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags))
-			{ 
+			if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags, ImGui::GetContentRegionAvail()))
+			{
+                ImGui::GetCurrentTable()->DisableDefaultContextMenu = true;
 				for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 				{
 					ImGui::TableSetupColumn(m_scheduleCore.getColumn(column)->name.c_str());
@@ -106,7 +125,9 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                 {
                     ImGui::TableSetColumnIndex(column);
 
-                    if (ImGui::SmallButton(std::string("+##addFilterGroup").append(std::to_string(column)).c_str()))
+                    const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+                    float addFilterButtonSize = ImGui::CalcItemSize(ImVec2(0.0f, 0.0f), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f).y;
+                    if (ImGui::Button(std::format("+##addFilterGroup{}", column).c_str(), ImVec2(addFilterButtonSize, addFilterButtonSize)))
                     {
                         // display the FilterGroup editor to add a filter group to this Column
                         if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
@@ -114,7 +135,6 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                             filterEditor->createGroupAndEdit(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                         }
                     }
-                    const float addButtonWidth = ImGui::GetItemRectSize().x;
                         
                     if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui"))
                     {
@@ -198,31 +218,57 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 				{
 					ImGui::TableSetColumnIndex(column);
 					const char* columnName = ImGui::TableGetColumnName(column); // get name passed to TableSetupColumn()
+                    bool isColumnHeaderHovered = (ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
 					ImGui::PushID(column);
-					// sort button!
-					if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+                    float headerCursorY = ImGui::GetCursorPosY();
+                    size_t pushedStyleVars = 0;
+					// HIDE the sort button if the column header is not hovered and the column does not have a sort direction applied
+                    if (isColumnHeaderHovered == false && m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE)
 					{
-						setColumnSort.invoke(column, m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
+                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+                        pushedStyleVars++;
 					}
-					ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-					// close button
+                    // sort button!
+                    if (ImGui::ArrowButton(std::string("##sortColumn").append(std::to_string(column)).c_str(), m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? ImGuiDir_Right : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+                    {
+                        setColumnSort.invoke(column, m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE ? COLUMN_SORT_DESCENDING : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
+                    }
+                    ImGui::PopStyleVar(pushedStyleVars);
+                    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+					ImGui::TableHeader(columnName);
+                    ImGuiID tableHeaderID = ImGui::GetItemID();
+                    ImGuiTable* currentTable = ImGui::GetCurrentTable();
+					// Show a close button on the right when hovered
 					// permanent columns can't be removed so there's no need for a remove button
-					if (m_scheduleCore.getColumn(column)->permanent == false)
+					if (isColumnHeaderHovered && m_scheduleCore.getColumn(column)->permanent == false)
 					{
-						if (ImGui::Button("X##removecolumn", ImVec2(20.0, 20.0)))
+                        // This is how the arrow button's size is calculated
+                        float headerButtonSize = ImGui::CalcTextSize("W").y;
+                        // SameLine() can't be used after a TableHeader so the position has to be calculated manually.
+                        ImGui::SetCursorScreenPos(ImVec2(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column).Max.x - headerButtonSize - 8.0f, ImGui::GetCursorScreenPos().y));
+                        ImGui::SetCursorPosY(headerCursorY);
+                        size_t pushedColorCount = 0;
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
+                        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
+                        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
+                        if (gui_templates::ImageButtonStyleColored("##RemoveColumn", (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(headerButtonSize, headerButtonSize)))
 						{
 							removeColumn.invoke(column);
+                            ImGui::PopStyleColor(pushedColorCount);
                             ImGui::PopID();
                             ImGui::EndTable();
                             goto skip_schedule_table;
 						}
-						ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+                        ImGui::PopStyleColor(pushedColorCount);
 					}
-					ImGui::TableHeader(columnName);
 					// column header context menu
-                    if (ImGui::BeginPopupContextItem("#ColumnEdit"))
+                    if (isColumnHeaderHovered && (ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonLeft) || ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonRight)) && (ImGui::IsAnyItemHovered() == false || ImGui::GetHoveredID() == tableHeaderID))
                     {
-						displayColumnContextPopup(column, tableFlags);
+                        ImGui::TableOpenContextMenu(column);
+                    }
+                    if (ImGui::GetCurrentTable()->ContextPopupColumn == column && ImGui::TableBeginContextMenuPopup(ImGui::GetCurrentTable()))
+                    {
+						displayColumnContextPopup(column, currentTable, tableFlags);
                         ImGui::EndPopup();
                     }
 					ImGui::PopID();
@@ -251,6 +297,29 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 					ImGui::TableNextRow();
 					for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 					{
+						ImGui::TableSetColumnIndex(column);
+						// Row remove buttons are displayed in the first displayed column
+						if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0)
+						{
+                            size_t pushedStyleVars = 0;
+                            // HIDE the row remove button unless the row is hovered
+                            if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex())
+                            {
+                                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+                                pushedStyleVars++;
+                            }
+                            const float labelSize = ImGui::CalcTextSize("X").y;
+                            const float rowRemoveButtonSize = labelSize - (int)labelSize % 8; //+ style.FramePadding.y * 2.0f;
+							if (gui_templates::ImageButtonStyleColored(std::format("X##RemoveRow{}", row).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(rowRemoveButtonSize, rowRemoveButtonSize)))
+							{
+								removeRow.invoke(row);
+								// break because this row can't be drawn anymore, it was removed.
+								break;
+							}
+                            ImGui::PopStyleVar(pushedStyleVars);
+							ImGui::SameLine();
+						}
+
                         bool columnEditDisabled = false;
                         // If viewing a different date and the column has a reset option then show it disabled 
                         if (m_scheduleDateOverride.getIsEmpty() == false && m_scheduleCore.getColumn(column)->resetOption != ColumnResetOption::Never)
@@ -260,50 +329,71 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
                         }
 
-						ImGui::TableSetColumnIndex(column);
-						// the buttons for removing rows are displayed in the first displayed column
-						if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0)
-						{
-							if (ImGui::Button(std::string("X##").append(std::to_string(row)).c_str(), ImVec2(26.0, 26.0)))
-							{
-								removeRow.invoke(row);
-								// break because this row can't be drawn anymore, it was removed.
-								break;
-							}
-							ImGui::SameLine();
-						}
-
 						SCHEDULE_TYPE columnType = m_scheduleCore.getColumn(column)->type;
 						// TODO: i could probably reduce the code repetition here
 						ImGui::SetNextItemWidth(-FLT_MIN);
+
+                        // Hightlight the table cell that is currently being edited in the element editor subgui
+                        if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                        {
+                            if (elementEditor->getOpenThisFrame() && std::pair<size_t, size_t>(column, row) == elementEditor->getCoordinates())
+                            {
+	                            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(gui_color_calculations::getTableCellHighlightColor(style.Colors[ImGuiCol_WindowBg], style.Colors[ImGuiCol_Text])));
+                            }
+                        }
  
 						switch(columnType)
 						{
 							case(SCH_BOOL):
 							{
                                 bool newValue = getElementValue<bool>(column, row, columnEditDisabled);
+                                // ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible); // Use a different background color sometime!
                                 if (ImGui::Checkbox(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue))
                                 {
                                     setElementValueBool.invoke(column, row, newValue);
                                 }
+                                // I will make an exception for this. To avoid the infamous Double Check™ this will have an additional check for whether any item (cough cough, remove row button) is being hovered. Happy now?
+                                if (isEditableElementClicked(columnEditDisabled) && ImGui::IsAnyItemHovered() == false)
+                                {
+                                    setElementValueBool.invoke(column, row, !newValue);
+                                }
+                                // ImGui::PopStyleColor();
 								break;
 							}
 							case(SCH_NUMBER):
 							{
                                 int newValue = getElementValue<int>(column, row, columnEditDisabled);
+                                ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
+                                // if (isEditableElementClicked(columnEditDisabled))
+                                // {
+                                //     ImGui::SetKeyboardFocusHere();
+                                // }
                                 if (ImGui::InputInt(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     setElementValueNumber.invoke(column, row, newValue);
                                 }
+                                // TEMP HACK Workaround to not lose focus instantly when clicking?
+                                if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1)
+                                {
+                                    ImGui::SetKeyboardFocusHere(-1);
+                                }
+                                ImGui::PopStyleColor();
 								break;
 							}
 							case(SCH_DECIMAL):
 							{
                                 double newValue = getElementValue<double>(column, row, columnEditDisabled);
+                                ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
                                 if (ImGui::InputDouble(std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(), &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue))
                                 {
                                     setElementValueDecimal.invoke(column, row, newValue);
                                 }
+                                // TEMP HACK Workaround to not lose focus instantly when clicking?
+                                if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1)
+                                {
+                                    ImGui::SetKeyboardFocusHere(-1);
+                                }
+                                ImGui::PopStyleColor();
 								break;
 							}
 							case(SCH_TEXT):
@@ -323,7 +413,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 // element to display the value as a wrapped, multiline text
                                 ImGui::TextWrapped("%s", displayedValue.c_str());
                                 // Open text editor if clicked while hovering the current column & row
-                                if (columnEditDisabled == false && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::IsAnyItemHovered() == false)
+                                if (isEditableElementClicked(columnEditDisabled) && ImGui::IsAnyItemHovered() == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -390,28 +480,12 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 {
                                     if (gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
-                                        // left clicking opens the editor like the user would expect
-                                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-                                        {
-                                            if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                                            {
-                                                elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                                                elementEditor->setEditorValue(value);
-                                            }
-                                        }
                                         // right clicking erases the option - bonus feature
-                                        else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                                        if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
                                         {
                                             value.setSelected(selectionIndices[i], false);
                                             setElementValueSelect.invoke(column, row, value); 
                                         }
-                                    }
-                                    // HACK to make this show when any of the options is hovered
-                                    if (i != selectedCount - 1 && ImGui::IsItemHovered())
-                                    {
-                                        ImGui::BeginTooltip();
-                                        ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
-                                        ImGui::EndTooltip();
                                     }
 
                                     displayedChars += options[selectionIndices[i]].name.length();
@@ -420,17 +494,12 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         ImGui::SameLine();
                                     }
                                 }
-
-                                // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
-                                if (selectedCount == 0)
+                                if (isEditableElementClicked(columnEditDisabled))
                                 {
-                                    if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
-                                        if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                                        {
-                                            elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                                            elementEditor->setEditorValue(value);
-                                        }
+                                        elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                        elementEditor->setEditorValue(value);
                                     }
                                 }
                                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -491,28 +560,12 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 {
                                     if (gui_templates::SelectOptionButton(SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]}, std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
-                                        // left clicking opens the editor like the user would expect
-                                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left))
-                                        {
-                                            if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                                            {
-                                                elementEditor->open(column, row, SCH_WEEKDAY, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                                                elementEditor->setEditorValue(value);
-                                            }
-                                        }
                                         // right clicking erases the option - bonus feature
-                                        else if (ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                                        if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
                                         {
                                             value.setSelected(selectionIndices[i], false);
                                             setElementValueSelect.invoke(column, row, value); 
                                         }
-                                    }
-                                    // HACK to make this show when any of the options is hovered
-                                    if (i != selectedCount - 1 && ImGui::IsItemHovered())
-                                    {
-                                        ImGui::BeginTooltip();
-                                        ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
-                                        ImGui::EndTooltip();
                                     }
 
                                     displayedChars += optionNames[selectionIndices[i]].length();
@@ -521,17 +574,13 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         ImGui::SameLine();
                                     }
                                 }
-
-                                // TEMP ? if there are no options selected, just show an "Edit" button to prevent kind of a softlock
-                                if (selectedCount == 0)
+                                // left clicking anywhere in the cell opens the editor
+                                if (isEditableElementClicked(columnEditDisabled))
                                 {
-                                    if (ImGui::Button(std::string("Edit##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
-                                        if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
-                                        {
-                                            elementEditor->open(column, row, SCH_WEEKDAY, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
-                                            elementEditor->setEditorValue(value);
-                                        }
+                                        elementEditor->open(column, row, SCH_WEEKDAY, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                        elementEditor->setEditorValue(value);
                                     }
                                 }
                                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
@@ -552,9 +601,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							case(SCH_TIME):
 							{
                                 TimeContainer value = getElementValue<TimeContainer>(column, row, columnEditDisabled);
-
-                                // Button displaying the Time of the current Time element
-                                if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str()))
+                                ImGui::Text("%s", value.getString().c_str());
+                                if (isEditableElementClicked(columnEditDisabled))
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -581,9 +629,9 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 							{
                                 auto value = getElementValue<DateContainer>(column, row, columnEditDisabled);
                             
-                                // Button displaying the date of the current Date element
-                                if (ImGui::Button(value.getString().append("##").append(std::to_string(column).append(";").append(std::to_string(row))).c_str(),
-                                    value.getIsEmpty() ? gui_sizes::emptyLabelSize : ImVec2(0, 0))) // Set minimum width for empty Date buttons 
+                                // Display the date of the current Date element
+                                ImGui::Text("%s", value.getString().c_str());
+                                if (isEditableElementClicked(columnEditDisabled))
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -614,10 +662,10 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                             ImGui::PopStyleVar();
                         }
 
-						if (ImGui::IsItemHovered())
+						if (columnEditDisabled == true && ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex())
 						{
 							ImGui::BeginTooltip();
-							ImGui::Text("Created: %s", m_scheduleCore.getElementConst(column, row)->getCreationTime().getString().c_str());
+							ImGui::Text("This column cannot be edited when viewing a different date\nbecause it has a reset option different from 'Never'.");
 							ImGui::EndTooltip();
 						}
 					}
@@ -659,12 +707,8 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
     ImGui::End();
 }
 
-void ScheduleGui::displayColumnContextPopup(unsigned int columnIndex, ImGuiTableFlags tableFlags)
+void ScheduleGui::displayColumnContextPopup(unsigned int columnIndex, ImGuiTable* table, ImGuiTableFlags tableFlags)
 {
-	// FIXME TODO STUPID HACK !!
-	ImGuiTable* table = ImGui::GetCurrentContext()->Tables.GetByIndex(0) ;
-	//ImGui::TableFindByID(ImGui::GetID("ScheduleTable"));
-
     const Column& column = *m_scheduleCore.getColumn(columnIndex);
 
 	// renaming
@@ -698,6 +742,7 @@ void ScheduleGui::displayColumnContextPopup(unsigned int columnIndex, ImGuiTable
     }
 
     // Reset setting dropdown
+    ImGui::AlignTextToFramePadding();
     ImGui::Text("Reset column:");
     ImGui::SameLine();
     if (ImGui::BeginCombo("##ColumnResetSetting", schedule_consts::columnResetOptionStrings.at(column.resetOption)))

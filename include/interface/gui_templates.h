@@ -25,10 +25,13 @@ namespace gui_templates
     bool TimeEditor(TimeContainer& editorTime);
     // Displays a button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Returns true if the button was clicked.
     bool SelectOptionButton(const SelectOption& selectOption, const char* idLabel, ImVec2 size = ImVec2(0, 0), ImGuiButtonFlags flags = ImGuiButtonFlags_None);
-    bool SelectOptionSelectable(const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size = ImVec2(0, 0), ImGuiSelectableFlags flags = ImGuiSelectableFlags_None);
+    // Displays a selectable button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Toggles selected when the button is clicked. Returns true if the button was clicked.
+    bool SelectOptionSelectable(const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size = ImVec2(0, 0), ImGuiSelectableFlags flags = ImGuiButtonFlags_None);
 
     void TextWithBackground(const char* fmt, ...);
     void TextWithBackground(const ImVec2& size, const char* fmt, ...);
+    // Displays an image button that is tinted to match the style color of text. Returns true if the button was pressed.
+    bool ImageButtonStyleColored(const char* idLabel, ImTextureID textureID, ImVec2 size, ImVec2 uv0 = ImVec2(0, 0), ImVec2 uv1 = ImVec2(1, 1), ImVec4 bgColor = ImVec4(0, 0, 0, 0), ImGuiButtonFlags buttonFlags = ImGuiButtonFlags_None);
 }
 
 namespace gui_helpers
@@ -36,6 +39,12 @@ namespace gui_helpers
     // Push a style color that is automatically converted from HSL to RGB.
     void PushStyleColorHsl(ImGuiCol color, ImVec4 hslColor);
 }
+
+namespace gui_size_calculations
+{
+    float getTextButtonWidth(const char* label);
+    float getSelectOptionSelectableWidth();
+};
 
 namespace gui_color_calculations
 {
@@ -61,4 +70,7 @@ namespace gui_color_calculations
     ImVec4 getHoverColorFromBase(ImVec4 base);
     ImVec4 getActiveColorFromBase(ImVec4 base);
     ImVec4 getDisabledColorFromBase(ImVec4 base);
+    // Calculate a likely suitable table cell highlight color (RGB) based on the text color (RGB) and window background color (RGB).
+    // Essentially gets the average of those two colors.
+    ImVec4 getTableCellHighlightColor(ImVec4 backgroundColor, ImVec4 fontColor);
 }

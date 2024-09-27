@@ -104,8 +104,9 @@ void DeleteModalSubGui::setAffectedScheduleName(const std::string& name)
 }
 
 
-MainMenuBarGui::MainMenuBarGui(const char* ID) : Gui(ID)
+MainMenuBarGui::MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler) : Gui(ID)
 {
+    m_styleHandler = styleHandler;
 	// add subguis
 	addSubGui(new NewNameModalSubGui("NewNameModalSubGui"));
 	addSubGui(new RenameModalSubGui("RenameModalSubGui"));
@@ -134,9 +135,9 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 			{
 				newSchedule();
 			}
-			if (ImGui::BeginMenu("Open", "CTRL+O"))
+			if (ImGui::BeginMenu("Open", m_fileNames.empty() == false))
 			{
-				displayScheduleList();
+				displayScheduleList(guiTextures);
 			}
             if (m_haveFileOpen == false)
             {
@@ -162,6 +163,56 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 			{
 				redoEvent.invoke();
 			}
+			ImGui::EndMenu();
+		}
+        if (ImGui::BeginMenu("Preferences"))
+		{
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Interface theme");
+            ImGui::SameLine();
+            const float styleSelectDropdownX = ImGui::GetCursorPosX();
+            if (ImGui::BeginCombo("##StyleSelectDropdown", m_styleHandler->styleDefinitions.at(m_styleHandler->getCurrentStyle()).name))
+            {
+                for (const auto& [styleEnum, styleDefinition] : m_styleHandler->styleDefinitions)
+                {
+                    bool isSelected = styleEnum == m_styleHandler->getCurrentStyle();
+                    if (ImGui::Selectable(styleDefinition.name, isSelected))
+                    {
+                        setGuiStyleEvent.invoke(styleEnum);
+                    }
+
+                    // Set the initial focus when opening the combo (scroll here)
+                    if (isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Font scale");
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(styleSelectDropdownX);
+            if (ImGui::BeginCombo("##FontSizeSelectDropdown", gui_fonts::fontSizeNames.at(m_styleHandler->getFontSize())))
+            {
+                for (const auto& [fontSizeEnum, fontSizeName] : gui_fonts::fontSizeNames)
+                {
+                    bool isSelected = fontSizeEnum == m_styleHandler->getFontSize();
+                    if (ImGui::Selectable(fontSizeName, isSelected))
+                    {
+                        setFontScaleEvent.invoke(fontSizeEnum);
+                    }
+
+                    // Set the initial focus when opening the combo (scroll here)
+                    if (isSelected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
 			ImGui::EndMenu();
 		}
         m_height = ImGui::GetWindowHeight();
@@ -224,7 +275,7 @@ void MainMenuBarGui::renameSchedule()
     m_openRenameModal = true;
 }
 
-void MainMenuBarGui::displayScheduleList()
+void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures)
 {
 	for (size_t i = 0; i < m_fileNames.size(); i++)
 	{
@@ -233,15 +284,22 @@ void MainMenuBarGui::displayScheduleList()
 		{
 			openScheduleFileEvent.invoke(std::string(m_fileNames[i]));
 		}
-		ImGui::SameLine();
-		if (ImGui::SmallButton(std::string("X##DeleteSchedule").append(std::to_string(i)).c_str()))
-		{
-			if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui"))
-			{
-				deleteModalSubGui->setAffectedScheduleName(m_fileNames[i]);
-			}
-			m_openDeleteConfirmationModal = true;
-		}
+        // Show a remove button on the right when the menu item is hovered
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) ? 1.0f : 0.0f);
+        float removeButtonSize = ImGui::GetItemRectSize().y;
+        ImGui::SameLine();
+        ImGui::SetCursorScreenPos(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetItemRectMin().y));
+        size_t pushedColorCount = 0;
+        if (gui_templates::ImageButtonStyleColored(std::format("##DeleteScheduleFile{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), 
+            ImVec2(removeButtonSize, removeButtonSize) - ImGui::GetStyle().FramePadding * 2.0f, ImVec2(), ImVec2(1,1), ImVec4(), ImGuiButtonFlags_AlignTextBaseLine))
+        {
+            if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui"))
+            {
+                deleteModalSubGui->setAffectedScheduleName(m_fileNames[i]);
+            }
+            m_openDeleteConfirmationModal = true;
+        }
+        ImGui::PopStyleVar();
 	}
 	ImGui::EndMenu();
 }

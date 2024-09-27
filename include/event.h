@@ -14,7 +14,7 @@ class Event
         {
         }
         // Adds the function as a listener to this event. Returns the ID for the function in the listener map (in case it needs to be removed later).
-        size_t addListener(std::function<void(Types...)>& listener)
+        size_t addListener(const std::function<void(Types...)>& listener)
         {
             m_listeners.insert({m_listenerID, listener});
             m_listenerID++;

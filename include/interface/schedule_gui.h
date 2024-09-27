@@ -13,17 +13,13 @@
 class ScheduleGui : public Gui
 {
     private:
-        // A map containing the texture IDs of gui textures.
-        // Each texture's ID will be set when the texture at gui creation.
-        // TEMP?
-        ImFont* m_font32x;
         const ScheduleCore& m_scheduleCore;
         const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
         bool m_openDateSelectPopup = false;
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
-        void displayColumnContextPopup(unsigned int column, ImGuiTableFlags tableFlags);
+        void displayColumnContextPopup(unsigned int column, ImGuiTable* table, ImGuiTableFlags tableFlags);
         template <typename T>
         T getElementValue(size_t column, size_t row, bool useDefaultValue) const
         {
@@ -55,6 +51,8 @@ class ScheduleGui : public Gui
         // row modification
         Event<size_t> addRow;
         Event<size_t> removeRow;
+
+        bool isEditableElementClicked(bool isEditingDisabled) const;
 
         void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         void clearDateOverride();

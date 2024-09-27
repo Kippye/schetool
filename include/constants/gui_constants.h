@@ -26,6 +26,9 @@ enum SelectColor_
     SelectColor_Last    = 1 << 9,
 };
 
+// Full definition in interface_style.cpp
+enum class GuiStyle;
+
 namespace gui_colors
 {
     // Select option colors in HSL (w is not really used but could be alpha).
@@ -57,32 +60,61 @@ namespace gui_colors
     const float inactiveAlpha = 0.5f;
     // Use for elements that are completely disabled.
     const float disabledAlpha = 0.25f;
+    // RGB color for black text
     const ImVec4 textColorBlack = {10.0f / 255, 10.0f / 255, 10.0f / 255, 1};
+    // RGB invisible color
+    const ImVec4 colorInvisible = {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
 namespace gui_sizes
 {
     const ImVec2 emptyLabelSize = ImVec2(64, 0);
-    // The biggest width that a select option selectable will likely need. 
-    // NOTE: Needs to be manually recalculated whenever schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH is changed. Calculation: ImGui::CalcTextSize(std::string(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH, 'W').c_str()).x);
-    const float selectOptionSelectableWidth = 142;
     namespace date_editor
     {
-        const ImVec2 monthDayButtonSize = ImVec2(24, 24);
         const ImVec2 monthDayButtonSpacing = ImVec2(0.0f, 0.0f);
         const float monthNameComboWidth = 108.0f;
         const float yearInputWidth = 108.0f;
-        const ImVec2 yearIncrementButtonSize = ImVec2(22, 22);
-    };
-    namespace element_editor
-    {
-        const ImVec2 selectOptionEditButtonSize = ImVec2(18, 18);
     };
     namespace filter_editor
     {
         const float ruleButtonWidthOffset = 30.0f;
         const float ruleComparisonComboWidth = 144.0f;
     }
+}
+
+namespace gui_style_vars
+{
+    const float labelButtonRounding = 4.0f;
+}
+
+enum class FontSize
+{
+    // Font size of 8px
+    Small,
+    // Font size of 16px
+    Normal,
+    // Font size of 24px
+    Big,
+    // Font size of 32px
+    Large
+};
+
+namespace gui_fonts
+{
+    const std::map<FontSize, const char*> fontSizeNames =
+    {
+        {FontSize::Small, "Small"},
+        {FontSize::Normal, "Normal"},
+        {FontSize::Big, "Big"},
+        {FontSize::Large, "Large"},
+    };
+    const std::map<FontSize, size_t> fontSizePixelSizes =
+    {
+        {FontSize::Small, 8},
+        {FontSize::Normal, 16},
+        {FontSize::Big, 24},
+        {FontSize::Large, 32},
+    };
 }
 
 #endif

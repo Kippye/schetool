@@ -1,21 +1,20 @@
 #pragma once
 
 #include <string>
-#include <memory>
 #include <chrono>
 
-typedef std::chrono::system_clock::time_point utc_tp;
-using namespace std::chrono;
+namespace chrono = std::chrono;
+typedef chrono::system_clock::time_point utc_tp;
 
 template<class T>
 struct is_duration : std::false_type{};
 template<class Rep, class Period>
-struct is_duration<duration<Rep, Period>> : std::true_type{};
+struct is_duration<chrono::duration<Rep, Period>> : std::true_type{};
 
 template<class T>
 struct is_time_point : std::false_type{};
 template<class Clock, class Duration>
-struct is_time_point<time_point<Clock, Duration>> : std::true_type{};
+struct is_time_point<chrono::time_point<Clock, Duration>> : std::true_type{};
 
 inline const bool WEEK_START_MONDAY = 0;
 inline const bool WEEK_START_SUNDAY = 1;
@@ -38,7 +37,7 @@ class DateWrapper
     public:
         DateWrapper();
         DateWrapper(unsigned int y, unsigned int m = 1, unsigned int mDay =  1);
-        DateWrapper(const year_month_day& date);
+        DateWrapper(const chrono::year_month_day& date);
 
         unsigned int getYear() const;
         unsigned int getMonth() const;
@@ -78,7 +77,7 @@ class ClockTimeWrapper
     public:
         ClockTimeWrapper();
         ClockTimeWrapper(unsigned int hours, unsigned int minutes);
-        ClockTimeWrapper(const hh_mm_ss<seconds>& hms);
+        ClockTimeWrapper(const chrono::hh_mm_ss<chrono::seconds>& hms);
 
         unsigned int getHours() const;
         unsigned int getMinutes() const;
@@ -136,8 +135,8 @@ class TimeWrapper
         static unsigned int getWeekday(const Timepoint& tp, bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED)
         {
             static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getWeekday() only works with std::chrono::time_point types!");
-            auto zonedDays = floor<days>(tp);
-            year_month_weekday ymw = year_month_weekday(zonedDays);
+            auto zonedDays = chrono::floor<chrono::days>(tp);
+            chrono::year_month_weekday ymw = chrono::year_month_weekday(zonedDays);
             unsigned int weekday = weekStart == WEEK_START_MONDAY ? ymw.weekday().iso_encoding() - 1 // The ISO encoding means Monday = 1,  Sunday = 7
                 : ymw.weekday().c_encoding(); // The C encoding means Sunday = 0, Saturday = 6
 
@@ -156,7 +155,7 @@ class TimeWrapper
         // Create an empty TimeWrapper.
         TimeWrapper();
         // Construct TimeWrapper from time_point (should be UTC)
-        TimeWrapper(const time_point<system_clock>& tp);
+        TimeWrapper(const chrono::time_point<chrono::system_clock>& tp);
         // Construct TimeWrapper from date (Clock time is 00:00)
         TimeWrapper(const DateWrapper& date);
         // Construct TimeWrapper that only contains a clock time (?)
@@ -169,8 +168,8 @@ class TimeWrapper
         bool getIsEmpty() const;
         void clear();  
 
-        time_point<system_clock> getTimeUTC() const;
-        local_time<seconds> getLocalTime(const std::string& timezoneName = "") const;
+        chrono::time_point<chrono::system_clock> getTimeUTC() const;
+        chrono::local_time<chrono::seconds> getLocalTime(const std::string& timezoneName = "") const;
 
         DateWrapper getDateUTC() const;
         DateWrapper getLocalDate() const;
@@ -244,13 +243,13 @@ class TimeWrapper
         static Duration::rep getDifferenceUTC(const TimeWrapper& base, const TimeWrapper& subtracted)
         {
             static_assert(is_duration<Duration>::value, "TimeWrapper::getDifferenceUTC() only works with std::chrono::duration types!");
-            return (floor<Duration>(base.m_time) - floor<Duration>(subtracted.m_time)).count();
+            return (chrono::floor<Duration>(base.m_time) - chrono::floor<Duration>(subtracted.m_time)).count();
         }
         template <typename Duration>
         static Duration::rep getDifference(const TimeWrapper& base, const TimeWrapper& subtracted)
         {
             static_assert(is_duration<Duration>::value, "TimeWrapper::getDifference() only works with std::chrono::duration types!");
-            return (floor<Duration>(base.getLocalTime()) - floor<Duration>(subtracted.getLocalTime())).count();
+            return (chrono::floor<Duration>(base.getLocalTime()) - chrono::floor<Duration>(subtracted.getLocalTime())).count();
         }
 
         bool operator==(const TimeWrapper& other) const
@@ -277,8 +276,8 @@ class TimeWrapper
         static std::pair<DateWrapper, ClockTimeWrapper> getTimeComponents(const Timepoint& time)
         {
             static_assert(is_time_point<Timepoint>::value, "TimeWrapper::getTimeComponents() only works with std::chrono::time_point types!");
-            auto timeDays = floor<days>(time);
-            return { DateWrapper(year_month_day(timeDays)), ClockTimeWrapper(hh_mm_ss(floor<seconds>(time - timeDays))) };
+            auto timeDays = chrono::floor<chrono::days>(time);
+            return { DateWrapper(chrono::year_month_day(timeDays)), ClockTimeWrapper(chrono::hh_mm_ss(chrono::floor<chrono::seconds>(time - timeDays))) };
         }
 
         // Turn a time to a string using the format type.
@@ -310,6 +309,6 @@ class TimeWrapper
         static TimeWrapper getCurrentTime();
         // Gets the amount of minutes the current timezone is offset from UTC time (including DST).
         // Example: The timezone is UTC + 3, returns 180min. The timezone is UTC - 2, returns -120min.
-        static minutes getTimezoneOffset();
+        static chrono::minutes getTimezoneOffset();
         static int limitYearToValidRange(int year);
 };
