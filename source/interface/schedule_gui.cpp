@@ -243,15 +243,15 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 					if (isColumnHeaderHovered && m_scheduleCore.getColumn(column)->permanent == false)
 					{
                         // This is how the arrow button's size is calculated
-                        float headerButtonSize = ImGui::GetFrameHeight();
+                        float headerButtonSize = ImGui::CalcTextSize("W").y;
                         // SameLine() can't be used after a TableHeader so the position has to be calculated manually.
-                        ImGui::SetCursorScreenPos(ImVec2(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column).Max.x - headerButtonSize - 12.0f, ImGui::GetCursorScreenPos().y));
+                        ImGui::SetCursorScreenPos(ImVec2(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column).Max.x - headerButtonSize - 8.0f, ImGui::GetCursorScreenPos().y));
                         ImGui::SetCursorPosY(headerCursorY);
                         size_t pushedColorCount = 0;
                         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
                         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
                         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-                        if (gui_templates::ImageButtonStyleColored("##RemoveColumn", (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(headerButtonSize, headerButtonSize) - style.FramePadding * 2.0f))
+                        if (gui_templates::ImageButtonStyleColored("##RemoveColumn", (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(headerButtonSize, headerButtonSize)))
 						{
 							removeColumn.invoke(column);
                             ImGui::PopStyleColor(pushedColorCount);
@@ -308,8 +308,9 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
                                 pushedStyleVars++;
                             }
-                            const float rowRemoveButtonSize = ImGui::CalcTextSize("X").y; //+ style.FramePadding.y * 2.0f;
-							if (gui_templates::ImageButtonStyleColored(std::format("X##{}", row).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove_16px"), ImVec2(rowRemoveButtonSize, rowRemoveButtonSize)))
+                            const float labelSize = ImGui::CalcTextSize("X").y;
+                            const float rowRemoveButtonSize = labelSize - (int)labelSize % 8; //+ style.FramePadding.y * 2.0f;
+							if (gui_templates::ImageButtonStyleColored(std::format("X##RemoveRow{}", row).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(rowRemoveButtonSize, rowRemoveButtonSize)))
 							{
 								removeRow.invoke(row);
 								// break because this row can't be drawn anymore, it was removed.

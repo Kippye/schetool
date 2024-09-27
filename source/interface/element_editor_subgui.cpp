@@ -193,15 +193,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                         // Show a remove button on the right when hovered, only if the options are mutable
                         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
                         {
-                            float removeButtonSize = optionButtonHeight; //ImGui::GetFrameHeight();
+                            float removeButtonSize = ImGui::CalcTextSize("W").y;
                             ImGui::SameLine();
-                            float previousCursorPosX = ImGui::GetCursorPosX();
-                            ImGui::SetCursorScreenPos(ImVec2(optionButtonRectMaxX - removeButtonSize, ImGui::GetCursorScreenPos().y));
+                            ImGui::SetCursorScreenPos(ImVec2(optionButtonRectMaxX - removeButtonSize - ImGui::GetStyle().FramePadding.x * 2.0f, ImGui::GetCursorScreenPos().y));
                             size_t pushedColorCount = 0;
                             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
                             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
                             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-                            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeButtonSize, removeButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
+                            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeButtonSize, removeButtonSize)))
                             {
                                 modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
                                 m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
@@ -250,14 +249,6 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 					}
 
                     ImGui::SameLine();
-                    // Edit name button
-                    // if (ImGui::ImageButton(std::format("EditSelectOptionName{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_edit"), gui_sizes::element_editor::selectOptionEditButtonSize - ImGui::GetStyle().FramePadding * 2.0f))
-                    // {
-                    //     m_editingSelectOptionName = true;
-                    //     m_giveSelectOptionNameInputFocus = true;
-                    //     m_editedOptionIndex = i;
-                    // }
-                    // ImGui::SameLine();
                     // Edit color button
                     if (ImGui::ColorButton(std::format("##EditSelectOptionColor{}", i).c_str(), gui_color_calculations::hslToRgb(gui_colors::selectOptionColors.at(options[i].color)), ImGuiColorEditFlags_NoTooltip))
                     {

@@ -137,7 +137,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 			}
 			if (ImGui::BeginMenu("Open", m_fileNames.empty() == false))
 			{
-				displayScheduleList();
+				displayScheduleList(guiTextures);
 			}
             if (m_haveFileOpen == false)
             {
@@ -275,7 +275,7 @@ void MainMenuBarGui::renameSchedule()
     m_openRenameModal = true;
 }
 
-void MainMenuBarGui::displayScheduleList()
+void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures)
 {
 	for (size_t i = 0; i < m_fileNames.size(); i++)
 	{
@@ -284,15 +284,22 @@ void MainMenuBarGui::displayScheduleList()
 		{
 			openScheduleFileEvent.invoke(std::string(m_fileNames[i]));
 		}
-		ImGui::SameLine();
-		if (ImGui::SmallButton(std::string("X##DeleteSchedule").append(std::to_string(i)).c_str()))
-		{
-			if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui"))
-			{
-				deleteModalSubGui->setAffectedScheduleName(m_fileNames[i]);
-			}
-			m_openDeleteConfirmationModal = true;
-		}
+        // Show a remove button on the right when the menu item is hovered
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) ? 1.0f : 0.0f);
+        float removeButtonSize = ImGui::GetItemRectSize().y;
+        ImGui::SameLine();
+        ImGui::SetCursorScreenPos(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetItemRectMin().y));
+        size_t pushedColorCount = 0;
+        if (gui_templates::ImageButtonStyleColored(std::format("##DeleteScheduleFile{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), 
+            ImVec2(removeButtonSize, removeButtonSize) - ImGui::GetStyle().FramePadding * 2.0f, ImVec2(), ImVec2(1,1), ImVec4(), ImGuiButtonFlags_AlignTextBaseLine))
+        {
+            if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui"))
+            {
+                deleteModalSubGui->setAffectedScheduleName(m_fileNames[i]);
+            }
+            m_openDeleteConfirmationModal = true;
+        }
+        ImGui::PopStyleVar();
 	}
 	ImGui::EndMenu();
 }

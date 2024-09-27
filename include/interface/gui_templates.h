@@ -31,7 +31,7 @@ namespace gui_templates
     void TextWithBackground(const char* fmt, ...);
     void TextWithBackground(const ImVec2& size, const char* fmt, ...);
     // Displays an image button that is tinted to match the style color of text. Returns true if the button was pressed.
-    bool ImageButtonStyleColored(const char* idLabel, ImTextureID textureID, ImVec2 size, ImVec2 uv0 = ImVec2(0, 0), ImVec2 uv1 = ImVec2(1, 1), ImVec4 bgColor = ImVec4(0, 0, 0, 0));
+    bool ImageButtonStyleColored(const char* idLabel, ImTextureID textureID, ImVec2 size, ImVec2 uv0 = ImVec2(0, 0), ImVec2 uv1 = ImVec2(1, 1), ImVec4 bgColor = ImVec4(0, 0, 0, 0), ImGuiButtonFlags buttonFlags = ImGuiButtonFlags_None);
 }
 
 namespace gui_helpers
