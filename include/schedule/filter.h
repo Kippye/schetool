@@ -14,7 +14,7 @@ class Filter
         Filter() = default;
         Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::Or);
 
-        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const;
+        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(), bool useDefaultValue = false) const;
 
         FilterRuleContainer getRule(size_t index);
         const FilterRuleContainer& getRuleConst(size_t index) const;

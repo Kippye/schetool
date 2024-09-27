@@ -169,7 +169,7 @@ bool Column::checkElementPassesFilters(size_t index, const TimeWrapper& currentT
 
     for (const auto& filterGroup: m_filterGroupsPerType.at(type))
     {
-        passes = passes && filterGroup.checkPasses(element, currentTime);
+        passes = passes && filterGroup.checkPasses(element, currentTime, currentTime.getIsEmpty() == false && resetOption != ColumnResetOption::Never);
     }
 
     return passes;

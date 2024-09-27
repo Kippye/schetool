@@ -51,10 +51,10 @@ class FilterRuleContainer
         // FilterRuleBase "API"
 
         //
-        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const
+        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(), bool useDefaultValue = false) const
         {
             if (isEmpty()) { return false; }
-            return m_filterRule->checkPasses(element, currentTime);
+            return m_filterRule->checkPasses(element, currentTime, useDefaultValue);
         }
         std::string getString() const
         {

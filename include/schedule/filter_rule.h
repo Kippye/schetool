@@ -16,8 +16,9 @@ class FilterRule : public FilterRuleBase
             m_passValue = passValue;
         }
 
-        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const override
+        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(), bool useDefaultValue = false) const override
         {
+            T value = useDefaultValue == false ? ((const Element<T>*)element)->getValue() : Element<T>::getDefaultValue();
             if (isComparisonValidForElement(element) == false) { return false; }
             // TODO: Check if the provided ElementBase is of the correct type.
             switch (m_comparison)
@@ -25,28 +26,28 @@ class FilterRule : public FilterRuleBase
                 case Comparison::Is:
                 {
                     if constexpr(has_operator_equal<T>::value)
-                        return (((const Element<T>*)element)->getValue() == m_passValue);
+                        return (value == m_passValue);
                     else
                         return false;
                 }
                 case Comparison::IsNot:
                 {
                     if constexpr(has_operator_equal<T>::value)
-                        return (((const Element<T>*)element)->getValue() != m_passValue);
+                        return (value != m_passValue);
                     else
                         return false;
                 }
                 case Comparison::IsLessThan:
                 {
                     if constexpr(has_operator_less<T>::value)
-                        return (((const Element<T>*)element)->getValue() < m_passValue);
+                        return (value < m_passValue);
                     else
                         return false;
                 }
                 case Comparison::IsMoreThan:
                 {
                     if constexpr(has_operator_less<T>::value)
-                        return (((const Element<T>*)element)->getValue() > m_passValue);
+                        return (value > m_passValue);
                     else
                         return false;
                 }
@@ -123,9 +124,9 @@ inline std::string FilterRule<DateContainer>::getString() const
 }
 
 template <>
-inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
+inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const
 {
-    SelectContainer value = ((const Element<SelectContainer>*)element)->getValue();
+    SelectContainer value = useDefaultValue == false ? ((const Element<SelectContainer>*)element)->getValue() : Element<SelectContainer>::getDefaultValue();
 
     switch(m_comparison)
     {
@@ -154,9 +155,9 @@ inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element,
 }
 
 template <>
-inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
+inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const
 {
-    WeekdayContainer value = ((const Element<WeekdayContainer>*)element)->getValue();
+    WeekdayContainer value = useDefaultValue == false ? ((const Element<WeekdayContainer>*)element)->getValue() : Element<WeekdayContainer>::getDefaultValue();
 
     switch(m_comparison)
     {
@@ -189,9 +190,9 @@ inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element
 }
 
 template <>
-inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
+inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const
 {
-    DateContainer value = ((const Element<DateContainer>*)element)->getValue();
+    DateContainer value = useDefaultValue == false ? ((const Element<DateContainer>*)element)->getValue() : Element<DateContainer>::getDefaultValue();
 
     switch(m_comparison)
     {

@@ -5,15 +5,15 @@ Filter::Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnu
 : m_rules(rules), m_operator(logicalOperator)
 {}
 
-bool Filter::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
+bool Filter::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const
 {
     bool passes = true; // true by default so having 0 rules returns true
 
     for (size_t i = 0; i < m_rules.size(); i++)
     {
         passes = i == 0 
-            ? m_rules[i].checkPasses(element, currentTime) // store the first filter's result to properly handle all operators
-            : m_operator.apply(passes, m_rules[i].checkPasses(element, currentTime)); // after the first element, apply the operator to previous and current results
+            ? m_rules[i].checkPasses(element, currentTime, useDefaultValue) // store the first filter's result to properly handle all operators
+            : m_operator.apply(passes, m_rules[i].checkPasses(element, currentTime, useDefaultValue)); // after the first element, apply the operator to previous and current results
     }
 
     return passes;

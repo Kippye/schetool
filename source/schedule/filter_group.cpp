@@ -5,7 +5,7 @@ FilterGroup::FilterGroup(const std::vector<Filter>& filters, const std::string& 
 : m_filters(filters), m_name(name), m_operator(logicalOperator), m_enabled(enabled)
 {}
 
-bool FilterGroup::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
+bool FilterGroup::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const
 {
     // If the FilterGroup is disabled, it will always return true as if it wasn't there.
     if (m_enabled == false) { return true; }
@@ -15,8 +15,8 @@ bool FilterGroup::checkPasses(const ElementBase* element, const TimeWrapper& cur
     for (size_t i = 0; i < m_filters.size(); i++)
     {
         passes = i == 0 
-            ? m_filters[i].checkPasses(element, currentTime) // store the first filter's result to properly handle all operators
-            : m_operator.apply(passes, m_filters[i].checkPasses(element, currentTime)); // after the first element, apply the operator to previous and current results
+            ? m_filters[i].checkPasses(element, currentTime, useDefaultValue) // store the first filter's result to properly handle all operators
+            : m_operator.apply(passes, m_filters[i].checkPasses(element, currentTime, useDefaultValue)); // after the first element, apply the operator to previous and current results
     }
 
     return passes;
