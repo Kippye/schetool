@@ -842,16 +842,8 @@ struct BLF_Column : BLF_Base
         // set up SelectOptions
         SelectOptions columnSelectOptions = selectOptions.getOptions();
 
-        std::vector<ElementBase*> rows = {};
-        // add elements to rows
-        for (size_t row = 0; row < elements.size(); row++)
-        {
-            Element<T>* element = new Element<T>(elements[row].getElement());
-            rows.push_back(element);
-        }
-
         Column col = Column(
-            rows,
+            {},
             (SCHEDULE_TYPE)type,
             name,
             permanent,
@@ -860,6 +852,11 @@ struct BLF_Column : BLF_Base
             columnSelectOptions,
             (ColumnResetOption)resetOption
         );
+        // add elements to the column
+        for (size_t row = 0; row < elements.size(); row++)
+        {
+            col.addElement(col.rows.size(), new Element<T>(elements[row].getElement()));
+        }
 
         // add filter groups to the column
         for (const BLF_FilterGroup<T>& filterGroup: filterGroups)

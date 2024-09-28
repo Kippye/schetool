@@ -46,6 +46,10 @@ void SelectContainer::update(const SelectOptionUpdateInfo& lastChange, size_t op
 
     switch(lastChange.type)
     {
+        case(OPTION_MODIFICATION_COUNT_UPDATE):
+        {
+            return;
+        }
         case(OPTION_MODIFICATION_ADD):
         {
             // Currently, options can only be "pushed back" so no selections are invalidated. We chillin.

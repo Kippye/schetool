@@ -101,15 +101,19 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 SelectColor lastOptionColor = selectOptions.getOptions().back().color;
                                 // Add 1 to the last color if it's 0, otherwise multiply by 2 or loop around to 0 if needed.
                                 addedOptionColor = lastOptionColor == 0 ? 1 : (lastOptionColor * 2 < SelectColor_Last ? lastOptionColor * 2 : 0);
-                            } 
-							modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_ADD)
-								.options({SelectOption(std::string(buf), addedOptionColor)}));
+                            }
+                            SelectOptionsModification prevModification = selectOptions.getLastModification().value_or(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE));
+                            SelectOptionsModification modificationToApply = SelectOptionsModification(OPTION_MODIFICATION_ADD)
+								.options({SelectOption(std::string(buf), addedOptionColor)});
+
+							modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                            
 							// HACK: There's currently no way of knowing that the option was successfully added.
                             // We just check the things that we can and if they are true, assume that it did succeed.
-                            if ((selectOptions.getLastUpdateInfo().firstIndex == selectOptions.getOptionCount() - 1 && selectOptions.getLastUpdateInfo().type == OPTION_MODIFICATION_ADD)
-                                && selectOptions.getOptions().back().name == buf)
+                            SelectOptionsModification newModification = selectOptions.getLastModification().value_or(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE));
+                            if (newModification == modificationToApply && prevModification != newModification)
                             {
-                                m_editorSelect.update(selectOptions.getLastUpdateInfo(), selectOptions.getOptionCount());
+                                m_editorSelect.update(modificationToApply.getUpdateInfo(), selectOptions.getOptionCount());
                                 m_editorSelect.setSelected(selectOptions.getOptions().size() - 1, true);
                                 m_madeEdits = true;
                                 // NOTE: break here because otherwise the start and end of the function kind of go out of sync
@@ -202,8 +206,9 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
                             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeButtonSize, removeButtonSize)))
                             {
-                                modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i));
-                                m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                SelectOptionsModification modificationToApply = SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i);
+                                modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                                m_editorSelect.update(modificationToApply.getUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
                                 m_madeEdits = true;
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
@@ -232,8 +237,9 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 if (i_next >= 0 && i_next < options.size())
                                 {
                                     m_hasOptionBeenDragged = true;
-                                    modifyColumnSelectOptions.invoke(m_editorColumn, SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next));
-                                    m_editorSelect.update(m_scheduleCore.getColumnSelectOptions(m_editorColumn).getLastUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                    SelectOptionsModification modificationToApply = SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next);
+                                    modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                                    m_editorSelect.update(modificationToApply.getUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
                                     m_madeEdits = true;
                                     m_dragLastMousePos = ImGui::GetMousePos();
                                 }

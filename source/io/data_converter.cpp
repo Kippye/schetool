@@ -258,13 +258,6 @@ std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vecto
                     if (column.index == columnIndex) 
                     {
                         schedule.push_back(column.getColumn());
-
-                        // Add SelectContainers as listeners to the Column's SelectOptions!!
-                        Column& scheduleColumn = schedule.back();
-                        for (size_t row = 0; row < scheduleColumn.rows.size(); row++)
-                        {
-                            scheduleColumn.selectOptions.addListener(row, ((Element<SelectContainer>*)scheduleColumn.getElement(row))->getValueReference());
-                        }
                     }
                 }  
                 break;

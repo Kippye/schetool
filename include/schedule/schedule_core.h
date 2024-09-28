@@ -222,7 +222,7 @@ class ScheduleCore
                     }
                     default:
                     {
-                        std::cout << "ScheduleCore::setElement has not been implemented for Element type " << other->getType() << std::endl;
+                        printf("ScheduleCore::setElement has not been implemented for Element type %d\n", other->getType());
                     }
                 }
             }

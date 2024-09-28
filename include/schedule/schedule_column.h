@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <iostream>
+#include <functional>
 #include <memory>
 #include "schedule_constants.h"
 #include "filter_group.h"
@@ -90,19 +90,29 @@ struct Column
             return *this;
         }
 
+        ~Column();
+
+        // ELEMENTS
         ElementBase* operator [] (size_t index)
         {
             return getElement(index);
         }
 
-        ~Column();
-
         bool hasElement(size_t index) const;
+
+        // Add an element to the column. The column will handle any special cases and initialising the elements.
+        // Returns true if the element was added.
+        bool addElement(size_t index, ElementBase* element);
 
         ElementBase* getElement(size_t index);
 
         const ElementBase* getElementConst(size_t index) const;
 
+        // SELECT OPTIONS
+        // Applies a modification to this column's SelectOptions and updates its select elements if the modification is applied successfully
+        bool modifySelectOptions(const SelectOptionsModification& modification);
+
+        // FILTERS
         const std::map<SCHEDULE_TYPE, std::vector<FilterGroup>>& getFilterGroupsPerType() const;
         // Gets the FilterGroup at the given index.
         FilterGroup& getFilterGroup(size_t index);

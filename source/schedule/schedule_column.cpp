@@ -75,6 +75,21 @@ bool Column::hasElement(size_t index) const
     return index < rows.size();
 }
 
+bool Column::addElement(size_t index, ElementBase* element)
+{
+    if (index <= rows.size() == false) { return false; }
+    if (element->getType() != type) { return false; }
+
+    // Update added selects to have the correct number of options
+    if (element->getType() == SCH_SELECT)
+    {
+        ((Element<SelectContainer>*)element)->getValueReference().update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(), selectOptions.getOptionCount());
+    }
+
+    rows.insert(rows.begin() + index, element);
+    return true;
+}
+
 ElementBase* Column::getElement(size_t index)
 {
     if (hasElement(index) == false)
@@ -93,6 +108,41 @@ const ElementBase* Column::getElementConst(size_t index) const
         return nullptr;
     }
     return rows[index];
+}
+
+bool Column::modifySelectOptions(const SelectOptionsModification& modification)
+{
+    if (selectOptions.applyModification(modification))
+    {
+        // If this column is a select column, update all the SelectContainers
+        if (type == SCH_SELECT)
+        {
+            // Update elements
+            for (ElementBase* element : rows)
+            {
+                ((Element<SelectContainer>*)element)->getValueReference().update(
+                    modification.getUpdateInfo(), selectOptions.getOptionCount()
+                );
+            }
+            // Update filters
+            for (FilterGroup& filterGroup : getFilterGroups())
+            {
+                for (Filter& filter : filterGroup.getFilters())
+                {
+                    for (FilterRuleContainer& filterRule : filter.getRules())
+                    {
+                        SelectContainer updatedValue = filterRule.getPassValue<SelectContainer>();
+                        updatedValue.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                        filterRule.setPassValue(updatedValue);
+                    }
+                }
+            }
+        }
+        printf("Applied option modification: %s", modification.getDataString().c_str());
+        return true;
+    }
+
+    return false;
 }
 
 const std::map<SCHEDULE_TYPE, std::vector<FilterGroup>>& Column::getFilterGroupsPerType() const
