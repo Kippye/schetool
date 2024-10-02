@@ -6,7 +6,7 @@ std::string SelectOptionsModification::getDataString() const
 {
     std::string dataString = "SelectOptionsModification {\n";
     // Required components
-    dataString.append(std::format("    Type: {}\nFirst index: {}\n", (int)m_type, m_firstIndex));
+    dataString.append(std::format("    Type: {}\n    First index: {}\n", (int)m_type, m_firstIndex));
     if (m_secondIndex.has_value())
     {
         dataString.append(std::format("    Second index: {}\n", m_secondIndex.value()));

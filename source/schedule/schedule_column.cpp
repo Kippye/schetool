@@ -138,7 +138,6 @@ bool Column::modifySelectOptions(const SelectOptionsModification& modification)
                 }
             }
         }
-        printf("Applied option modification: %s", modification.getDataString().c_str());
         return true;
     }
 

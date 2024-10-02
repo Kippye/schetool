@@ -131,6 +131,10 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                 //     ImGui::ActivateItemByID(ImGui::GetItemID());
                 // }
 
+                int hoveredOptionIndex = -1;
+                int activeOptionIndex = -1;
+                std::string activeOptionID = "";
+
 				// display existing options
 				for (size_t i = 0; i < options.size(); i++)
 				{
@@ -181,6 +185,16 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 m_madeEdits = true;
                             }
                         }
+                        if (ImGui::IsItemActive())
+                        {
+                            activeOptionIndex = i;
+                            activeOptionID = optionButtonID;
+                        }
+                        if (ImGui::IsMouseHoveringRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()))
+                        {
+                            hoveredOptionIndex = i;
+                        }
+                        // bool isItemHovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
                         const float optionButtonHeight = ImGui::GetItemRectSize().y;
                         const float optionButtonRectMaxX = ImGui::GetItemRectMax().x;
 
@@ -218,42 +232,6 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                         }
                     }
 
-					// drag to reorder options
-					if (m_editingSelectOptionName == false && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
-					{
-                        // ImGui::IsItemToggledSelection()
-                        if (ImGui::IsItemActive())
-                        {
-                            if (optionButtonID != m_draggedOptionID)
-                            {
-                                m_hasOptionBeenDragged = false;
-                                m_dragLastMousePos = ImGui::GetMousePos();
-                                m_draggedOptionID = optionButtonID;
-                            }
-                            
-                            if (!ImGui::IsItemHovered())
-                            {
-                                size_t i_next = i + ((ImGui::GetMousePos() - m_dragLastMousePos).y < 0.f ? -1 : 1);
-                                if (i_next >= 0 && i_next < options.size())
-                                {
-                                    m_hasOptionBeenDragged = true;
-                                    SelectOptionsModification modificationToApply = SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(i).secondIndex(i_next);
-                                    modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
-                                    m_editorSelect.update(modificationToApply.getUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
-                                    m_madeEdits = true;
-                                    m_dragLastMousePos = ImGui::GetMousePos();
-                                }
-                            }
-                        }
-                        // Drag ended
-                        else if (m_draggedOptionID == optionButtonID)
-                        {
-                            m_draggedOptionID = "";
-                            m_hasOptionBeenDragged = false;
-                            m_dragLastMousePos = ImVec2(0, 0);
-                        }
-					}
-
                     ImGui::SameLine();
                     // Edit color button
                     if (ImGui::ColorButton(std::format("##EditSelectOptionColor{}", i).c_str(), gui_color_calculations::hslToRgb(gui_colors::selectOptionColors.at(options[i].color)), ImGuiColorEditFlags_NoTooltip))
@@ -283,6 +261,51 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                         ImGui::EndPopup();
                     }
 				}
+                // drag to reorder options
+                if (m_editingSelectOptionName == false && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
+                {
+                    // ImGui::IsItemToggledSelection()
+                    // Some option is active
+                    if (activeOptionIndex != -1)
+                    {
+                        if (activeOptionID != m_draggedOptionID)
+                        {
+                            m_hasOptionBeenDragged = false;
+                            m_draggedOptionID = activeOptionID;
+                        }
+                        
+                        // Hovering a different option (NOT whitespace!)
+                        if (hoveredOptionIndex != -1 && hoveredOptionIndex != activeOptionIndex)
+                        {
+                            float dragDeltaY = ImGui::GetMouseDragDelta().y;
+                            int indexDelta = 0;
+                            if (dragDeltaY < 0.0f && activeOptionIndex > 0)
+                            {
+                                indexDelta = -1;
+                            }
+                            else if (dragDeltaY > 0.0f && activeOptionIndex < options.size() - 1)
+                            {
+                                indexDelta = 1;
+                            }
+
+                            if (indexDelta != 0)
+                            {
+                                m_hasOptionBeenDragged = true;
+                                SelectOptionsModification modificationToApply = SelectOptionsModification(OPTION_MODIFICATION_MOVE).firstIndex(activeOptionIndex).secondIndex(activeOptionIndex + indexDelta);
+                                modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                                m_editorSelect.update(modificationToApply.getUpdateInfo(), m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                m_madeEdits = true;
+                                ImGui::ResetMouseDragDelta();
+                            }
+                        }
+                    }
+                    // Drag ended
+                    else
+                    {
+                        m_draggedOptionID = "";
+                        m_hasOptionBeenDragged = false;
+                    }
+                }
 
 				break;
 			}

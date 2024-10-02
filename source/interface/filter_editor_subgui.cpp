@@ -711,9 +711,9 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
                 }
             }
             ImGui::SameLine();
-            const float removeRuleButtonSize = ImGui::GetItemRectSize().y;
+            const float removeRuleButtonSize = ImGui::CalcTextSize("W").y;
             // Remove FilterRule button
-            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveFilterRule{}", ruleIndex).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeRuleButtonSize, removeRuleButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
+            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveFilterRule{}", ruleIndex).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeRuleButtonSize, removeRuleButtonSize)))
             {
                 m_filterGroupState.getFilterGroup().getFilter(filterIndex).removeRule(ruleIndex);
                 removeColumnFilterRule.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), filterIndex, ruleIndex);
