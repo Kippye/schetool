@@ -59,7 +59,7 @@ void Input::processInput(GLFWwindow* window)
 	mouseMovement = glm::vec2(0.0f);
 }
 
-void Input::addEventListener(INPUT_EVENT event, std::function<void()>& listener)
+void Input::addEventListener(INPUT_EVENT event, const std::function<void()>& listener)
 {
     if (listener)
     {

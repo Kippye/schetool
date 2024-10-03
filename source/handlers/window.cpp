@@ -147,6 +147,7 @@ std::string Window::getTitle()
 
 void Window::terminate()
 {
+    windowCloseEvent.invoke();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 }

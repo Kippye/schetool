@@ -19,6 +19,8 @@
 
 Program::Program()
 {
+    // Listen to the SIGTERM (program termination) signal
+    signal(SIGTERM, Program::signalHandler);
     // use user-preferred locale from OS
     std::setlocale(LC_ALL, ""); 
 
@@ -48,7 +50,7 @@ void Program::loop()
 
 		if (glfwWindowShouldClose(windowManager.window))
 		{
-			programWillClose = quitProgram = true;
+			quitProgram = true;
 		}
 		render.render();
 		ioHandler.addToAutosaveTimer(render.deltaTime);
@@ -69,3 +71,5 @@ int main()
 	return 0;
 }
 #endif
+
+bool Program::quitProgram = false;
