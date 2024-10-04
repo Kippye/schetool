@@ -7,6 +7,7 @@
 
 #include "test_time_wrapper.h" // tested early because almost everything uses it
 #include "test_date_container.h" // must be tested before filters since filters use it
+#include "test_select_options.h"
 #include "test_filter.h" // tested before FilterGroups since they are contained
 #include "test_filter_group.h"
 #include "test_time_handler.h"

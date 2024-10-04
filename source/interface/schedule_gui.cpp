@@ -67,7 +67,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
         {
             // Display date editor to edit m_scheduleDateOverride.
             // If the current date was selected, just clear m_scheduleDateOverride again.
-            if (gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth) && m_scheduleDateOverride.getDateUTC() == TimeWrapper::getCurrentTime().getDateUTC())
+            if (gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth) && m_scheduleDateOverride.getDateUTC() == TimeWrapper::getCurrentTime().getLocalDate())
             {
                 m_scheduleDateOverride.clear();
             }
@@ -262,17 +262,32 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                         ImGui::PopStyleColor(pushedColorCount);
 					}
 					// column header context menu
-                    if (isColumnHeaderHovered && (ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonLeft) || ImGui::IsMouseClicked(ImGuiPopupFlags_MouseButtonRight)) && (ImGui::IsAnyItemHovered() == false || ImGui::GetHoveredID() == tableHeaderID))
+                    if (isColumnHeaderHovered // Hovering the column header
+                        && m_nextMouseReleaseOpenColumnContext // The current mouse release can open the popup
+                        && ((ImGui::GetMouseDragDelta(0).x == 0 && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) // Clicked LMB without dragging
+                            || (ImGui::GetMouseDragDelta(1).x == 0 && ImGui::IsMouseReleased(ImGuiMouseButton_Right))) // OR clicked RMB without dragging
+                        && (ImGui::IsAnyItemHovered() == false || ImGui::GetHoveredID() == tableHeaderID)) // AND hovering the table header
                     {
                         ImGui::TableOpenContextMenu(column);
                     }
+                    bool popupOpenBefore = ImGui::GetCurrentTable()->IsContextPopupOpen;
                     if (ImGui::GetCurrentTable()->ContextPopupColumn == column && ImGui::TableBeginContextMenuPopup(ImGui::GetCurrentTable()))
                     {
 						displayColumnContextPopup(column, currentTable, tableFlags);
                         ImGui::EndPopup();
                     }
+                    // The column context menu was closed this frame (probably through a mouse click)
+                    if (popupOpenBefore == true && ImGui::GetCurrentTable()->IsContextPopupOpen == false)
+                    {
+                        m_nextMouseReleaseOpenColumnContext = false;
+                    }
 					ImGui::PopID();
 				}
+                // The first mouse release after closing the column context popup does nothing but allows the next release to open it again
+                if (m_nextMouseReleaseOpenColumnContext == false && (ImGui::IsMouseReleased(ImGuiMouseButton_Left) || ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
+                {
+                    m_nextMouseReleaseOpenColumnContext = true;
+                }
 
 				std::vector<size_t> sortedRowIndices = m_scheduleCore.getSortedRowIndices();
 

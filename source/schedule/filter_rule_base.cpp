@@ -21,7 +21,7 @@ bool FilterRuleBase::isComparisonValidForElement(const ElementBase* element, boo
     return validComparison;
 }
 
-bool FilterRuleBase::checkPasses(const ElementBase* element, const TimeWrapper& currentTime) const
+bool FilterRuleBase::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const
 {
     if (isComparisonValidForElement(element) == false) { return false; }
     return true;

@@ -54,6 +54,35 @@ struct BLF_Base
     }
 };
 
+struct BLF_ClockTime : BLF_Base
+{
+	static constexpr const char* getName()
+	{
+		return "BLF_ClockTime";
+	}
+
+	unsigned int hours;
+	unsigned int minutes;
+
+	BLF_ClockTime() : hours(0), minutes(0) 
+	{}
+	BLF_ClockTime(const ClockTimeWrapper& clockTime) : hours(clockTime.getHours()), minutes(clockTime.getMinutes())
+	{}
+
+	ClockTimeWrapper getClockTime() const
+	{
+		return ClockTimeWrapper(hours, minutes);
+	}
+
+	static void addDefinition(ObjectDefinitions& definitions)
+	{
+		definitions.add(definitions.getObjectTable().define<BLF_ClockTime>(getName(),
+			blf::arg("hours", &BLF_ClockTime::hours),
+			blf::arg("minutes", &BLF_ClockTime::minutes)
+		));
+	}
+};
+
 struct BLF_Date : BLF_Base
 {
 	static constexpr const char* getName()
@@ -67,12 +96,12 @@ struct BLF_Date : BLF_Base
 
 	BLF_Date() : year(1900), month(1), monthDay(1) 
 	{}
-	BLF_Date(const TimeWrapper& date) : year(date.getYearUTC()), month(date.getMonthUTC()), monthDay(date.getMonthDayUTC())
+	BLF_Date(const DateWrapper& date) : year(date.getYear()), month(date.getMonth()), monthDay(date.getMonthDay())
 	{}
 
-	TimeWrapper getDate() const
+	DateWrapper getDate() const
 	{
-		return TimeWrapper(DateWrapper(year, month, monthDay));
+		return DateWrapper(year, month, monthDay);
 	}
 
 	static void addDefinition(ObjectDefinitions& definitions)
@@ -93,15 +122,25 @@ struct BLF_FileInfo : BLF_Base
 	}
 
 	BLF_Date editDate;
+    BLF_ClockTime editTime;
 
 	BLF_FileInfo() {}
-	BLF_FileInfo(const TimeWrapper& fileEditDate) : editDate(fileEditDate)
+	BLF_FileInfo(const TimeWrapper& fileEditTime) : editDate(fileEditTime.getDateUTC()), editTime(fileEditTime.getClockTimeUTC())
 	{}
+
+    TimeWrapper getEditTime() const
+    {
+        return TimeWrapper(
+            editDate.getDate(),
+            editTime.getClockTime()
+        );
+    }
 
 	static void addDefinition(ObjectDefinitions& definitions)
 	{
 		definitions.add(definitions.getObjectTable().define<BLF_FileInfo>(getName(),
-			blf::arg("editDate", &BLF_FileInfo::editDate, definitions.get<BLF_Date>())
+			blf::arg("editDate", &BLF_FileInfo::editDate, definitions.get<BLF_Date>()),
+			blf::arg("editTime", &BLF_FileInfo::editTime, definitions.get<BLF_ClockTime>())
 		));
 	}
 };
@@ -112,38 +151,26 @@ struct BLF_ElementInfo : BLF_Base
     {
         return "BLF_ElementInfo";
     }
-    int creationYear;
-    int creationMonth;
-    int creationMday;
-    int creationHours;
-    int creationMinutes;
+    BLF_Date creationDate;
+    BLF_ClockTime creationTime;
 
     BLF_ElementInfo() {}
-    BLF_ElementInfo(const ElementBase* element)
-    {
-        creationYear = element->getCreationTime().getYearUTC();
-        creationMonth = element->getCreationTime().getMonthUTC();
-        creationMday = element->getCreationTime().getMonthDayUTC();
-        creationHours = element->getCreationTime().getClockTimeUTC().getHours();
-        creationMinutes = element->getCreationTime().getClockTimeUTC().getMinutes();
-    }
+    BLF_ElementInfo(const ElementBase* element) : creationDate(element->getCreationTime().getDateUTC()), creationTime(element->getCreationTime().getClockTimeUTC())
+    {}
 
     TimeWrapper getCreationTime() const
     {
         return TimeWrapper(
-            DateWrapper(creationYear, creationMonth, creationMday),
-            ClockTimeWrapper(creationHours, creationMinutes)
+            creationDate.getDate(),
+            creationTime.getClockTime()
         );         
     }
 
     static void addDefinition(ObjectDefinitions& definitions)
     {
         definitions.add(definitions.getObjectTable().define<BLF_ElementInfo>(getName(), 
-            blf::arg("creationYear", &BLF_ElementInfo::creationYear),
-            blf::arg("creationMonth", &BLF_ElementInfo::creationMonth),
-            blf::arg("creationMday", &BLF_ElementInfo::creationMday),
-            blf::arg("creationHours", &BLF_ElementInfo::creationHours),
-            blf::arg("creationMinutes", &BLF_ElementInfo::creationMinutes)
+            blf::arg("creationDate", &BLF_ElementInfo::creationDate, definitions.get<BLF_Date>()),
+            blf::arg("creationTime", &BLF_ElementInfo::creationTime, definitions.get<BLF_ClockTime>())
         ));
     }
 };
@@ -842,16 +869,8 @@ struct BLF_Column : BLF_Base
         // set up SelectOptions
         SelectOptions columnSelectOptions = selectOptions.getOptions();
 
-        std::vector<ElementBase*> rows = {};
-        // add elements to rows
-        for (size_t row = 0; row < elements.size(); row++)
-        {
-            Element<T>* element = new Element<T>(elements[row].getElement());
-            rows.push_back(element);
-        }
-
         Column col = Column(
-            rows,
+            {},
             (SCHEDULE_TYPE)type,
             name,
             permanent,
@@ -860,6 +879,11 @@ struct BLF_Column : BLF_Base
             columnSelectOptions,
             (ColumnResetOption)resetOption
         );
+        // add elements to the column
+        for (size_t row = 0; row < elements.size(); row++)
+        {
+            col.addElement(col.rows.size(), new Element<T>(elements[row].getElement()));
+        }
 
         // add filter groups to the column
         for (const BLF_FilterGroup<T>& filterGroup: filterGroups)

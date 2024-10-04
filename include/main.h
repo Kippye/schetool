@@ -8,6 +8,7 @@
 #include "schedule.h"
 #include "interface.h"
 #include "time_handler.h"
+#include <csignal>
 
 class Program
 {
@@ -21,9 +22,24 @@ class Program
 		Schedule schedule;
         TimeHandler timeHandler;
 
-		bool programWillClose = false;
-		bool quitProgram = false;
+		static bool quitProgram;
 
 		Program();
+        static void signalHandler (int signum)
+        {
+            std::cout << "Program received signal: " << signum << std::endl;
+
+            switch(signum)
+            {
+                // Start the program close process when the OS orders it. Hopefully the autosave can be applied before.
+                case(SIGTERM):
+                {
+                    quitProgram = true;
+                    break;
+                }
+                default:
+                break;
+            }
+        };
 		void loop();
 };

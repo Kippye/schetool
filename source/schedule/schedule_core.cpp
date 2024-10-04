@@ -134,17 +134,6 @@ void ScheduleCore::addColumn(size_t index, const Column& column)
         m_schedule.insert(m_schedule.begin() + index, column);
     }
 
-    Column* addedColumn = getMutableColumn(index);
-    if (addedColumn->type == SCH_SELECT)
-    {
-        addedColumn->selectOptions.clearListeners();
-
-        for (size_t row = 0; row < addedColumn->rows.size(); row++)
-        {
-            addedColumn->selectOptions.addListener(row, ((Element<SelectContainer>*)addedColumn->getElement(row))->getValueReference());
-        }
-    }
-
     // Sort columns just in case, because the added Column could have a sort other than COLUMN_SORT_NONE
     sortColumns();
 }
@@ -308,23 +297,7 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
 {
     if (existsColumnAtIndex(column) == false) { return false; }
     
-    if (m_schedule.at(column).selectOptions.applyModification(selectOptionsModification) == false) { std::cout << "ScheduleCore::modifySelectOptions: Applying the following modification failed:"; std::cout << selectOptionsModification.getDataString(); return false; }
-    
-    if (m_schedule.at(column).type == SCH_SELECT)
-    {
-        for (FilterGroup& filterGroup: m_schedule.at(column).getFilterGroups())
-        {
-            for (Filter& filter : filterGroup.getFilters())
-            {
-                for (FilterRuleContainer& filterRule : filter.getRules())
-                {
-                    SelectContainer updatedValue = filterRule.getPassValue<SelectContainer>();
-                    updatedValue.update(getColumnSelectOptions(column).getLastUpdateInfo(), getColumnSelectOptions(column).getOptionCount());
-                    filterRule.setPassValue(updatedValue);
-                }
-            }
-        }
-    }
+    if (m_schedule.at(column).modifySelectOptions(selectOptionsModification) == false) { std::cout << "ScheduleCore::modifySelectOptions: Applying the following modification failed:" << std::endl; std::cout << selectOptionsModification.getDataString(); return false; }
 
     sortColumns();
     return true;
@@ -419,8 +392,6 @@ bool ScheduleCore::removeColumnFilterRule(size_t column, size_t groupIndex, size
 void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
 {
     Column& column = *getMutableColumn(index);
-    // HACK y
-    column.selectOptions.clearListeners();
 
     size_t rowCount = column.rows.size();
 
@@ -463,7 +434,8 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
             for (size_t row = 0; row < rowCount; row++)
             {
                 auto selectElement = new Element<SelectContainer>(type, Element<SelectContainer>::getDefaultValue());
-                column.selectOptions.addListener(row, selectElement->getValueReference());
+                // Update the select to have the correct number of options
+                selectElement->getValueReference().update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(), column.selectOptions.getOptionCount());
                 setElement(index, row, (ElementBase*)selectElement, false);
             }     
             break;
@@ -528,51 +500,47 @@ void ScheduleCore::addRow(size_t index)
     for (size_t i = 0; i < getColumnCount(); i++)
     {
         Column& column = m_schedule[i];
-        std::vector<ElementBase*>& columnValues = column.rows;
 
         switch(column.type)
         {
             case(SCH_BOOL):
             {
-                columnValues.insert(columnValues.begin() + index, new Element<bool>(column.type, Element<bool>::getDefaultValue()));
+                column.addElement(index, new Element<bool>(column.type, Element<bool>::getDefaultValue()));
                 break;
             }
             case(SCH_NUMBER):
             {
-                columnValues.insert(columnValues.begin() + index, new Element<int>(column.type, Element<int>::getDefaultValue()));
+                column.addElement(index, new Element<int>(column.type, Element<int>::getDefaultValue()));
                 break;
             }
             case(SCH_DECIMAL):
             {
-                columnValues.insert(columnValues.begin() + index, new Element<double>(column.type, Element<double>::getDefaultValue()));
+                column.addElement(index, new Element<double>(column.type, Element<double>::getDefaultValue()));
                 break;
             }
             case(SCH_TEXT):
             {
-                columnValues.insert(columnValues.begin() + index, new Element<std::string>(column.type, Element<std::string>::getDefaultValue()));
+                column.addElement(index, new Element<std::string>(column.type, Element<std::string>::getDefaultValue()));
                 break;
             }
             case(SCH_SELECT):
             {
-                Element<SelectContainer>* selectElement = new Element<SelectContainer>(column.type, Element<SelectContainer>::getDefaultValue());
-                columnValues.insert(columnValues.begin() + index, selectElement);
-                column.selectOptions.addListener(index, selectElement->getValueReference());
+                column.addElement(index, new Element<SelectContainer>(column.type, Element<SelectContainer>::getDefaultValue()));
                 break;
             }
             case(SCH_WEEKDAY):
             {
-                Element<WeekdayContainer>* weekdayElement = new Element<WeekdayContainer>(column.type, Element<WeekdayContainer>::getDefaultValue());
-                columnValues.insert(columnValues.begin() + index, weekdayElement);
+                column.addElement(index, new Element<WeekdayContainer>(column.type, Element<WeekdayContainer>::getDefaultValue()));
                 break;
             }
             case(SCH_TIME):
             { 
-                columnValues.insert(columnValues.begin() + index, new Element<TimeContainer>(column.type, Element<TimeContainer>::getDefaultValue()));      
+                column.addElement(index, new Element<TimeContainer>(column.type, Element<TimeContainer>::getDefaultValue()));      
                 break;
             }
             case(SCH_DATE):
             { 
-                columnValues.insert(columnValues.begin() + index, new Element<DateContainer>(column.type, Element<DateContainer>::getDefaultValue()));      
+                column.addElement(index, new Element<DateContainer>(column.type, Element<DateContainer>::getDefaultValue()));      
                 break;
             }
             default:
@@ -600,11 +568,6 @@ bool ScheduleCore::removeRow(size_t row)
         else
         {
             m_schedule[i].rows.erase(m_schedule[i].rows.begin() + row);
-        }
-        // for Select Columns, remove the Element from SelectOptions listeners
-        if (m_schedule[i].type == SCH_SELECT)
-        {
-            m_schedule[i].selectOptions.removeListener(row);
         }
     }
 

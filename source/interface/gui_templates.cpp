@@ -42,6 +42,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
         }
     }
 
+    const float inputLabelWidth = ImGui::CalcTextSize("September").x * 1.5f;
     // MONTH SELECTION
     if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left))
     {
@@ -51,7 +52,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     TimeWrapper formatTime;
     formatTime.setMonthUTC(viewedMonth);
     std::string monthName = formatTime.getDynamicFmtStringUTC("{:%B}");
-    ImGui::SetNextItemWidth(gui_sizes::date_editor::monthNameComboWidth);
+    ImGui::SetNextItemWidth(inputLabelWidth);
     if (ImGui::BeginCombo("##DateEditorMonth", monthName.c_str(), ImGuiComboFlags_NoArrowButton))
     {
         for (size_t i = 1; i <= 12; i++)
@@ -88,7 +89,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
         viewedYear = TimeWrapper::limitYearToValidRange(viewedYear - 1);
     }
     ImGui::SameLine();
-    ImGui::SetNextItemWidth(gui_sizes::date_editor::yearInputWidth);
+    ImGui::SetNextItemWidth(inputLabelWidth);
     if (ImGui::InputInt("##YearInput", &yearInput, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         viewedYear = TimeWrapper::limitYearToValidRange(yearInput);
@@ -98,6 +99,9 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     {
         viewedYear = TimeWrapper::limitYearToValidRange(viewedYear + 1);
     }
+    ImGui::SameLine(0.0f, 0.0f);
+    const float dayButtonsAreaWidth = ImGui::GetCursorPosX() - ImGui::GetWindowContentRegionMin().x;
+    ImGui::NewLine();
 
     // MONTH DAYS
     size_t dayIndex = 0;
@@ -112,7 +116,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate, unsigned int& viewedYear
     int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
 
     unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
-    const float monthDayButtonSize = ImGui::GetContentRegionAvail().x / 7.0f - (6 * gui_sizes::date_editor::monthDayButtonSpacing.x);
+    const float monthDayButtonSize = /*ImGui::GetContentRegionAvail().x*/ dayButtonsAreaWidth / 7.0f - (6 * gui_sizes::date_editor::monthDayButtonSpacing.x);
 
     auto addCalendarDay = [&](int month, int dayDisplayNumber)
     {

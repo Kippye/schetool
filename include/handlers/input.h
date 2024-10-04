@@ -67,7 +67,7 @@ class Input
 		void init(Window*);
 		void processInput(GLFWwindow* window);
 
-		void addEventListener(INPUT_EVENT callback, std::function<void()>& listener);
+		void addEventListener(INPUT_EVENT callback, const std::function<void()>& listener);
   	size_t getEventListenerCount(INPUT_EVENT callback);
 		void invokeEvent(INPUT_EVENT callback);
 		bool getEventInvokedLastFrame(INPUT_EVENT callback);
