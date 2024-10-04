@@ -8,6 +8,7 @@
 #include "time_container.h"
 #include "date_container.h"
 #include "select_container.h"
+#include "single_select_container.h"
 #include "weekday_container.h"
 #include "schedule_column.h"
 #include "element.h"
@@ -44,7 +45,7 @@ class ObjectDefinitions
 
 struct BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
         return "BLF_Base";
     }
@@ -56,7 +57,7 @@ struct BLF_Base
 
 struct BLF_ClockTime : BLF_Base
 {
-	static constexpr const char* getName()
+	static constexpr std::string getName()
 	{
 		return "BLF_ClockTime";
 	}
@@ -85,7 +86,7 @@ struct BLF_ClockTime : BLF_Base
 
 struct BLF_Date : BLF_Base
 {
-	static constexpr const char* getName()
+	static constexpr std::string getName()
 	{
 		return "BLF_Date";
 	}
@@ -116,7 +117,7 @@ struct BLF_Date : BLF_Base
 
 struct BLF_FileInfo : BLF_Base
 {
-	static constexpr const char* getName()
+	static constexpr std::string getName()
 	{
 		return "BLF_FileInfo";
 	}
@@ -147,7 +148,7 @@ struct BLF_FileInfo : BLF_Base
 
 struct BLF_ElementInfo : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
         return "BLF_ElementInfo";
     }
@@ -181,7 +182,7 @@ struct BLF_Element : BLF_Base {};
 template <>
 struct BLF_Element<bool> : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
         return "BLF_Element_bool";
     }
@@ -211,7 +212,7 @@ struct BLF_Element<bool> : BLF_Base
 template <>
 struct BLF_Element<int> : BLF_Base
 {
-	static constexpr const char* getName()
+	static constexpr std::string getName()
 	{
 		return "BLF_Element_int";
 	}        
@@ -241,7 +242,7 @@ struct BLF_Element<int> : BLF_Base
 template <>
 struct BLF_Element<double> : BLF_Base
 {
-	static constexpr const char* getName()
+	static constexpr std::string getName()
 	{
 		return "BLF_Element_double";
 	}        
@@ -271,7 +272,7 @@ struct BLF_Element<double> : BLF_Base
 template <>
 struct BLF_Element<std::string> : BLF_Base
 {
-	static constexpr const char* getName()
+	static constexpr std::string getName()
 	{
 		return "BLF_Element_string";
 	}        
@@ -299,9 +300,55 @@ struct BLF_Element<std::string> : BLF_Base
 };
 
 template <>
+struct BLF_Element<SingleSelectContainer> : BLF_Base
+{
+    static constexpr std::string getName()
+    {
+        return "BLF_Element_SingleSelectContainer";
+    }
+    BLF_ElementInfo info;
+    std::vector<size_t> selectionIndices = {};
+
+    BLF_Element() {}
+    BLF_Element(const Element<SingleSelectContainer>* element) : info(element)
+    {
+        const std::optional<size_t> selection = element->getValue().getSelection();
+        if (selection.has_value())
+        {
+            selectionIndices.push_back(selection.value());
+        }
+    }
+
+    std::optional<size_t> getSelection() const
+    {
+        if (selectionIndices.size() == 0)
+        {
+            return std::nullopt;
+        }
+
+        return selectionIndices[0];
+    }
+
+	Element<SingleSelectContainer> getElement() const
+	{
+		Element<SingleSelectContainer> singleSelect = Element<SingleSelectContainer>(SCH_SELECT, SingleSelectContainer(), info.getCreationTime());
+		singleSelect.getValueReference().replaceSelection(getSelection());
+		return singleSelect;
+	}
+
+    static void addDefinition(ObjectDefinitions& definitions)
+    {
+        definitions.add(definitions.getObjectTable().define<BLF_Element<SingleSelectContainer>>(getName(),
+            blf::arg("info", &BLF_Element<SingleSelectContainer>::info, definitions.get<BLF_ElementInfo>()),
+            blf::arg("selectionIndices", &BLF_Element<SingleSelectContainer>::selectionIndices)
+        ));
+    }
+};
+
+template <>
 struct BLF_Element<SelectContainer> : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
         return "BLF_Element_SelectContainer";
     }        
@@ -333,7 +380,7 @@ struct BLF_Element<SelectContainer> : BLF_Base
 
 	Element<SelectContainer> getElement() const
 	{
-		Element<SelectContainer> select = Element<SelectContainer>(SCH_SELECT, SelectContainer(), info.getCreationTime());
+		Element<SelectContainer> select = Element<SelectContainer>(SCH_MULTISELECT, SelectContainer(), info.getCreationTime());
 		select.getValueReference().replaceSelection(getSelection());
 		return select;
 	}
@@ -350,7 +397,7 @@ struct BLF_Element<SelectContainer> : BLF_Base
 template <>
 struct BLF_Element<WeekdayContainer> : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
         return "BLF_Element_WeekdayContainer";
     }
@@ -403,7 +450,7 @@ struct BLF_Element<WeekdayContainer> : BLF_Base
 template <>
 struct BLF_Element<TimeContainer> : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
         return "BLF_Element_TimeContainer";
     }
@@ -436,7 +483,7 @@ struct BLF_Element<TimeContainer> : BLF_Base
 template <>
 struct BLF_Element<DateContainer> : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
         return "BLF_Element_DateContainer";
     }
@@ -481,9 +528,9 @@ struct BLF_Element<DateContainer> : BLF_Base
 template <typename T>
 struct BLF_FilterRule : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
-        return "BLF_FilterRule";
+        return std::string("BLF_FilterRule_").append(Element<T>::getTypeName());
     }
     BLF_Element<T> passValueElement;
     int comparison = 0;
@@ -517,60 +564,12 @@ struct BLF_FilterRule : BLF_Base
     }
 };
 
-template <>
-constexpr const char* BLF_FilterRule<bool>::getName()
-{
-    return "BLF_FilterRule_bool";
-}
-
-template <>
-constexpr const char* BLF_FilterRule<int>::getName()
-{
-    return "BLF_FilterRule_int";
-}
-
-template <>
-constexpr const char* BLF_FilterRule<double>::getName()
-{
-    return "BLF_FilterRule_double";
-}
-
-template <>
-constexpr const char* BLF_FilterRule<std::string>::getName()
-{
-    return "BLF_FilterRule_string";
-}
-
-template <>
-constexpr const char* BLF_FilterRule<SelectContainer>::getName()
-{
-    return "BLF_FilterRule_SelectContainer";
-}
-
-template <>
-constexpr const char* BLF_FilterRule<WeekdayContainer>::getName()
-{
-    return "BLF_FilterRule_WeekdayContainer";
-}
-
-template <>
-constexpr const char* BLF_FilterRule<TimeContainer>::getName()
-{
-    return "BLF_FilterRule_TimeContainer";
-}
-
-template <>
-constexpr const char* BLF_FilterRule<DateContainer>::getName()
-{
-    return "BLF_FilterRule_DateContainer";
-}
-
 template <typename T>
 struct BLF_Filter : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
-        return "BLF_Filter";
+        return std::string("BLF_Filter_").append(Element<T>::getTypeName());
     }
     int logicalOperator;
     std::vector<BLF_FilterRule<T>> rules = {};
@@ -607,60 +606,12 @@ struct BLF_Filter : BLF_Base
     }
 };
 
-template <>
-constexpr const char* BLF_Filter<bool>::getName()
-{
-    return "BLF_Filter_bool";
-}
-
-template <>
-constexpr const char* BLF_Filter<int>::getName()
-{
-    return "BLF_Filter_int";
-}
-
-template <>
-constexpr const char* BLF_Filter<double>::getName()
-{
-    return "BLF_Filter_double";
-}
-
-template <>
-constexpr const char* BLF_Filter<std::string>::getName()
-{
-    return "BLF_Filter_string";
-}
-
-template <>
-constexpr const char* BLF_Filter<SelectContainer>::getName()
-{
-    return "BLF_Filter_SelectContainer";
-}
-
-template <>
-constexpr const char* BLF_Filter<WeekdayContainer>::getName()
-{
-    return "BLF_Filter_WeekdayContainer";
-}
-
-template <>
-constexpr const char* BLF_Filter<TimeContainer>::getName()
-{
-    return "BLF_Filter_TimeContainer";
-}
-
-template <>
-constexpr const char* BLF_Filter<DateContainer>::getName()
-{
-    return "BLF_Filter_DateContainer";
-}
-
 template <typename T>
 struct BLF_FilterGroup : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
-        return "BLF_FilterGroup";
+        return std::string("BLF_FilterGroup_").append(Element<T>::getTypeName());
     }
     int logicalOperator;
     std::string name;
@@ -703,57 +654,9 @@ struct BLF_FilterGroup : BLF_Base
     }
 };
 
-template <>
-constexpr const char* BLF_FilterGroup<bool>::getName()
-{
-    return "BLF_FilterGroup_bool";
-}
-
-template <>
-constexpr const char* BLF_FilterGroup<int>::getName()
-{
-    return "BLF_FilterGroup_int";
-}
-
-template <>
-constexpr const char* BLF_FilterGroup<double>::getName()
-{
-    return "BLF_FilterGroup_double";
-}
-
-template <>
-constexpr const char* BLF_FilterGroup<std::string>::getName()
-{
-    return "BLF_FilterGroup_string";
-}
-
-template <>
-constexpr const char* BLF_FilterGroup<SelectContainer>::getName()
-{
-    return "BLF_FilterGroup_SelectContainer";
-}
-
-template <>
-constexpr const char* BLF_FilterGroup<WeekdayContainer>::getName()
-{
-    return "BLF_FilterGroup_WeekdayContainer";
-}
-
-template <>
-constexpr const char* BLF_FilterGroup<TimeContainer>::getName()
-{
-    return "BLF_FilterGroup_TimeContainer";
-}
-
-template <>
-constexpr const char* BLF_FilterGroup<DateContainer>::getName()
-{
-    return "BLF_FilterGroup_DateContainer";
-}
-
 struct BLF_SelectOption : BLF_Base
 {
-	static constexpr const char* getName()
+	static constexpr std::string getName()
 	{
 		return "BLF_SelectOption";
 	}
@@ -784,7 +687,7 @@ struct BLF_SelectOption : BLF_Base
 
 struct BLF_SelectOptions : BLF_Base
 {
-	static constexpr const char* getName()
+	static constexpr std::string getName()
 	{
 		return "BLF_SelectOptions";
 	}
@@ -825,9 +728,9 @@ struct BLF_SelectOptions : BLF_Base
 template <typename T>
 struct BLF_Column : BLF_Base
 {
-    static constexpr const char* getName()
+    static constexpr std::string getName()
     {
-        return "BLF_Column";
+        return std::string("BLF_Column_").append(Element<T>::getTypeName());
     }
     int index;
     int type;
@@ -910,54 +813,6 @@ struct BLF_Column : BLF_Base
         ));
     }
 };
-
-template <>
-constexpr const char* BLF_Column<bool>::getName()
-{
-    return "BLF_Column_bool";
-}
-
-template <>
-constexpr const char* BLF_Column<int>::getName()
-{
-    return "BLF_Column_int";
-}
-
-template <>
-constexpr const char* BLF_Column<double>::getName()
-{
-    return "BLF_Column_double";
-}
-
-template <>
-constexpr const char* BLF_Column<std::string>::getName()
-{
-    return "BLF_Column_string";
-}
-
-template <>
-constexpr const char* BLF_Column<SelectContainer>::getName()
-{
-    return "BLF_Column_SelectContainer";
-}
-
-template <>
-constexpr const char* BLF_Column<WeekdayContainer>::getName()
-{
-    return "BLF_Column_WeekdayContainer";
-}
-
-template <>
-constexpr const char* BLF_Column<TimeContainer>::getName()
-{
-    return "BLF_Column_TimeContainer";
-}
-
-template <>
-constexpr const char* BLF_Column<DateContainer>::getName()
-{
-    return "BLF_Column_DateContainer";
-}
 
 template <typename T>
 concept DerivedBlfBase = std::is_base_of<BLF_Base, T>::value;

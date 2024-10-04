@@ -83,6 +83,10 @@ bool Column::addElement(size_t index, ElementBase* element)
     // Update added selects to have the correct number of options
     if (element->getType() == SCH_SELECT)
     {
+        ((Element<SingleSelectContainer>*)element)->getValueReference().update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(), selectOptions.getOptionCount());
+    }
+    else if (element->getType() == SCH_MULTISELECT)
+    {
         ((Element<SelectContainer>*)element)->getValueReference().update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(), selectOptions.getOptionCount());
     }
 
@@ -114,8 +118,31 @@ bool Column::modifySelectOptions(const SelectOptionsModification& modification)
 {
     if (selectOptions.applyModification(modification))
     {
-        // If this column is a select column, update all the SelectContainers
+        // If this column is a select column, update all the (Single)SelectContainers
         if (type == SCH_SELECT)
+        {
+            // Update elements
+            for (ElementBase* element : rows)
+            {
+                ((Element<SingleSelectContainer>*)element)->getValueReference().update(
+                    modification.getUpdateInfo(), selectOptions.getOptionCount()
+                );
+            }
+            // Update filters
+            for (FilterGroup& filterGroup : getFilterGroups())
+            {
+                for (Filter& filter : filterGroup.getFilters())
+                {
+                    for (FilterRuleContainer& filterRule : filter.getRules())
+                    {
+                        SingleSelectContainer updatedValue = filterRule.getPassValue<SingleSelectContainer>();
+                        updatedValue.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                        filterRule.setPassValue(updatedValue);
+                    }
+                }
+            }
+        }
+        if (type == SCH_MULTISELECT)
         {
             // Update elements
             for (ElementBase* element : rows)

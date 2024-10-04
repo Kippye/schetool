@@ -155,6 +155,9 @@ class FilterRuleEditorSubGui : public Gui
                                 m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<std::string>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_SELECT):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<SingleSelectContainer>>(ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_MULTISELECT):
                                 m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<SelectContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_WEEKDAY):
@@ -195,6 +198,9 @@ class FilterRuleEditorSubGui : public Gui
                             m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<std::string>());
                             break;
                         case(SCH_SELECT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<SingleSelectContainer>());
+                            break;
+                        case(SCH_MULTISELECT):
                             m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getPrevRule().getAsType<SelectContainer>());
                             break;
                         case(SCH_WEEKDAY):
@@ -290,6 +296,9 @@ class FilterRuleEditorSubGui : public Gui
                                 m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<std::string>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_SELECT):
+                                m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<SingleSelectContainer>>(ruleAddOrRemoveBase)->getRule());
+                                break;
+                            case(SCH_MULTISELECT):
                                 m_filterGroupState.getFilterGroup().getFilter(ruleAddOrRemoveBase->getFilterIndex()).addRule(ruleAddOrRemoveBase->getFilterRuleIndex(), std::dynamic_pointer_cast<const FilterRuleAddOrRemoveEdit<SelectContainer>>(ruleAddOrRemoveBase)->getRule());
                                 break;
                             case(SCH_WEEKDAY):
@@ -331,6 +340,9 @@ class FilterRuleEditorSubGui : public Gui
                             m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<std::string>());
                             break;
                         case(SCH_SELECT):
+                            m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<SingleSelectContainer>());
+                            break;
+                        case(SCH_MULTISELECT):
                             m_filterGroupState.getFilterGroup().getFilter(ruleChangeBase->getFilterIndex()).replaceRule(ruleChangeBase->getFilterRuleIndex(), ruleChangeBase->getNewRule().getAsType<SelectContainer>());
                             break;
                         case(SCH_WEEKDAY):

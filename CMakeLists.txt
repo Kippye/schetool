@@ -37,7 +37,7 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
         ENDIF()
         # GNU (G++)
         IF (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -fuse-ld=lld -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=${CPP_VERSION}")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -fuse-ld=lld -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=${CPP_VERSION} -Wa,-mbig-obj") # Pass  -Wa,-mbig-obj to avoid error for data_converter.cpp due to its size.
         ENDIF()
         message(STATUS "~~ Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
 
@@ -136,6 +136,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/date_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/file_info.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/select_container.cpp"
+    "${SCHETOOL_SRC}/${CONTAINERS_DIR}/single_select_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/select_options.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_wrapper.cpp"

@@ -27,6 +27,7 @@ void DataConverter::setupObjectTable()
     addTypeObjectDefinitions<int>();
     addTypeObjectDefinitions<double>();
     addTypeObjectDefinitions<std::string>();
+    addTypeObjectDefinitions<SingleSelectContainer>();
     addTypeObjectDefinitions<SelectContainer>();
     addTypeObjectDefinitions<WeekdayContainer>();
     addTypeObjectDefinitions<TimeContainer>();
@@ -79,6 +80,9 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
                 addColumnToData<std::string>(data, schedule[c], c);
                 break;
             case(SCH_SELECT):
+                addColumnToData<SingleSelectContainer>(data, schedule[c], c);
+                break;
+            case(SCH_MULTISELECT):
                 addColumnToData<SelectContainer>(data, schedule[c], c);
                 break;
             case(SCH_WEEKDAY):
@@ -160,6 +164,14 @@ std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vecto
                 break;
             }
             case(SCH_SELECT):
+            { 
+                for (const BLF_Column<SingleSelectContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<SingleSelectContainer>>()))
+                {
+                    columnTypes.insert({column.index, type});
+                }  
+                break;
+            }
+            case(SCH_MULTISELECT):
             { 
                 for (const BLF_Column<SelectContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<SelectContainer>>()))
                 {
@@ -253,6 +265,17 @@ std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vecto
                 break;
             }
             case(SCH_SELECT):
+            { 
+                for (const BLF_Column<SingleSelectContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<SingleSelectContainer>>()))
+                {
+                    if (column.index == columnIndex) 
+                    {
+                        schedule.push_back(column.getColumn());
+                    }
+                }  
+                break;
+            }
+            case(SCH_MULTISELECT):
             { 
                 for (const BLF_Column<SelectContainer>& column: fileBody.data.groupby(m_definitions.get<BLF_Column<SelectContainer>>()))
                 {

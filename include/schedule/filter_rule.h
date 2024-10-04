@@ -124,6 +124,29 @@ inline std::string FilterRule<DateContainer>::getString() const
 }
 
 template <>
+inline bool FilterRule<SingleSelectContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const
+{
+    SingleSelectContainer value = useDefaultValue == false ? ((const Element<SingleSelectContainer>*)element)->getValue() : Element<SingleSelectContainer>::getDefaultValue();
+
+    switch(m_comparison)
+    {
+        case Comparison::Is:
+        {
+            return (value == m_passValue);
+        }
+        case Comparison::IsNot:
+        {
+            return (value != m_passValue);
+        }
+        case Comparison::IsEmpty:
+        {
+            return (value.getSelection().has_value() == false);
+        }
+        default: isComparisonValidForElement(element); return false;
+    }
+}
+
+template <>
 inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const
 {
     SelectContainer value = useDefaultValue == false ? ((const Element<SelectContainer>*)element)->getValue() : Element<SelectContainer>::getDefaultValue();

@@ -28,6 +28,7 @@ namespace schedule_consts
         {SCH_DECIMAL, "Decimal"},
         {SCH_TEXT, "Text"},
         {SCH_SELECT, "Select"},
+        {SCH_MULTISELECT, "Multi-select"},
         {SCH_WEEKDAY, "Weekday"},
         {SCH_TIME, "Time"},
         {SCH_DATE, "Date"},

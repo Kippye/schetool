@@ -6,6 +6,8 @@
 #include "schedule_column.h"
 #include "schedule_constants.h"
 #include "element.h"
+#include "single_select_container.h"
+#include "weekday_container.h"
 #include "select_options.h"
 
 class ScheduleCore
@@ -201,6 +203,11 @@ class ScheduleCore
                         break;
                     }
                     case(SCH_SELECT):
+                    {
+                        getElementAsSpecial<SingleSelectContainer>(column, row)->setValue(((Element<SingleSelectContainer>*)other)->getValue());
+                        break;
+                    }
+                    case(SCH_MULTISELECT):
                     {
                         getElementAsSpecial<SelectContainer>(column, row)->setValue(((Element<SelectContainer>*)other)->getValue());
                         break;

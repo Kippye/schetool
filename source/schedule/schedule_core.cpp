@@ -3,7 +3,6 @@
 #include <vector>
 #include <numeric>
 #include "filter_rule.h"
-#include "weekday_container.h"
 #include "schedule_core.h"
 #include "element_base.h"
 
@@ -223,6 +222,11 @@ bool ScheduleCore::setColumnElements(size_t index, const Column& columnData)
             }
             case(SCH_SELECT):
             { 
+                setElementValue(index, row, ((Element<SingleSelectContainer>*)columnData.rows[row])->getValue());
+                break;
+            }
+            case(SCH_MULTISELECT):
+            { 
                 setElementValue(index, row, ((Element<SelectContainer>*)columnData.rows[row])->getValue());
                 break;
             }
@@ -433,6 +437,17 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type)
         {
             for (size_t row = 0; row < rowCount; row++)
             {
+                auto selectElement = new Element<SingleSelectContainer>(type, Element<SingleSelectContainer>::getDefaultValue());
+                // Update the select to have the correct number of options
+                selectElement->getValueReference().update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(), column.selectOptions.getOptionCount());
+                setElement(index, row, (ElementBase*)selectElement, false);
+            }     
+            break;
+        }
+        case(SCH_MULTISELECT):
+        {
+            for (size_t row = 0; row < rowCount; row++)
+            {
                 auto selectElement = new Element<SelectContainer>(type, Element<SelectContainer>::getDefaultValue());
                 // Update the select to have the correct number of options
                 selectElement->getValueReference().update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(), column.selectOptions.getOptionCount());
@@ -524,6 +539,11 @@ void ScheduleCore::addRow(size_t index)
                 break;
             }
             case(SCH_SELECT):
+            {
+                column.addElement(index, new Element<SingleSelectContainer>(column.type, Element<SingleSelectContainer>::getDefaultValue()));
+                break;
+            }
+            case(SCH_MULTISELECT):
             {
                 column.addElement(index, new Element<SelectContainer>(column.type, Element<SelectContainer>::getDefaultValue()));
                 break;

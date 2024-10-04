@@ -95,6 +95,9 @@ class Schedule
                     addColumnFilterRule<std::string>(col, groupIndex, filterIndex, filterRule.getAsType<std::string>());
                 break;
                 case SCH_SELECT:
+                    addColumnFilterRule<SingleSelectContainer>(col, groupIndex, filterIndex, filterRule.getAsType<SingleSelectContainer>());
+                break;
+                case SCH_MULTISELECT:
                     addColumnFilterRule<SelectContainer>(col, groupIndex, filterIndex, filterRule.getAsType<SelectContainer>());
                 break;
                 case SCH_WEEKDAY:
@@ -129,6 +132,9 @@ class Schedule
                     replaceColumnFilterRule<std::string>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<std::string>(), rule.getAsType<std::string>());
                 break;
                 case SCH_SELECT:
+                    replaceColumnFilterRule<SingleSelectContainer>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<SingleSelectContainer>(), rule.getAsType<SingleSelectContainer>());
+                break;
+                case SCH_MULTISELECT:
                     replaceColumnFilterRule<SelectContainer>(col, groupIndex, filterIndex, ruleIndex,  previousRule.getAsType<SelectContainer>(), rule.getAsType<SelectContainer>());
                 break;
                 case SCH_WEEKDAY:
@@ -163,6 +169,9 @@ class Schedule
                     removeColumnFilterRule<std::string>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_SELECT:
+                    removeColumnFilterRule<SingleSelectContainer>(col, groupIndex, filterIndex, ruleIndex);
+                break;
+                case SCH_MULTISELECT:
                     removeColumnFilterRule<SelectContainer>(col, groupIndex, filterIndex, ruleIndex);
                 break;
                 case SCH_WEEKDAY:
