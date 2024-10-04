@@ -16,6 +16,7 @@ class ScheduleGui : public Gui
         const ScheduleCore& m_scheduleCore;
         const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
         bool m_openDateSelectPopup = false;
+        bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
