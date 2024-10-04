@@ -190,6 +190,10 @@ struct ColumnSortComparison
             }
             case(SCH_SELECT):
             {
+                return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SingleSelectContainer>*)left)->getValue() > ((const Element<SingleSelectContainer>*)right)->getValue() : ((const Element<SingleSelectContainer>*)left)->getValue() < ((const Element<SingleSelectContainer>*)right)->getValue();
+            }
+            case(SCH_MULTISELECT):
+            {
                 return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getValue() > ((const Element<SelectContainer>*)right)->getValue() : ((const Element<SelectContainer>*)left)->getValue() < ((const Element<SelectContainer>*)right)->getValue();
             }
             case(SCH_WEEKDAY):

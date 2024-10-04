@@ -5,11 +5,6 @@ void WeekdayContainer::update(const SelectOptionUpdateInfo& change, size_t optio
     // do nothing, weekday options can't be changed
 }
 
-const std::set<size_t> WeekdayContainer::getSelection() const
-{
-    return m_selection;
-}  
-
 // STATIC
 WeekdayContainer WeekdayContainer::getCurrentSystemWeekday(const TimeWrapper& currentTime)
 {

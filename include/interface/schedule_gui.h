@@ -6,6 +6,7 @@
 #include "main_menu_bar_gui.h"
 #include "element_base.h"
 #include "select_container.h"
+#include "single_select_container.h"
 #include "schedule_events.h"
 #include "schedule_core.h"
 #include "schedule_column.h"

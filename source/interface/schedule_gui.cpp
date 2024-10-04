@@ -452,7 +452,66 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 }
 								break;
 							}
-							case(SCH_SELECT):
+                            case(SCH_SELECT):
+							{
+                                SingleSelectContainer value = getElementValue<SingleSelectContainer>(column, row, columnEditDisabled);
+                                auto selection = value.getSelection();
+                                const std::vector<SelectOption>& options = m_scheduleCore.getColumn(column)->selectOptions.getOptions();
+
+                                // Temporary error patching
+                                if (selection.has_value())
+                                {
+                                    // error: there should never be more selected than options
+                                    if (options.size() == 0)
+                                    {
+                                        printf("ScheduleGui::draw(): SingleSelect at (%zu; %zu) has more index (%zu) in selection but there are no existing options. Removing index from selection for this frame!\n", column, row, selection.value());
+                                        selection.reset();
+                                    }
+
+                                    // error fix attempt: there should never be selection indices that are >= optionNames.size()
+                                    if (selection.value() >= options.size())
+                                    {
+                                        printf("ScheduleGui::draw(): SingleSelect at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection for this frame.\n", column, row, selection.value(), options.size());
+                                        selection.reset();
+                                    }
+                                }
+
+                                if (selection.has_value())
+                                {
+                                    if (gui_templates::SelectOptionButton(options[selection.value()], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                                    {
+                                        // right clicking erases the option - bonus feature
+                                        if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                                        {
+                                            value.setSelected(selection.value(), false);
+                                            setElementValueSelect.invoke(column, row, value); 
+                                        }
+                                    }
+                                }
+                                if (isEditableElementClicked(columnEditDisabled))
+                                {
+                                    if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                    {
+                                        elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                        elementEditor->setEditorValue(value);
+                                    }
+                                }
+                                if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
+                                {
+                                    auto [editorColumn, editorRow] = elementEditor->getCoordinates();
+                                    if (column == editorColumn && row == editorRow)
+                                    {
+                                        elementEditor->draw(window, input, guiTextures);
+                                        // was editing this Element, made edits and just closed the editor. apply the edits
+                                        if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false && elementEditor->getMadeEdits())
+                                        {
+                                            setElementValueSelect.invoke(column, row, elementEditor->getEditorValue(value));
+                                        }
+                                    }
+                                }
+								break;
+							}
+							case(SCH_MULTISELECT):
 							{
                                 SelectContainer value = getElementValue<SelectContainer>(column, row, columnEditDisabled);
                                 auto selection = value.getSelection();
@@ -513,7 +572,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
-                                        elementEditor->open(column, row, SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                                        elementEditor->open(column, row, SCH_MULTISELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
                                         elementEditor->setEditorValue(value);
                                     }
                                 }

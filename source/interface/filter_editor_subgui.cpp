@@ -239,10 +239,56 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
             }
             case(SCH_SELECT):
             {
+				SingleSelectContainer value = m_filterRuleState.getFilterRule().getPassValue<SingleSelectContainer>();
+                auto prevFilter = m_filterRuleState.getFilterRule().getAsType<SingleSelectContainer>(); 
+
+                auto [comparisonChanged, newComparison] = displayComparisonCombo(SCH_SELECT);
+
+                if (comparisonChanged && m_editing == true)
+                {
+                    filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<SingleSelectContainer>());
+                    invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                }
+
+                if (newComparison != Comparison::IsEmpty)
+                {
+                    auto selection = value.getSelection();
+                    const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_filterGroupState.getColumnIndex()).getOptions();
+                    // Options
+                    for (size_t i = 0; i < options.size(); i++)
+                    {
+                        bool selected = selection == i;
+
+                        auto setCurrentOptionSelected = [&](bool newSelected)
+                        {
+                            value.setSelected(i, newSelected);
+                            m_filterRuleState.getFilterRule().setPassValue(value);
+                            if (m_editing == true)
+                            {
+                                filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<SingleSelectContainer>());
+                                invokeEditFilterRuleEvent(FilterRuleContainer(prevFilter));
+                            }
+                        };
+
+                        if (ImGui::Checkbox(std::string("##SelectFilterEditorCheck").append(std::to_string(i)).c_str(), &selected))
+                        {
+                            setCurrentOptionSelected(selected);
+                        }
+                        ImGui::SameLine();
+                        if (gui_templates::SelectOptionSelectable(options[i], std::format("##EditorOption{}", i).c_str(), &selected, ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0), ImGuiSelectableFlags_DontClosePopups))
+                        {
+                            setCurrentOptionSelected(selected);
+                        }
+                    }
+                }
+                break;
+            }
+            case(SCH_MULTISELECT):
+            {
 				SelectContainer value = m_filterRuleState.getFilterRule().getPassValue<SelectContainer>();
                 auto prevFilter = m_filterRuleState.getFilterRule().getAsType<SelectContainer>(); 
 
-                auto [comparisonChanged, newComparison] = displayComparisonCombo(SCH_SELECT);
+                auto [comparisonChanged, newComparison] = displayComparisonCombo(SCH_MULTISELECT);
 
                 if (comparisonChanged && m_editing == true)
                 {
@@ -449,6 +495,9 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                     filter.addRule(m_filterRuleState.getFilterRule().getAsType<std::string>());
                     break;
                 case(SCH_SELECT):
+                    filter.addRule(m_filterRuleState.getFilterRule().getAsType<SingleSelectContainer>());
+                    break;
+                case(SCH_MULTISELECT):
                     filter.addRule(m_filterRuleState.getFilterRule().getAsType<SelectContainer>());
                     break;
                 case(SCH_WEEKDAY):
@@ -513,6 +562,9 @@ void FilterRuleEditorSubGui::openEdit(SCHEDULE_TYPE type, const std::string& col
             m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<std::string>());
             break;
         case(SCH_SELECT):
+            m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<SingleSelectContainer>());
+            break;
+        case(SCH_MULTISELECT):
             m_filterRuleState.setup(type, filterIndex, ruleIndex, m_filterGroupState.getFilterGroup().getFilter(filterIndex).getRule(ruleIndex).getAsType<SelectContainer>());
             break;
         case(SCH_WEEKDAY):
@@ -572,6 +624,11 @@ void FilterRuleEditorSubGui::openCreate(SCHEDULE_TYPE type, const std::string& c
             break;
         }
         case(SCH_SELECT):
+        {
+            m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<SingleSelectContainer>(SingleSelectContainer()));
+            break;
+        }
+        case(SCH_MULTISELECT):
         {
             m_filterRuleState.setup(type, filterIndex, filter.getRuleCount(), FilterRule<SelectContainer>(SelectContainer()));
             break;

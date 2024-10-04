@@ -4,9 +4,10 @@
 #include <type_traits>
 #include "element_base.h"
 #include "select_container.h"
+#include "single_select_container.h"
+#include "weekday_container.h"
 #include "time_container.h"
 #include "date_container.h"
-#include "weekday_container.h"
 
 template <typename T>
 class Element : public ElementBase
@@ -33,13 +34,18 @@ class Element : public ElementBase
             return m_value != other.m_value;
         }
 
+        static constexpr const char* getTypeName()
+        {
+            return "Element";
+        }
+
         std::string getString() const override
         {
             if constexpr(std::is_same_v<T, TimeContainer> || std::is_same_v<T, DateContainer>)
             {
                 return m_value.getString();
             }
-            else if constexpr(std::is_same_v<T, SelectContainer> || std::is_same_v<T, WeekdayContainer>)
+            else if constexpr(std::is_same_v<T, SingleSelectContainer> || std::is_same_v<T, SelectContainer> || std::is_same_v<T, WeekdayContainer>)
             {
                 return "[...]";
             }
@@ -108,6 +114,12 @@ inline std::string Element<std::string>::getDefaultValue()
 }
 
 template <>
+inline SingleSelectContainer Element<SingleSelectContainer>::getDefaultValue()
+{
+    return SingleSelectContainer();
+}
+
+template <>
 inline SelectContainer Element<SelectContainer>::getDefaultValue()
 {
     return SelectContainer();
@@ -129,4 +141,58 @@ template <>
 inline DateContainer Element<DateContainer>::getDefaultValue()
 {
     return DateContainer();
+}
+
+template <>
+constexpr const char* Element<bool>::getTypeName()
+{
+    return "Checkbox";
+}
+
+template <>
+constexpr const char* Element<int>::getTypeName()
+{
+    return "Number";
+}
+
+template <>
+constexpr const char* Element<double>::getTypeName()
+{
+    return "Decimal";
+}
+
+template <>
+constexpr const char* Element<std::string>::getTypeName()
+{
+    return "Text";
+}
+
+template <>
+constexpr const char* Element<SingleSelectContainer>::getTypeName()
+{
+    return "Select";
+}
+
+template <>
+constexpr const char* Element<SelectContainer>::getTypeName()
+{
+    return "Multi-select";
+}
+
+template <>
+constexpr const char* Element<WeekdayContainer>::getTypeName()
+{
+    return "Weekday";
+}
+
+template <>
+constexpr const char* Element<TimeContainer>::getTypeName()
+{
+    return "Time";
+}
+
+template <>
+constexpr const char* Element<DateContainer>::getTypeName()
+{
+    return "Date";
 }

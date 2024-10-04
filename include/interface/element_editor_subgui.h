@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui.h"
+#include "single_select_container.h"
 #include "select_container.h"
 #include "weekday_container.h"
 #include "time_container.h"
@@ -27,6 +28,7 @@ class ElementEditorSubGui : public Gui
         std::string m_editorText;
         TimeContainer m_editorTime;
         DateContainer m_editorDate;
+        SingleSelectContainer m_editorSingleSelect;
         SelectContainer m_editorSelect;
         WeekdayContainer m_editorWeekday;
 
@@ -67,6 +69,10 @@ class ElementEditorSubGui : public Gui
             m_viewedMonth = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().getMonth() : m_editorDate.getTime().getMonth();
             m_viewedYear = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().getYear() : m_editorDate.getTime().getYear();
         }
+        void setEditorValue(const SingleSelectContainer& value)
+        {
+            m_editorSingleSelect = value;
+        }
         void setEditorValue(const SelectContainer& value)
         {
             m_editorSelect = value;
@@ -86,6 +92,10 @@ class ElementEditorSubGui : public Gui
         const DateContainer& getEditorValue(const DateContainer& _typeValueUnused) const
         {
             return m_editorDate;
+        }
+        const SingleSelectContainer& getEditorValue(const SingleSelectContainer& _typeValueUnused) const
+        {
+            return m_editorSingleSelect;
         }
         const SelectContainer& getEditorValue(const SelectContainer& _typeValueUnused) const
         {
