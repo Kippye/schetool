@@ -313,6 +313,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 					for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 					{
 						ImGui::TableSetColumnIndex(column);
+                        bool removeRowButtonHovered = false;
 						// Row remove buttons are displayed in the first displayed column
 						if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0)
 						{
@@ -332,6 +333,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 								break;
 							}
                             ImGui::PopStyleVar(pushedStyleVars);
+                            removeRowButtonHovered = ImGui::IsItemHovered();
 							ImGui::SameLine();
 						}
 
@@ -428,7 +430,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 // element to display the value as a wrapped, multiline text
                                 ImGui::TextWrapped("%s", displayedValue.c_str());
                                 // Open text editor if clicked while hovering the current column & row
-                                if (isEditableElementClicked(columnEditDisabled) && ImGui::IsAnyItemHovered() == false)
+                                if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -488,7 +490,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         }
                                     }
                                 }
-                                if (isEditableElementClicked(columnEditDisabled))
+                                if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -568,7 +570,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         ImGui::SameLine();
                                     }
                                 }
-                                if (isEditableElementClicked(columnEditDisabled))
+                                if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -649,7 +651,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                     }
                                 }
                                 // left clicking anywhere in the cell opens the editor
-                                if (isEditableElementClicked(columnEditDisabled))
+                                if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
