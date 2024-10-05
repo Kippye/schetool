@@ -103,6 +103,11 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             if (newModification == modificationToApply && prevModification != newModification)
                             {
                                 m_editorSingleSelect.update(modificationToApply.getUpdateInfo(), selectOptions.getOptionCount());
+                                // Select the added option if nothing else is selected
+                                if (m_editorSingleSelect.getSelection().has_value() == false)
+                                {
+                                    m_editorSingleSelect.setSelected(selectOptions.getOptions().size() - 1, true);
+                                }
                                 m_madeEdits = true;
                                 // NOTE: break here because otherwise the start and end of the function kind of go out of sync
                                 break;

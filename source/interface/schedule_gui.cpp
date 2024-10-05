@@ -313,6 +313,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 					for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
 					{
 						ImGui::TableSetColumnIndex(column);
+                        bool removeRowButtonHovered = false;
 						// Row remove buttons are displayed in the first displayed column
 						if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0)
 						{
@@ -332,6 +333,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 								break;
 							}
                             ImGui::PopStyleVar(pushedStyleVars);
+                            removeRowButtonHovered = ImGui::IsItemHovered();
 							ImGui::SameLine();
 						}
 
@@ -428,7 +430,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 // element to display the value as a wrapped, multiline text
                                 ImGui::TextWrapped("%s", displayedValue.c_str());
                                 // Open text editor if clicked while hovering the current column & row
-                                if (isEditableElementClicked(columnEditDisabled) && ImGui::IsAnyItemHovered() == false)
+                                if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -488,7 +490,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         }
                                     }
                                 }
-                                if (isEditableElementClicked(columnEditDisabled))
+                                if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -546,12 +548,24 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 // sort indices so that the same options are always displayed in the same order
                                 std::sort(std::begin(selectionIndices), std::end(selectionIndices));
 
-                                float displayedChars = 0;
-                                float pixelsPerCharacter = 12.0f;
-                                float columnWidth = ImGui::GetColumnWidth(column);
+                                size_t currentRowWidth = 0;
+                                const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
+                                const float columnWidth = ImGui::GetColumnWidth(column);
 
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
+                                    const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) + options[selectionIndices[i]].name.length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
+                                    if (currentRowWidth + nextOptionAddedWidth < columnWidth)
+                                    {
+                                        if (i > 0) // Don't add padding to the first option
+                                        {
+                                            ImGui::SameLine();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        currentRowWidth = 0;
+                                    }
                                     if (gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
                                         // right clicking erases the option - bonus feature
@@ -562,13 +576,11 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         }
                                     }
 
-                                    displayedChars += options[selectionIndices[i]].name.length();
-                                    if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - options[selectionIndices[i]].name.length()) * pixelsPerCharacter / columnWidth))
-                                    {
-                                        ImGui::SameLine();
-                                    }
+                                    currentRowWidth = currentRowWidth == 0 
+                                        ? ImGui::GetItemRectSize().x 
+                                        : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
                                 }
-                                if (isEditableElementClicked(columnEditDisabled))
+                                if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
@@ -626,12 +638,24 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                 // sort indices so that the same options are always displayed in the same order
                                 std::sort(std::begin(selectionIndices), std::end(selectionIndices));
 
-                                float displayedChars = 0;
-                                float pixelsPerCharacter = 12.0f;
-                                float columnWidth = ImGui::GetColumnWidth(column);
+                                size_t currentRowWidth = 0;
+                                const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
+                                const float columnWidth = ImGui::GetColumnWidth(column);
 
                                 for (size_t i = 0; i < selectedCount; i++)
                                 {
+                                    const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) + optionNames[selectionIndices[i]].length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
+                                    if (currentRowWidth + nextOptionAddedWidth < columnWidth)
+                                    {
+                                        if (i > 0) // Don't add padding to the first option
+                                        {
+                                            ImGui::SameLine();
+                                        }
+                                    }
+                                    else
+                                    {
+                                        currentRowWidth = 0;
+                                    }
                                     if (gui_templates::SelectOptionButton(SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]}, std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                                     {
                                         // right clicking erases the option - bonus feature
@@ -642,14 +666,12 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
                                         }
                                     }
 
-                                    displayedChars += optionNames[selectionIndices[i]].length();
-                                    if (i < selectedCount - 1 && floor(displayedChars * pixelsPerCharacter / columnWidth) == floor((displayedChars - optionNames[selectionIndices[i]].length()) * pixelsPerCharacter / columnWidth))
-                                    {
-                                        ImGui::SameLine();
-                                    }
+                                    currentRowWidth = currentRowWidth == 0 
+                                        ? ImGui::GetItemRectSize().x 
+                                        : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
                                 }
                                 // left clicking anywhere in the cell opens the editor
-                                if (isEditableElementClicked(columnEditDisabled))
+                                if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
                                 {
                                     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                                     {
