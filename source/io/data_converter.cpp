@@ -17,6 +17,7 @@ void DataConverter::setupObjectTable()
 {
     addObjectDefinition<BLF_Base>();
     addObjectDefinition<BLF_Date>();
+    addObjectDefinition<BLF_ClockTime>();
     addObjectDefinition<BLF_FileInfo>();
     addObjectDefinition<BLF_ElementInfo>();
     addObjectDefinition<BLF_SelectOption>();
@@ -57,7 +58,7 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
 
     DataTable data;
 
-    BLF_FileInfo fileInfo = BLF_FileInfo(DateContainer::getCurrentSystemDate().getTime());
+    BLF_FileInfo fileInfo = BLF_FileInfo(TimeWrapper::getCurrentTime());
     data.insert(getObjectDefinition<BLF_FileInfo>().serialize(fileInfo));
 
     for (size_t c = 0; c < schedule.size(); c++)
@@ -115,7 +116,7 @@ std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vecto
     auto fileBody = file.deserializeBody(m_definitions.getObjectTableConst());
 
     BLF_FileInfo fileInfo = *fileBody.data.groupby(m_definitions.get<BLF_FileInfo>()).begin();
-    FileInfo returnFileInfo = FileInfo(path, TimeWrapper(), fileInfo.editDate.getDate());
+    FileInfo returnFileInfo = FileInfo(path, TimeWrapper(), fileInfo.getEditTime());
 
     std::map<size_t, SCHEDULE_TYPE> columnTypes = {};
 

@@ -67,7 +67,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
         {
             // Display date editor to edit m_scheduleDateOverride.
             // If the current date was selected, just clear m_scheduleDateOverride again.
-            if (gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth) && m_scheduleDateOverride.getDateUTC() == TimeWrapper::getCurrentTime().getDateUTC())
+            if (gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth) && m_scheduleDateOverride.getDateUTC() == TimeWrapper::getCurrentTime().getLocalDate())
             {
                 m_scheduleDateOverride.clear();
             }
