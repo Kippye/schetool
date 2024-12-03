@@ -26,7 +26,6 @@ class Program
 		static bool quitProgram;
 
 		Program();
-        // void handleSignal();
         void handleSignal(Signal signal);
 		void loop();
 };

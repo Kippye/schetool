@@ -1,8 +1,6 @@
 #include "main.h"
 #include <GLFW/glfw3.h>
 #include <locale>
-#include <csignal>
-#include <atomic>
 
 // Windows Release build
 #if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))
@@ -19,20 +17,8 @@
 #include <Windows.h>
 #endif
 
-std::atomic<int> gLastFrameSignal = -1;
-
-extern "C" void signalHandler(int signum)
-{
-    gLastFrameSignal.store(signum);
-};
-
 Program::Program()
 {
-    // Listen to signals
-    // signal(SIGTERM, signalHandler);
-    // signal(SIGSEGV, signalHandler);
-    // signal(SIGINT, signalHandler);
-    // signal(SIGABRT, signalHandler);
     // use user-preferred locale from OS
     std::setlocale(LC_ALL, ""); 
 
@@ -57,40 +43,6 @@ Program::Program()
 
 void Program::handleSignal(Signal signal)
 {
-    // if (gLastFrameSignal.load() == -1) { return; }
-    // std::cout << gLastFrameSignal.load() << std::endl;
-    // switch(gLastFrameSignal.load())
-    // {
-    //     case(SIGTERM):
-    //     {
-    //         std::cout << "Program received signal: SIGTERM" << std::endl;
-    //         quitProgram = true;
-    //         break;
-    //     }
-    //     case(SIGSEGV):
-    //     {
-    //         std::cout << "Program received signal: SIGSEGV" << std::endl;
-    //         break;
-    //     }
-    //     case(SIGINT):
-    //     {
-    //         std::cout << "Program received signal: SIGINT" << std::endl;
-    //         quitProgram = true;
-    //         break;
-    //     }
-    //     case(SIGABRT):
-    //     {
-    //         std::cout << "Program received signal: SIGABRT" << std::endl;
-    //         break;
-    //     }
-    //     case(0):
-    //     {
-    //         break;
-    //     }
-    //     default:
-    //     std::cout << "Program received unknown signal: " << gLastFrameSignal << std::endl;
-    //     break;
-    // }
     switch(signal)
     {
         case(Signal::None):
@@ -141,7 +93,7 @@ void Program::loop()
 
 		if (glfwWindowShouldClose(windowManager.window))
 		{
-            std::cout << "glfw window close" << std::endl;
+            std::cout << "GLFW window should close. Quitting program." << std::endl;
 			quitProgram = true;
 		}
         if (quitProgram)
@@ -154,10 +106,12 @@ void Program::loop()
 		glfwPollEvents();
 	}
 	
-    auto time = std::chrono::system_clock::now();
-    auto secs = std::chrono::floor<std::chrono::seconds>(time);
-    auto millis = std::chrono::milliseconds(std::chrono::floor<std::chrono::milliseconds>(time - secs));
-    std::string timeString = TimeWrapper::getString(time, TIME_FORMAT_TIME).append(std::format(" + {}ms", millis.count()));
+    auto time = TimeWrapper(std::chrono::system_clock::now()).getLocalTime();
+    auto floorMinutes = std::chrono::floor<std::chrono::minutes>(time);
+    auto secs = std::chrono::seconds(std::chrono::floor<std::chrono::seconds>(time - floorMinutes));
+    auto floorSecs = std::chrono::floor<std::chrono::seconds>(time);
+    auto millis = std::chrono::milliseconds(std::chrono::floor<std::chrono::milliseconds>(time - floorSecs));
+    std::string timeString = std::format("{}:{}:{}ms", TimeWrapper::getString(time, TIME_FORMAT_TIME), secs.count(), millis.count());
 	std::cout << "Terminating program at " << timeString << "..." << std::endl;
 	windowManager.terminate();
 }

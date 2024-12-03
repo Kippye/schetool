@@ -13,12 +13,15 @@ class SignalHandler
     protected:
         Signal m_lastSignal = Signal::None;
     public:
+        // Initialise the signal handler and its implementation.
         void init(Window& window);
         
         // Listen for signals, return the signal if there is one.
         Signal listenForSignals();
-        // Listen to get an update every time a signal is received.
+    private:
+        // (NOT IMPLEMENTED) Listen to get an update every time a signal is received.
         Event<Signal> signalEvent;
+    public:
         // Check the current signal.
         Signal getSignal();
         // Get the current signal and clear it.

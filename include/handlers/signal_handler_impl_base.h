@@ -14,5 +14,10 @@ class SignalHandlerImpl
         // Set up the signal listener.
         virtual bool init(){ return false; };
         // Get the last signal and clear it.
-        virtual Signal getLastSignal() const{};
+        virtual Signal getLastSignal() const{ return Signal::None; };
+        // Check if this signal handler implementation is valid.
+        bool getIsValid() const
+        {
+            return m_haveValidListener;
+        }
 };

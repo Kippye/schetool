@@ -144,6 +144,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler_impl_linux.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler_impl_win.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/textures.cpp"
