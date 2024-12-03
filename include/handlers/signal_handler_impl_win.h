@@ -1,14 +1,5 @@
 #pragma once
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <Windows.h>
-#include <CommCtrl.h>
-
 #include "signal_handler_impl_base.h"
 
 // Signal handler implementation for Windows.
