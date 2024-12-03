@@ -38,6 +38,7 @@ const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinit
         colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
         colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.43f, 0.43f, 0.43f, 1.00f);
         colors[ImGuiCol_CheckMark]              = ImVec4(0.32f, 0.32f, 0.32f, 1.00f);
+        ImGui::GetStyle().ChildRounding = 4.0f;
         ImGui::GetStyle().FrameRounding = 4.0f;
         ImGui::GetStyle().PopupRounding = 4.0f;
         ImGui::GetStyle().WindowRounding = 4.0f;
@@ -64,6 +65,7 @@ const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinit
         colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.08f, 0.08f, 0.08f, 0.53f);
         colors[ImGuiCol_TableBorderStrong]      = ImVec4(0.13f, 0.13f, 0.13f, 1.00f);
         colors[ImGuiCol_TableBorderLight]       = ImVec4(0.35f, 0.35f, 0.35f, 1.00f);
+        ImGui::GetStyle().ChildRounding = 4.0f;
         ImGui::GetStyle().FrameRounding = 4.0f;
         ImGui::GetStyle().PopupRounding = 4.0f;
         ImGui::GetStyle().WindowRounding = 4.0f;

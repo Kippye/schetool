@@ -37,7 +37,7 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
         ENDIF()
         # GNU (G++)
         IF (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -fuse-ld=lld -mtune=native -lpthread -static-libstdc++ -static-libgcc -std=${CPP_VERSION} -Wa,-mbig-obj") # Pass  -Wa,-mbig-obj to avoid error for data_converter.cpp due to its size.
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -fuse-ld=lld -mtune=native -lpthread -lcomctl32 -static-libstdc++ -static-libgcc -std=${CPP_VERSION} -Wa,-mbig-obj") # Pass  -Wa,-mbig-obj to avoid error for data_converter.cpp due to its size.
         ENDIF()
         message(STATUS "~~ Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
 
@@ -144,6 +144,8 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler_impl_win.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/time_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/window.cpp"

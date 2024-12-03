@@ -72,6 +72,7 @@ void IO_Handler::unloadCurrentFile()
 
 void IO_Handler::closeCurrentFile()
 {
+    printf("IOHandler::closeCurrentFile(): Closing current file...\n");
     if (m_currentFileInfo.empty()) { return; }
 
     createAutosave();
@@ -85,6 +86,7 @@ void IO_Handler::closeCurrentFile()
 
 bool IO_Handler::applyAutosaveToFile(const char* fileName)
 {
+    printf("IO_Handler::applyAutosaveToFile(): Applying autosave to file %s...\n", fileName);
     fs::path pathToFile = fs::path(makeRelativePathFromName(fileName));
     fs::path pathToAutosaveFile = fs::path(makeRelativePathFromName(getFileAutosaveName(fileName).c_str()));
 
@@ -114,6 +116,7 @@ bool IO_Handler::applyAutosaveToFile(const char* fileName)
             // The file was successfully copied, which means the autosave can be removed
             fs::remove(pathToAutosaveFile);
             passFileNamesToGui();
+            printf("IO_Handler::applyAutosaveToFile(): Applied autosave to file %s...\n", fileName);
             return true;
         }
     }
@@ -348,6 +351,7 @@ void IO_Handler::openMostRecentFile()
 
 bool IO_Handler::createAutosave()
 {
+    printf("IO_Handler::createAutosave(): Creating autosave...\n");
     if (m_currentFileInfo.empty()) { return false; }
 
     // save to open file name if the open file is itself an autosave, otherwise get the autosave name from the base file name
@@ -356,6 +360,7 @@ bool IO_Handler::createAutosave()
     if (writeSchedule(autosaveName.c_str()))
     {
         return true;
+        printf("IO_Handler::createAutosave(): Created autosave!\n");
     }
 
     return false;

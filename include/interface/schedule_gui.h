@@ -21,7 +21,11 @@ class ScheduleGui : public Gui
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
-        void displayColumnContextPopup(unsigned int column, ImGuiTable* table, ImGuiTableFlags tableFlags);
+        void drawColumnHeaderContextContent(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
+        void drawScheduleTable(Window& window, Input& input, GuiTextures& guiTextures);
+        // Draws the contents of the table cell at the given column and row.
+        // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
+        bool drawTableCellContents(size_t column, size_t row, Window& window, Input& input, GuiTextures& guiTextures);
         template <typename T>
         T getElementValue(size_t column, size_t row, bool useDefaultValue) const
         {
