@@ -1,5 +1,5 @@
 #include "signal_handler.h"
-#ifdef WIN32
+#ifdef _WIN32
 #include "signal_handler_impl_win.h"
 #else
 #include "signal_handler_impl_linux.h"
@@ -7,7 +7,7 @@
 
 void SignalHandler::init(Window& window)
 {
-    #ifdef WIN32 // Windows-specific implementation
+    #ifdef _WIN32 // Windows-specific implementation
     m_implementation = std::make_shared<SignalHandlerWinImpl>(window);
     if (m_implementation->init()) {}
     #else // Linux implementation (We don't do mac for now :/)
