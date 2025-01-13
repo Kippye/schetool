@@ -66,7 +66,7 @@ cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ --preset make
 * [CMake](https://cmake.org/) version 3.25 or later for project file generation.
 * A compiler such as GCC (version 1.14.1 or later).
 * [GLFW dependency packages](https://www.glfw.org/docs/3.3/compile.html#compile_deps) - get the list for your distro and desktop environment.
-* At least on Fedora, the ``mesa-libGL-devel`` package is also needed (might not be if other graphics drivers are installed). 
+* Depending on your graphics drivers (or lack of any), the  ``mesa-libGL-devel`` package might also be needed. 
 * [vcpkg](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-bash) to get the some of the project's libraries - complete step 1. here.
 <details>
 <summary>NOTE: vcpkg requires these packages, depending on your distro:</summary>
