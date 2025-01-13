@@ -120,7 +120,7 @@ LRESULT Subclassproc(
         break;
 
         default:
-        printf("Subclassproc(): Other signal with value: %d\n", uMsg);
+        // printf("Subclassproc(): Other signal with value: %d\n", uMsg);
         break;
     }
 
@@ -130,7 +130,7 @@ LRESULT Subclassproc(
 
 bool SignalHandlerWinImpl::init()
 {
-    printf("SIGNAL HANDLER WINDOWS INIT");
+    printf("Initialising Signal Handler Windows implementation.\n");
     gGlfwWndProc = (WNDPROC)GetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC);
     if (SetWindowSubclass(glfwGetWin32Window(m_window.window), Subclassproc, gSubClassID, (DWORD_PTR)nullptr))
     {
