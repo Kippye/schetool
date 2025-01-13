@@ -65,7 +65,6 @@ ENDIF()
 message(STATUS "~~ Finished setting compile flags")
 
 find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
 
 set(LIBRARY_DIR "libs")
 
@@ -180,7 +179,6 @@ target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags
     imgui
     glad 
     glfw
-    glm::glm
 )
 
 # add testing subdirectory (handles its own logic)

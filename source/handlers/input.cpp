@@ -1,6 +1,4 @@
-#include <iostream>
-#include <glm/gtx/norm.hpp>
-#include <input.h>
+#include "input.h"
 
 void Input::init(Window* windowManager)
 { 
@@ -56,7 +54,8 @@ void Input::processInput(GLFWwindow* window)
 	if (m_guiWantKeyboard) { return; }
 
 	// reset mouse movement as it only updates when the mouse is ACTUALLY moved
-	mouseMovement = glm::vec2(0.0f);
+    mouseMoveX = 0;
+    mouseMoveY = 0;
 }
 
 void Input::addEventListener(INPUT_EVENT event, const std::function<void()>& listener)
@@ -154,10 +153,10 @@ void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos)
 {
 	if (m_windowManager->hasFocus)
 	{
-		mouseMovement.x = (float)xPos - mousePos.x;
-		mouseMovement.y = (float)yPos - mousePos.y;
-		mousePos.x = (float)xPos;
-		mousePos.y = (float)yPos;
+        mouseMoveX = xPos - mousePosX;
+        mouseMoveY = yPos - mousePosY;
+        mousePosX = xPos;
+        mousePosY = yPos;
 	}
 }
 

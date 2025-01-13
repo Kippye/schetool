@@ -1,5 +1,4 @@
 #pragma once
-#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -23,8 +22,8 @@ class Gui
         Gui();
         Gui(const char* ID);
 
-        glm::vec2 position;
-        glm::vec2 size;
+        ImVec2 position;
+        ImVec2 size;
         float opacity = 1.0f;
         std::map<std::string, std::shared_ptr<Gui>> subGuis = {};
 

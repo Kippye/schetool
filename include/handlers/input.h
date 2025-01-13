@@ -1,7 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <window.h>
+#include "window.h"
 #include <map>
 #include <vector>
 
@@ -59,8 +58,8 @@ class Input
 		std::map<INPUT_EVENT, bool> m_eventStates = {};
 		std::map<INPUT_EVENT, bool> m_eventLastFrameStates = {};
 	public:
-		glm::vec2 mousePos;
-		glm::vec2 mouseMovement;
+        double mousePosX = 0, mousePosY = 0;
+        double mouseMoveX = 0, mouseMoveY = 0;
 		ButtonStates buttonStates;
 		const float mouseRepeatDelay = 0.05f;
 
@@ -68,7 +67,7 @@ class Input
 		void processInput(GLFWwindow* window);
 
 		void addEventListener(INPUT_EVENT callback, const std::function<void()>& listener);
-  	size_t getEventListenerCount(INPUT_EVENT callback);
+        size_t getEventListenerCount(INPUT_EVENT callback);
 		void invokeEvent(INPUT_EVENT callback);
 		bool getEventInvokedLastFrame(INPUT_EVENT callback);
 
