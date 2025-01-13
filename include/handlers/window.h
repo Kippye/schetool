@@ -51,6 +51,7 @@ class Window
         std::string getTitle();
         // lifecycle functions
         void init();
+        // call the windowCloseEvent, destroy the window and terminate glfw.
         void terminate();
 
         // input events

@@ -26,15 +26,25 @@ void Window::init()
 	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); //might be needed for bigger monitors?
 
 	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, m_titleBase.c_str(), NULL, NULL);
-	setTitle(m_titleBase);
-
 	if (window == NULL)
 	{
 		std::cout << "Could not create a GLFW window :(" << std::endl;
+        const char* description;
+        int code = glfwGetError(&description);
+        if (code != GLFW_NO_ERROR)
+        {
+            std::cout << "Error code: " << code;
+            if (description)
+            {
+                std::cout << ". Description: " << description;
+            }
+            std::cout << std::endl;
+        }
 		glfwTerminate();
 		return;
 	}
 
+	setTitle(m_titleBase);
 	// make the window current and maximize 8)
 	glfwMakeContextCurrent(window);
 	glfwMaximizeWindow(window);
@@ -44,6 +54,7 @@ void Window::init()
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
 		std::cout << "Could not initialize GLAD ( not glad :( )" << std::endl;
+        window_close_callback(this);
 		return;
 	}
 
@@ -147,6 +158,7 @@ std::string Window::getTitle()
 
 void Window::terminate()
 {
+    printf("Window::terminate(): Invoking windowCloseEvent.\n");
     windowCloseEvent.invoke();
 	glfwDestroyWindow(window);
 	glfwTerminate();
