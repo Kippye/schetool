@@ -1,4 +1,4 @@
-#include "signal_handler_impl_linux.h"
+#include "signal_handler_linux_impl.h"
 
 #include <csignal>
 #include <atomic>
@@ -19,7 +19,7 @@ bool SignalHandlerLinuxImpl::init()
     signal(SIGSEGV, signalHandler);
     signal(SIGINT, signalHandler);
     signal(SIGABRT, signalHandler);
-    printf("LINUX SIGNAL HANDLER INIT");
+    printf("Initialised Linux signal handler.\n");
     m_haveValidListener = true;
     return m_haveValidListener;
 }

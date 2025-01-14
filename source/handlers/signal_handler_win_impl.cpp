@@ -1,5 +1,5 @@
 #ifdef _WIN32
-#include "signal_handler_impl_win.h"
+#include "signal_handler_win_impl.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

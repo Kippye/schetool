@@ -1,8 +1,8 @@
 #include "signal_handler.h"
 #ifndef _WIN32
-#include "signal_handler_impl_linux.h"
+#include "signal_handler_linux_impl.h"
 #else
-#include "signal_handler_impl_win.h"
+#include "signal_handler_win_impl.h"
 #endif
 
 void SignalHandler::init(Window& window)

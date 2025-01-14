@@ -297,6 +297,8 @@ class Schedule
         void removeColumn(size_t column, bool addToHistory = true);
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column);
+        // Get the index of the first column with the given flags
+        size_t getFlaggedColumnIndex(ScheduleColumnFlags flags) const;
         void setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory = true);
         void setColumnName(size_t column, const std::string& name, bool addToHistory = true);
         void setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory = true);

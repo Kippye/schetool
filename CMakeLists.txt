@@ -55,7 +55,7 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
         ENDIF()
     # LINUX OR OTHER SYSTEM
     ELSE()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CPP_VERSION} -lstdc++")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CPP_VERSION} -lstdc++ -lnotify")
         message(STATUS "~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
     ENDIF()
 ELSEIF (CMAKE_GENERATOR MATCHES "Visual Studio")
@@ -116,6 +116,16 @@ set(IO_DIR          "io")
 set(SCHEDULE_DIR    "schedule")
 set(UTIL_DIR        "util")
 
+# glib2
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
+target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::deps)
+find_package(GDKPixBuf REQUIRED)
+IF (GDKPIXBUF_FOUND)
+target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
+target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
+ENDIF()
+
 target_include_directories(${PROGRAM_NAME} 
     PUBLIC "include" 
     PUBLIC "include/generated"
@@ -142,9 +152,11 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/weekday_container.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/notification_handler_linux_impl.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/notification_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
-    "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler_impl_linux.cpp"
-    "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler_impl_win.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler_linux_impl.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler_win_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/time_handler.cpp"

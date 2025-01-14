@@ -1,11 +1,12 @@
 #include "time_handler.h"
 
-void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule)
+void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule, NotificationHandler& notificationHandler)
 {
     ioHandler.fileReadEvent.addListener(fileOpenListener);
     ioHandler.fileCreatedEvent.addListener(fileOpenListener);
     ioHandler.fileUnloadEvent.addListener(fileUnloadListener);
     m_schedule = &schedule;
+    m_notificationHandler = &notificationHandler;
 }
 
 void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
@@ -65,19 +66,72 @@ void TimeHandler::applyResetsSinceEditTime(TimeWrapper lastEditTime)
     m_lastTickTime = TimeWrapper::getCurrentTime();
 }
 
-void TimeHandler::timeTick()
+void TimeHandler::showItemStartNotifications(const TimeWrapper& currentTime, const TimeWrapper& previousTime)
 {
-    // The last tick time is full when a file is open.
-    if (m_lastTickTime.getIsEmpty()) { return; }
+    // ELEMENT START NOTIFICATIONS
+    auto scheduleColumns = m_schedule->getAllColumns();
+    size_t startColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Start);
+    const Column* startColumn = m_schedule->getColumn(startColumnIndex);
 
-    TimeWrapper currentTime = TimeWrapper::getCurrentTime();
-    // Apply any resets since the last tick time.
-    applyResetsSince(m_lastTickTime);
-    m_lastTickTime = currentTime;
+    for (size_t row = 0; row < m_schedule->getRowCount(); row++)
+    {
+        // FIRST check if the item is even visible
+        bool isItemVisible = false;
+        for (const Column& col: scheduleColumns)
+        {
+            // Check if the row's Element passes every FilterGroup in this Column
+            isItemVisible = col.checkElementPassesFilters(row
+                // NOTE: Do i use override time here?
+                // Usually the override time applies when viewing a different date
+                // But you still only want to get notifications for the actual current date
+                // So for now, no. We will let it use TimeWrapper::getCurrentTime() by default.
+            );
+            if (isItemVisible == false)
+            {
+                break;
+            }
+        }
+        // Only send notifications for the beginning of visible schedule items
+        if (isItemVisible == false)
+        {
+            continue;
+        }
+
+        auto elementTimeContainer = m_schedule->getElementAsSpecial<TimeContainer>(startColumnIndex, row);
+        TimeWrapper elementTime = TimeWrapper::getTimeWithOffsetSubtracted(TimeWrapper(currentTime.getDateUTC(), ClockTimeWrapper(elementTimeContainer->getConstValueReference().getHours(), elementTimeContainer->getConstValueReference().getMinutes())));
+        // The element's start time was reached just this frame
+        if (currentTime >= elementTime && previousTime < elementTime)
+        {
+            size_t nameColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Name);
+            size_t endColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_End);
+            auto endElementTimeContainer = m_schedule->getElementAsSpecial<TimeContainer>(endColumnIndex, row);
+            ClockTimeWrapper endTime = ClockTimeWrapper(endElementTimeContainer->getConstValueReference().getHours(), endElementTimeContainer->getConstValueReference().getMinutes());
+            // Send a notification about the element starting
+            m_notificationHandler->showElementNotification
+            (
+                m_schedule->getElementAsSpecial<std::string>(nameColumnIndex, row)->getValue(),
+                elementTime.getLocalClockTime(),
+                endTime
+            );
+        }
+    }
 }
 
 void TimeHandler::handleFileUnloaded()
 {
     // Clear last tick time so the handler doesn't try to do resets when no file is even loaded
     m_lastTickTime.clear();
+}
+
+
+void TimeHandler::timeTick()
+{
+    // The last tick time is full when a file is open.
+    if (m_lastTickTime.getIsEmpty()) { return; }
+
+    TimeWrapper currentTime = TimeWrapper::getCurrentTime();
+    showItemStartNotifications(currentTime, m_lastTickTime);
+    // Apply any resets since the last tick time.
+    applyResetsSince(m_lastTickTime);
+    m_lastTickTime = currentTime;
 }

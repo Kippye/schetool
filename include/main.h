@@ -9,6 +9,7 @@
 #include "interface.h"
 #include "time_handler.h"
 #include "signal_handler.h"
+#include "notification_handler.h"
 
 class Program
 {
@@ -22,6 +23,7 @@ class Program
 		Schedule schedule;
         TimeHandler timeHandler;
         SignalHandler signalHandler;
+		NotificationHandler notificationHandler;
 
 		static bool quitProgram;
 

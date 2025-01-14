@@ -231,6 +231,11 @@ const Column* Schedule::getColumn(size_t column)
     return m_core.getColumn(column);
 }
 
+size_t Schedule::getFlaggedColumnIndex(ScheduleColumnFlags flags) const
+{
+    return m_core.getFlaggedColumnIndex(flags);
+}
+
 
 void Schedule::setColumnType(size_t columnIndex, SCHEDULE_TYPE type, bool addToHistory)
 {

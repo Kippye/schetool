@@ -2,6 +2,9 @@
 #include <GLFW/glfw3.h>
 #include <locale>
 
+// TEMP
+#include "notification_handler_linux_impl.h"
+
 // Windows Release build
 #if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))
 	#define WIN_RELEASE
@@ -27,6 +30,7 @@ Program::Program()
 	// setup and initialize components
 	windowManager.init();
     signalHandler.init(windowManager);
+    notificationHandler.init();
     textureLoader.init();
     windowManager.loadIcon(textureLoader);
 	input.init(&windowManager);
@@ -34,7 +38,7 @@ Program::Program()
 	render.init(&windowManager, &interface);
 	schedule.init(input, interface);
 	ioHandler.init(&schedule, &windowManager, input, interface);
-    timeHandler.init(ioHandler, schedule);
+    timeHandler.init(ioHandler, schedule, notificationHandler);
 
 	schedule.createDefaultSchedule();
 
