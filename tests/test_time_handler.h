@@ -9,6 +9,7 @@ TEST_CASE("TimeHandler")
 {
     IO_Handler ioHandler;
     Schedule schedule;
+    NotificationHandler notificationHandler;
     // set up schedule
     schedule.addColumn(schedule.getColumnCount(), Column({}, SCH_BOOL, "DailyReset"), false);
     schedule.setColumnResetOption(schedule.getColumnCount() - 1, ColumnResetOption::Daily, false);
@@ -24,7 +25,7 @@ TEST_CASE("TimeHandler")
     }
 
     TimeHandler timeHandler;
-    timeHandler.init(ioHandler, schedule);
+    timeHandler.init(ioHandler, schedule, notificationHandler);
 
     TimeWrapper::testCurrentTimeOverride.clear();
 

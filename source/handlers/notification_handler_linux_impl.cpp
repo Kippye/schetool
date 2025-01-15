@@ -1,3 +1,4 @@
+#ifndef _WIN32
 #include "notification_handler_linux_impl.h"
 #include <libnotify/notify.h>
 
@@ -38,3 +39,4 @@ bool NotificationHandlerLinuxImpl::showElementNotification(const std::string& na
     }
     return false;
 }
+#endif

@@ -116,14 +116,18 @@ set(IO_DIR          "io")
 set(SCHEDULE_DIR    "schedule")
 set(UTIL_DIR        "util")
 
-# glib2
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
-target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::deps)
-find_package(GDKPixBuf REQUIRED)
-IF (GDKPIXBUF_FOUND)
-target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
-target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
+# LINUX PACKAGES / LIBRARIES
+IF (LINUX)
+    find_package(PkgConfig REQUIRED)
+    # glib2
+    pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
+    target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::deps)
+    # gdkpixbuf
+    find_package(GDKPixBuf REQUIRED)
+    IF (GDKPIXBUF_FOUND)
+        target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
+        target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
+    ENDIF()
 ENDIF()
 
 target_include_directories(${PROGRAM_NAME} 

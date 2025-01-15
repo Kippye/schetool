@@ -9,7 +9,7 @@ void NotificationHandler::init()
 {
     #ifdef _WIN32 // Windows-specific implementation
     //m_implementation = std::make_shared<Notificat>(window);
-    if (m_implementation->init()) {}
+    //if (m_implementation->init()) {}
     #else // Linux implementation (We don't do mac for now :/)
     m_implementation = std::make_shared<NotificationHandlerLinuxImpl>();
     if (m_implementation->init()) {}
