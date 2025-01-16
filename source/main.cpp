@@ -2,22 +2,11 @@
 #include <GLFW/glfw3.h>
 #include <locale>
 
-// TEMP
-#include "notification_handler_linux_impl.h"
-
 // Windows Release build
-#if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))
-	#define WIN_RELEASE
-#endif
-
-#ifdef WIN_RELEASE
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <Windows.h>
+#if (defined (_WIN32) || defined (_WIN64))
+    #ifdef NDEBUG
+        #define WIN_RELEASE
+    #endif
 #endif
 
 Program::Program()
@@ -34,15 +23,18 @@ Program::Program()
     textureLoader.init();
     windowManager.loadIcon(textureLoader);
 	input.init(&windowManager);
-	interface.init(&windowManager, &input, textureLoader);
-	render.init(&windowManager, &interface);
-	schedule.init(input, interface);
-	ioHandler.init(&schedule, &windowManager, input, interface);
+	programInterface.init(&windowManager, &input, textureLoader);
+	render.init(&windowManager, &programInterface);
+	schedule.init(input, programInterface);
+	ioHandler.init(&schedule, &windowManager, input, programInterface);
     timeHandler.init(ioHandler, schedule, notificationHandler);
 
 	schedule.createDefaultSchedule();
 
     ioHandler.openMostRecentFile();
+
+    // TEMP
+    notificationHandler.showElementNotification("just a test", ClockTimeWrapper(00, 44), ClockTimeWrapper(1, 00));
 }
 
 void Program::handleSignal(Signal signal)

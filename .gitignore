@@ -10,6 +10,9 @@ Debug/
 Release/
 resources/
 
+# package dir
+_CPACK_Packages/
+
 # vcpkg
 vcpkg/
 
@@ -75,3 +78,7 @@ imgui.ini
 *.i*86
 *.out
 *.x86_64
+
+# Packages
+*.zip
+*.msi

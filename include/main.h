@@ -19,7 +19,7 @@ class Program
 		IO_Handler ioHandler;
 		Render render;
 		Input input;
-		Interface interface;
+		Interface programInterface;
 		Schedule schedule;
         TimeHandler timeHandler;
         SignalHandler signalHandler;

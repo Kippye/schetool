@@ -29,6 +29,7 @@ class IO_Handler
         std::shared_ptr<ScheduleGui> m_scheduleGui = NULL;
         FileInfo m_currentFileInfo = FileInfo();
         double m_timeSinceAutosave = 0.0;
+        std::filesystem::path m_saveDir = std::filesystem::path();
         const char* m_autosaveSuffix = "_auto";
 
         // input listeners
@@ -83,8 +84,10 @@ class IO_Handler
             readSchedule(getFileBaseName(getLastEditedScheduleStemName().c_str()).c_str());
         });
 
+        // Chooses the most suitable save directory based on the current platform and existence of certain directories
+        std::filesystem::path getBestSaveDirPath() const;
         bool isScheduleFilePath(const std::filesystem::path& path) const;
-        std::string makeRelativePathFromName(const char* name) const;
+        std::filesystem::path makeSchedulePathFromName(const char* name) const;
         bool applyAutosaveToFile(const char* name);
         void sendFileInfoUpdates();
         void passFileNamesToGui();
@@ -93,7 +96,6 @@ class IO_Handler
         // Mostly just creates and applies an autosave of the file before it is unloaded by calling unloadCurrentFile().
         void closeCurrentFile();
     public:
-        const char* SCHEDULES_SUBDIR_PATH = "./schedules/";
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
 
         Event<FileInfo> fileReadEvent;
@@ -102,7 +104,6 @@ class IO_Handler
 
         void init(Schedule* schedule, Window* window, Input& input, Interface& interface);
 
-        // Does any necessary procedures between when a file is "closed" and the program closed or a new one opened
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
         bool createNewSchedule(const char* name);

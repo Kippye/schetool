@@ -6,6 +6,8 @@ set(PROGRAM_NAME ${PROJECT_NAME})
 
 set(CPP_VERSION "c++20")
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 # enable testing by default for debug makefile builds (can't check for configuration with msvc)
 IF ((CMAKE_GENERATOR STREQUAL "Unix Makefiles") AND ("${CMAKE_BUILD_TYPE}" STREQUAL Debug))
     option(ENABLE_TESTING "Unit testing build" ON)
@@ -27,11 +29,10 @@ target_compile_options(compiler_flags INTERFACE ${PRESET_ADD_COMPILE_OPTIONS})
 message(STATUS "~~ Setting compile and link flags for ${CMAKE_GENERATOR}")
 message(STATUS "~~ Using CXX compiler ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
 IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-    # WINDOWS OR MSYS SYSTEM
+    #### WINDOWS OR MSYS SYSTEM ####
     IF ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS))
-        # COMPILER FLAGS
+        ### COMPILER FLAGS ###
         # CLANG
-        
         IF (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -stdlib=libc++ -fuse-ld=lld -mtune=native -std=${CPP_VERSION}")
         ENDIF()
@@ -41,7 +42,7 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
         ENDIF()
         message(STATUS "~~ Set Unix Makefiles compile flags for Windows or MSYS system to: ${CMAKE_CXX_FLAGS}")
 
-        # WINDOWS LINKER FLAGS
+        ### WINDOWS LINKER FLAGS ###
         # keep console for debug builds and hide it for release builds
         # /ENTRY:mainCRTStartup keeps the same "main" function instead of requiring "WinMain"
         IF (${CMAKE_BUILD_TYPE} STREQUAL Debug)
@@ -53,7 +54,7 @@ IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
             set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,windows" "-Wl,-entry,mainCRTStartup")
             message(STATUS "~~ Added Windows Release linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
         ENDIF()
-    # LINUX OR OTHER SYSTEM
+    #### LINUX OR OTHER SYSTEM ####
     ELSE()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CPP_VERSION} -lstdc++ -lnotify")
         message(STATUS "~~ Set Unix Makefiles base compile flags to: ${CMAKE_CXX_FLAGS}")
@@ -71,6 +72,10 @@ set(LIBRARY_DIR "libs")
 # local source-compiled libraries
 add_subdirectory("${LIBRARY_DIR}/blf")
 add_subdirectory("${LIBRARY_DIR}/glad")
+# NOTE: FSR 'WINDOWS' isn't set on MinGW
+IF (WIN32 AND NOT MINGW)
+    add_subdirectory("${LIBRARY_DIR}/notificationcompat")
+ENDIF()
 
 add_subdirectory("${LIBRARY_DIR}/imgui") # imgui 1.90.4
 target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
@@ -157,6 +162,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/notification_handler_linux_impl.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/notification_handler_win_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/notification_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signal_handler_linux_impl.cpp"
@@ -190,6 +196,31 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
 )
 
+# PLATFORM-SPECIFIC INCLUDE DIRS
+IF (WIN32 AND NOT MINGW)
+    #### WINDOWS 10 SDK ####
+    # Use the env variable (not available with MinGW)
+    IF (DEFINED ENV{WindowsSdkDir})
+        # TODO: Get subdirectory (this only gets the /10/ dir, not the specific version)
+        SET(WINDOWS_SDK_INCLUDE_DIR $ENV{WindowsSdkDir})
+    ENDIF()
+    # Try to find the SDK using a script
+    IF (NOT WINDOWS_SDK_INCLUDE_DIR)
+        include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/win-10-sdk-finder/find_win10_sdk.cmake" OPTIONAL)
+    ENDIF()
+    IF (WINDOWS_SDK_INCLUDE_DIR)
+        # Pass the include directories to the notification compatibility library or it doesn't find the headers
+        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/winrt")
+        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/winrt/wrl")
+        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/um")
+        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/shared")
+        message(STATUS "~~ Found Windows 10 SDK at: ${WINDOWS_SDK_INCLUDE_DIR}")
+    ELSE()
+        message(FATAL_ERROR "Could not find the Windows 10 SDK."
+        "You can manually pass it with the cmake flag: -DWINDOWS_SDK_INCLUDE_DIR=<Path>")
+    ENDIF()
+ENDIF()
+
 target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags 
     blf
     imgui
@@ -197,5 +228,82 @@ target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags
     glfw
 )
 
+# PLATFORM-SPECIFIC LINKS
+IF (WIN32)
+    IF (NOT MINGW)
+        target_link_libraries(${PROGRAM_NAME} PUBLIC notificationcompat)
+        target_link_libraries(${PROGRAM_NAME} PUBLIC runtimeobject)
+        target_link_libraries(${PROGRAM_NAME} PUBLIC comctl32)
+    ENDIF(NOT MINGW)
+ENDIF(WIN32)
+
 # add testing subdirectory (handles its own logic)
 add_subdirectory(tests)
+
+
+########## INSTALL ##########
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
+install(TARGETS ${PROGRAM_NAME}
+    DESTINATION "."
+    RUNTIME_DEPENDENCY_SET schetool_deps
+)
+install(FILES "README.md"
+    DESTINATION "."
+)
+install(DIRECTORY "fonts"
+    DESTINATION "."
+)
+install(DIRECTORY "textures"
+    DESTINATION "."
+)
+# This will be removed after packaging for WiX packages
+install(CODE [[
+    file(MAKE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/schedules")
+]])
+IF (WIN32)
+    install(FILES "$<TARGET_FILE:${PROGRAM_NAME}>/../glfw3.dll"
+        DESTINATION "."
+    )
+ENDIF(WIN32)
+
+set(PACKAGING_DIR "${CMAKE_SOURCE_DIR}/packaging")
+
+########## PACKAGING ##########
+IF (WIN32 AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    # WIX PACKAGE COMMAND:
+    # cpack -G WIX -C [Release | Debug] --config build\CPackConfig.cmake
+    # NOTE: Any settings that CPack uses must be defined before including it
+    # NOTE: Some package generators support components to optionally install (might be needed in the future)
+    # cpack_add_component
+    set(CPACK_PACKAGE_NAME "${PROGRAM_NAME}")
+    set(CPACK_PACKAGE_VENDOR "Kip (KipHub)")
+    set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A lightweight daily schedule making program.")
+    set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROGRAM_NAME}")
+    set(CPACK_VERBATIM_VARIABLES TRUE)
+    # TODO: Look into these to see which ones should be constant
+    # Currently, if schetool is already installed, the installer will fail no matter what (i believe)
+    set(CPACK_WIX_PRODUCT_GUID "79A832A4-47BC-46CD-998A-73DCD7CAF255")
+    set(CPACK_WIX_UPGRADE_GUID "79A832A4-47BC-46CD-998A-73DCD7CAF255")
+    # The name of the folder in start menu containing the exe, uninstaller and maybe other things
+    set(CPACK_WIX_PROGRAM_MENU_FOLDER "${PROGRAM_NAME}")
+    # The description shown when the program is selected in 'Add or Remove Programs'
+    set(CPACK_WIX_PROPERTY_ARPCOMMENTS "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
+    # Start menu and desktop shortcuts
+    set(CPACK_PACKAGE_EXECUTABLES "${PROGRAM_NAME};${PROGRAM_NAME}")
+    set(CPACK_CREATE_DESKTOP_LINKS "${PROGRAM_NAME};${PROGRAM_NAME}")
+
+    # WIX POST PACKAGE SCRIPT
+    # Deletes the MSI installer and builds a new one to replace it
+    # Adds ShortcutProperty elements to the start menu shortcut in files.wxs
+    # Also removes the "schedules" dir from install for WiX (modifies files.wxs and features.wxs and rebuilds their .wixobj files)
+    # NOTE: Does nothing for other package generators
+    set(CPACK_POST_BUILD_SCRIPTS "${PACKAGING_DIR}/fix_wix.cmake")
+
+    # We don't want to split our program up into several things
+    # TODO: Actually look up what this does
+    set(CPACK_MONOLITHIC_INSTALL 1)
+    include(CPack)
+ENDIF()
