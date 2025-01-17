@@ -5,8 +5,6 @@
 #include <format>
 #include <iostream>
 
-constexpr unsigned int ELEMENT_NOTIFICATION_TIMEOUT_MS = 10 * 1000;
-
 bool NotificationHandlerLinuxImpl::init()
 {
     if (notify_init("schetool") == TRUE)
@@ -50,7 +48,7 @@ bool NotificationHandlerLinuxImpl::showElementNotification(const std::string& na
         std::format("{} - {}", TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME)).c_str(),
         "appointment-new"
     );
-    notify_notification_set_timeout(notif, ELEMENT_NOTIFICATION_TIMEOUT_MS);
+    notify_notification_set_timeout(notif, ELEMENT_NOTIFICATION_TIMEOUT_SEC * 1000);
     if (notify_notification_show(notif, NULL))
     {
         return true;
