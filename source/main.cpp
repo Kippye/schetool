@@ -32,9 +32,6 @@ Program::Program()
 	schedule.createDefaultSchedule();
 
     ioHandler.openMostRecentFile();
-
-    // TEMP
-    notificationHandler.showElementNotification("just a test", ClockTimeWrapper(00, 44), ClockTimeWrapper(1, 00));
 }
 
 void Program::handleSignal(Signal signal)

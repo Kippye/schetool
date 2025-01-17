@@ -13,8 +13,6 @@ using namespace ABI::Windows::Data::Xml::Dom;
 using namespace ABI::Windows::UI::Notifications;
 using namespace Microsoft::WRL;
 
-constexpr int ELEMENT_NOTIFICATION_TIMEOUT_MS = 10 * 1000;
-
 bool NotificationHandlerWinImpl::init()
 {
     // Register AUMID and COM server (for a packaged app, this is a no-operation)
@@ -35,6 +33,43 @@ bool NotificationHandlerWinImpl::init()
         m_initialised = false;
     }
     return m_initialised;
+}
+
+bool NotificationHandlerWinImpl::showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec)
+{
+    if (getIsInitialised() == false) { return false; }
+    std::string xmlText = std::format(m_notificationFormat, title, content);
+    std::wstring wxmlText(xmlText.begin(), xmlText.end());
+    // Construct XML
+    ComPtr<IXmlDocument> doc;
+    HRESULT hr = DesktopNotificationManagerCompat::CreateXmlDocumentFromString(
+        wxmlText.c_str(),
+        &doc
+    );
+    if (SUCCEEDED(hr))
+    {
+        // Create the notifier
+        // Desktop apps must use the compat method to create the notifier.
+        ComPtr<IToastNotifier> notifier;
+        hr = DesktopNotificationManagerCompat::CreateToastNotifier(&notifier);
+        if (SUCCEEDED(hr))
+        {
+            // Create the notification itself (using helper method from compat library)
+            ComPtr<IToastNotification> toast;
+            hr = DesktopNotificationManagerCompat::CreateToastNotification(doc.Get(), &toast);
+            if (SUCCEEDED(hr))
+            {
+                // And show it!
+                hr = notifier->Show(toast.Get());
+                if (SUCCEEDED(hr))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 bool NotificationHandlerWinImpl::showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)

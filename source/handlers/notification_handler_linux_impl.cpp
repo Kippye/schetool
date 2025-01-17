@@ -5,7 +5,7 @@
 #include <format>
 #include <iostream>
 
-constexpr int ELEMENT_NOTIFICATION_TIMEOUT_MS = 10 * 1000;
+constexpr unsigned int ELEMENT_NOTIFICATION_TIMEOUT_MS = 10 * 1000;
 
 bool NotificationHandlerLinuxImpl::init()
 {
@@ -20,6 +20,24 @@ bool NotificationHandlerLinuxImpl::init()
         m_initialised = false;
     }
     return m_initialised;
+}
+
+bool NotificationHandlerLinuxImpl::showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec)
+{
+    if (getIsInitialised() == false) { return false; }
+
+    NotifyNotification* notif = notify_notification_new
+    (
+        title.c_str(),
+        content.c_str(),
+        NULL // TODO: Support providing icon?
+    );
+    notify_notification_set_timeout(notif, timeout_sec * 1000);
+    if (notify_notification_show(notif, NULL))
+    {
+        return true;
+    }
+    return false;
 }
 
 bool NotificationHandlerLinuxImpl::showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)

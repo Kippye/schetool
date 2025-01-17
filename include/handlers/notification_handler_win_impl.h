@@ -30,6 +30,15 @@ CoCreatableClass(NotificationActivator);
 class NotificationHandlerWinImpl : public NotificationHandlerImpl
 {        
     private:
+        static constexpr const char* const m_notificationFormat = 
+        "<toast>"
+            "<visual>"
+                "<binding template='ToastGeneric'>"
+                    "<text hint-maxLines='1'>{}</text>"
+                    "<text>{}</text>"
+                "</binding>"
+            "</visual>"
+        "</toast>";
         static constexpr const char* const m_elementNotificationFormat = 
         "<toast>"
             "<visual>"
@@ -39,9 +48,8 @@ class NotificationHandlerWinImpl : public NotificationHandlerImpl
                 "</binding>"
             "</visual>"
         "</toast>";
-        // void displayMessage(LPCTSTR caption, LPCTSTR text, LPCTSTR msgType);
-        // WinToastHandler m_winToastHandler;
     public:
         bool init() override;
+        bool showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec) override;
         bool showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end) override;
 };
