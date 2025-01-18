@@ -2,11 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <locale>
 
-// Windows Release build
-#if (defined (_WIN32) || defined (_WIN64))
-    #ifdef NDEBUG
-        #define WIN_RELEASE
-    #endif
+#if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))
+	#define WIN_RELEASE
 #endif
 
 Program::Program()

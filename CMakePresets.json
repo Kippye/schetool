@@ -49,7 +49,7 @@
         "base-vcpkg"
       ],
       "cacheVariables": {
-        "PRESET_ADD_COMPILE_OPTIONS": "-- /nologo /verbosity:minimal /maxcpucount"
+        "PRESET_ADD_COMPILE_OPTIONS": "/nologo /verbosity:minimal /maxcpucount"
       },
       "condition": {
         "type": "equals",

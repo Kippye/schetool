@@ -1,12 +1,11 @@
 #pragma once
 #include "DesktopNotificationManagerCompat.h"
 #include <NotificationActivationCallback.h>
-#include <windows.ui.notifications.h>
 
 #include "time_wrapper.h"
 #include "notification_handler_base_impl.h"
+#include <string>
 
-// The UUID CLSID must be unique to your app. Create a new GUID if copying this code.
 class DECLSPEC_UUID("79A832A4-47BC-46CD-998A-73DCD7CAF255") NotificationActivator WrlSealed // WrlFinal
     : public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, INotificationActivationCallback>
 {
@@ -26,7 +25,7 @@ public:
 CoCreatableClass(NotificationActivator);
 
 // Windows notification handler implementation.
-// Uses the WinToast library to create notifications.
+// Uses notificationcompat library (from Microsoft Learn) to create notifications through WRL.
 class NotificationHandlerWinImpl : public NotificationHandlerImpl
 {        
     private:
@@ -48,6 +47,9 @@ class NotificationHandlerWinImpl : public NotificationHandlerImpl
                 "</binding>"
             "</visual>"
         "</toast>";
+
+        // Show a notification using a prefilled XML string
+        bool showNotificationWithXmlString(const std::wstring& xml);
     public:
         bool init() override;
         bool showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec) override;

@@ -104,9 +104,17 @@ ENDIF()
 
 target_link_options(${PROGRAM_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
 
+IF (WIN32 AND NOT MINGW)
+    target_link_options(${PROGRAM_NAME} PRIVATE
+        $<$<CONFIG:Debug>:/SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup>
+        $<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup>
+    )
+ENDIF()
+
 # add build configuration defines
 target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<CONFIG:Debug>:DEBUG>")
 target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<NOT:$<CONFIG:Debug>>:NDEBUG>")
+target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<CONFIG:Release>:RELEASE>")
 
 IF (ENABLE_TESTING)
     target_compile_definitions(${PROGRAM_NAME} PUBLIC "PERFORM_UNIT_TESTS")

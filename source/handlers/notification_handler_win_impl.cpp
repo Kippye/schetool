@@ -3,7 +3,6 @@
 #include "notification_handler_win_impl.h"
 
 #include <NotificationActivationCallback.h>
-#include <windows.ui.notifications.h>
 
 #include <format>
 #include <iostream>
@@ -35,15 +34,14 @@ bool NotificationHandlerWinImpl::init()
     return m_initialised;
 }
 
-bool NotificationHandlerWinImpl::showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec)
+bool NotificationHandlerWinImpl::showNotificationWithXmlString(const std::wstring& xmlString)
 {
     if (getIsInitialised() == false) { return false; }
-    std::string xmlText = std::format(m_notificationFormat, title, content);
-    std::wstring wxmlText(xmlText.begin(), xmlText.end());
+
     // Construct XML
     ComPtr<IXmlDocument> doc;
     HRESULT hr = DesktopNotificationManagerCompat::CreateXmlDocumentFromString(
-        wxmlText.c_str(),
+        xmlString.c_str(),
         &doc
     );
     if (SUCCEEDED(hr))
@@ -72,40 +70,21 @@ bool NotificationHandlerWinImpl::showNotification(const std::string& title, cons
     return false;
 }
 
+bool NotificationHandlerWinImpl::showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec)
+{
+    if (getIsInitialised() == false) { return false; }
+    std::string xmlText = std::format(m_notificationFormat, title, content);
+    std::wstring wxmlText(xmlText.begin(), xmlText.end());
+    
+    return showNotificationWithXmlString(wxmlText);
+}
+
 bool NotificationHandlerWinImpl::showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
 {
     if (getIsInitialised() == false) { return false; }
     std::string xmlText = std::format(m_elementNotificationFormat, name, TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME));
     std::wstring wxmlText(xmlText.begin(), xmlText.end());
-    // Construct XML
-    ComPtr<IXmlDocument> doc;
-    HRESULT hr = DesktopNotificationManagerCompat::CreateXmlDocumentFromString(
-        wxmlText.c_str(),
-        &doc
-    );
-    if (SUCCEEDED(hr))
-    {
-        // Create the notifier
-        // Desktop apps must use the compat method to create the notifier.
-        ComPtr<IToastNotifier> notifier;
-        hr = DesktopNotificationManagerCompat::CreateToastNotifier(&notifier);
-        if (SUCCEEDED(hr))
-        {
-            // Create the notification itself (using helper method from compat library)
-            ComPtr<IToastNotification> toast;
-            hr = DesktopNotificationManagerCompat::CreateToastNotification(doc.Get(), &toast);
-            if (SUCCEEDED(hr))
-            {
-                // And show it!
-                hr = notifier->Show(toast.Get());
-                if (SUCCEEDED(hr))
-                {
-                    return true;
-                }
-            }
-        }
-    }
 
-    return false;
+    return showNotificationWithXmlString(wxmlText);
 }
 #endif
