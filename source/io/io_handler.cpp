@@ -130,19 +130,19 @@ void IO_Handler::closeCurrentFile()
 
 bool IO_Handler::applyAutosaveToFile(const char* fileName)
 {
-    printf("IO_Handler::applyAutosaveToFile(): Applying autosave to file %s...\n", fileName);
+    std::cout << std::format("IO_Handler::applyAutosaveToFile(): Applying autosave to file: '{}'", fileName) << std::endl;
     fs::path pathToFile = fs::path(makeSchedulePathFromName(fileName));
     fs::path pathToAutosaveFile = fs::path(makeSchedulePathFromName(getFileAutosaveName(fileName).c_str()));
 
     // A Schedule file with this path does not exist. stop.
     if (fs::exists(pathToFile) == false)
     {
-        printf("IO_Handler::applyAutosaveToFile(%s): Base file not found at path %s\n", fileName, pathToFile.string().c_str());
+        std::cout << std::format("IO_Handler::applyAutosaveToFile(): Base file for Schedule '{}' not found at path: '{}'", fileName, pathToFile.string()) << std::endl;
         return false;
     }
     if (fs::exists(pathToAutosaveFile) == false)
     {
-        printf("IO_Handler::applyAutosaveToFile(%s): Autosave file not found at path %s\n", fileName, pathToAutosaveFile.string().c_str());
+        std::cout << std::format("IO_Handler::applyAutosaveToFile(): Autosave file for Schedule '{}' not found at path: '{}'", fileName, pathToAutosaveFile.string()) << std::endl;
         return false;
     }
 
@@ -160,14 +160,14 @@ bool IO_Handler::applyAutosaveToFile(const char* fileName)
             // The file was successfully copied, which means the autosave can be removed
             fs::remove(pathToAutosaveFile);
             passFileNamesToGui();
-            printf("IO_Handler::applyAutosaveToFile(): Applied autosave to file %s...\n", fileName);
+            std::cout << std::format("IO_Handler::applyAutosaveToFile(): Applied autosave to Schedule '{}'", fileName) << std::endl;
             return true;
         }
     }
     // Failed to copy
     catch (fs::filesystem_error& e)
     {
-        printf("Could not copy autosave %s to file %s: %s\n", pathToAutosaveFile.string().c_str(), pathToFile.string().c_str(), e.what());
+        std::cout << std::format("IO_Handler::applyAutosaveToFile(): Could not copy autosave at '{}' to file at '{}'. Error: {}", pathToAutosaveFile.string(), pathToFile.string(), e.what()) << std::endl;
         return false;
     }
     passFileNamesToGui();
@@ -181,11 +181,11 @@ bool IO_Handler::writeSchedule(const char* name)
     {
         if (fs::create_directories(m_saveDir))
         {
-            std::cout << std::format("Tried to write Schedule but the schedules directory did not exist. Created a schedules directory at: '{}'", m_saveDir.string()) << std::endl;
+            std::cout << std::format("IO_Handler::writeSchedule(): Schedule save directory did not exist. Created a 'schedules' directory at: '{}'", m_saveDir.string()) << std::endl;
         }
         else
         {
-            std::cout << std::format("Tried to write Schedule but the schedules directory did not exist. FAILED to create a schedules directory at: '{}'", m_saveDir.string()) << std::endl;
+            std::cout << std::format("IO_Handler::writeSchedule(): Schedule save directory did not exist. FAILED to create a 'schedules' directory at: '{}'", m_saveDir.string()) << std::endl;
             return false;
         }
     }
@@ -194,7 +194,7 @@ bool IO_Handler::writeSchedule(const char* name)
 
     if (m_converter.writeSchedule(schedulePath.string().c_str(), m_schedule->getAllColumns()) == 0)
     {
-        std::cout << std::format("Successfully wrote Schedule to file: '{}'", schedulePath.string()) << std::endl;
+        std::cout << std::format("IO_Handler::writeSchedule(): Wrote Schedule to file: '{}'", schedulePath.string()) << std::endl;
     }
     // TODO: make some event that the Schedule can listen to?
     m_schedule->getEditHistoryMutable().setEditedSinceWrite(false);
@@ -209,14 +209,14 @@ bool IO_Handler::readSchedule(const char* name)
     
     if (fs::exists(schedulePath) == false)
     {
-        std::cout << std::format("Tried to read Schedule at path to non-existant file: '{}'", schedulePath.string()) << std::endl;
+        std::cout << std::format("IO_Handler::readSchedule(): Tried to read Schedule at path to non-existant file: '{}'", schedulePath.string()) << std::endl;
         return false;
     }
 
     m_schedule->getEditHistoryMutable().clearEditHistory();
     if (std::optional<FileInfo> readFileInfo = m_converter.readSchedule(schedulePath.string().c_str(), m_schedule->getAllColumnsMutable()))
     {
-        std::cout << std::format("Successfully read Schedule from file: '{}'", schedulePath.string()) << std::endl;
+        std::cout << std::format("IO_Handler::readSchedule(): Read Schedule from file: '{}'", schedulePath.string()) << std::endl;
         m_schedule->sortColumns();
         m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(schedulePath), readFileInfo->getScheduleEditTime());
         sendFileInfoUpdates();
@@ -228,7 +228,7 @@ bool IO_Handler::readSchedule(const char* name)
     }
     else
     {
-        std::cout << std::format("Failed when reading Schedule from file: '{}'", schedulePath.string()) << std::endl;
+        std::cout << std::format("IO_Handler::readSchedule(): Failed when reading Schedule from file: '{}'", schedulePath.string()) << std::endl;
         return false;
     }
 }
@@ -261,7 +261,7 @@ bool IO_Handler::deleteSchedule(const char* name)
 
     if (fs::exists(schedulePath) == false)
     {
-        std::cout << std::format("Tried to delete non-existant Schedule at: '{}'", schedulePath.string()) << std::endl;
+        std::cout << std::format("IO_Handler::deleteSchedule(): Tried to delete non-existent Schedule at: '{}'", schedulePath.string()) << std::endl;
         return false;
     }
 
@@ -302,12 +302,12 @@ bool IO_Handler::renameCurrentFile(const std::string& newName)
     {
         if (fs::create_directories(m_saveDir))
         {
-            std::cout << std::format("Tried to rename a Schedule but the schedules directory did not exist. Created a schedules directory at: '{}'", m_saveDir.string()) << std::endl;
+            std::cout << std::format("IO_Handler::renameCurrentFile(): Tried to rename a Schedule but the schedules directory did not exist. Created a schedules directory at: '{}'", m_saveDir.string()) << std::endl;
             schedulesDirWasCreated = true;
         }
         else
         {
-            std::cout << std::format("Tried to rename a Schedule but the schedules directory did not exist. FAILED to create a schedules directory at: '{}'", m_saveDir.string()) << std::endl;
+            std::cout << std::format("IO_Handler::renameCurrentFile(): Tried to rename a Schedule but the schedules directory did not exist. FAILED to create a schedules directory at: '{}'", m_saveDir.string()) << std::endl;
         }
     }
     //  A Schedule file with this name already exists, don't overwrite it. Just stop.
@@ -318,9 +318,9 @@ bool IO_Handler::renameCurrentFile(const std::string& newName)
     // If the file to rename doesn't exist, just write the Schedule to the file with the provided new name
     if (schedulesDirWasCreated || fs::exists(pathToOpenFile) == false)
     {
-        std::cout << std::format("Tried to change the name of the Schedule file, but the file was not found at its previous path: '{}'", pathToOpenFile.string()) << std::endl;
+        std::cout << std::format("IO_Handler::renameCurrentFile(): Tried to change the name of the Schedule file, but the file was not found at its previous path: '{}'", pathToOpenFile.string()) << std::endl;
         writeSchedule(newName.c_str());
-        std::cout << std::format("Wrote current file to renamed path: '{}'", pathToRenamedFile.string()) << std::endl;
+        std::cout << std::format("IO_Handler::renameCurrentFile(): Wrote current file to renamed path: '{}'", pathToRenamedFile.string()) << std::endl;
     }
     else // All is fine, rename the file
     {
@@ -492,7 +492,7 @@ std::vector<std::string> IO_Handler::getScheduleStemNames(bool includeAutosaves)
     std::vector<std::string> filenames = {};
     if (fs::exists(m_saveDir) == false)
     {
-        std::cout << std::format("Tried to get Schedule stem names but the schedules directory '{}' did not exist.", m_saveDir.string()) << std::endl;
+        std::cout << std::format("IO_Handler::getScheduleStemNames(): Schedules directory '{}' does not exist.", m_saveDir.string()) << std::endl;
         return filenames;
     }
 
@@ -501,13 +501,13 @@ std::vector<std::string> IO_Handler::getScheduleStemNames(bool includeAutosaves)
         // Skip non-regular files
         if (entry.is_regular_file() == false)
         {
-            std::cout << "Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
+            std::cout << "IO_Handler::getScheduleStemNames(): Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
             continue;
         }
         // Skip non-schedule files
         if (isScheduleFilePath(entry.path()) == false)
         {
-            std::cout << "Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
+            std::cout << "IO_Handler::getScheduleStemNames(): Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
             continue;
         }
         // Skip autosave files if includeAutosaves == false
@@ -528,7 +528,7 @@ std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime(bool i
 
     if (fs::exists(m_saveDir) == false)
     {
-        std::cout << std::format("Tried to get sorted Schedule stem names but the schedules directory '{}' did not exist.", m_saveDir.string()) << std::endl;
+        std::cout << std::format("IO_Handler::getScheduleStemNamesSortedByEditTime(): Schedules directory '{}' does not exist.", m_saveDir.string()) << std::endl;
         return filenames;
     }
 
@@ -537,13 +537,13 @@ std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime(bool i
         // Skip non-regular files
         if (entry.is_regular_file() == false)
         {
-            std::cout << "Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
+            std::cout << "IO_Handler::getScheduleStemNamesSortedByEditTime(): Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
             continue;
         }
         // Skip non-schedule files
         if (isScheduleFilePath(entry.path()) == false)
         {
-            std::cout << "Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
+            std::cout << "IO_Handler::getScheduleStemNamesSortedByEditTime(): Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
             continue;
         }
         // Skip autosave files if includeAutosaves == false
@@ -564,7 +564,7 @@ std::string IO_Handler::getLastEditedScheduleStemName()
 {
     if (fs::exists(m_saveDir) == false)
     {
-        std::cout << std::format("Tried to get the latest edited Schedule, but the schedules directory '{}' did not exist.", m_saveDir.string()) << std::endl;
+        std::cout << std::format("IO_Handler::getLastEditedScheduleStemName(): Schedules directory '{}' does not exist.", m_saveDir.string()) << std::endl;
         return std::string("");
     }
 
@@ -577,13 +577,13 @@ std::string IO_Handler::getLastEditedScheduleStemName()
         // Skip non-regular files
         if (entry.is_regular_file() == false)
         {
-            std::cout << "Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
+            std::cout << "IO_Handler::getLastEditedScheduleStemName(): Skipped file " << entry.path().string() << " (entry.is_regular_file() == false)" << std::endl;
             continue;
         }
         // Skip non-schedule files
         if (isScheduleFilePath(entry.path()) == false)
         {
-            std::cout << "Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
+            std::cout << "IO_Handler::getLastEditedScheduleStemName(): Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
             continue;
         }
 

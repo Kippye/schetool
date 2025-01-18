@@ -10,7 +10,7 @@ extern "C" {
 
 void Window::init()
 {
-    m_titleBase = std::format("{} {}", 
+    m_titleBase = std::format("{} {}{}", 
         program_info::PROGRAM_NAME,
         program_info::ProgramVersion::getCurrent().getString(),
         #ifdef DEBUG

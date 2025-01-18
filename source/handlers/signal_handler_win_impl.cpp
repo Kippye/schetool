@@ -29,28 +29,23 @@ BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
         // Handle the CTRL-C signal.
         case CTRL_C_EVENT:
             gLastSignal = Signal::Interrupt;
-            printf("Ctrl-C event\n\n");
         return TRUE;
 
         // CTRL-CLOSE: confirm that the user wants to exit.
         case CTRL_CLOSE_EVENT:
             gLastSignal = Signal::Close;
-            printf("Ctrl-Close event\n\n");
         return TRUE;
 
         // Pass other signals to the next handler.
         case CTRL_BREAK_EVENT:
-            printf("Ctrl-Break event\n\n");
         return TRUE;
 
         case CTRL_LOGOFF_EVENT:
             gLastSignal = Signal::Logoff;
-            printf("Ctrl-Logoff event\n\n");
         return TRUE;
 
         case CTRL_SHUTDOWN_EVENT:
             gLastSignal = Signal::Shutdown;
-            printf("Ctrl-Shutdown event\n\n");
         return TRUE;
 
         default:
@@ -130,7 +125,6 @@ LRESULT SubWndProc(
 
 bool SignalHandlerWinImpl::init()
 {
-    printf("Initialising Signal Handler Windows implementation.\n");
     gGlfwWndProc = (WNDPROC)GetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC);
     SetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC, (LONG_PTR)SubWndProc);
     // if (SetWindowSubclass(glfwGetWin32Window(m_window.window), Subclassproc, gSubClassID, (DWORD_PTR)nullptr))
@@ -147,6 +141,7 @@ bool SignalHandlerWinImpl::init()
         printf("\nERROR: SignalHandlerWinImpl::init(): Could not set console control handler");
         m_haveValidListener = false;
     }
+    printf("Initialised Windows signal handler.\n");
     return m_haveValidListener;
 }
 
