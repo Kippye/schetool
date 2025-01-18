@@ -42,7 +42,7 @@ class Window
         // load and set the window's icon
         void loadIcon(TextureLoader& textureLoader);
         void setCursor(CURSOR_TYPE _cursor);
-        void setTitle(const std::string& title);
+        void setTitle(std::string title);
         void setTitleSuffix(const std::string& suffix);
         std::string getTitle();
         // lifecycle functions

@@ -20,7 +20,7 @@
 
 Signal gLastSignal = Signal::None;
 WNDPROC gGlfwWndProc;
-UINT_PTR gSubClassID = 420;
+// UINT_PTR gSubClassID = 420;
 
 BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
 {
@@ -58,13 +58,13 @@ BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
     }
 }
 
-LRESULT Subclassproc(
+LRESULT SubWndProc(
     HWND hWnd,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam,
-    UINT_PTR uIdSubclass,
-    DWORD_PTR dwRefData
+    LPARAM lParam
+    // UINT_PTR uIdSubclass,
+    // DWORD_PTR dwRefData
 )
 {
     switch(uMsg)
@@ -73,9 +73,9 @@ LRESULT Subclassproc(
         break;
         case WM_CLOSE:
         gLastSignal = Signal::Close;
-        printf("Subclassproc(): WM_CLOSE\n");
+        printf("SubWndProc(): WM_CLOSE\n");
         return 1;
-        // break;
+        break;
 
         case WM_QUERYENDSESSION:
         {
@@ -89,14 +89,14 @@ LRESULT Subclassproc(
                 auto floorSecs = std::chrono::floor<std::chrono::seconds>(time);
                 auto millis = std::chrono::milliseconds(std::chrono::floor<std::chrono::milliseconds>(time - floorSecs));
                 std::string timeString = std::format("{}:{}:{}ms", TimeWrapper::getString(time, TIME_FORMAT_TIME), secs.count(), millis.count());
-                printf("Subclassproc(): Returning Shutdown at %s (WM_QUERYENDSESSION)\n", timeString.c_str());
+                printf("SubWndProc(): Returning Shutdown at %s (WM_QUERYENDSESSION)\n", timeString.c_str());
                 return 1;
             }
             // User is logging off
             if ((lParam & ENDSESSION_LOGOFF) == ENDSESSION_LOGOFF)
             {
                 gLastSignal = Signal::Logoff;
-                printf("Subclassproc(): Returning Logoff (WM_QUERYENDSESSION)\n");
+                printf("SubWndProc(): Returning Logoff (WM_QUERYENDSESSION)\n");
             }
             break;
         }
@@ -111,16 +111,16 @@ LRESULT Subclassproc(
             auto floorSecs = std::chrono::floor<std::chrono::seconds>(time);
             auto millis = std::chrono::milliseconds(std::chrono::floor<std::chrono::milliseconds>(time - floorSecs));
             std::string timeString = std::format("{}:{}:{}ms", TimeWrapper::getString(time, TIME_FORMAT_TIME), secs.count(), millis.count());
-            printf("Subclassproc(): Got Endsession (shutdown in 5 seconds!) at %s after WM_QUERYENDSESSION (WM_ENDSESSION)\n", timeString.c_str());
+            printf("SubWndProc(): Got Endsession (shutdown in 5 seconds!) at %s after WM_QUERYENDSESSION (WM_ENDSESSION)\n", timeString.c_str());
         }
 
         case WM_QUIT:
         gLastSignal = Signal::Close;
-        printf("Subclassproc(): Returning Close (WM_QUIT)\n");
+        printf("SubWndProc(): Returning Close (WM_QUIT)\n");
         break;
 
         default:
-        // printf("Subclassproc(): Other signal with value: %d\n", uMsg);
+        // printf("SubWndProc(): Other signal with value: %d\n", uMsg);
         break;
     }
 
@@ -132,10 +132,11 @@ bool SignalHandlerWinImpl::init()
 {
     printf("Initialising Signal Handler Windows implementation.\n");
     gGlfwWndProc = (WNDPROC)GetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC);
-    if (SetWindowSubclass(glfwGetWin32Window(m_window.window), Subclassproc, gSubClassID, (DWORD_PTR)nullptr))
-    {
-        // printf("Window subclass successfully created!\n");
-    }
+    SetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC, (LONG_PTR)SubWndProc);
+    // if (SetWindowSubclass(glfwGetWin32Window(m_window.window), Subclassproc, gSubClassID, (DWORD_PTR)nullptr))
+    // {
+    //     // printf("Window subclass successfully created!\n");
+    // }
 
     if (SetConsoleCtrlHandler(CtrlHandler, TRUE))
     {

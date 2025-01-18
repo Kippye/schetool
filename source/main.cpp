@@ -15,6 +15,7 @@ Program::Program()
 
 	// setup and initialize components
 	windowManager.init();
+    // NOTE: MUST be initialised AFTER windowManager!
     signalHandler.init(windowManager);
     notificationHandler.init();
     textureLoader.init();

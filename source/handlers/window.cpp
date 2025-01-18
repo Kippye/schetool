@@ -4,23 +4,24 @@ extern "C" {
 }
 #include <GLFW/glfw3.h>
 
-#include <window.h>
+#include "window.h"
 #include <generated/program_info.h>
+#include <format>
 
 void Window::init()
 {
-	m_titleBase = program_info::PROGRAM_NAME;
-	m_titleBase = m_titleBase.append(" ").append(program_info::ProgramVersion::getCurrent()
-		.getString()
-		#ifdef DEBUG
-		.append(std::string(" (DEBUG) "))
-		#endif
-	);
+    m_titleBase = std::format("{} {}", 
+        program_info::PROGRAM_NAME,
+        program_info::ProgramVersion::getCurrent().getString(),
+        #ifdef DEBUG
+        " (DEBUG)"
+        #else
+        ""
+        #endif
+    );
 
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
 	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE); //might be needed for bigger monitors?
@@ -28,7 +29,7 @@ void Window::init()
 	window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, m_titleBase.c_str(), NULL, NULL);
 	if (window == NULL)
 	{
-		std::cout << "Could not create a GLFW window :(" << std::endl;
+		std::cout << "Could not create a GLFW window." << std::endl;
         const char* description;
         int code = glfwGetError(&description);
         if (code != GLFW_NO_ERROR)
@@ -47,16 +48,17 @@ void Window::init()
 	setTitle(m_titleBase);
 	// make the window current and maximize 8)
 	glfwMakeContextCurrent(window);
-	glfwMaximizeWindow(window);
+    glfwMaximizeWindow(window);
 	glfwSetWindowSizeLimits(window, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
 	glfwSetWindowUserPointer(window, this);
 	// load address of OpenGL function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cout << "Could not initialize GLAD ( not glad :( )" << std::endl;
+		std::cout << "Could not initialize GLAD." << std::endl;
         window_close_callback(this);
 		return;
 	}
+    std::cout << "Using OpenGL " << glGetString(GL_VERSION) << std::endl;
 
 	// load and create cursors
 	// cursors[NORMAL] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
@@ -116,7 +118,6 @@ void Window::init()
 	{
 		self->shouldClose = true;
         self->windowCloseEvent.invoke();
-		std::cout << "Program close requested." << std::endl;
 	};
 }
 
@@ -130,7 +131,7 @@ void Window::loadIcon(TextureLoader& textureLoader)
     }
     else
     {
-        printf("Window::init(..): Failed to load program icon from path: %s\n", (textureLoader.textureFolder + "icon.png").c_str());
+        printf("Window::init(): Failed to load program icon from path: %s\n", (textureLoader.textureFolder + "icon.png").c_str());
     }
 }
 
@@ -139,16 +140,17 @@ void Window::setCursor(CURSOR_TYPE cursor)
 	glfwSetCursor(window, cursors[cursor]);
 }
 
-void Window::setTitle(const std::string& title)
+void Window::setTitle(std::string title)
 {
 	m_title = title;
-	glfwSetWindowTitle(window, title.c_str());
+    glfwSetWindowTitle(window, m_title.c_str());
 }
 
 void Window::setTitleSuffix(const std::string& suffix)
 {
 	std::string newTitle = m_titleBase;
-	setTitle(newTitle.append(suffix));
+    newTitle.append(suffix);
+    setTitle(newTitle);
 }
 
 std::string Window::getTitle()

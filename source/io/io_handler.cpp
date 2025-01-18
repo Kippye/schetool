@@ -100,7 +100,7 @@ void IO_Handler::passFileNamesToGui()
 
 void IO_Handler::sendFileInfoUpdates()
 {
-    m_windowManager->setTitleSuffix(std::string(" - ").append(m_currentFileInfo.getName()).c_str());
+    m_windowManager->setTitleSuffix(std::string(" - ").append(m_currentFileInfo.getName()));
     m_schedule->setName(m_currentFileInfo.getName());
     m_mainMenuBarGui->passHaveFileOpen(m_currentFileInfo.empty() == false);
 }
