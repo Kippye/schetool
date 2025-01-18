@@ -17,4 +17,8 @@ class GuiTextures
         // If it contains an extension, that extension will be used.
         // If it doesn't contain an extension, every supported extension will be tried until a file is found.
         GLuint getOrLoad(const std::string& guiRelativePath);
+        // Do the same as getOrLoad, but returning whether the texture exists.
+        // The provided GLuint reference will be set to the texture if it is found.
+        // Does not print an error if the texture is not found.
+        bool exists(const std::string& guiRelativePath, GLuint& textureOut);
 };
