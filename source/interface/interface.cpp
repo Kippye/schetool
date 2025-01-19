@@ -17,7 +17,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
 	imGuiIO = &ImGui::GetIO();
 	// set up platform / renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(m_windowManager->window, true);
-	ImGui_ImplOpenGL3_Init("#version 430");
+	ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());
     // Load fonts
     m_styleHandler->loadFontSizes("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf");
 

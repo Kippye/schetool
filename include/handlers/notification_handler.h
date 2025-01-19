@@ -15,5 +15,5 @@ class NotificationHandler
         // NOTE: The Windows implementation doesn't support a custom timeout length. Instead, the time that notifications are displayed for can be changed in Windows accessbility settings.
         bool showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec = DEFAULT_NOTIFICATION_TIMEOUT_SEC);
         // Show a notification about an element (usually about it starting)
-        bool showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end);
+        bool showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end);
 };

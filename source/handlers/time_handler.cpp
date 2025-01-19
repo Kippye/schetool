@@ -109,7 +109,7 @@ void TimeHandler::showItemStartNotifications(const TimeWrapper& currentTime, con
             auto endElementTimeContainer = m_schedule->getElementAsSpecial<TimeContainer>(endColumnIndex, row);
             ClockTimeWrapper itemEndTime = ClockTimeWrapper(endElementTimeContainer->getConstValueReference().getHours(), endElementTimeContainer->getConstValueReference().getMinutes());
             // Send a notification about the element starting
-            m_notificationHandler->showElementNotification
+            m_notificationHandler->showItemNotification
             (
                 m_schedule->getElementAsSpecial<std::string>(nameColumnIndex, row)->getValue(),
                 itemStartTime.getLocalClockTime(),

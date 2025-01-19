@@ -8,6 +8,7 @@ extern "C" {
 
 #include <functional>
 #include <string>
+#include <map>
 #include "textures.h"
 #include "event.h"
 
@@ -20,6 +21,9 @@ enum CURSOR_TYPE
 class Window
 {
 	private:
+        static std::map<std::string, std::string> m_versionGlToGLSL;
+        std::string m_glVersionString = "";
+        std::string m_glslVersionString = "#version 140";
 		std::string m_titleBase = "";
 		std::string m_title = "";
         // window events
@@ -38,13 +42,16 @@ class Window
 		bool hasFocus = true;
 		bool shouldClose = false;
         Event<> windowCloseEvent;
+
+        std::string getGlVersionString() const;
+        std::string getGlslVersionString() const;
         // window functions
         // load and set the window's icon
         void loadIcon(TextureLoader& textureLoader);
         void setCursor(CURSOR_TYPE _cursor);
         void setTitle(std::string title);
         void setTitleSuffix(const std::string& suffix);
-        std::string getTitle();
+        std::string getTitle() const;
         // lifecycle functions
         void init();
         // call the windowCloseEvent, destroy the window and terminate glfw.

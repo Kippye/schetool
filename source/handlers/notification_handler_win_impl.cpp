@@ -7,10 +7,20 @@
 #include <format>
 #include <iostream>
 #include <string>
+#include <cstdlib>
+#include <ctime>
 
 using namespace ABI::Windows::Data::Xml::Dom;
 using namespace ABI::Windows::UI::Notifications;
 using namespace Microsoft::WRL;
+
+NotificationInfo::NotificationInfo(size_t ID, std::optional<std::string> itemName, std::optional<ClockTimeWrapper> startTime, std::optional<ClockTimeWrapper> endTime)
+{
+    this->ID = ID;
+    this->itemName = itemName;
+    this->startTime = startTime;
+    this->endTime = endTime;
+}
 
 bool NotificationHandlerWinImpl::init()
 {
@@ -30,6 +40,10 @@ bool NotificationHandlerWinImpl::init()
     {
         printf("NotificationHandlerWinImpl::init(): Failed to initialise notification handler. Notifications will not be shown.\n");
         m_initialised = false;
+    }
+    if (m_initialised)
+    {
+        srand(time(0));
     }
     return m_initialised;
 }
@@ -76,15 +90,40 @@ bool NotificationHandlerWinImpl::showNotification(const std::string& title, cons
     std::string xmlText = std::format(m_notificationFormat, title, content);
     std::wstring wxmlText(xmlText.begin(), xmlText.end());
     
-    return showNotificationWithXmlString(wxmlText);
+    if (showNotificationWithXmlString(wxmlText))
+    {
+        m_notificationHistory.emplace_back(m_notificationID);
+        m_notificationID++;
+        return true;
+    }
+    return false;
 }
 
-bool NotificationHandlerWinImpl::showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
+bool NotificationHandlerWinImpl::showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
 {
-    if (getIsInitialised() == false) { return false; }
-    std::string xmlText = std::format(m_elementNotificationFormat, name, TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME));
-    std::wstring wxmlText(xmlText.begin(), xmlText.end());
+    // Choose a random message
+    size_t messageIndex = rand() % m_scheduleProgressMessages.size();
+    std::string supportiveMessage = messageIndex >= m_scheduleProgressMessages.size() ? "" : m_scheduleProgressMessages[messageIndex];
 
-    return showNotificationWithXmlString(wxmlText);
+    if (getIsInitialised() == false) { return false; }
+    std::string xmlText = std::format(
+        m_elementNotificationFormat,        // Notification format XML
+        name,                               // Name of the element for launch (not supported)
+        ITEM_NOTIFICATION_TIMEOUT_SEC,      // How long the notification is shown for
+        name,                               // Item name in notification
+        TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME),
+        supportiveMessage,                  // Supportive message for schedule progress
+        m_notificationID
+    );
+    std::wstring wxmlText(xmlText.begin(), xmlText.end());
+    if (showNotificationWithXmlString(wxmlText))
+    {
+        m_notificationHistory.emplace_back(m_notificationID, name, beginning, end);
+        m_notificationID++;
+        return true;
+    }
+    return false;
 }
+
+// NotificationHandlerWinImpl::m_notificationHistory
 #endif

@@ -10,5 +10,5 @@ class NotificationHandlerLinuxImpl : public NotificationHandlerImpl
     public:
         bool init() override;
         bool showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec) override;
-        bool showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end) override;
+        bool showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end) override;
 };

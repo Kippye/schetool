@@ -8,6 +8,23 @@ extern "C" {
 #include <generated/program_info.h>
 #include <format>
 
+std::map<std::string, std::string> Window::m_versionGlToGLSL =
+{
+    { "2.0", "#version 110" },
+    { "2.1", "#version 120" },
+    { "3.0", "#version 130" },
+    { "3.1", "#version 140" },
+    { "3.2", "#version 150" },
+    { "3.3", "#version 330 core" },
+    { "4.0", "#version 400 core" },
+    { "4.1", "#version 410 core" },
+    { "4.2", "#version 410 core" },
+    { "4.3", "#version 430 core" },
+    { "4.4", "#version 440 core" },
+    { "4.5", "#version 450 core" },
+    { "4.6", "#version 460 core" },
+};
+
 void Window::init()
 {
     m_titleBase = std::format("{} {}{}", 
@@ -58,7 +75,17 @@ void Window::init()
         window_close_callback(this);
 		return;
 	}
-    std::cout << "Using OpenGL " << glGetString(GL_VERSION) << std::endl;
+    auto glVersionString = glGetString(GL_VERSION);
+    std::cout << "Using OpenGL " << glVersionString << std::endl;
+    std::string glVersionNormalString = std::string(reinterpret_cast<const char*>(glVersionString));
+    // Get the first 3 characters (x.y) and get rid of the rest.
+    m_glVersionString = glVersionNormalString.substr(0, 3);
+    // Try to map the OpenGL version to its GLSL version
+    if (m_versionGlToGLSL.count(m_glVersionString) != 0)
+    {
+        m_glslVersionString = m_versionGlToGLSL.at(m_glVersionString);
+    }
+    std::cout << "Chose suitable GLSL version: " << m_glslVersionString << std::endl;
 
 	// load and create cursors
 	// cursors[NORMAL] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
@@ -121,6 +148,16 @@ void Window::init()
 	};
 }
 
+std::string Window::getGlslVersionString() const
+{
+    return m_glVersionString;
+}
+
+std::string Window::getGlslVersionString() const
+{
+    return m_glslVersionString;
+}
+
 void Window::loadIcon(TextureLoader& textureLoader)
 {
 	GLFWimage images[1] = { GLFWimage() } ;
@@ -153,7 +190,7 @@ void Window::setTitleSuffix(const std::string& suffix)
     setTitle(newTitle);
 }
 
-std::string Window::getTitle()
+std::string Window::getTitle() const
 {
 	return m_title;
 }

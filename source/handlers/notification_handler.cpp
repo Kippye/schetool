@@ -33,10 +33,10 @@ bool NotificationHandler::showNotification(const std::string& title, const std::
     return m_implementation->showNotification(title, content, timeout_sec);
 }
 
-bool NotificationHandler::showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
+bool NotificationHandler::showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
 {
     if (!m_implementation) { return false; }
     if (m_implementation->getIsInitialised() == false){ return false; }
     
-    return m_implementation->showElementNotification(name, beginning, end);
+    return m_implementation->showItemNotification(name, beginning, end);
 }

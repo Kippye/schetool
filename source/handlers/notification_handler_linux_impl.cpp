@@ -38,7 +38,7 @@ bool NotificationHandlerLinuxImpl::showNotification(const std::string& title, co
     return false;
 }
 
-bool NotificationHandlerLinuxImpl::showElementNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
+bool NotificationHandlerLinuxImpl::showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
 {
     if (getIsInitialised() == false) { return false; }
 
@@ -48,7 +48,7 @@ bool NotificationHandlerLinuxImpl::showElementNotification(const std::string& na
         std::format("{} - {}", TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME)).c_str(),
         "appointment-new"
     );
-    notify_notification_set_timeout(notif, ELEMENT_NOTIFICATION_TIMEOUT_SEC * 1000);
+    notify_notification_set_timeout(notif, ITEM_NOTIFICATION_TIMEOUT_SEC * 1000);
     if (notify_notification_show(notif, NULL))
     {
         return true;
