@@ -1,6 +1,6 @@
 # Pre-built releases
 
-The latest stable releases for Windows and Linux are available under [Releases](https://github.com/Kippye/schetool/releases). Just download, extract and run.
+The latest stable releases for Windows and Linux are available under [Releases](https://github.com/Kippye/schetool/releases). Just download, extract (or install) and run.
 
 # Building schetool
 
@@ -11,24 +11,27 @@ The latest stable releases for Windows and Linux are available under [Releases](
 **General**
 * [CMake](https://cmake.org/) version 3.25 or later for project file generation.
 * [vcpkg](https://learn.microsoft.com/en-gb/vcpkg/get_started/get-started?pivots=shell-bash) to get the some of the project's libraries - complete step 1. here.
-* It would be preferred to use [Visual Studio build tools](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022) for vcpkg.
+* It's best to use [Visual Studio build tools](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022) for vcpkg.
 
-**MSVC**
+**MSVC (Recommended)**
 * Visual Studio, at least its C++ development [build tools](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022). The project has a preset for Visual Studio 17 2022. No other versions have been tested, but might work if a preset is added.
 
 **Makefile**
 * MinGW64 (recommended to get it from [MSYS2](https://www.msys2.org/))
-* A compiler (GCC (version 1.14.1 or later) and clang have been tested)
+* A compiler \[GCC (version 1.14.1 or later) or clang (not tested)\]
 * TODO: Full package list
 
 > [!NOTE]
 > Currently, using the ld linker seems to cause linking errors. The CMakeLists automatically uses lld instead.
 
+> [!NOTE]
+> Builds created using MinGW do not support sending notifications.
+
 ### Building
 
-Tests can be enabled / disabled using the ``-DENABLE_TESTING=ON`` or ``-DENABLE_TESTING=OFF`` CMake flags.
+Tests can be enabled / disabled using the ``-DENABLE_TESTS=ON`` or ``-DENABLE_TESTS=OFF`` CMake flags.
 
-If building with tests, the executable will be in a ``build\tests`` subdirectory.
+If building with tests, the executable will be in a ``tests`` subdirectory.
 
 **Using MSVC**
 ```
