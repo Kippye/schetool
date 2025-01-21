@@ -8,7 +8,7 @@ IF ("WIX" IN_LIST CPACK_GENERATOR)
         set(WIX_DIR "${PROJECT_BASE_DIR}/_CPACK_PACKAGES/win64/WIX")
         MESSAGE(STATUS "WIX dir was not found directly, created from PROJECT_BASE_DIR: ${WIX_DIR}")
     ENDIF(NOT WIX_DIR)
-    IF (EXISTS "${WIX_DIR}/files.wxs" AND EXISTS "${WIX_DIR}/features.wxs")
+    IF (EXISTS "${WIX_DIR}/files.wxs")
         # Python is currently required to "fix" 'files.wxs'
         find_package(Python3 REQUIRED)
         # Wix is also required (duh)
@@ -25,17 +25,11 @@ IF ("WIX" IN_LIST CPACK_GENERATOR)
             file(REMOVE ${PREVIOUS_MSI_FILES})
             # Fix the wxs files created by CPack
             # This is required until another way to insert ShortcutProperty elements into the Start Menu Shortcut of 'files.wxs' is found
-            # Also to remove the 'schedules' folder from the installation while keeping it for ZIP packages
             execute_process(
-                COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/fix_wix.py" "${WIX_DIR}/files.wxs" "${WIX_DIR}/features.wxs")
+                COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/fix_wix.py" "${WIX_DIR}/files.wxs")
             # Call candle to build files.wixobj
             execute_process(
                 COMMAND "${WIX_CANDLE}" -nologo -sw -arch x64 -out "${WIX_DIR}/files.wixobj" "-I${WIX_DIR}" "${WIX_DIR}/files.wxs"
-                WORKING_DIRECTORY "${WIX_DIR}"
-            )
-            # Call candle to build features.wixobj
-            execute_process(
-                COMMAND "${WIX_CANDLE}" -nologo -sw -arch x64 -out "${WIX_DIR}/features.wixobj" "-I${WIX_DIR}" "${WIX_DIR}/features.wxs"
                 WORKING_DIRECTORY "${WIX_DIR}"
             )
             list(GET PREVIOUS_MSI_FILES 0 NEW_MSI_PATH)

@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(schetool VERSION 0.8.0)
+project(schetool VERSION 0.8.1)
 
 set(PROGRAM_NAME ${PROJECT_NAME})
 
 set(CPP_VERSION "c++20")
 
+message("~~~~ Building ${PROGRAM_NAME} ${PROJECT_VERSION}")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # enable testing by default for debug makefile builds (can't check for configuration with msvc)
@@ -271,9 +272,9 @@ install(DIRECTORY "textures"
     DESTINATION "."
 )
 # This will be removed after packaging for WiX packages
-install(CODE [[
-    file(MAKE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/schedules")
-]])
+# install(CODE [[
+#     file(MAKE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/schedules")
+# ]])
 IF (WIN32)
     install(FILES "$<TARGET_FILE:${PROGRAM_NAME}>/../glfw3.dll"
         DESTINATION "."
@@ -300,9 +301,8 @@ IF (WIN32 AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     # set(CPACK_WIX_LICENSE_RTF) TODO: Add license
     set(CPACK_WIX_PRODUCT_ICON "${CMAKE_SOURCE_DIR}/textures/icon.ico")
     set(CPACK_VERBATIM_VARIABLES TRUE)
-    # TODO: Look into these to see which ones should be constant
-    # Currently, if schetool is already installed, the installer will fail no matter what (i believe)
-    set(CPACK_WIX_PRODUCT_GUID "79A832A4-47BC-46CD-998A-73DCD7CAF255")
+    # UPDATE this GUID whenever a new version of the installer is made so that it can replace the old installation
+    set(CPACK_WIX_PRODUCT_GUID "49FAFCF1-412F-459A-BED9-FE3BB5041ADB")
     set(CPACK_WIX_UPGRADE_GUID "79A832A4-47BC-46CD-998A-73DCD7CAF255")
     # The name of the folder in start menu containing the exe, uninstaller and maybe other things
     set(CPACK_WIX_PROGRAM_MENU_FOLDER "${PROGRAM_NAME}")
@@ -316,6 +316,8 @@ IF (WIN32 AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     set(CPACK_PACKAGE_EXECUTABLES "${PROGRAM_NAME};${PROGRAM_NAME}")
     set(CPACK_CREATE_DESKTOP_LINKS "${PROGRAM_NAME};${PROGRAM_NAME}")
 
+    # Currently just adds a "schedules" subdirectory for archive packages
+    set(CPACK_INSTALL_SCRIPTS "${PACKAGING_DIR}/generator_specific_install.cmake")
     # WIX POST PACKAGE SCRIPT
     # Deletes the MSI installer and builds a new one to replace it
     # Adds ShortcutProperty elements to the start menu shortcut in files.wxs
