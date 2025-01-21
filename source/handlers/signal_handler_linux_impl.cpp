@@ -1,3 +1,4 @@
+#ifdef SCHETOOL_LINUX
 #include "signal_handler_linux_impl.h"
 
 #include <csignal>
@@ -54,3 +55,4 @@ Signal SignalHandlerLinuxImpl::getLastSignal() const
     gLastFrameSignal.store(-1) ;
     return lastSignal;
 }
+#endif

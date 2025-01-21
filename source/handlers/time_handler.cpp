@@ -5,8 +5,52 @@ void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule, NotificationHa
     ioHandler.fileReadEvent.addListener(fileOpenListener);
     ioHandler.fileCreatedEvent.addListener(fileOpenListener);
     ioHandler.fileUnloadEvent.addListener(fileUnloadListener);
+
+    notificationHandler.notificationActivatedEvent.addListener(notificationActivatedListener);
     m_schedule = &schedule;
     m_notificationHandler = &notificationHandler;
+}
+
+std::pair<size_t, size_t> TimeHandler::countTodayAndCompletedItems() const
+{
+    auto scheduleColumns = m_schedule->getAllColumns();
+    size_t todayItemCount = 0;
+    size_t todayCompletedItemCount = 0;
+
+    for (size_t row = 0; row < m_schedule->getRowCount(); row++)
+    {
+        bool isVisibleToday = false;
+        bool isCompletedToday = false;
+        for (const Column& col: scheduleColumns)
+        {
+            // NOT the "Finished" column
+            if (!(col.flags & ScheduleColumnFlags_Finished))
+            {
+                // Check if the row's Element passes every FilterGroup in this Column
+                isVisibleToday = col.checkElementPassesFilters(row);
+                if (isVisibleToday == false)
+                {
+                    break;
+                }
+            }
+            // "Finished" column
+            else
+            {
+                isCompletedToday = m_schedule->getElementValue<bool>(m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Finished), row);
+            }
+        }
+        if (isVisibleToday)
+        {
+            todayItemCount++;
+            // Only add completed items that are visible based on other columns' filtering
+            if (isCompletedToday)
+            {
+                todayCompletedItemCount++;
+            }
+        }
+    }
+
+    return { todayItemCount, todayCompletedItemCount };
 }
 
 void TimeHandler::applyResetsSince(const TimeWrapper& previousTime)
@@ -68,10 +112,11 @@ void TimeHandler::applyResetsSinceEditTime(TimeWrapper lastEditTime)
 
 void TimeHandler::showItemStartNotifications(const TimeWrapper& currentTime, const TimeWrapper& previousTime)
 {
-    // ELEMENT START NOTIFICATIONS
     auto scheduleColumns = m_schedule->getAllColumns();
     size_t startColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Start);
     const Column* startColumn = m_schedule->getColumn(startColumnIndex);
+
+    auto [todayItemCount, todayCompletedItemCount] = countTodayAndCompletedItems();
 
     for (size_t row = 0; row < m_schedule->getRowCount(); row++)
     {
@@ -113,9 +158,64 @@ void TimeHandler::showItemStartNotifications(const TimeWrapper& currentTime, con
             (
                 m_schedule->getElementAsSpecial<std::string>(nameColumnIndex, row)->getValue(),
                 itemStartTime.getLocalClockTime(),
-                itemEndTime
+                itemEndTime,
+                { todayCompletedItemCount, todayItemCount }
             );
         }
+    }
+}
+
+void TimeHandler::completePreviousItem(const ClockTimeWrapper& startTime)
+{
+    auto scheduleColumns = m_schedule->getAllColumns();
+    size_t startColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Start);
+    size_t finishedColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Finished);
+    const Column* startColumn = m_schedule->getColumn(startColumnIndex);
+    const Column* finishedColumn = m_schedule->getColumn(finishedColumnIndex);
+
+    ClockTimeWrapper closestPreviousItemTime = startTime;
+    size_t previousItemRow = 0;
+
+    for (size_t row = 0; row < m_schedule->getRowCount(); row++)
+    {
+        // FIRST check if the item is even visible (exclude Finished, we want to know if the closest previous item is already finished so we can decide to do nothing)
+        bool isItemCurrentlyVisible = false;
+        for (size_t i = 0; i < m_schedule->getColumnCount(); i++)
+        {
+            if (i != finishedColumnIndex)
+            {
+                // Check if the row's Element passes every FilterGroup in this Column
+                isItemCurrentlyVisible = m_schedule->getColumn(i)->checkElementPassesFilters(row
+                    // NOTE: Do i use override time here?
+                    // Usually the override time applies when viewing a different date
+                    // But you still only want to get notifications for the actual current date
+                    // So for now, no. We will let it use TimeWrapper::getCurrentTime() by default.
+                );
+            }
+            if (isItemCurrentlyVisible == false)
+            {
+                break;
+            }
+        }
+        // Skip items that are not visible right now
+        if (isItemCurrentlyVisible == false)
+        {
+            continue;
+        }
+        // Compare the item's start time
+        TimeContainer startValue = m_schedule->getElementValue<TimeContainer>(startColumnIndex, row);
+        ClockTimeWrapper itemStartTime = ClockTimeWrapper(startValue.getHours(), startValue.getMinutes());
+        // First previous time or a closer time than the current closest
+        if (itemStartTime < startTime && (closestPreviousItemTime == startTime || itemStartTime > closestPreviousItemTime))
+        {
+            closestPreviousItemTime = itemStartTime;
+            previousItemRow = row;
+        }
+    }
+
+    if (closestPreviousItemTime < startTime)
+    {
+        m_schedule->setElementValue(finishedColumnIndex, previousItemRow, true);
     }
 }
 

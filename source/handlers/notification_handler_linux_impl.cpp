@@ -1,4 +1,4 @@
-#ifndef _WIN32
+#ifdef SCHETOOL_LINUX
 #include "notification_handler_linux_impl.h"
 #include <libnotify/notify.h>
 
@@ -38,7 +38,7 @@ bool NotificationHandlerLinuxImpl::showNotification(const std::string& title, co
     return false;
 }
 
-bool NotificationHandlerLinuxImpl::showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
+bool NotificationHandlerLinuxImpl::showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end, const ItemNotificationData& notificationData)
 {
     if (getIsInitialised() == false) { return false; }
 

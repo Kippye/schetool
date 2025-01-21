@@ -1,5 +1,9 @@
 #if defined(_WIN32) && !defined(__MINGW32__)
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "notification_handler_win_impl.h"
 
 #include <NotificationActivationCallback.h>
@@ -24,6 +28,8 @@ NotificationInfo::NotificationInfo(size_t ID, std::optional<std::string> itemNam
 
 bool NotificationHandlerWinImpl::init()
 {
+    NotificationActivator::notificationActivatedEvent.addListener(notificationActivatedListener);
+
     // Register AUMID and COM server (for a packaged app, this is a no-operation)
     HRESULT hr = DesktopNotificationManagerCompat::RegisterAumidAndComServer(L"Kip.schetool", __uuidof(NotificationActivator));
     if (SUCCEEDED(hr))
@@ -99,7 +105,7 @@ bool NotificationHandlerWinImpl::showNotification(const std::string& title, cons
     return false;
 }
 
-bool NotificationHandlerWinImpl::showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end)
+bool NotificationHandlerWinImpl::showItemNotification(const std::string& name, const ClockTimeWrapper& beginning, const ClockTimeWrapper& end, const ItemNotificationData& notificationData)
 {
     // Choose a random message
     size_t messageIndex = rand() % m_scheduleProgressMessages.size();
@@ -107,11 +113,14 @@ bool NotificationHandlerWinImpl::showItemNotification(const std::string& name, c
 
     if (getIsInitialised() == false) { return false; }
     std::string xmlText = std::format(
-        m_elementNotificationFormat,        // Notification format XML
+        m_itemNotificationFormat,        // Notification format XML
         name,                               // Name of the element for launch (not supported)
         ITEM_NOTIFICATION_TIMEOUT_SEC,      // How long the notification is shown for
         name,                               // Item name in notification
-        TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME),
+        TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME), // "xx:xx - yy:yy"
+        notificationData.completedItemCount / (float)std::max((size_t)1, notificationData.totalItemCount), // Progress bar percentage
+        notificationData.completedItemCount,// Completed items
+        notificationData.totalItemCount,    // Total items
         supportiveMessage,                  // Supportive message for schedule progress
         m_notificationID
     );
@@ -124,6 +133,4 @@ bool NotificationHandlerWinImpl::showItemNotification(const std::string& name, c
     }
     return false;
 }
-
-// NotificationHandlerWinImpl::m_notificationHistory
 #endif
