@@ -3,6 +3,7 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <optional>
 #include "schedule_constants.h"
 #include "filter_group.h"
 #include "element_base.h"
@@ -129,7 +130,7 @@ struct Column
         // Returns false if no element exists at the index or the element doesn't pass at least one filter.
         // Returns true if the element passes all FilterGroups.
         // Optionally pass a TimeWrapper to use instead of TimeWrapper::getCurrentTime() in filters. 
-        bool checkElementPassesFilters(size_t elementIndex, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime()) const;
+        bool checkElementPassesFilters(size_t elementIndex, const std::optional<TimeWrapper>& currentTime = std::nullopt) const;
  
         bool hasFilterGroupAt(size_t index) const;
         bool hasFilterAt(size_t groupIndex, size_t filterIndex) const;

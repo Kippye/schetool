@@ -148,7 +148,7 @@ void Window::init()
 	};
 }
 
-std::string Window::getGlslVersionString() const
+std::string Window::getGlVersionString() const
 {
     return m_glVersionString;
 }
