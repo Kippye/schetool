@@ -18,6 +18,11 @@ void SignalHandler::init(Window& window)
 
 Signal SignalHandler::listenForSignals()
 {
+    if (!m_implementation)
+    {
+        printf("SignalHandler::listenForSignals(): There is no implementation. Returning Signal::None\n");
+        return Signal::None;
+    }
     if (m_implementation->getIsValid() == false)
     {
         printf("SignalHandler::listenForSignals(): Implementation is invalid. Returning Signal::None\n");

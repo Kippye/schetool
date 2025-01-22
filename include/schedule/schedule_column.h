@@ -79,6 +79,11 @@ struct Column
                 selectOptions = other.selectOptions;
                 resetOption = other.resetOption;
 
+                for (size_t i = 0; i < rows.size(); i++)
+                {
+                    delete rows[i];
+                }
+
                 rows.clear();
 
                 for (size_t i = 0; i < other.rows.size(); i++)

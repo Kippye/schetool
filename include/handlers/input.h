@@ -43,7 +43,7 @@ class Input
 {
 	private:
 		Window* m_windowManager;
-		bool m_guiWantKeyboard;
+		bool m_guiWantKeyboard = false;
 		bool m_firstMouseMovement = true;
 		std::vector<InputShortcut> m_shortcuts =
 		{

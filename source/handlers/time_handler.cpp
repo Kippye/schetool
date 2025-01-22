@@ -13,7 +13,7 @@ void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule, NotificationHa
 
 std::pair<size_t, size_t> TimeHandler::countTodayAndCompletedItems() const
 {
-    auto scheduleColumns = m_schedule->getAllColumns();
+    auto& scheduleColumns = m_schedule->getAllColumns();
     size_t todayItemCount = 0;
     size_t todayCompletedItemCount = 0;
 
@@ -112,7 +112,7 @@ void TimeHandler::applyResetsSinceEditTime(TimeWrapper lastEditTime)
 
 void TimeHandler::showItemStartNotifications(const TimeWrapper& currentTime, const TimeWrapper& previousTime)
 {
-    auto scheduleColumns = m_schedule->getAllColumns();
+    auto& scheduleColumns = m_schedule->getAllColumns();
     size_t startColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Start);
     const Column* startColumn = m_schedule->getColumn(startColumnIndex);
 
