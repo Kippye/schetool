@@ -1,18 +1,15 @@
 cmake_minimum_required(VERSION 3.25)
-
-project(schetool VERSION 0.8.1)
-
-set(PROGRAM_NAME ${PROJECT_NAME})
-
-set(CPP_VERSION "c++20")
-
-message("~~~~ Building ${PROGRAM_NAME} ${PROJECT_VERSION}")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-# enable testing by default for debug makefile builds (can't check for configuration with msvc)
+############ PROJECT DEFINITION ############
+project(schetool VERSION 0.8.1)
+set(CPP_VERSION "c++20")
+
+######### OPTIONS #########
+# Enable testing by default for Debug Unix Makefiles (can't check for configuration with MSVC)
 IF ((CMAKE_GENERATOR STREQUAL "Unix Makefiles") AND ("${CMAKE_BUILD_TYPE}" STREQUAL Debug))
     option(ENABLE_TESTS "Unit testing build" ON)
-# otherwise, testing has to be manually enabled
+# Otherwise, testing has to be manually enabled
 ELSE()
     option(ENABLE_TESTS "Unit testing build" OFF)
 ENDIF()
@@ -20,113 +17,12 @@ ENDIF()
 # Force even Release builds to show and output to a console
 option(FORCE_CONSOLE "Should the console be visible even in Release builds?" OFF)
 
-# specify the C++ standard
-add_library(compiler_flags INTERFACE)
-
-# add compile options defined by preset (might be empty)
-target_compile_options(compiler_flags INTERFACE ${PRESET_ADD_COMPILE_OPTIONS})
-
-# TODO: Use something to check if these libraries exist on the system
-# INCLUDE (CheckLibraryExists)
-# Usage: CHECK_LIBRARY_EXISTS(library function location variable)
-
-message(STATUS "~~ Generator ${CMAKE_GENERATOR} on system ${CMAKE_SYSTEM_NAME}")
-message(STATUS "~~ Using CXX compiler ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
-IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
-    message(STATUS "~~ Configuration: ${CMAKE_BUILD_TYPE}")
-    #### WINDOWS OR MSYS SYSTEM ####
-    IF ((CMAKE_SYSTEM_NAME STREQUAL Windows) OR (CMAKE_SYSTEM_NAME STREQUAL MSYS))
-        ### COMPILER FLAGS ###
-        # CLANG
-        IF (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -stdlib=libc++ -fuse-ld=lld -mtune=native -std=${CPP_VERSION}")
-        ENDIF()
-        # GNU (G++)
-        IF (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -fuse-ld=lld -mtune=native -lpthread -lcomctl32 -static-libstdc++ -static-libgcc -std=${CPP_VERSION} -Wa,-mbig-obj") # Pass  -Wa,-mbig-obj to avoid error for data_converter.cpp due to its size.
-        ENDIF()
-        message(STATUS "~~ Compile flags for Windows or MSYS system: ${CMAKE_CXX_FLAGS}")
-
-        ### WINDOWS LINKER FLAGS ###
-        # keep console for debug builds and hide it for release builds
-        # /ENTRY:mainCRTStartup keeps the same "main" function instead of requiring "WinMain"
-        IF ((${CMAKE_BUILD_TYPE} STREQUAL Debug) OR FORCE_CONSOLE)
-            set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,console" "-Wl,-entry,mainCRTStartup")
-            message(STATUS "~~ Windows or MSYS linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
-            IF (${CMAKE_BUILD_TYPE} STREQUAL Debug)
-                set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-                message(DEBUG "~~ Enabled exporting compile commands")
-            ENDIF()
-        ELSEIF(${CMAKE_BUILD_TYPE} STREQUAL Release)
-            set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,windows" "-Wl,-entry,mainCRTStartup")
-            message(STATUS "~~ Windows or MSYS linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
-        ENDIF()
-    #### LINUX OR OTHER SYSTEM ####
-    ELSE()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CPP_VERSION} -lstdc++ -lnotify")
-        message(STATUS "~~ Compile flags for Linux or other system: ${CMAKE_CXX_FLAGS}")
-    ENDIF()
-ELSEIF (CMAKE_GENERATOR MATCHES "Visual Studio")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:${CPP_VERSION} /bigobj") # Pass /bigobj to avoid C1128 for data_converter.cpp due to its templates.
-    message(STATUS "~~ Compile flags for Visual Studio: ${CMAKE_CXX_FLAGS}")
-ENDIF()
-message(STATUS "~~ Finished setting compile flags")
-
-find_package(glfw3 REQUIRED)
-
+######### GLOBALS #########
+set(PROGRAM_NAME ${PROJECT_NAME})
+### SUBDIRS ###
 set(LIBRARY_DIR "libs")
-
-# local source-compiled libraries
-add_subdirectory("${LIBRARY_DIR}/blf")
-add_subdirectory("${LIBRARY_DIR}/glad")
-# NOTE: FSR 'WINDOWS' isn't set on MinGW
-IF (WIN32 AND NOT MINGW)
-    add_subdirectory("${LIBRARY_DIR}/notificationcompat")
-ENDIF()
-
-add_subdirectory("${LIBRARY_DIR}/imgui") # imgui 1.90.4
-target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
-
-
-# pass information like PROGRAM_NAME, PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR and PROJECT_VERSION_PATCH to a header file to include
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/program_info.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/include/generated/program_info.h")
-
-# executable
-IF (ENABLE_TESTS)
-    add_library(${PROGRAM_NAME})
-ELSE()
-    add_executable(${PROGRAM_NAME})
-ENDIF()
-
-# add platform-specific defines and options
-IF (WIN32)
-    target_compile_definitions(${PROGRAM_NAME} PUBLIC "WIN32")
-    target_compile_definitions(${PROGRAM_NAME} PUBLIC "_WIN32")
-    target_compile_definitions(${PROGRAM_NAME} PUBLIC "SCHETOOL_WINDOWS")
-    message(STATUS "~~ Added Windows compile definitions")
-ELSEIF(LINUX)
-    target_compile_definitions(${PROGRAM_NAME} PUBLIC "SCHETOOL_LINUX")
-ENDIF()
-
-target_link_options(${PROGRAM_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
-
-IF (WIN32 AND NOT MINGW)
-    target_link_options(${PROGRAM_NAME} PRIVATE
-        $<$<OR:$<CONFIG:Debug>,$<BOOL:${FORCE_CONSOLE}>>:/SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup>
-        $<$<AND:$<CONFIG:Release>,$<NOT:$<BOOL:${FORCE_CONSOLE}>>>:/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup>
-    )
-ENDIF()
-
-# add build configuration defines
-target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<CONFIG:Debug>:DEBUG>")
-target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<NOT:$<CONFIG:Debug>>:NDEBUG>")
-target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<CONFIG:Release>:RELEASE>")
-
-IF (ENABLE_TESTS)
-    target_compile_definitions(${PROGRAM_NAME} PUBLIC "PERFORM_UNIT_TESTS")
-ENDIF (ENABLE_TESTS)
-
 set(SCHETOOL_SRC    "source")
+### SUB-SUBDIRS ###
 set(CONSTANTS_DIR   "constants")
 set(CONTAINERS_DIR  "containers")
 set(HANDLERS_DIR    "handlers")
@@ -134,22 +30,131 @@ set(INTERFACE_DIR   "interface")
 set(IO_DIR          "io")
 set(SCHEDULE_DIR    "schedule")
 set(UTIL_DIR        "util")
+### INSTALL ###
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
+### PACKAGING ###
+set(PACKAGING_DIR "${CMAKE_SOURCE_DIR}/packaging")
 
-# LINUX PACKAGES / LIBRARIES
+######### MAIN TARGET #########
+IF (ENABLE_TESTS)
+    add_library(${PROGRAM_NAME})
+ELSE()
+    add_executable(${PROGRAM_NAME})
+ENDIF()
+
+######### PLATFORM #########
+include("cmake/platform.cmake")
+
+######### PACKAGES #########
+message("~~~~ Configuring ${PROGRAM_NAME} ${PROJECT_VERSION}")
+### LINUX PACKAGES / LIBRARIES ###
 IF (LINUX)
     find_package(PkgConfig REQUIRED)
     # glib2
     pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
-    target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::deps)
     # gdkpixbuf
     find_package(GDKPixBuf REQUIRED)
-    IF (GDKPIXBUF_FOUND)
-        target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
-        target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
+ENDIF()
+
+######### SUBDIRS / LOCAL LIBRARIES #########
+add_subdirectory("${LIBRARY_DIR}/blf")
+add_subdirectory("${LIBRARY_DIR}/glad")
+IF (WINDOWS_MSVC)
+    add_subdirectory("${LIBRARY_DIR}/notificationcompat")
+    ### WINDOWS 10 SDK ###
+    # Use the env variable (not available with MinGW)
+    IF (DEFINED ENV{WindowsSdkDir})
+        # TODO: Get subdirectory (this only gets the /10/ dir, not the specific version)
+        SET(WINDOWS_SDK_INCLUDE_DIR $ENV{WindowsSdkDir})
+    ENDIF()
+    # Try to find the SDK using a script
+    IF (NOT WINDOWS_SDK_INCLUDE_DIR)
+        include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/win-10-sdk-finder/find_win10_sdk.cmake" OPTIONAL)
+    ENDIF()
+    IF (WINDOWS_SDK_INCLUDE_DIR)
+        # Pass the include directories to the notification compatibility library or it doesn't find the headers
+        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/winrt")
+        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/winrt/wrl")
+        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/um")
+        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/shared")
+        message(STATUS "~~ Found Windows 10 SDK at: ${WINDOWS_SDK_INCLUDE_DIR}")
+    ELSE()
+        message(FATAL_ERROR "Could not find the Windows 10 SDK."
+        "You can manually pass it with the cmake flag: -DWINDOWS_SDK_INCLUDE_DIR=<Path>")
     ENDIF()
 ENDIF()
 
-target_include_directories(${PROGRAM_NAME} 
+find_package(glfw3 REQUIRED)
+add_subdirectory("${LIBRARY_DIR}/imgui") # imgui 1.90.4
+target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
+
+######### DEFINES #########
+### Build configuration ###
+target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<CONFIG:Debug>:DEBUG>")
+target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<NOT:$<CONFIG:Debug>>:NDEBUG>")
+target_compile_definitions(${PROGRAM_NAME} PUBLIC "$<$<CONFIG:Release>:RELEASE>")
+
+IF (ENABLE_TESTS)
+    target_compile_definitions(${PROGRAM_NAME} PUBLIC "PERFORM_UNIT_TESTS")
+ENDIF(ENABLE_TESTS)
+
+######### COMPILE OPTIONS #########
+add_library(compiler_flags INTERFACE)
+# Add compile options defined by preset (might be empty)
+target_compile_options(compiler_flags INTERFACE ${PRESET_ADD_COMPILE_OPTIONS})
+
+message(STATUS "~~ Generator ${CMAKE_GENERATOR} on system ${CMAKE_SYSTEM_NAME}")
+message(STATUS "~~ Using CXX compiler ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
+IF (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+    message(STATUS "~~ Configuration: ${CMAKE_BUILD_TYPE}")
+    IF (${CMAKE_BUILD_TYPE} STREQUAL Debug)
+        set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+    ENDIF()
+    ###### WINDOWS OR MSYS SYSTEM ######
+    IF (WIN32)
+        ### COMPILER FLAGS ###
+        # CLANG
+        IF (${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -fuse-ld=lld -mtune=native -lpthread -lcomtl32 -static-libstdc++ -std=${CPP_VERSION} -Wa,-mbig-obj")
+        ENDIF()
+        # GNU (G++)
+        IF (${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -static -fuse-ld=lld -mtune=native -lpthread -lcomctl32 -static-libstdc++ -static-libgcc -std=${CPP_VERSION} -Wa,-mbig-obj") # Pass  -Wa,-mbig-obj to avoid error for data_converter.cpp due to its size.
+        ENDIF()
+        message(STATUS "~~ Compile flags for MinGW: ${CMAKE_CXX_FLAGS}")
+
+        ### LINKER FLAGS ###
+        # /ENTRY:mainCRTStartup keeps the same "main" function instead of requiring "WinMain"
+        IF ((${CMAKE_BUILD_TYPE} STREQUAL Debug) OR FORCE_CONSOLE)
+            set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,console" "-Wl,-entry,mainCRTStartup")
+        ELSEIF(${CMAKE_BUILD_TYPE} STREQUAL Release)
+            set(SUBSYSTEM_LINKER_OPTIONS "-Wl,-subsystem,windows" "-Wl,-entry,mainCRTStartup")
+        ENDIF()
+        message(STATUS "~~ MinGW linker options: ${SUBSYSTEM_LINKER_OPTIONS}")
+    ###### LINUX SYSTEM ######
+    ELSEIF(LINUX)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=${CPP_VERSION} -lstdc++ -lnotify")
+        message(STATUS "~~ Compile flags for Linux Makefiles: ${CMAKE_CXX_FLAGS}")
+    ENDIF()
+ELSEIF (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:${CPP_VERSION} /bigobj") # Pass /bigobj to avoid C1128 for data_converter.cpp due to its templates.
+    message(STATUS "~~ Compile flags for Visual Studio: ${CMAKE_CXX_FLAGS}")
+ENDIF()
+
+######### LINK OPTIONS #########
+target_link_options(${PROGRAM_NAME} PRIVATE ${SUBSYSTEM_LINKER_OPTIONS})
+IF (WINDOWS_MSVC)
+    target_link_options(${PROGRAM_NAME} PRIVATE
+        $<$<OR:$<CONFIG:Debug>,$<BOOL:${FORCE_CONSOLE}>>:/SUBSYSTEM:CONSOLE /ENTRY:mainCRTStartup>
+        $<$<AND:$<CONFIG:Release>,$<NOT:$<BOOL:${FORCE_CONSOLE}>>>:/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup>
+    )
+ENDIF()
+
+######### INCLUDES #########
+# Pass information like PROGRAM_NAME, PROJECT_VERSION_MAJOR, PROJECT_VERSION_MINOR and PROJECT_VERSION_PATCH to a header file to include
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/program_info.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/include/generated/program_info.h")
+
+target_include_directories(${PROGRAM_NAME}
     PUBLIC "include" 
     PUBLIC "include/generated"
     PUBLIC "include/${CONSTANTS_DIR}"
@@ -162,6 +167,14 @@ target_include_directories(${PROGRAM_NAME}
     PUBLIC "libs"
     PUBLIC "libs/stb")
 
+###### PLATFORM-SPECIFIC ######
+IF (LINUX)
+    IF (GDKPIXBUF_FOUND)
+        target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
+    ENDIF()
+ENDIF()
+
+######### SOURCES #########
 target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/main.cpp"
     "${SCHETOOL_SRC}/${CONSTANTS_DIR}/filter_constants.cpp"
@@ -210,31 +223,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
 )
 
-# PLATFORM-SPECIFIC INCLUDE DIRS
-IF (WIN32 AND NOT MINGW)
-    #### WINDOWS 10 SDK ####
-    # Use the env variable (not available with MinGW)
-    IF (DEFINED ENV{WindowsSdkDir})
-        # TODO: Get subdirectory (this only gets the /10/ dir, not the specific version)
-        SET(WINDOWS_SDK_INCLUDE_DIR $ENV{WindowsSdkDir})
-    ENDIF()
-    # Try to find the SDK using a script
-    IF (NOT WINDOWS_SDK_INCLUDE_DIR)
-        include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/win-10-sdk-finder/find_win10_sdk.cmake" OPTIONAL)
-    ENDIF()
-    IF (WINDOWS_SDK_INCLUDE_DIR)
-        # Pass the include directories to the notification compatibility library or it doesn't find the headers
-        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/winrt")
-        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/winrt/wrl")
-        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/um")
-        target_include_directories(notificationcompat PUBLIC "${WINDOWS_SDK_INCLUDE_DIR}/shared")
-        message(STATUS "~~ Found Windows 10 SDK at: ${WINDOWS_SDK_INCLUDE_DIR}")
-    ELSE()
-        message(FATAL_ERROR "Could not find the Windows 10 SDK."
-        "You can manually pass it with the cmake flag: -DWINDOWS_SDK_INCLUDE_DIR=<Path>")
-    ENDIF()
-ENDIF()
-
+######### LINKS #########
 target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags 
     blf
     imgui
@@ -242,91 +231,26 @@ target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags
     glfw
 )
 
-# PLATFORM-SPECIFIC LINKS
-IF (WIN32)
-    IF (NOT MINGW)
-        target_link_libraries(${PROGRAM_NAME} PUBLIC notificationcompat)
-        target_link_libraries(${PROGRAM_NAME} PUBLIC runtimeobject)
-        target_link_libraries(${PROGRAM_NAME} PUBLIC comctl32)
-    ENDIF(NOT MINGW)
-ENDIF(WIN32)
+### PLATFORM-SPECIFIC ###
+IF (WINDOWS_MSVC)
+    target_link_libraries(${PROGRAM_NAME} PUBLIC notificationcompat)
+    target_link_libraries(${PROGRAM_NAME} PUBLIC runtimeobject)
+    target_link_libraries(${PROGRAM_NAME} PUBLIC comctl32)
+ENDIF(WINDOWS_MSVC)
 
-# add testing subdirectory (handles its own logic)
+IF (LINUX)
+    # glib 2.0
+    target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::deps)
+    IF (GDKPIXBUF_FOUND)
+        target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
+    ENDIF()
+ENDIF()
+
+# Testing subdirectory
 IF (ENABLE_TESTS)
     add_subdirectory(tests)
 ENDIF(ENABLE_TESTS)
 
-########## INSTALL ##########
-set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
-install(TARGETS ${PROGRAM_NAME}
-    DESTINATION "."
-    RUNTIME_DEPENDENCY_SET schetool_deps
-)
-install(FILES "README.md"
-    DESTINATION "."
-)
-install(DIRECTORY "fonts"
-    DESTINATION "."
-)
-install(DIRECTORY "textures"
-    DESTINATION "."
-)
-# This will be removed after packaging for WiX packages
-# install(CODE [[
-#     file(MAKE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/schedules")
-# ]])
-IF (WIN32)
-    install(FILES "$<TARGET_FILE:${PROGRAM_NAME}>/../glfw3.dll"
-        DESTINATION "."
-    )
-ENDIF(WIN32)
+include("cmake/install.cmake")
 
-set(PACKAGING_DIR "${CMAKE_SOURCE_DIR}/packaging")
-
-########## PACKAGING ##########
-IF (WIN32 AND CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    # WIX PACKAGE COMMAND:
-    # cpack -G WIX -C [Release | Debug] --config build\CPackConfig.cmake
-    # NOTE: Any settings that CPack uses must be defined before including it
-    # NOTE: Some package generators support components to optionally install (might be needed in the future)
-    # cpack_add_component
-    set(CPACK_PACKAGE_NAME "${PROGRAM_NAME}")
-    set(CPACK_PACKAGE_VENDOR "Kip (KipHub)")
-    set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
-    set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
-    set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-    set(CPACK_PACKAGE_INSTALL_DIRECTORY "${PROGRAM_NAME}")
-    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A lightweight daily schedule making program.")
-    set(CPACK_PACKAGE_DESCRIPTION_FILE "${PACKAGING_DIR}/package_description.txt")
-    # set(CPACK_WIX_LICENSE_RTF) TODO: Add license
-    set(CPACK_WIX_PRODUCT_ICON "${CMAKE_SOURCE_DIR}/textures/icon.ico")
-    set(CPACK_VERBATIM_VARIABLES TRUE)
-    # UPDATE this GUID whenever a new version of the installer is made so that it can replace the old installation
-    set(CPACK_WIX_PRODUCT_GUID "49FAFCF1-412F-459A-BED9-FE3BB5041ADB")
-    set(CPACK_WIX_UPGRADE_GUID "79A832A4-47BC-46CD-998A-73DCD7CAF255")
-    # The name of the folder in start menu containing the exe, uninstaller and maybe other things
-    set(CPACK_WIX_PROGRAM_MENU_FOLDER "${PROGRAM_NAME}")
-    ## Add or Remove Programs ##
-    # The description shown when the program is selected in 'Add or Remove Programs'
-    set(CPACK_WIX_PROPERTY_ARPCOMMENTS "${CPACK_PACKAGE_DESCRIPTION_SUMMARY}")
-    # Program about info link (for now just a link to its github)
-    set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "https://github.com/Kippye/schetool")
-    ## Shortcuts ##
-    # Start menu and desktop shortcuts
-    set(CPACK_PACKAGE_EXECUTABLES "${PROGRAM_NAME};${PROGRAM_NAME}")
-    set(CPACK_CREATE_DESKTOP_LINKS "${PROGRAM_NAME};${PROGRAM_NAME}")
-
-    # Currently just adds a "schedules" subdirectory for archive packages
-    set(CPACK_INSTALL_SCRIPTS "${PACKAGING_DIR}/generator_specific_install.cmake")
-    # WIX POST PACKAGE SCRIPT
-    # Deletes the MSI installer and builds a new one to replace it
-    # Adds ShortcutProperty elements to the start menu shortcut in files.wxs
-    # Also removes the "schedules" dir from install for WiX (modifies files.wxs and features.wxs and rebuilds their .wixobj files)
-    # NOTE: Does nothing for other package generators
-    set(CPACK_POST_BUILD_SCRIPTS "${PACKAGING_DIR}/fix_wix.cmake")
-
-    # We don't want to split our program up into several things
-    # TODO: Actually look up what this does
-    set(CPACK_MONOLITHIC_INSTALL 1)
-    include(CPack)
-ENDIF()
+include("cmake/package.cmake")
