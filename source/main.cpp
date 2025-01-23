@@ -11,6 +11,11 @@ Program::Program()
     // use user-preferred locale from OS
     std::setlocale(LC_ALL, ""); 
 
+    #ifdef SCHETOOL_LINUX
+    gContext = g_main_context_default();
+    notifyLoop = g_main_loop_new(nullptr, false);
+    #endif
+
 	// TODO: load user preferences here!
 
 	// setup and initialize components
@@ -94,6 +99,9 @@ void Program::loop()
         timeHandler.timeTick();
 
         handleSignal(signalHandler.listenForSignals());
+        #ifdef SCHETOOL_LINUX
+        g_main_context_iteration(gContext, false);
+        #endif
 		glfwPollEvents();
 	}
 	

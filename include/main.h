@@ -11,6 +11,10 @@
 #include "signal_handler.h"
 #include "notification_handler.h"
 
+#ifdef SCHETOOL_LINUX
+#include <libnotify/notify.h>
+#endif
+
 class Program
 {
 	public:
@@ -24,6 +28,10 @@ class Program
         TimeHandler timeHandler;
         SignalHandler signalHandler;
 		NotificationHandler notificationHandler;
+		#ifdef SCHETOOL_LINUX
+		GMainContext* gContext = nullptr;
+		GMainLoop* notifyLoop = nullptr;
+		#endif
 
 		static bool quitProgram;
 

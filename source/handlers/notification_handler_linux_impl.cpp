@@ -1,15 +1,34 @@
+#define SCHETOOL_LINUX 1
+
 #ifdef SCHETOOL_LINUX
 #include "notification_handler_linux_impl.h"
-#include <libnotify/notify.h>
 
 #include <format>
 #include <iostream>
+
+std::function<void(NotifyNotification*, char*, gpointer)> notifyActionCallback = nullptr;
+
+// Free user data after it isn't needed by a notification anymore.
+// NOTE: The data gets cast to a NotificationInfo pointer so userdata always has to be of that type!
+void notifyFreeUserDataCallback(gpointer data)
+{
+    delete (NotificationInfo*)data;
+}
+
+void notifyActionCallbackWrapper(NotifyNotification* notification, char* action, gpointer userData)
+{
+    if (notifyActionCallback)
+    {
+        notifyActionCallback(notification, action, userData);
+    }
+}
 
 bool NotificationHandlerLinuxImpl::init()
 {
     if (notify_init("schetool") == TRUE)
     {
         printf("Initialised Linux notification handler.\n");
+        notifyActionCallback = notificationActionCallback;
         m_initialised = true;
     }
     else
@@ -33,6 +52,7 @@ bool NotificationHandlerLinuxImpl::showNotification(const std::string& title, co
     notify_notification_set_timeout(notif, timeout_sec * 1000);
     if (notify_notification_show(notif, NULL))
     {
+        m_notificationID++;
         return true;
     }
     return false;
@@ -45,12 +65,44 @@ bool NotificationHandlerLinuxImpl::showItemNotification(const std::string& name,
     NotifyNotification* notif = notify_notification_new
     (
         std::format("'{}' is beginning.", name).c_str(),
-        std::format("{} - {}", TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME)).c_str(),
+        std::format("{} - {}\n{}/{} items", 
+            TimeWrapper(beginning).getStringUTC(TIME_FORMAT_TIME).c_str(), 
+            TimeWrapper(end).getStringUTC(TIME_FORMAT_TIME).c_str(),
+            notificationData.completedItemCount,
+            notificationData.totalItemCount).c_str(),
         "appointment-new"
     );
     notify_notification_set_timeout(notif, ITEM_NOTIFICATION_TIMEOUT_SEC * 1000);
+    // Callback for clicking on the notification itself
+    notify_notification_add_action(
+        notif, 
+        "default", 
+        "Clicked on", 
+        notifyActionCallbackWrapper, 
+        new NotificationInfo(m_notificationID, name, beginning, end),
+        notifyFreeUserDataCallback
+    );
+    // Mark previous done button
+    notify_notification_add_action(
+        notif, 
+        "markPreviousDone", 
+        "Mark previous done", 
+        notifyActionCallbackWrapper, 
+        new NotificationInfo(m_notificationID, name, beginning, end),
+        notifyFreeUserDataCallback
+    );
+    // Dismiss button
+    notify_notification_add_action(
+        notif, 
+        "dismiss", 
+        "Dismiss", 
+        notifyActionCallbackWrapper, 
+        new NotificationInfo(m_notificationID, name, beginning, end),
+        notifyFreeUserDataCallback
+    );
     if (notify_notification_show(notif, NULL))
     {
+        m_notificationID++;
         return true;
     }
     return false;

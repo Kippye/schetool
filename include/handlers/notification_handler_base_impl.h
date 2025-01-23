@@ -21,7 +21,13 @@ struct NotificationInfo
     std::optional<ClockTimeWrapper> startTime = std::nullopt;
     std::optional<ClockTimeWrapper> endTime = std::nullopt;
 
-    NotificationInfo(size_t ID, std::optional<std::string> itemName = std::nullopt, std::optional<ClockTimeWrapper> startTime = std::nullopt, std::optional<ClockTimeWrapper> endTime = std::nullopt);
+    NotificationInfo(size_t ID, std::optional<std::string> itemName = std::nullopt, std::optional<ClockTimeWrapper> startTime = std::nullopt, std::optional<ClockTimeWrapper> endTime = std::nullopt)
+    {
+        this->ID = ID;
+        this->itemName = itemName;
+        this->startTime = startTime;
+        this->endTime = endTime;
+    }
 };
 
 // Struct passed as input to showItemNotification.

@@ -18,14 +18,6 @@ using namespace ABI::Windows::Data::Xml::Dom;
 using namespace ABI::Windows::UI::Notifications;
 using namespace Microsoft::WRL;
 
-NotificationInfo::NotificationInfo(size_t ID, std::optional<std::string> itemName, std::optional<ClockTimeWrapper> startTime, std::optional<ClockTimeWrapper> endTime)
-{
-    this->ID = ID;
-    this->itemName = itemName;
-    this->startTime = startTime;
-    this->endTime = endTime;
-}
-
 bool NotificationHandlerWinImpl::init()
 {
     NotificationActivator::notificationActivatedEvent.addListener(notificationActivatedListener);
