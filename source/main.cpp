@@ -21,7 +21,7 @@ Program::Program()
 	// setup and initialize components
 	windowManager.init();
     // NOTE: MUST be initialised AFTER windowManager!
-    signalHandler.init(windowManager);
+    signalListener.init(windowManager);
     notificationHandler.init();
     textureLoader.init();
     windowManager.loadIcon(textureLoader);
@@ -98,7 +98,7 @@ void Program::loop()
 		ioHandler.addToAutosaveTimer(render.deltaTime);
         timeHandler.timeTick();
 
-        handleSignal(signalHandler.listenForSignals());
+        handleSignal(signalListener.listenForSignals());
         #ifdef SCHETOOL_LINUX
         g_main_context_iteration(gContext, false);
         #endif

@@ -8,7 +8,7 @@
 #include "schedule.h"
 #include "interface.h"
 #include "time_handler.h"
-#include "signal_handler.h"
+#include "signal_listener.h"
 #include "notification_handler.h"
 
 #ifdef SCHETOOL_LINUX
@@ -26,7 +26,7 @@ class Program
 		Interface programInterface;
 		Schedule schedule;
         TimeHandler timeHandler;
-        SignalHandler signalHandler;
+        SignalListener signalListener;
 		NotificationHandler notificationHandler;
 		#ifdef SCHETOOL_LINUX
 		GMainContext* gContext = nullptr;

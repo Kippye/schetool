@@ -1,5 +1,5 @@
 #ifdef _WIN32
-#include "signal_handler_win_impl.h"
+#include "signal_listener_win_impl.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -123,7 +123,7 @@ LRESULT SubWndProc(
     // return 0;DefWindowProcA(hWnd, uMsg, wParam, lParam);
 }
 
-bool SignalHandlerWinImpl::init()
+bool SignalListenerWinImpl::init()
 {
     gGlfwWndProc = (WNDPROC)GetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC);
     SetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC, (LONG_PTR)SubWndProc);
@@ -145,7 +145,7 @@ bool SignalHandlerWinImpl::init()
     return m_haveValidListener;
 }
 
-Signal SignalHandlerWinImpl::getLastSignal() const
+Signal SignalListenerWinImpl::getLastSignal() const
 {
     Signal lastSignal = gLastSignal;
     gLastSignal = Signal::None;

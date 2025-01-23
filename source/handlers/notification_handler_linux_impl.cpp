@@ -1,5 +1,3 @@
-#define SCHETOOL_LINUX 1
-
 #ifdef SCHETOOL_LINUX
 #include "notification_handler_linux_impl.h"
 

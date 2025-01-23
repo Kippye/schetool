@@ -2,14 +2,14 @@
 
 #include "event.h"
 #include "signal_constants.h"
-#include "signal_handler_impl_base.h"
+#include "signal_listener_impl_base.h"
 #include "window.h"
 #include <memory>
 
-class SignalHandler
+class SignalListener
 {
     private:
-        std::shared_ptr<SignalHandlerImpl> m_implementation;
+        std::shared_ptr<SignalListenerImpl> m_implementation;
     protected:
         Signal m_lastSignal = Signal::None;
     public:

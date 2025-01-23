@@ -1,13 +1,13 @@
 #pragma once
 
-#include "signal_handler_impl_base.h"
+#include "signal_listener_impl_base.h"
 
 // Signal handler implementation for Linux.
 // Note that on Linux, closing the program and shutting down the OS both result in Signal::Close
-class SignalHandlerLinuxImpl : public SignalHandlerImpl
+class SignalListenerLinuxImpl : public SignalListenerImpl
 {
     public:
-        SignalHandlerLinuxImpl(Window& window) : SignalHandlerImpl(window)
+        SignalListenerLinuxImpl(Window& window) : SignalListenerImpl(window)
         {}
         // Set up the signal listener.
         bool init() override;

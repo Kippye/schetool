@@ -3,13 +3,13 @@
 #include "signal_constants.h"
 #include "window.h"
 
-class SignalHandlerImpl
+class SignalListenerImpl
 {
     protected:
         Window& m_window;
         bool m_haveValidListener = false;
     public:
-        SignalHandlerImpl(Window& window) : m_window(window)
+        SignalListenerImpl(Window& window) : m_window(window)
         {}
         // Set up the signal listener.
         virtual bool init(){ return false; };

@@ -1,14 +1,14 @@
-#include "signal_handler.h"
+#include "signal_listener.h"
 #ifndef _WIN32
-#include "signal_handler_linux_impl.h"
+#include "signal_listener_linux_impl.h"
 #else
-#include "signal_handler_win_impl.h"
+#include "signal_listener_win_impl.h"
 #endif
 
-void SignalHandler::init(Window& window)
+void SignalListener::init(Window& window)
 {
     #ifdef _WIN32 // Windows-specific implementation
-    m_implementation = std::make_shared<SignalHandlerWinImpl>(window);
+    m_implementation = std::make_shared<SignalListenerWinImpl>(window);
     if (m_implementation->init()) {}
     #else // Linux implementation (We don't do mac for now :/)
     m_implementation = std::make_shared<SignalHandlerLinuxImpl>(window);
@@ -16,7 +16,7 @@ void SignalHandler::init(Window& window)
     #endif
 }
 
-Signal SignalHandler::listenForSignals()
+Signal SignalListener::listenForSignals()
 {
     if (!m_implementation)
     {
@@ -34,13 +34,13 @@ Signal SignalHandler::listenForSignals()
 }
 
 // Check the current signal.
-Signal SignalHandler::getSignal()
+Signal SignalListener::getSignal()
 {
     return m_lastSignal;
 }
 
 // Get the current signal and clear it (shortcut for getSignal() + clearSignal()).
-Signal SignalHandler::popSignal()
+Signal SignalListener::popSignal()
 {
     Signal lastSignal = m_lastSignal;
     m_lastSignal = Signal::None;
@@ -48,7 +48,7 @@ Signal SignalHandler::popSignal()
 }
 
 // Call at the end of the frame to clear the current signal.
-void SignalHandler::clearSignal()
+void SignalListener::clearSignal()
 {
     m_lastSignal = Signal::None;
 }
