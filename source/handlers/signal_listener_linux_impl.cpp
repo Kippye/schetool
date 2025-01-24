@@ -13,19 +13,19 @@ extern "C" void signalHandler(int signum)
     gLastFrameSignal.store(signum);
 };
 
-bool SignalHandlerLinuxImpl::init()
+bool SignalListenerLinuxImpl::init()
 {
     // Listen to signals
     signal(SIGTERM, signalHandler);
     signal(SIGSEGV, signalHandler);
     signal(SIGINT, signalHandler);
     signal(SIGABRT, signalHandler);
-    printf("Initialised Linux signal handler.\n");
+    printf("Initialised Linux signal listener.\n");
     m_haveValidListener = true;
     return m_haveValidListener;
 }
 
-Signal SignalHandlerLinuxImpl::getLastSignal() const
+Signal SignalListenerLinuxImpl::getLastSignal() const
 {
     Signal lastSignal = Signal::None;
 

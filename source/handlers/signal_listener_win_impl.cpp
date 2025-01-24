@@ -111,7 +111,6 @@ LRESULT SubWndProc(
 
         case WM_QUIT:
         gLastSignal = Signal::Close;
-        printf("SubWndProc(): Returning Close (WM_QUIT)\n");
         break;
 
         default:
@@ -138,7 +137,7 @@ bool SignalListenerWinImpl::init()
     }
     else
     {
-        printf("\nERROR: SignalHandlerWinImpl::init(): Could not set console control handler");
+        printf("\nERROR: SignalListenerWinImpl::init(): Could not set console control handler");
         m_haveValidListener = false;
     }
     printf("Initialised Windows signal handler.\n");

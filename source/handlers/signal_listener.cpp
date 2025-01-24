@@ -11,7 +11,7 @@ void SignalListener::init(Window& window)
     m_implementation = std::make_shared<SignalListenerWinImpl>(window);
     if (m_implementation->init()) {}
     #else // Linux implementation (We don't do mac for now :/)
-    m_implementation = std::make_shared<SignalHandlerLinuxImpl>(window);
+    m_implementation = std::make_shared<SignalListenerLinuxImpl>(window);
     if (m_implementation->init()) {}
     #endif
 }
@@ -20,12 +20,12 @@ Signal SignalListener::listenForSignals()
 {
     if (!m_implementation)
     {
-        printf("SignalHandler::listenForSignals(): There is no implementation. Returning Signal::None\n");
+        printf("SignalListener::listenForSignals(): There is no implementation. Returning Signal::None\n");
         return Signal::None;
     }
     if (m_implementation->getIsValid() == false)
     {
-        printf("SignalHandler::listenForSignals(): Implementation is invalid. Returning Signal::None\n");
+        printf("SignalListener::listenForSignals(): Implementation is invalid. Returning Signal::None\n");
         return Signal::None;
     }
     m_lastSignal = m_implementation->getLastSignal();
