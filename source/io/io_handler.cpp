@@ -81,15 +81,24 @@ fs::path IO_Handler::getBestSaveDirPath() const
     #endif
 }
 
-// Returns true if the path has the schedule file extension and is considered a valid file by the DataConverter
 bool IO_Handler::isScheduleFilePath(const fs::path& path) const
 {
-    return (strcmp(path.extension().string().c_str(), SCHEDULE_FILE_EXTENSION) == 0 && m_converter.isValidScheduleFile(path.string().c_str()));
+    return strcmp(path.extension().string().c_str(), SCHEDULE_FILE_EXTENSION) == 0;
+}
+
+bool IO_Handler::isValidScheduleFile(const std::filesystem::path& path) const
+{
+    return m_converter.isValidScheduleFile(path.string().c_str());
 }
 
 fs::path IO_Handler::makeSchedulePathFromName(const char* name) const
 {
     return fs::path(m_saveDir) / std::format("{}{}", name, SCHEDULE_FILE_EXTENSION).c_str();
+}
+
+fs::path IO_Handler::makeIniPathFromScheduleName(const char* name) const
+{
+    return fs::path(m_saveDir) / std::format("{}{}", name, INI_FILE_EXTENSION).c_str();
 }
 
 void IO_Handler::passFileNamesToGui()
@@ -194,6 +203,18 @@ bool IO_Handler::writeSchedule(const char* name)
 
     if (m_converter.writeSchedule(schedulePath.string().c_str(), m_schedule->getAllColumns()) == 0)
     {
+        if (ImGui::GetIO().WantSaveIniSettings)
+        {
+            if (isAutosave(name))
+            {
+                ImGui::SaveIniSettingsToDisk(makeIniPathFromScheduleName(getFileBaseName(name).c_str()).string().c_str());
+            }
+            else
+            {
+                ImGui::SaveIniSettingsToDisk(makeIniPathFromScheduleName(name).string().c_str());
+            }
+            ImGui::GetIO().WantSaveIniSettings = false;
+        }
         std::cout << std::format("IO_Handler::writeSchedule(): Wrote Schedule to file: '{}'", schedulePath.string()) << std::endl;
     }
     // TODO: make some event that the Schedule can listen to?
@@ -216,6 +237,10 @@ bool IO_Handler::readSchedule(const char* name)
     m_schedule->getEditHistoryMutable().clearEditHistory();
     if (std::optional<FileInfo> readFileInfo = m_converter.readSchedule(schedulePath.string().c_str(), m_schedule->getAllColumnsMutable()))
     {
+        if (!isAutosave(schedulePath.string()))
+        {
+            ImGui::LoadIniSettingsFromDisk(makeIniPathFromScheduleName(name).string().c_str());
+        }
         std::cout << std::format("IO_Handler::readSchedule(): Read Schedule from file: '{}'", schedulePath.string()) << std::endl;
         m_schedule->sortColumns();
         m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(schedulePath), readFileInfo->getScheduleEditTime());
@@ -252,7 +277,6 @@ bool IO_Handler::createNewSchedule(const char* name)
 }
  
 // Deletes the Schedule with the name and returns true if it exists or returns false.
-// NOTE: This can delete the currently open file. Is this the correct behaviour?
 bool IO_Handler::deleteSchedule(const char* name)
 {
     if (m_currentFileInfo.empty()) { return false; }
@@ -271,6 +295,14 @@ bool IO_Handler::deleteSchedule(const char* name)
     if (fs::exists(autosavePath))
     {
         fs::remove(autosavePath);
+    }
+
+    fs::path iniFilePath = makeIniPathFromScheduleName(name);
+
+    // delete the file's ini file if it exists
+    if (fs::exists(iniFilePath))
+    {
+        fs::remove(iniFilePath);
     }
 
     if (fs::remove(schedulePath) )
@@ -332,6 +364,13 @@ bool IO_Handler::renameCurrentFile(const std::string& newName)
     if (fs::exists(pathToAutosave))
     {
         fs::rename(pathToAutosave, pathToRenamedAutosave);
+    }
+    // Rename the ini file as well, if it exists
+    fs::path pathToIniFile = fs::path(makeIniPathFromScheduleName(pathToOpenFile.stem().string().c_str()));
+    fs::path pathToRenamedIniFile = fs::path(makeIniPathFromScheduleName(newName.c_str()));
+    if (fs::exists(pathToIniFile))
+    {
+        fs::rename(pathToIniFile, pathToRenamedIniFile);
     }
 
     passFileNamesToGui();
@@ -507,6 +546,11 @@ std::vector<std::string> IO_Handler::getScheduleStemNames(bool includeAutosaves)
         // Skip non-schedule files
         if (isScheduleFilePath(entry.path()) == false)
         {
+            continue;
+        }
+        // Skip invalid (probably outdated) schedule files
+        if (isValidScheduleFile(entry.path()) == false)
+        {
             std::cout << "IO_Handler::getScheduleStemNames(): Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
             continue;
         }
@@ -542,6 +586,11 @@ std::vector<std::string> IO_Handler::getScheduleStemNamesSortedByEditTime(bool i
         }
         // Skip non-schedule files
         if (isScheduleFilePath(entry.path()) == false)
+        {
+            continue;
+        }
+        // Skip invalid (probably outdated) schedule files
+        if (isValidScheduleFile(entry.path()) == false)
         {
             std::cout << "IO_Handler::getScheduleStemNamesSortedByEditTime(): Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
             continue;
@@ -582,6 +631,11 @@ std::string IO_Handler::getLastEditedScheduleStemName()
         }
         // Skip non-schedule files
         if (isScheduleFilePath(entry.path()) == false)
+        {
+            continue;
+        }
+        // Skip invalid (probably outdated) schedule files
+        if (isValidScheduleFile(entry.path()) == false)
         {
             std::cout << "IO_Handler::getLastEditedScheduleStemName(): Skipped file " << entry.path().string() << " (not a valid schedule file)" << std::endl;
             continue;

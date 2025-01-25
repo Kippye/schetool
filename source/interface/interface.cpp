@@ -15,6 +15,8 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
 	// imgui setup
 	imGui = ImGui::CreateContext();
 	imGuiIO = &ImGui::GetIO();
+	// Disable automatically making an "imgui.ini" file in the working directory.
+	imGuiIO->IniFilename = NULL;
 	// set up platform / renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(m_windowManager->window, true);
 	ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());
@@ -22,7 +24,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     m_styleHandler->loadFontSizes("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf");
 
     // Apply the default style
-    m_styleHandler->applyStyle(m_styleHandler->getDefaultStyle());
+    setStyle(m_styleHandler->getDefaultStyle());
 
 	// ADD GUIS
     addGui<StartPageGui>("StartPageGui");

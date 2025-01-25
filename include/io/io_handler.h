@@ -86,8 +86,12 @@ class IO_Handler
 
         // Chooses the most suitable save directory based on the current platform and existence of certain directories
         std::filesystem::path getBestSaveDirPath() const;
+        // Returns true if the path has the schedule file extension.
         bool isScheduleFilePath(const std::filesystem::path& path) const;
+        // Returns true if the path points to a file that can be loaded by the DataConverter.
+        bool isValidScheduleFile(const std::filesystem::path& path) const;
         std::filesystem::path makeSchedulePathFromName(const char* name) const;
+        std::filesystem::path makeIniPathFromScheduleName(const char* name) const;
         bool applyAutosaveToFile(const char* name);
         void sendFileInfoUpdates();
         void passFileNamesToGui();
@@ -97,6 +101,7 @@ class IO_Handler
         void closeCurrentFile();
     public:
         const char* SCHEDULE_FILE_EXTENSION = ".blf";
+        const char* INI_FILE_EXTENSION = ".ini";
 
         Event<FileInfo> fileReadEvent;
         Event<FileInfo> fileCreatedEvent;
