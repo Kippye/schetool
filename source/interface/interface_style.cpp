@@ -102,24 +102,29 @@ void InterfaceStyleHandler::applyStyle(GuiStyle style)
     m_currentStyle = style;
 }
 
+GuiStyle InterfaceStyleHandler::getDefaultStyle()
+{
+    return (GuiStyle)0;
+}
+
 GuiStyle InterfaceStyleHandler::getCurrentStyle() const
 {
     return m_currentStyle;
 }
 
-GuiStyle InterfaceStyleHandler::getDefaultStyle() const
+void InterfaceStyleHandler::setFontSize(FontSize fontSize)
 {
-    return m_defaultStyle;
+    currentFontSize = fontSize;
+}
+
+FontSize InterfaceStyleHandler::getDefaultFontSize()
+{
+    return FontSize::Normal;
 }
 
 FontSize InterfaceStyleHandler::getFontSize()
 {
     return currentFontSize;
-}
-
-void InterfaceStyleHandler::setFontSize(FontSize fontSize)
-{
-    currentFontSize = fontSize;
 }
 
 ImFont* InterfaceStyleHandler::getFontData(FontSize fontSize)

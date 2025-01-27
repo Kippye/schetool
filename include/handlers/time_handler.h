@@ -25,9 +25,12 @@ class TimeHandler
 
         std::function<void(NotificationActivation, NotificationInfo)> notificationActivatedListener = [&](NotificationActivation activationType, NotificationInfo notificationInfo)
         {
-            if (notificationInfo.startTime.has_value())
+            if (activationType == NotificationActivation::PreviousMarkedDone)
             {
-                completePreviousItem(notificationInfo.startTime.value());
+                if (notificationInfo.startTime.has_value())
+                {
+                    completePreviousItem(notificationInfo.startTime.value());
+                }
             }
         };
 

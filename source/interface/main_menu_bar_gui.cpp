@@ -1,5 +1,6 @@
 #include "main_menu_bar_gui.h"
 #include "gui_templates.h"
+#include "gui_constants.h"
 
 TextInputModalSubGui::TextInputModalSubGui(const char* ID, const char* popupName, const char* acceptButtonText, size_t textMaxLength, bool showCloseButton) : Gui(ID)
 {
@@ -167,6 +168,17 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 		}
         if (ImGui::BeginMenu("Preferences"))
 		{
+			ImGui::AlignTextToFramePadding();
+            ImGui::Text("Notifications");
+            ImGui::SameLine();
+            // ImGui::SetCursorPosX(styleSelectDropdownX);
+			bool notificationsEnabled = m_preferences.getNotificationsEnabled();
+            if (ImGui::Checkbox("##NotificationsEnabledCheckbox", &notificationsEnabled))
+            {
+                m_preferences.setNotificationsEnabled(notificationsEnabled);
+				preferencesChangedEvent.invoke(m_preferences);
+            }
+			ImGui::SeparatorText("Interface");
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Interface theme");
             ImGui::SameLine();
@@ -178,7 +190,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
                     bool isSelected = styleEnum == m_styleHandler->getCurrentStyle();
                     if (ImGui::Selectable(styleDefinition.name, isSelected))
                     {
-                        setGuiStyleEvent.invoke(styleEnum);
+						m_preferences.setStyle(styleEnum);
+						preferencesChangedEvent.invoke(m_preferences);
                     }
 
                     // Set the initial focus when opening the combo (scroll here)
@@ -201,7 +214,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
                     bool isSelected = fontSizeEnum == m_styleHandler->getFontSize();
                     if (ImGui::Selectable(fontSizeName, isSelected))
                     {
-                        setFontScaleEvent.invoke(fontSizeEnum);
+						m_preferences.setFontSize(fontSizeEnum);
+						preferencesChangedEvent.invoke(m_preferences);
                     }
 
                     // Set the initial focus when opening the combo (scroll here)
@@ -317,4 +331,9 @@ void MainMenuBarGui::passFileNames(const std::vector<std::string>& fileNames)
 void MainMenuBarGui::passHaveFileOpen(bool haveFileOpen)
 {
     m_haveFileOpen = haveFileOpen;
+}
+
+void MainMenuBarGui::passPreferences(const Preferences& preferences)
+{
+	m_preferences = preferences;
 }

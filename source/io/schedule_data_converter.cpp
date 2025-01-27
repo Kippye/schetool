@@ -1,19 +1,14 @@
-#include "data_converter.h"
+#include "schedule_data_converter.h"
 
 using namespace blf;
 using namespace blf::file;
 
-LocalObjectTable& ObjectDefinitions::getObjectTable()
+const std::string& ScheduleDataConverter::getExtension() const
 {
-    return m_objectTable;
+    return m_extension;
 }
 
-const LocalObjectTable& ObjectDefinitions::getObjectTableConst() const
-{
-    return m_objectTable;
-}
-
-void DataConverter::setupObjectTable()
+void ScheduleDataConverter::setupObjectTable()
 {
     addObjectDefinition<BLF_Base>();
     addObjectDefinition<BLF_Date>();
@@ -34,7 +29,7 @@ void DataConverter::setupObjectTable()
     addTypeObjectDefinitions<DateContainer>();
 }
 
-bool DataConverter::isValidScheduleFile(const char* path) const
+bool ScheduleDataConverter::isValidScheduleFile(const char* path) const
 {
     try
     {
@@ -53,7 +48,7 @@ bool DataConverter::isValidScheduleFile(const char* path) const
     }
 }
 
-int DataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule)
+int ScheduleDataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule)
 {
     FileWriteStream stream(path);
 
@@ -95,7 +90,7 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
                 addColumnToData<DateContainer>(data, schedule[c], c);
                 break;
             default:
-                printf("DataConverter::writeSchedule(%s, schedule): Writing Columns of type %d has not been implemented\n", path, schedule[c].type);
+                printf("ScheduleDataConverter::writeSchedule(%s, schedule): Writing Columns of type %d has not been implemented\n", path, schedule[c].type);
                 break;
         }
     }
@@ -107,7 +102,7 @@ int DataConverter::writeSchedule(const char* path, const std::vector<Column>& sc
     return 0;
 }
 
-std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
+std::optional<FileInfo> ScheduleDataConverter::readSchedule(const char* path, std::vector<Column>& schedule)
 {
     std::vector<Column> scheduleCopy = schedule;
     // clear the provided copy just in case
@@ -205,7 +200,7 @@ std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vecto
             }
             default:
             {
-                printf("DataConverter::readSchedule(%s, schedule): Inserting type of BLF_Column<T> with type %d has not been implemented\n", path, type);
+                printf("ScheduleDataConverter::readSchedule(%s, schedule): Inserting type of BLF_Column<T> with type %d has not been implemented\n", path, type);
             }
         }
     }
@@ -321,7 +316,7 @@ std::optional<FileInfo> DataConverter::readSchedule(const char* path, std::vecto
             }
             default:
             {
-                printf("DataConverter::readSchedule(%s, schedule): Converting from BLF_Column<T> with type %d has not been implemented\n", path, type);
+                printf("ScheduleDataConverter::readSchedule(%s, schedule): Converting from BLF_Column<T> with type %d has not been implemented\n", path, type);
             }
         }
     }

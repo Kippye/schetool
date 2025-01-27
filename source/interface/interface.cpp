@@ -1,4 +1,3 @@
-#include <iostream>
 #include "interface.h"
 #include "start_page_gui.h"
 #include "main_menu_bar_gui.h"
@@ -28,14 +27,24 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
 
 	// ADD GUIS
     addGui<StartPageGui>("StartPageGui");
-	auto mainMenuBarGui = addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler);
-    mainMenuBarGui->setGuiStyleEvent.addListener([&](GuiStyle style) { setStyle(style); });
-    mainMenuBarGui->setFontScaleEvent.addListener([&](FontSize fontScale) { m_styleHandler->setFontSize(fontScale); });
+	addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler);
     // simple popups
     addGui<AutosavePopupGui>("AutosavePopupGui");
 	#if DEBUG
 	addGui<EditHistoryGui>("EditHistoryGui");
 	#endif
+}
+
+void Interface::initEventListeners(std::shared_ptr<PreferencesIO> preferencesIO)
+{
+	if (preferencesIO)
+	{
+		preferencesIO->preferencesChangedEvent.addListener([&](Preferences preferences)
+		{
+			setStyle(preferences.getStyle());
+			m_styleHandler->setFontSize(preferences.getFontSize());
+		});
+	}
 }
 
 void Interface::setStyle(GuiStyle style)

@@ -2,9 +2,13 @@
 
 void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule, NotificationHandler& notificationHandler)
 {
-    ioHandler.fileReadEvent.addListener(fileOpenListener);
-    ioHandler.fileCreatedEvent.addListener(fileOpenListener);
-    ioHandler.fileUnloadEvent.addListener(fileUnloadListener);
+    auto scheduleIO = ioHandler.getScheduleIO();
+    if (scheduleIO)
+    {
+        scheduleIO->fileReadEvent.addListener(fileOpenListener);
+        scheduleIO->fileCreatedEvent.addListener(fileOpenListener);
+        scheduleIO->fileUnloadEvent.addListener(fileUnloadListener);
+    }
 
     notificationHandler.notificationActivatedEvent.addListener(notificationActivatedListener);
     m_schedule = &schedule;

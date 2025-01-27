@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 #include "interface_style.h"
-#include "gui_constants.h"
+#include "preferences.h"
 #include "gui.h"
 #include "window.h"
 #include "input.h"
@@ -67,6 +67,7 @@ class MainMenuBarGui : public Gui
         std::shared_ptr<const InterfaceStyleHandler> m_styleHandler = nullptr;
         bool m_haveFileOpen = false;
         std::vector<std::string> m_fileNames = {};
+        Preferences m_preferences = Preferences::getDefault();
 
         void renameSchedule();
         void newSchedule();
@@ -80,12 +81,12 @@ class MainMenuBarGui : public Gui
         Event<> undoEvent;
         Event<> redoEvent;
 
-        Event<GuiStyle> setGuiStyleEvent;
-        Event<FontSize> setFontScaleEvent;
+        Event<Preferences> preferencesChangedEvent;
 
         void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         float getHeight() const;
         void closeModal();
         void passFileNames(const std::vector<std::string>& fileNames);
         void passHaveFileOpen(bool haveFileOpen);
+        void passPreferences(const Preferences& preferences);
 };

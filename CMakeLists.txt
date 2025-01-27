@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ############ PROJECT DEFINITION ############
-project(schetool VERSION 0.8.2)
+project(schetool VERSION 0.8.3)
 set(CPP_VERSION "c++20")
 
 ######### OPTIONS #########
@@ -209,8 +209,11 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/start_page_gui.cpp"
-    "${SCHETOOL_SRC}/${IO_DIR}/data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/io_handler.cpp"
+    "${SCHETOOL_SRC}/${IO_DIR}/preferences_data_converter.cpp"
+    "${SCHETOOL_SRC}/${IO_DIR}/preferences_io.cpp"
+    "${SCHETOOL_SRC}/${IO_DIR}/schedule_data_converter.cpp"
+    "${SCHETOOL_SRC}/${IO_DIR}/schedule_io.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/element_base.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filter.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filter_group.cpp"

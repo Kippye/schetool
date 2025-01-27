@@ -30,11 +30,22 @@ Program::Program()
 	render.init(&windowManager, &programInterface);
 	schedule.init(input, programInterface);
 	ioHandler.init(&schedule, &windowManager, input, programInterface);
+    programInterface.initEventListeners(ioHandler.getPreferencesIO());
+    notificationHandler.initEventListeners(ioHandler.getPreferencesIO());
     timeHandler.init(ioHandler, schedule, notificationHandler);
 
 	schedule.createDefaultSchedule();
 
-    ioHandler.openMostRecentFile();
+    auto scheduleIO = ioHandler.getScheduleIO();
+    if (scheduleIO)
+    {
+        scheduleIO->openMostRecentFile();
+    }
+    auto preferencesIO = ioHandler.getPreferencesIO();
+    if (preferencesIO)
+    {
+        preferencesIO->readPreferences();
+    }
 }
 
 void Program::handleSignal(Signal signal)
