@@ -8,15 +8,12 @@
 namespace fs = std::filesystem;
 
 
-ScheduleIO::ScheduleIO(Schedule& schedule, Window& window, Input& input, Interface& programInterface, std::filesystem::path saveDir) :
+ScheduleIO::ScheduleIO(Schedule& schedule, Interface& programInterface, std::filesystem::path saveDir) :
     m_schedule(schedule),
     m_saveDir(saveDir)
 {
     m_converter = ScheduleDataConverter();
     m_converter.setupObjectTable();
-    
-    window.windowCloseEvent.addListener(windowCloseListener);
-    input.addEventListener(INPUT_EVENT_SC_SAVE, saveListener);
 
     m_startPageGui = programInterface.getGuiByID<StartPageGui>("StartPageGui");
     m_startPageGui->getSubGui<StartPageNewNameModalSubGui>("StartPageNewNameModalSubGui")->createNewScheduleEvent.addListener(createNewListener);

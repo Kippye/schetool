@@ -28,16 +28,10 @@ class ScheduleIO
         std::filesystem::path m_saveDir = std::filesystem::path();
         const char* m_autosaveSuffix = "_auto";
 
-        // input listeners
         std::function<void()> saveListener = std::function<void()>([&]()
         {
             if (m_currentFileInfo.empty()) { return; }
             writeSchedule(m_currentFileInfo.getName().c_str());
-        });
-        // window event listeners
-        std::function<void()> windowCloseListener = std::function<void()>([&]()
-        {
-            closeCurrentFile();
         });
         // gui listeners
         // ScheduleNameModalSubGui
@@ -91,8 +85,6 @@ class ScheduleIO
         void passFileNamesToGui();
         // Cleans everything about the currently open file (clears the schedule, edit history, etc)
         void unloadCurrentFile();
-        // Mostly just creates and applies an autosave of the file before it is unloaded by calling unloadCurrentFile().
-        void closeCurrentFile();
     public:
         const char* INI_FILE_EXTENSION = ".ini";
 
@@ -101,7 +93,7 @@ class ScheduleIO
         Event<FileInfo> fileCreatedEvent;
         Event<> fileUnloadEvent;
 
-        ScheduleIO(Schedule& schedule, Window& window, Input& input, Interface& interface, std::filesystem::path saveDir);
+        ScheduleIO(Schedule& schedule, Interface& interface, std::filesystem::path saveDir);
 
         bool writeSchedule(const char* name);
         bool readSchedule(const char* name);
@@ -112,6 +104,8 @@ class ScheduleIO
         // If the open file doesn't exist, write a file with the new name.
         // If the open file exists, rename it to the new name.
         bool renameCurrentFile(const std::string& newName);
+        // Mostly just creates and applies an autosave of the file before it is unloaded by calling unloadCurrentFile().
+        void closeCurrentFile();
         FileInfo getCurrentFileInfo() const;
         void openMostRecentFile();
         bool createAutosave();

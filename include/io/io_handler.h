@@ -31,6 +31,25 @@ class IO_Handler
             m_mainMenuBarGui->passHaveFileOpen(fileInfo.empty() == false);
         };
 
+        // input listeners
+        std::function<void()> saveInputListener = std::function<void()>([&]()
+        {
+            if (m_scheduleIO)
+            {
+                FileInfo currentFileInfo = m_scheduleIO->getCurrentFileInfo();
+                if (currentFileInfo.empty()) { return; }
+                m_scheduleIO->writeSchedule(currentFileInfo.getName().c_str());
+            }
+        });
+        // window event listeners
+        std::function<void()> windowCloseListener = std::function<void()>([&]()
+        {
+            if (m_scheduleIO)
+            {
+                m_scheduleIO->closeCurrentFile();
+            }
+        });
+
         std::function<void(Preferences)> preferencesModifiedListener = [&](Preferences preferences)
         {
             if (m_preferencesIO)

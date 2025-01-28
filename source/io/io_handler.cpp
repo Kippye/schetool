@@ -76,11 +76,15 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     m_schedule = schedule;
     m_windowManager = window;
 
+    // EVENT LISTENERS
     m_mainMenuBarGui = programInterface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
     if (m_mainMenuBarGui)
     {
         m_mainMenuBarGui->preferencesChangedEvent.addListener(preferencesModifiedListener);
     }
+
+    window->windowCloseEvent.addListener(windowCloseListener);
+    input.addEventListener(INPUT_EVENT_SC_SAVE, saveInputListener);
 
     fs::path savesDir = getBestScheduleSavePath();
     fs::path configDir = getBestConfigSavePath();
@@ -88,7 +92,7 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     std::cout << std::format("Config save path is: '{}'", configDir.string()) << std::endl;
 
     // TODO: I don't like this pointer dereferencing
-    m_scheduleIO = std::make_shared<ScheduleIO>(*schedule, *window, input, programInterface, savesDir);
+    m_scheduleIO = std::make_shared<ScheduleIO>(*schedule, programInterface, savesDir);
     m_preferencesIO = std::make_shared<PreferencesIO>(configDir);
     
     m_scheduleIO->openFileInfoChangeEvent.addListener(openFileInfoChangeListener);
@@ -104,10 +108,6 @@ void IO_Handler::addToAutosaveTimer(double delta)
         if (m_scheduleIO)
         {
             m_scheduleIO->createAutosave();
-        }
-        if (m_preferencesIO)
-        {
-            m_preferencesIO->writePreferences();
         }
         m_timeSinceAutosave = 0;
     }
