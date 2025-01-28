@@ -65,13 +65,41 @@ class ScheduleIO
         // AutosavePopupGui
         // NOTE: all of these assume that the most recently edited file is still an autosave
         // TODO: handle the (rare?) case where it isn't
-        std::function<void()> openAutosaveListener = std::function<void()>([&]()
+        std::function<void()> applyAutosaveListener = std::function<void()>([&]()
         {
-            readSchedule(getLastEditedScheduleStemName().c_str());
+            std::string lastEditedFileName = getLastEditedScheduleStemName();
+            // 99% of the time, the autosave will be the most recent
+            if (isAutosave(lastEditedFileName))
+            {
+                std::string baseFileName = getFileBaseName(lastEditedFileName.c_str());
+                // Apply autosave to file
+                applyAutosaveToFile(baseFileName.c_str());
+                // Read the updated base file
+                readSchedule(baseFileName.c_str());
+            }
+            // Somehow, the most recently edited file was an autosave but now isn't?
+            else
+            {
+                
+            }
         });
-        std::function<void()> ignoreAutosaveOpenFileEvent = std::function<void()>([&]()
+        std::function<void()> deleteAutosaveListener = std::function<void()>([&]()
         {
-            readSchedule(getFileBaseName(getLastEditedScheduleStemName().c_str()).c_str());
+            std::string lastEditedFileName = getLastEditedScheduleStemName();
+            std::string baseFileName = getFileBaseName(lastEditedFileName.c_str());
+            // 99% of the time, the autosave will be the most recent
+            if (isAutosave(lastEditedFileName))
+            {
+                deleteSchedule(lastEditedFileName.c_str());
+            }
+            // Somehow, the most recently edited file was an autosave but now isn't?
+            // The base file will be opened anyway
+            else
+            {
+                // Get the autosave name from the base file name and try to delete it.
+                deleteSchedule(getFileAutosaveName(lastEditedFileName.c_str()).c_str());
+            }
+            readSchedule(baseFileName.c_str());
         });
 
         // Returns true if the path has the schedule file extension.
@@ -80,6 +108,8 @@ class ScheduleIO
         bool isValidScheduleFile(const std::filesystem::path& path) const;
         std::filesystem::path makeSchedulePathFromName(const char* name) const;
         std::filesystem::path makeIniPathFromScheduleName(const char* name) const;
+        // Apply the autosave of the given file to it.
+        // NOTE: The requested name is the name of the *base file*.
         bool applyAutosaveToFile(const char* name);
         void sendFileInfoUpdates();
         void passFileNamesToGui();
@@ -111,6 +141,8 @@ class ScheduleIO
         bool createAutosave();
         bool isAutosave(const std::string& fileName);
         std::string getFileAutosaveName(const char* fileName);
+        // Remove the autosave suffix from a file name.
+        // If the file name already isn't that of an autosave, the initial name is be returned.
         std::string getFileBaseName(const char* autosaveName);
         long long getFileEditTime(std::filesystem::path filePath);
         TimeWrapper getFileEditTimeWrapped(std::filesystem::path filePath);

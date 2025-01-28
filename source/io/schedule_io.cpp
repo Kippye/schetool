@@ -30,8 +30,8 @@ ScheduleIO::ScheduleIO(Schedule& schedule, Interface& programInterface, std::fil
     m_mainMenuBarGui->saveEvent.addListener(saveListener);
 
     m_autosavePopupGui = programInterface.getGuiByID<AutosavePopupGui>("AutosavePopupGui");
-    m_autosavePopupGui->openAutosaveEvent.addListener(openAutosaveListener);
-    m_autosavePopupGui->ignoreAutosaveOpenFileEvent.addListener(ignoreAutosaveOpenFileEvent);
+    m_autosavePopupGui->applyAutosaveEvent.addListener(applyAutosaveListener);
+    m_autosavePopupGui->deleteAutosaveEvent.addListener(deleteAutosaveListener);
 
     passFileNamesToGui();
 }
@@ -232,8 +232,6 @@ bool ScheduleIO::createNewSchedule(const char* name)
 // Deletes the Schedule with the name and returns true if it exists or returns false.
 bool ScheduleIO::deleteSchedule(const char* name)
 {
-    if (m_currentFileInfo.empty()) { return false; }
-
     fs::path schedulePath = makeSchedulePathFromName(name);
 
     if (fs::exists(schedulePath) == false)
@@ -398,9 +396,9 @@ void ScheduleIO::openMostRecentFile()
 
 bool ScheduleIO::createAutosave()
 {
-    printf("ScheduleIO::createAutosave(): Creating autosave...\n");
     if (m_currentFileInfo.empty()) { return false; }
     if (m_schedule.getEditHistory().getEditedSinceWrite() == false) { return false; }
+    printf("ScheduleIO::createAutosave(): Creating autosave...\n");
 
     // save to open file name if the open file is itself an autosave, otherwise get the autosave name from the base file name
     std::string autosaveName = isAutosave(m_currentFileInfo.getName()) ? m_currentFileInfo.getName() : getFileAutosaveName(m_currentFileInfo.getName().c_str());
@@ -430,6 +428,7 @@ std::string ScheduleIO::getFileBaseName(const char* autosaveName)
     if (isAutosave(autosaveString) == false)
     {
         std::cout << std::format("ScheduleIO::getFileBaseName(): File name '{}' is not an autosave", autosaveName) << std::endl;
+        return autosaveString;
     }
 
     return autosaveString.substr(0, autosaveString.rfind(m_autosaveSuffix));
