@@ -58,6 +58,20 @@ void Input::processInput(GLFWwindow* window)
     mouseMoveY = 0;
 }
 
+std::vector<InputShortcut> Input::getEventShortcuts(INPUT_EVENT event) const
+{
+	std::vector<InputShortcut> eventShortcuts = {};
+
+	for (const InputShortcut& shortcut : m_shortcuts)
+	{
+		if (shortcut.event == event)
+		{
+			eventShortcuts.push_back(shortcut);
+		}
+	}
+	return eventShortcuts;
+}
+
 void Input::addEventListener(INPUT_EVENT event, const std::function<void()>& listener)
 {
     if (listener)

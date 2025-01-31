@@ -124,7 +124,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-			if (ImGui::MenuItem("Rename", "CTRL+F2"))
+			auto renameShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_RENAME);
+			if (ImGui::MenuItem("Rename", renameShortcuts.size() > 0 ? renameShortcuts.front().getShortcutString().c_str() : NULL))
 			{
 				renameSchedule();
 			}
@@ -132,7 +133,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             {
                 ImGui::PopItemFlag();
             }
-			if (ImGui::MenuItem("New", "CTRL+N")) 
+			auto newFileShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_NEW);
+			if (ImGui::MenuItem("New", newFileShortcuts.size() > 0 ? newFileShortcuts.front().getShortcutString().c_str() : NULL)) 
 			{
 				newSchedule();
 			}
@@ -144,7 +146,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-			if (ImGui::MenuItem("Save", "CTRL+S"))
+			auto saveShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_SAVE);
+			if (ImGui::MenuItem("Save", saveShortcuts.size() > 0 ? saveShortcuts.front().getShortcutString().c_str() : NULL))
 			{
 				saveEvent.invoke();
 			}
@@ -156,11 +159,13 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 		}
 		if (ImGui::BeginMenu("Edit"))
 		{
-			if (ImGui::MenuItem("Undo", "CTRL+Z"))
+			auto undoShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_UNDO);
+			if (ImGui::MenuItem("Undo", undoShortcuts.size() > 0 ? undoShortcuts.front().getShortcutString().c_str() : NULL))
 			{
 				undoEvent.invoke();
 			}
-			if (ImGui::MenuItem("Redo", "CTRL+Y")) 
+			auto redoShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_REDO);
+			if (ImGui::MenuItem("Redo", redoShortcuts.size() > 0 ? redoShortcuts.front().getShortcutString().c_str() : NULL)) 
 			{
 				redoEvent.invoke();
 			}
@@ -233,6 +238,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 	}
 	ImGui::EndMainMenuBar();
 
+	printf("%d\n", input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME));
 	// check shortcuts (dunno if this is the best place for this? TODO )
 	if (m_haveFileOpen && input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) { renameSchedule(); }
 	if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) { newSchedule(); }
