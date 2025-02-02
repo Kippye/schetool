@@ -86,6 +86,7 @@ void ScheduleIO::closeCurrentFile()
     {
         applyAutosaveToFile(m_currentFileInfo.getName().c_str());
     }
+    createIniForFile(m_currentFileInfo.getName().c_str());
 
     unloadCurrentFile();
 }
@@ -137,6 +138,24 @@ bool ScheduleIO::applyAutosaveToFile(const char* fileName)
     return false;
 }
 
+void ScheduleIO::createIniForFile(const char* name)
+{
+    printf("Creating ini for file: %s\n", name);
+    if (ImGui::GetIO().WantSaveIniSettings)
+    {
+        if (isAutosave(name))
+        {
+            ImGui::SaveIniSettingsToDisk(makeIniPathFromScheduleName(getFileBaseName(name).c_str()).string().c_str());
+        }
+        else
+        {
+            ImGui::SaveIniSettingsToDisk(makeIniPathFromScheduleName(name).string().c_str());
+        }
+        printf("Created ini for file: %s\n", name);
+        ImGui::GetIO().WantSaveIniSettings = false;
+    }
+}
+
 bool ScheduleIO::writeSchedule(const char* name)
 {
     if (fs::exists(m_saveDir) == false)
@@ -156,18 +175,7 @@ bool ScheduleIO::writeSchedule(const char* name)
 
     if (m_converter.writeSchedule(schedulePath.string().c_str(), m_schedule.getAllColumns()) == 0)
     {
-        if (ImGui::GetIO().WantSaveIniSettings)
-        {
-            if (isAutosave(name))
-            {
-                ImGui::SaveIniSettingsToDisk(makeIniPathFromScheduleName(getFileBaseName(name).c_str()).string().c_str());
-            }
-            else
-            {
-                ImGui::SaveIniSettingsToDisk(makeIniPathFromScheduleName(name).string().c_str());
-            }
-            ImGui::GetIO().WantSaveIniSettings = false;
-        }
+        createIniForFile(name);
         std::cout << std::format("ScheduleIO::writeSchedule(): Wrote Schedule to file: '{}'", schedulePath.string()) << std::endl;
     }
     // TODO: make some event that the Schedule can listen to?

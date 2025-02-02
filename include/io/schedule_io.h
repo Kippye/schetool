@@ -111,6 +111,8 @@ class ScheduleIO
         // Apply the autosave of the given file to it.
         // NOTE: The requested name is the name of the *base file*.
         bool applyAutosaveToFile(const char* name);
+        // Pass the file name of a schedule file to create an imgui .ini file for it.
+        void createIniForFile(const char* name);
         void sendFileInfoUpdates();
         void passFileNamesToGui();
         // Cleans everything about the currently open file (clears the schedule, edit history, etc)

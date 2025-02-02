@@ -16,6 +16,9 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
 	imGuiIO = &ImGui::GetIO();
 	// Disable automatically making an "imgui.ini" file in the working directory.
 	imGuiIO->IniFilename = NULL;
+    // Note that there is no actual saving rate.
+    // This is just so imgui doesn't take 5 seconds after a change before it tells me that a change needs to be saved.
+    imGuiIO->IniSavingRate = 0.1f;
 	// set up platform / renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(m_windowManager->window, true);
 	ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());

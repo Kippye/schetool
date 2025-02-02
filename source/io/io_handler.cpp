@@ -45,7 +45,7 @@ fs::path IO_Handler::getBestScheduleSavePath() const
         return "./schedules";
     }
     #if defined (SCHETOOL_WINDOWS)
-    return getBestDataDirPath() / "schedules";
+    return getWinBestDataDirPath() / "schedules";
     #elif defined(SCHETOOL_LINUX)
     fs::path base = std::getenv("HOME") ? fs::path(std::getenv("HOME")) / ".local/share" : ".";
     // If the home/.local/share directory doesn't exist, it would be pretty weird for schetool to create it.
@@ -62,7 +62,7 @@ fs::path IO_Handler::getBestConfigSavePath() const
         return "./config";
     }
     #if defined(SCHETOOL_WINDOWS)
-    return getBestDataDirPath() / "config";
+    return getWinBestDataDirPath() / "config";
     #elif defined(SCHETOOL_LINUX)
     fs::path base = std::getenv("HOME") ? fs::path(std::getenv("HOME")) / ".config" : ".";
     // If the home/.config directory doesn't exist, it would be pretty weird for schetool to create it.

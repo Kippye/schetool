@@ -238,7 +238,6 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 	}
 	ImGui::EndMainMenuBar();
 
-	printf("%d\n", input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME));
 	// check shortcuts (dunno if this is the best place for this? TODO )
 	if (m_haveFileOpen && input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) { renameSchedule(); }
 	if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) { newSchedule(); }
