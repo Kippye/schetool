@@ -140,7 +140,6 @@ bool ScheduleIO::applyAutosaveToFile(const char* fileName)
 
 void ScheduleIO::createIniForFile(const char* name)
 {
-    printf("Creating ini for file: %s\n", name);
     if (ImGui::GetIO().WantSaveIniSettings)
     {
         if (isAutosave(name))
@@ -151,7 +150,6 @@ void ScheduleIO::createIniForFile(const char* name)
         {
             ImGui::SaveIniSettingsToDisk(makeIniPathFromScheduleName(name).string().c_str());
         }
-        printf("Created ini for file: %s\n", name);
         ImGui::GetIO().WantSaveIniSettings = false;
     }
 }

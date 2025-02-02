@@ -177,7 +177,7 @@ unsigned char* TextureLoader::loadTextureData(const std::filesystem::path& path,
 
         if (format == FORMAT_NONE)
         {
-			printf("TextureLoader::loadTextureData(%s, %d, %d, %d, %d): Unsupported image file type with extension: %s\n", path.string().c_str(), *width, *height, flip, *ID, bind, path.extension().string().c_str());
+			printf("TextureLoader::loadTextureData(...): The path '%s' has an unsupported image file extension: '%s'\n", path.string().c_str(), path.extension().string().c_str());
         }
         else
         {
