@@ -8,7 +8,12 @@
 #include "schedule.h"
 #include "interface.h"
 #include "time_handler.h"
-#include "signal_handler.h"
+#include "signal_listener.h"
+#include "notification_handler.h"
+
+#ifdef SCHETOOL_LINUX
+#include <libnotify/notify.h>
+#endif
 
 class Program
 {
@@ -18,10 +23,15 @@ class Program
 		IO_Handler ioHandler;
 		Render render;
 		Input input;
-		Interface interface;
+		Interface programInterface;
 		Schedule schedule;
         TimeHandler timeHandler;
-        SignalHandler signalHandler;
+        SignalListener signalListener;
+		NotificationHandler notificationHandler;
+		#ifdef SCHETOOL_LINUX
+		GMainContext* gContext = nullptr;
+		GMainLoop* notifyLoop = nullptr;
+		#endif
 
 		static bool quitProgram;
 

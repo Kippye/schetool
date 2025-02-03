@@ -267,9 +267,19 @@ class TimeWrapper
             return left.m_time < right.m_time;
         }
 
+        friend bool operator<=(const TimeWrapper& left, const TimeWrapper& right)
+        {
+            return left.m_time < right.m_time || left.m_time == right.m_time;
+        }
+
         friend bool operator>(const TimeWrapper& left, const TimeWrapper& right)
         {
             return left.m_time > right.m_time;
+        }
+
+        friend bool operator>=(const TimeWrapper& left, const TimeWrapper& right)
+        {
+            return left.m_time > right.m_time || left.m_time == right.m_time;
         }
 
         template <typename Timepoint>
@@ -307,6 +317,12 @@ class TimeWrapper
         }
         // Gets the current system date and time
         static TimeWrapper getCurrentTime();
+        // Creates a new TimeWrapper with the timezone offset subtracted.
+        // Example: 
+        // Input TimeWrapper: 15:30.
+        // Time zone: UTC + 2.
+        // Output TimeWrapper: 13:30.
+        static TimeWrapper getTimeWithOffsetSubtracted(const TimeWrapper& base);
         // Gets the amount of minutes the current timezone is offset from UTC time (including DST).
         // Example: The timezone is UTC + 3, returns 180min. The timezone is UTC - 2, returns -120min.
         static chrono::minutes getTimezoneOffset();

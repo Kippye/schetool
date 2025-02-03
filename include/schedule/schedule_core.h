@@ -16,7 +16,6 @@ class ScheduleCore
         std::vector<Column> m_schedule = {};
         ColumnSortComparison m_columnSortComparison;
         std::vector<size_t> m_sortedRowIndices = {};
-        size_t getFlaggedColumnIndex(ScheduleColumnFlags flags) const;
         Column* getColumnWithFlags(ScheduleColumnFlags flags);
         Column* getMutableColumn(size_t column);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
@@ -43,6 +42,8 @@ class ScheduleCore
         bool removeColumn(size_t column);
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column) const;
+        // Get the index of the first column with the given flags
+        size_t getFlaggedColumnIndex(ScheduleColumnFlags flags) const;
         // Set the values of every Element to be copies of the provided Column's Element values. NOTE: If the provided Column has fewer rows, only those will be modified. If it has more rows, ones past the end will be ignored.
         bool setColumnElements(size_t index, const Column& columnData);
         bool setColumnType(size_t column, SCHEDULE_TYPE type);

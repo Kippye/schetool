@@ -2,19 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <locale>
 
-// Windows Release build
 #if defined(NDEBUG) && (defined (_WIN32) || defined (_WIN64))
 	#define WIN_RELEASE
-#endif
-
-#ifdef WIN_RELEASE
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <Windows.h>
 #endif
 
 Program::Program()
@@ -22,19 +11,26 @@ Program::Program()
     // use user-preferred locale from OS
     std::setlocale(LC_ALL, ""); 
 
+    #ifdef SCHETOOL_LINUX
+    gContext = g_main_context_default();
+    notifyLoop = g_main_loop_new(nullptr, false);
+    #endif
+
 	// TODO: load user preferences here!
 
 	// setup and initialize components
 	windowManager.init();
-    signalHandler.init(windowManager);
+    // NOTE: MUST be initialised AFTER windowManager!
+    signalListener.init(windowManager);
+    notificationHandler.init();
     textureLoader.init();
     windowManager.loadIcon(textureLoader);
 	input.init(&windowManager);
-	interface.init(&windowManager, &input, textureLoader);
-	render.init(&windowManager, &interface);
-	schedule.init(input, interface);
-	ioHandler.init(&schedule, &windowManager, input, interface);
-    timeHandler.init(ioHandler, schedule);
+	programInterface.init(&windowManager, &input, textureLoader);
+	render.init(&windowManager, &programInterface);
+	schedule.init(input, programInterface);
+	ioHandler.init(&schedule, &windowManager, input, programInterface);
+    timeHandler.init(ioHandler, schedule, notificationHandler);
 
 	schedule.createDefaultSchedule();
 
@@ -102,7 +98,10 @@ void Program::loop()
 		ioHandler.addToAutosaveTimer(render.deltaTime);
         timeHandler.timeTick();
 
-        handleSignal(signalHandler.listenForSignals());
+        handleSignal(signalListener.listenForSignals());
+        #ifdef SCHETOOL_LINUX
+        g_main_context_iteration(gContext, false);
+        #endif
 		glfwPollEvents();
 	}
 	

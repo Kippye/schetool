@@ -5,7 +5,7 @@
 #include "util.h"
 
 #ifdef __MINGW32__
-#include "time_wrapper_impl_mingw.h"
+#include "time_wrapper_mingw_impl.h"
 #endif
 
 using namespace std::chrono_literals;
@@ -302,11 +302,22 @@ TimeWrapper TimeWrapper::getCurrentTime()
     return TimeWrapper(system_clock::now());
 }
 
+TimeWrapper TimeWrapper::getTimeWithOffsetSubtracted(const TimeWrapper &base)
+{
+    return TimeWrapper(base.getTimeUTC() - TimeWrapper::getTimezoneOffset());
+}
+
 int TimeWrapper::limitYearToValidRange(int year)
 {
     year = std::max(year, 1678);
     year = std::min(year, 2261);
     return year;
+}
+
+chrono::minutes TimeWrapper::getTimezoneOffset()
+{
+    TimeWrapper time = TimeWrapper(DateWrapper(2025, 1, 14), ClockTimeWrapper(18, 00));
+    return chrono::floor<minutes>(time.getLocalTime().time_since_epoch() - time.getTimeUTC().time_since_epoch());
 }
 
 #ifdef PERFORM_UNIT_TESTS

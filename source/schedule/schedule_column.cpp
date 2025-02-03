@@ -236,7 +236,7 @@ size_t Column::getFilterGroupCount() const
     return m_filterGroupsPerType.at(type).size();
 }
 
-bool Column::checkElementPassesFilters(size_t index, const TimeWrapper& currentTime) const
+bool Column::checkElementPassesFilters(size_t index, const std::optional<TimeWrapper>& currentTime) const
 {
     if (hasElement(index) == false) { return false; }
 
@@ -245,7 +245,7 @@ bool Column::checkElementPassesFilters(size_t index, const TimeWrapper& currentT
 
     for (const auto& filterGroup: m_filterGroupsPerType.at(type))
     {
-        passes = passes && filterGroup.checkPasses(element, currentTime, currentTime.getIsEmpty() == false && resetOption != ColumnResetOption::Never);
+        passes = passes && filterGroup.checkPasses(element, currentTime.value_or(TimeWrapper::getCurrentTime()), currentTime.has_value() && currentTime->getIsEmpty() == false && resetOption != ColumnResetOption::Never);
     }
 
     return passes;

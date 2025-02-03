@@ -1,0 +1,4 @@
+DESCRIPTION
+===========
+
+A lightweight daily schedule making program.

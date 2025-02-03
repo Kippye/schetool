@@ -1,4 +1,5 @@
-#include "signal_handler_impl_linux.h"
+#ifdef SCHETOOL_LINUX
+#include "signal_listener_linux_impl.h"
 
 #include <csignal>
 #include <atomic>
@@ -12,19 +13,19 @@ extern "C" void signalHandler(int signum)
     gLastFrameSignal.store(signum);
 };
 
-bool SignalHandlerLinuxImpl::init()
+bool SignalListenerLinuxImpl::init()
 {
     // Listen to signals
     signal(SIGTERM, signalHandler);
     signal(SIGSEGV, signalHandler);
     signal(SIGINT, signalHandler);
     signal(SIGABRT, signalHandler);
-    printf("LINUX SIGNAL HANDLER INIT");
+    printf("Initialised Linux signal listener.\n");
     m_haveValidListener = true;
     return m_haveValidListener;
 }
 
-Signal SignalHandlerLinuxImpl::getLastSignal() const
+Signal SignalListenerLinuxImpl::getLastSignal() const
 {
     Signal lastSignal = Signal::None;
 
@@ -54,3 +55,4 @@ Signal SignalHandlerLinuxImpl::getLastSignal() const
     gLastFrameSignal.store(-1) ;
     return lastSignal;
 }
+#endif
