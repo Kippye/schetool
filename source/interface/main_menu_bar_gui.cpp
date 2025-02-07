@@ -1,5 +1,6 @@
 #include "main_menu_bar_gui.h"
 #include "gui_templates.h"
+#include "gui_constants.h"
 
 TextInputModalSubGui::TextInputModalSubGui(const char* ID, const char* popupName, const char* acceptButtonText, size_t textMaxLength, bool showCloseButton) : Gui(ID)
 {
@@ -123,7 +124,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-			if (ImGui::MenuItem("Rename", "CTRL+F2"))
+			auto renameShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_RENAME);
+			if (ImGui::MenuItem("Rename", renameShortcuts.size() > 0 ? renameShortcuts.front().getShortcutString().c_str() : NULL))
 			{
 				renameSchedule();
 			}
@@ -131,7 +133,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             {
                 ImGui::PopItemFlag();
             }
-			if (ImGui::MenuItem("New", "CTRL+N")) 
+			auto newFileShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_NEW);
+			if (ImGui::MenuItem("New", newFileShortcuts.size() > 0 ? newFileShortcuts.front().getShortcutString().c_str() : NULL)) 
 			{
 				newSchedule();
 			}
@@ -143,7 +146,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-			if (ImGui::MenuItem("Save", "CTRL+S"))
+			auto saveShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_SAVE);
+			if (ImGui::MenuItem("Save", saveShortcuts.size() > 0 ? saveShortcuts.front().getShortcutString().c_str() : NULL))
 			{
 				saveEvent.invoke();
 			}
@@ -155,11 +159,13 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 		}
 		if (ImGui::BeginMenu("Edit"))
 		{
-			if (ImGui::MenuItem("Undo", "CTRL+Z"))
+			auto undoShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_UNDO);
+			if (ImGui::MenuItem("Undo", undoShortcuts.size() > 0 ? undoShortcuts.front().getShortcutString().c_str() : NULL))
 			{
 				undoEvent.invoke();
 			}
-			if (ImGui::MenuItem("Redo", "CTRL+Y")) 
+			auto redoShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_REDO);
+			if (ImGui::MenuItem("Redo", redoShortcuts.size() > 0 ? redoShortcuts.front().getShortcutString().c_str() : NULL)) 
 			{
 				redoEvent.invoke();
 			}
@@ -167,6 +173,17 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 		}
         if (ImGui::BeginMenu("Preferences"))
 		{
+			ImGui::AlignTextToFramePadding();
+            ImGui::Text("Notifications");
+            ImGui::SameLine();
+            // ImGui::SetCursorPosX(styleSelectDropdownX);
+			bool notificationsEnabled = m_preferences.getNotificationsEnabled();
+            if (ImGui::Checkbox("##NotificationsEnabledCheckbox", &notificationsEnabled))
+            {
+                m_preferences.setNotificationsEnabled(notificationsEnabled);
+				preferencesChangedEvent.invoke(m_preferences);
+            }
+			ImGui::SeparatorText("Interface");
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Interface theme");
             ImGui::SameLine();
@@ -178,7 +195,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
                     bool isSelected = styleEnum == m_styleHandler->getCurrentStyle();
                     if (ImGui::Selectable(styleDefinition.name, isSelected))
                     {
-                        setGuiStyleEvent.invoke(styleEnum);
+						m_preferences.setStyle(styleEnum);
+						preferencesChangedEvent.invoke(m_preferences);
                     }
 
                     // Set the initial focus when opening the combo (scroll here)
@@ -201,7 +219,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
                     bool isSelected = fontSizeEnum == m_styleHandler->getFontSize();
                     if (ImGui::Selectable(fontSizeName, isSelected))
                     {
-                        setFontScaleEvent.invoke(fontSizeEnum);
+						m_preferences.setFontSize(fontSizeEnum);
+						preferencesChangedEvent.invoke(m_preferences);
                     }
 
                     // Set the initial focus when opening the combo (scroll here)
@@ -317,4 +336,9 @@ void MainMenuBarGui::passFileNames(const std::vector<std::string>& fileNames)
 void MainMenuBarGui::passHaveFileOpen(bool haveFileOpen)
 {
     m_haveFileOpen = haveFileOpen;
+}
+
+void MainMenuBarGui::passPreferences(const Preferences& preferences)
+{
+	m_preferences = preferences;
 }

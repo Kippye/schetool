@@ -16,14 +16,14 @@ void AutosavePopupGui::draw(Window& window, Input& input, GuiTextures& guiTextur
             gui_templates::TextWithBackground(labelSize, "Autosave file");
             gui_templates::TextWithBackground(labelSize, "%s", m_autosaveInfo.getName().c_str());
             gui_templates::TextWithBackground(labelSize, "%s", m_autosaveEditTimeString.c_str());
-            if (ImGui::Button("Open autosave", buttonSize))
+            if (ImGui::Button("Apply autosave", buttonSize))
             {
-                openAutosaveEvent.invoke();
+                applyAutosaveEvent.invoke();
                 ImGui::CloseCurrentPopup();
             }
             if (ImGui::BeginItemTooltip())
             {
-                ImGui::Text("Note: Autosaves autosave to the same file.\nRename them and remove the suffix to change this.");
+                ImGui::Text("Replace the base file with the autosave and open the file.");
                 ImGui::EndTooltip();
             }
             ImGui::NextColumn();
@@ -33,8 +33,13 @@ void AutosavePopupGui::draw(Window& window, Input& input, GuiTextures& guiTextur
             gui_templates::TextWithBackground(labelSize, "%s", m_baseEditTimeString.c_str());
             if (ImGui::Button("Open file", buttonSize))
             {
-                ignoreAutosaveOpenFileEvent.invoke();
+                deleteAutosaveEvent.invoke();
                 ImGui::CloseCurrentPopup();
+            }
+            if (ImGui::BeginItemTooltip())
+            {
+                ImGui::Text("Delete the autosave and open the base file.");
+                ImGui::EndTooltip();
             }
         ImGui::EndColumns();
 		ImGui::EndPopup();

@@ -22,6 +22,7 @@ include/generated
 
 # program directories
 schedules/
+config/
 
 # luarocks build files
 *.src.rock

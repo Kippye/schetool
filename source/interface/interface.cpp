@@ -1,4 +1,3 @@
-#include <iostream>
 #include "interface.h"
 #include "start_page_gui.h"
 #include "main_menu_bar_gui.h"
@@ -15,6 +14,11 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
 	// imgui setup
 	imGui = ImGui::CreateContext();
 	imGuiIO = &ImGui::GetIO();
+	// Disable automatically making an "imgui.ini" file in the working directory.
+	imGuiIO->IniFilename = NULL;
+    // Note that there is no actual saving rate.
+    // This is just so imgui doesn't take 5 seconds after a change before it tells me that a change needs to be saved.
+    imGuiIO->IniSavingRate = 0.1f;
 	// set up platform / renderer bindings
 	ImGui_ImplGlfw_InitForOpenGL(m_windowManager->window, true);
 	ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());
@@ -22,18 +26,28 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     m_styleHandler->loadFontSizes("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf");
 
     // Apply the default style
-    m_styleHandler->applyStyle(m_styleHandler->getDefaultStyle());
+    setStyle(m_styleHandler->getDefaultStyle());
 
 	// ADD GUIS
     addGui<StartPageGui>("StartPageGui");
-	auto mainMenuBarGui = addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler);
-    mainMenuBarGui->setGuiStyleEvent.addListener([&](GuiStyle style) { setStyle(style); });
-    mainMenuBarGui->setFontScaleEvent.addListener([&](FontSize fontScale) { m_styleHandler->setFontSize(fontScale); });
+	addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler);
     // simple popups
     addGui<AutosavePopupGui>("AutosavePopupGui");
 	#if DEBUG
 	addGui<EditHistoryGui>("EditHistoryGui");
 	#endif
+}
+
+void Interface::initEventListeners(std::shared_ptr<PreferencesIO> preferencesIO)
+{
+	if (preferencesIO)
+	{
+		preferencesIO->preferencesChangedEvent.addListener([&](Preferences preferences)
+		{
+			setStyle(preferences.getStyle());
+			m_styleHandler->setFontSize(preferences.getFontSize());
+		});
+	}
 }
 
 void Interface::setStyle(GuiStyle style)

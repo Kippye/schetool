@@ -1,19 +1,16 @@
 #pragma once
 
-#include <functional>
-#include <filesystem>
-#include <string>
-#include "event.h"
-#include "data_converter.h"
+#include "schedule_io.h"
+#include "preferences_io.h"
+#include "file_info.h"
 #include "schedule.h"
 #include "window.h"
 #include "input.h"
-#include "file_info.h"
-#include "start_page_gui.h"
-#include "schedule_gui.h"
-#include "main_menu_bar_gui.h"
-#include "autosave_popup_gui.h"
 #include "interface.h"
+#include <filesystem>
+#include <memory>
+#include <functional>
+#include <string>
 
 const unsigned int AUTOSAVE_DELAY_SECONDS = 1 * 60;
 
@@ -22,108 +19,62 @@ class IO_Handler
     private:
         Schedule* m_schedule = NULL;
         Window* m_windowManager = NULL;
-        DataConverter m_converter;
-        std::shared_ptr<StartPageGui> m_startPageGui = NULL;
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
-        std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = NULL;
-        std::shared_ptr<ScheduleGui> m_scheduleGui = NULL;
-        FileInfo m_currentFileInfo = FileInfo();
+        std::shared_ptr<ScheduleIO> m_scheduleIO = nullptr;
+        std::shared_ptr<PreferencesIO> m_preferencesIO = nullptr;
         double m_timeSinceAutosave = 0.0;
-        std::filesystem::path m_saveDir = std::filesystem::path();
-        const char* m_autosaveSuffix = "_auto";
+
+        std::function<void(FileInfo)> openFileInfoChangeListener = [&](FileInfo fileInfo)
+        {
+            m_windowManager->setTitleSuffix(std::string(" - ").append(fileInfo.getName()));
+            m_schedule->setName(fileInfo.getName());
+            m_mainMenuBarGui->passHaveFileOpen(fileInfo.empty() == false);
+        };
 
         // input listeners
-        std::function<void()> saveListener = std::function<void()>([&]()
+        std::function<void()> saveInputListener = std::function<void()>([&]()
         {
-            if (m_currentFileInfo.empty()) { return; }
-            writeSchedule(m_currentFileInfo.getName().c_str());
+            if (m_scheduleIO)
+            {
+                FileInfo currentFileInfo = m_scheduleIO->getCurrentFileInfo();
+                if (currentFileInfo.empty()) { return; }
+                m_scheduleIO->writeSchedule(currentFileInfo.getName().c_str());
+            }
         });
         // window event listeners
         std::function<void()> windowCloseListener = std::function<void()>([&]()
         {
-            closeCurrentFile();
-        });
-        // gui listeners
-        // ScheduleNameModalSubGui
-        std::function<void(std::string)> renameListener = std::function<void(std::string)>([&](std::string name)
-        {
-            if (renameCurrentFile(name))
+            if (m_scheduleIO)
             {
-                m_mainMenuBarGui->closeModal();
+                m_scheduleIO->closeCurrentFile();
             }
-        });
-        std::function<void(std::string)> createNewListener = std::function<void(std::string)>([&](std::string name)
-        {
-            closeCurrentFile();
-            if (createNewSchedule(name.c_str()))
-            {
-                m_mainMenuBarGui->closeModal();
-            }
-        });
-        // DeleteModalSubGui
-        std::function<void(std::string)> deleteListener = std::function<void(std::string)>([&](std::string name)
-        {
-            deleteSchedule(name.c_str());
-            // Modal hides itself
-        });
-        // MainMenuBarGui
-        std::function<void(std::string)> openListener = std::function<void(std::string)>([&](std::string name)
-        {
-            closeCurrentFile();
-            readSchedule(name.c_str());
-        });
-        // AutosavePopupGui
-        // NOTE: all of these assume that the most recently edited file is still an autosave
-        // TODO: handle the (rare?) case where it isn't
-        std::function<void()> openAutosaveListener = std::function<void()>([&]()
-        {
-            readSchedule(getLastEditedScheduleStemName().c_str());
-        });
-        std::function<void()> ignoreAutosaveOpenFileEvent = std::function<void()>([&]()
-        {
-            readSchedule(getFileBaseName(getLastEditedScheduleStemName().c_str()).c_str());
         });
 
-        // Chooses the most suitable save directory based on the current platform and existence of certain directories
-        std::filesystem::path getBestSaveDirPath() const;
-        bool isScheduleFilePath(const std::filesystem::path& path) const;
-        std::filesystem::path makeSchedulePathFromName(const char* name) const;
-        bool applyAutosaveToFile(const char* name);
-        void sendFileInfoUpdates();
-        void passFileNamesToGui();
-        // Cleans everything about the currently open file (clears the schedule, edit history, etc)
-        void unloadCurrentFile();
-        // Mostly just creates and applies an autosave of the file before it is unloaded by calling unloadCurrentFile().
-        void closeCurrentFile();
+        std::function<void(Preferences)> preferencesModifiedListener = [&](Preferences preferences)
+        {
+            if (m_preferencesIO)
+            {
+                m_preferencesIO->setPreferences(preferences);
+            }
+        };
+
+        std::function<void(Preferences)> preferencesLoadedListener = [&](Preferences preferences)
+        {
+            m_mainMenuBarGui->passPreferences(preferences);
+        };
+
+        // WINDOWS ONLY. Chooses the most suitable data directory based on the current platform and existence of certain directories
+        // The data dir is the base directory onto which subdirectories will be added.
+        // Usually this is either the application's install directory or the AppData/Roaming/program_name directory.
+        std::filesystem::path getWinBestDataDirPath() const;
+        // Appends the schedule save subdirectory to the best available save dir path.
+        std::filesystem::path getBestScheduleSavePath() const;
+        // Appends the configs save subdirectory to the best available data dir path.
+        std::filesystem::path getBestConfigSavePath() const;
     public:
-        const char* SCHEDULE_FILE_EXTENSION = ".blf";
-
-        Event<FileInfo> fileReadEvent;
-        Event<FileInfo> fileCreatedEvent;
-        Event<> fileUnloadEvent;
-
+        // Initialise the IO handler and the specific IO classes.
         void init(Schedule* schedule, Window* window, Input& input, Interface& interface);
-
-        bool writeSchedule(const char* name);
-        bool readSchedule(const char* name);
-        bool createNewSchedule(const char* name);
-        bool deleteSchedule(const char* name);
-        // Rename the currently open file to the provided name.
-        // Cancelled if a file with that name already exists.
-        // If the open file doesn't exist, write a file with the new name.
-        // If the open file exists, rename it to the new name.
-        bool renameCurrentFile(const std::string& newName);
-        FileInfo getCurrentFileInfo() const;
-        void openMostRecentFile();
-        bool createAutosave();
         void addToAutosaveTimer(double delta);
-        bool isAutosave(const std::string& fileName);
-        std::string getFileAutosaveName(const char* fileName);
-        std::string getFileBaseName(const char* autosaveName);
-        long long getFileEditTime(std::filesystem::path filePath);
-        TimeWrapper getFileEditTimeWrapped(std::filesystem::path filePath);
-        std::string getFileEditTimeString(std::filesystem::path filePath);
-        std::vector<std::string> getScheduleStemNames(bool includeAutosaves = true);
-        std::vector<std::string> getScheduleStemNamesSortedByEditTime(bool includeAutosaves = true);
-        std::string getLastEditedScheduleStemName();
+        std::shared_ptr<ScheduleIO> getScheduleIO();
+        std::shared_ptr<PreferencesIO> getPreferencesIO();
 };

@@ -29,10 +29,19 @@ void NotificationHandler::init()
     }
 }
 
+void NotificationHandler::initEventListeners(std::shared_ptr<PreferencesIO> preferencesIO)
+{
+    if (preferencesIO)
+    {
+        preferencesIO->preferencesChangedEvent.addListener(preferencesChangedListener);
+    }
+}
+
 bool NotificationHandler::showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec)
 {
     if (!m_implementation) { return false; }
     if (m_implementation->getIsInitialised() == false) { return false; }
+    if (!m_notificationsEnabled) { return false; }
 
     return m_implementation->showNotification(title, content, timeout_sec);
 }
@@ -41,6 +50,7 @@ bool NotificationHandler::showItemNotification(const std::string& name, const Cl
 {
     if (!m_implementation) { return false; }
     if (m_implementation->getIsInitialised() == false){ return false; }
+    if (!m_notificationsEnabled) { return false; }
     
     return m_implementation->showItemNotification(name, beginning, end, itemNotificationData);
 }

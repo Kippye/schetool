@@ -3,6 +3,7 @@
 #include <optional>
 #include <map>
 #include "blf/include/blf.hpp"
+#include "blf_base_types.h"
 #include "file_info.h"
 #include "element_base.h"
 #include "time_container.h"
@@ -12,48 +13,6 @@
 #include "weekday_container.h"
 #include "schedule_column.h"
 #include "element.h"
-
-struct BLF_Base;
-
-class ObjectDefinitions
-{
-    private:
-        std::map<std::string, const std::shared_ptr<blf::ObjectDefinition>> m_localObjectDefinitions = {};
-        blf::LocalObjectTable m_objectTable;
-    public:
-        blf::LocalObjectTable& getObjectTable();
-        const blf::LocalObjectTable& getObjectTableConst() const;
-
-        template <typename T>
-        void add(blf::LocalObjectDefinition<T>& definition)
-        {
-            static_assert(std::is_base_of_v<BLF_Base, T> == true);
-            if (m_localObjectDefinitions.contains(definition.getName()))
-            {
-                printf("ObjectDefinitions::add(definition): Tried to add duplicate object definition with name %s\n", definition.getName().getBuffer());
-                return;
-            }
-            m_localObjectDefinitions.insert({definition.getName(), std::make_shared<blf::LocalObjectDefinition<T>>(definition)});
-        }
-        template <typename T>
-        const blf::LocalObjectDefinition<T>& get()
-        {
-            static_assert(std::is_base_of_v<BLF_Base, T> == true);
-            return *std::dynamic_pointer_cast<blf::LocalObjectDefinition<T>>(m_localObjectDefinitions.at(T::getName()));
-        }
-};
-
-struct BLF_Base
-{
-    static constexpr std::string getName()
-    {
-        return "BLF_Base";
-    }
-    static void addDefinition(ObjectDefinitions& objectTable)
-    {
-        objectTable.add(objectTable.getObjectTable().define<BLF_Base>(getName()));
-    }
-};
 
 struct BLF_ClockTime : BLF_Base
 {
@@ -814,12 +773,10 @@ struct BLF_Column : BLF_Base
     }
 };
 
-template <typename T>
-concept DerivedBlfBase = std::is_base_of<BLF_Base, T>::value;
-
-class DataConverter
+class ScheduleDataConverter
 {
     private:
+        std::string m_extension = ".blf";
         ObjectDefinitions m_definitions;
         
         template <DerivedBlfBase BlfClass>
@@ -843,6 +800,8 @@ class DataConverter
             return m_definitions.get<T>();
         }
     public:
+        // Get the file extension used by the ScheduleDataConverter.
+        const std::string& getExtension() const;
         void setupObjectTable();
 
         // Adds the Column (and its elements, filters, etc to the provided DataTable), assuming that the Columns (and their elements, filters) are of the provided type.

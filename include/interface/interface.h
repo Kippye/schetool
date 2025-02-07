@@ -16,6 +16,7 @@
 #include "window.h"
 #include "input.h"
 #include "gui.h"
+#include "preferences_io.h"
 
 class Interface
 {
@@ -34,6 +35,7 @@ class Interface
 		ImGuiContext* imGui;
 
 		void init(Window*, Input*, TextureLoader&);
+        void initEventListeners(std::shared_ptr<PreferencesIO> preferencesIO);
         // Passthrough function to InterFaceStyleHandler to set and apply the current style.
         void setStyle(GuiStyle style);
         // Get the currently applied style
