@@ -71,7 +71,7 @@ class MainMenuBarGui : public Gui
 
         void renameSchedule();
         void newSchedule();
-        void displayScheduleList(GuiTextures& guiTextures); 
+        void displayScheduleList(GuiTextures& guiTextures);
     public:
         MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler);
 

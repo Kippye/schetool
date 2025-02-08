@@ -1,6 +1,7 @@
 #include "main_menu_bar_gui.h"
 #include "gui_templates.h"
 #include "gui_constants.h"
+#include "util.h"
 
 TextInputModalSubGui::TextInputModalSubGui(const char* ID, const char* popupName, const char* acceptButtonText, size_t textMaxLength, bool showCloseButton) : Gui(ID)
 {
@@ -114,6 +115,13 @@ MainMenuBarGui::MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceSt
 	addSubGui(new DeleteModalSubGui("DeleteModalSubGui"));
 }
 
+// Helper function that gets the input shortcuts for an INPUT_EVENT and turns them into a string in the format:
+// CTRL+SHIFT+X{separator}CTRL+SHIFT+Y{...}
+std::string getInputEventShortcutsString(const Input& input, INPUT_EVENT inputEvent)
+{
+    return containers::combine(Input::getShortcutStrings(input.getEventShortcuts(inputEvent)), "  ");
+}
+
 void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
 {
     if (ImGui::BeginMainMenuBar())
@@ -164,8 +172,8 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 			{
 				undoEvent.invoke();
 			}
-			auto redoShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_REDO);
-			if (ImGui::MenuItem("Redo", redoShortcuts.size() > 0 ? redoShortcuts.front().getShortcutString().c_str() : NULL)) 
+            std::string redoShortcutsString = getInputEventShortcutsString(input, INPUT_EVENT_SC_REDO);
+			if (ImGui::MenuItem("Redo", redoShortcutsString.c_str()))
 			{
 				redoEvent.invoke();
 			}

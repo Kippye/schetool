@@ -72,6 +72,17 @@ std::vector<InputShortcut> Input::getEventShortcuts(INPUT_EVENT event) const
 	return eventShortcuts;
 }
 
+std::vector<std::string> Input::getShortcutStrings(const std::vector<InputShortcut>& shortcuts)
+{
+    std::vector<std::string> shortcutStrings = {};
+
+    for (const InputShortcut& shortcut : shortcuts)
+	{
+        shortcutStrings.push_back(shortcut.getShortcutString());
+	}
+	return shortcutStrings;
+}
+
 void Input::addEventListener(INPUT_EVENT event, const std::function<void()>& listener)
 {
     if (listener)

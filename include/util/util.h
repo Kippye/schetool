@@ -27,6 +27,7 @@ class containers
 			else        
 				std::rotate(d.begin() + oldIndex, d.begin() + oldIndex + 1, d.begin() + newIndex + 1);
 		}
+        // Split a string into a vector of strings at occurances of the provided delimiter character.
 		static std::vector<std::string> split (const std::string &s, char delim) 
 		{
 			std::vector<std::string> result;
@@ -39,6 +40,24 @@ class containers
 
 			return result;
 		}
+        // Combine every string in a vector into one long string, separating each of them with the given separator.
+        static std::string combine(const std::vector<std::string>& strings, const char* separator = ",")
+        {
+            if (strings.size() == 0)
+            {
+                return "";
+            }
+
+            std::string result = strings[0];
+
+            for (size_t i = 1; i < strings.size(); i++)
+            {
+                result.append(separator);
+                result.append(strings[i]);
+            }
+
+            return result;
+        }
 };
 
 class mytime
