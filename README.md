@@ -22,7 +22,7 @@ The latest stable releases for Windows and Linux are available under [Releases](
 * TODO: Full package list
 
 > [!NOTE]
-> Currently, using the ld linker seems to cause linking errors. The CMakeLists automatically uses lld instead.
+> The lld linker is used instead of ld.
 
 > [!NOTE]
 > Builds created using MinGW do not support sending notifications.
