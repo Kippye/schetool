@@ -38,7 +38,8 @@ class ScheduleCore
         bool existsColumnAtIndex(size_t index) const;
 
         void addColumn(size_t index, const Column& column);
-        void addDefaultColumn(size_t index);
+        // Add a column with default values of the given type at the given index.
+        void addDefaultColumn(size_t index, SCHEDULE_TYPE columnType = SCH_TEXT);
         bool removeColumn(size_t column);
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column) const;

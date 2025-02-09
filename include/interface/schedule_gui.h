@@ -46,7 +46,7 @@ class ScheduleGui : public Gui
         Event<size_t, size_t, DateContainer>      setElementValueDate;
         // column add / remove
         Event<size_t> removeColumn;
-        Event<size_t> addDefaultColumn;
+        Event<size_t, SCHEDULE_TYPE> addDefaultColumn;
         // column modification
         Event<size_t, SCHEDULE_TYPE>         setColumnType;
         Event<size_t, COLUMN_SORT>           setColumnSort;

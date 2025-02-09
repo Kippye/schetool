@@ -89,7 +89,7 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
             ImGui::SameLine();
             ImGui::SetCursorPosY(ImGui::GetItemRectMin().y + ImGui::GetItemRectSize().y / 2.0f - resetButtonSize / 2.0f);
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
-            if (gui_templates::ImageButtonStyleColored("##ResetToTodayButton", (ImTextureID)guiTextures.getOrLoad("icon_reset_24px"), ImVec2(resetButtonSize, resetButtonSize)))
+            if (gui_templates::ImageButtonStyleColored("##ResetToTodayButton", guiTextures.getOrLoad("icon_reset_24px").ImID, ImVec2(resetButtonSize, resetButtonSize)))
             {
                 m_scheduleDateOverride.clear();
             }
@@ -118,10 +118,29 @@ void ScheduleGui::draw(Window& window, Input& input, GuiTextures& guiTextures)
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
         }
-		if (ImGui::Button("+", ImVec2(ADD_COLUMN_BUTTON_WIDTH, (float)(CHILD_WINDOW_HEIGHT))))
-		{
-			addDefaultColumn.invoke(m_scheduleCore.getColumnCount());
-		}
+        ImGui::Button("+", ImVec2(ADD_COLUMN_BUTTON_WIDTH, (float)(CHILD_WINDOW_HEIGHT)));
+        if (ImGui::BeginPopupContextItem("SelectAddedColumnTypeContext", ImGuiPopupFlags_MouseButtonLeft))
+        {
+            ImGui::Text("Add column");
+            float columnTypeButtonSize = 1.0f;
+            for (int colType = 0; colType < SCH_LAST; colType++)
+            {
+                float currentTextSize = gui_size_calculations::getTextButtonWidth(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType));
+                columnTypeButtonSize = std::max(columnTypeButtonSize, currentTextSize + ImGui::GetStyle().FramePadding.x * 2.0f);
+            }
+            for (int colType = 0; colType < SCH_LAST; colType++)
+            {
+                if (ImGui::Button(std::format("{}##AddedColumnTypeButton{}", schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType), colType).c_str(), ImVec2(columnTypeButtonSize, 0.0f)))
+                {
+                    addDefaultColumn.invoke(m_scheduleCore.getColumnCount(), (SCHEDULE_TYPE)colType);
+                    if (!input.buttonStates.ctrlDown)
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+            }
+            ImGui::EndPopup();
+        }
         if (addColumnButtonDisabled)
         {
             ImGui::PopItemFlag();
@@ -386,7 +405,7 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-                if (gui_templates::ImageButtonStyleColored("##RemoveColumn", (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(headerButtonSize, headerButtonSize)))
+                if (gui_templates::ImageButtonStyleColored("##RemoveColumn", guiTextures.getOrLoad("icon_remove").ImID, ImVec2(headerButtonSize, headerButtonSize)))
                 {
                     removeColumn.invoke(column);
                     ImGui::PopStyleColor(pushedColorCount);
@@ -480,7 +499,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
         }
         const float labelSize = ImGui::CalcTextSize("X").y;
         const float rowRemoveButtonSize = labelSize - (int)labelSize % 8; //+ style.FramePadding.y * 2.0f;
-        if (gui_templates::ImageButtonStyleColored(std::format("X##RemoveRow{}", row).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(rowRemoveButtonSize, rowRemoveButtonSize)))
+        if (gui_templates::ImageButtonStyleColored(std::format("X##RemoveRow{}", row).c_str(), guiTextures.getOrLoad("icon_remove").ImID, ImVec2(rowRemoveButtonSize, rowRemoveButtonSize)))
         {
             removeRow.invoke(row);
             // Return because this row can't be drawn anymore, it was removed.

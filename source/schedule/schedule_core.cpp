@@ -137,13 +137,65 @@ void ScheduleCore::addColumn(size_t index, const Column& column)
     sortColumns();
 }
 
-void ScheduleCore::addDefaultColumn(size_t index)
+void ScheduleCore::addDefaultColumn(size_t index, SCHEDULE_TYPE columnType)
 {
-    Column addedColumn = Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Text"), false);
+    Column addedColumn = Column(std::vector<ElementBase*>{}, columnType, schedule_consts::scheduleTypeNames.at(columnType), false);
 
     for (size_t i = 0; i < getRowCount(); i++)
     {
-        addedColumn.rows.push_back((ElementBase*)new Element<std::string>(SCH_TEXT, std::string(""), TimeWrapper::getCurrentTime()));
+        switch(columnType)
+        {
+            case(SCH_BOOL):
+            {
+                addedColumn.rows.push_back((ElementBase*)new Element<bool>(columnType, Element<bool>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            case(SCH_NUMBER):
+            {
+                addedColumn.rows.push_back((ElementBase*)new Element<int>(columnType, Element<int>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            case(SCH_DECIMAL):
+            {
+                addedColumn.rows.push_back((ElementBase*)new Element<double>(columnType, Element<double>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            case(SCH_TEXT):
+            {
+                addedColumn.rows.push_back((ElementBase*)new Element<std::string>(columnType, Element<std::string>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            case(SCH_SELECT):
+            { 
+                addedColumn.rows.push_back((ElementBase*)new Element<SingleSelectContainer>(columnType, Element<SingleSelectContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            case(SCH_MULTISELECT):
+            { 
+                addedColumn.rows.push_back((ElementBase*)new Element<SelectContainer>(columnType, Element<SelectContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            case(SCH_WEEKDAY):
+            { 
+                addedColumn.rows.push_back((ElementBase*)new Element<WeekdayContainer>(columnType, Element<WeekdayContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            case(SCH_TIME):
+            { 
+                addedColumn.rows.push_back((ElementBase*)new Element<TimeContainer>(columnType, Element<TimeContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            case(SCH_DATE):
+            { 
+                addedColumn.rows.push_back((ElementBase*)new Element<DateContainer>(columnType, Element<DateContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                break;
+            }
+            default:
+            {
+                std::cout << "ScheduleCore::addDefaultColumn(): Adding a Column of type: '" << columnType << "' has not been implemented!" << std::endl;
+                return;
+            }
+        }
     }
     m_schedule.insert(m_schedule.begin() + index, addedColumn);
 

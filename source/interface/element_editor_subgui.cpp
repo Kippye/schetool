@@ -211,7 +211,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
                             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
                             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-                            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeButtonSize, removeButtonSize)))
+                            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(), guiTextures.getOrLoad("icon_remove").ImID, ImVec2(removeButtonSize, removeButtonSize)))
                             {
                                 SelectOptionsModification modificationToApply = SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i);
                                 modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
@@ -469,7 +469,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
                             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
                             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-                            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), ImVec2(removeButtonSize, removeButtonSize)))
+                            if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(), guiTextures.getOrLoad("icon_remove").ImID, ImVec2(removeButtonSize, removeButtonSize)))
                             {
                                 SelectOptionsModification modificationToApply = SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i);
                                 modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);

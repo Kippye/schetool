@@ -223,9 +223,9 @@ class Schedule
             setElementValue(col, row, val);
         };
         // column add / remove
-        std::function<void(size_t)> addDefaultColumnListener = [&](size_t col)
+        std::function<void(size_t, SCHEDULE_TYPE)> addDefaultColumnListener = [&](size_t col, SCHEDULE_TYPE colType)
         {
-            addDefaultColumn(col);
+            addDefaultColumn(col, colType);
         };
         std::function<void(size_t)> removeColumnListener = [&](size_t col)
         {
@@ -293,7 +293,7 @@ class Schedule
         // COLUMNS
         size_t getColumnCount();
         void addColumn(size_t index, const Column& column, bool addToHistory = true);
-        void addDefaultColumn(size_t index, bool addToHistory = true);
+        void addDefaultColumn(size_t index, SCHEDULE_TYPE colType = SCH_TEXT, bool addToHistory = true);
         void removeColumn(size_t column, bool addToHistory = true);
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column);

@@ -190,14 +190,14 @@ void Schedule::addColumn(size_t columnIndex, const Column& column, bool addToHis
     m_scheduleEvents.columnAdded.invoke(columnIndex);
 }
 
-void Schedule::addDefaultColumn(size_t columnIndex, bool addToHistory)
+void Schedule::addDefaultColumn(size_t columnIndex, SCHEDULE_TYPE colType, bool addToHistory)
 {
-    m_core.addDefaultColumn(columnIndex);
+    size_t columnCountBefore = getColumnCount();
+    m_core.addDefaultColumn(columnIndex, colType);
 
-    // kiiinda HACK y since i'm just hoping that the core actually added a Column at the index
     if (addToHistory)
     {
-        if (columnIndex < m_core.getColumnCount())
+        if (getColumnCount() > columnCountBefore && columnIndex < m_core.getColumnCount())
         {
             m_editHistory.addEdit<ColumnEdit>(false, columnIndex, *m_core.getColumn(columnIndex));
         }

@@ -14,22 +14,6 @@ std::filesystem::path GuiTextures::getGuiTextureFolderPath() const
     return m_guiTextureFolder;
 }
 
-GLuint GuiTextures::getOrLoad(const std::string& guiRelativePath)
-{
-    GuiTextureInfo textureInfo;
-
-    if (exists(guiRelativePath, textureInfo))
-    {
-        return textureInfo.ID;
-    }
-    else
-    {
-        std::cout << std::format("GuiTextures::getOrLoad(): Texture not found at gui relative path '{}'. Returning missing texture {}", guiRelativePath.c_str(), textureInfo.ID) << std::endl;
-        // Return the missing texture if there was no other result.
-        return textureInfo.ID;
-    }
-}
-
 bool GuiTextures::exists(const std::string& guiRelativePath, GuiTextureInfo& outTexture)
 {
     // If the texture has been loaded already, give it and return true
@@ -58,4 +42,14 @@ bool GuiTextures::exists(const std::string& guiRelativePath, GuiTextureInfo& out
     // Output the missing texture if there was no other result.
     outTexture = { m_textureLoader.getMissingTexture(), (ImTextureID)(intptr_t)m_textureLoader.getMissingTexture(), 16, 16 };
     return false;
+}
+
+GuiTextureInfo GuiTextures::getOrLoad(const std::string& guiRelativePath)
+{
+    GuiTextureInfo textureInfo;
+    if (!exists(guiRelativePath, textureInfo))
+    {
+        std::cout << std::format("GuiTextures::exists(): Texture not found at gui relative path '{}'. Returning missing texture '{}'.", guiRelativePath.c_str(), textureInfo.ID) << std::endl;
+    }
+    return textureInfo;
 }

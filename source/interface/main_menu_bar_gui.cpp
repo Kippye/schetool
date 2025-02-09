@@ -317,7 +317,7 @@ void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures)
         ImGui::SameLine();
         ImGui::SetCursorScreenPos(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetItemRectMin().y));
         size_t pushedColorCount = 0;
-        if (gui_templates::ImageButtonStyleColored(std::format("##DeleteScheduleFile{}", i).c_str(), (ImTextureID)guiTextures.getOrLoad("icon_remove"), 
+        if (gui_templates::ImageButtonStyleColored(std::format("##DeleteScheduleFile{}", i).c_str(), guiTextures.getOrLoad("icon_remove").ImID, 
             ImVec2(removeButtonSize, removeButtonSize) - ImGui::GetStyle().FramePadding * 2.0f, ImVec2(), ImVec2(1,1), ImVec4(), ImGuiButtonFlags_AlignTextBaseLine))
         {
             if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui"))
