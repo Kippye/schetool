@@ -20,8 +20,13 @@ class ScheduleGui : public Gui
         bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
+        int m_cellContextColumn = -1, m_cellContextRow = -1;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
         void drawColumnHeaderContextContent(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
+        void openCellContextPopup(size_t column, size_t row);
+        void closeCellContextPopup();
+        void drawCellContextContent();
+
         void drawScheduleTable(Window& window, Input& input, GuiTextures& guiTextures);
         // Draws the contents of the table cell at the given column and row.
         // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
@@ -57,6 +62,7 @@ class ScheduleGui : public Gui
         // row modification
         Event<size_t> addRow;
         Event<size_t> removeRow;
+        Event<size_t> duplicateRow;
 
         bool isEditableElementClicked(bool isEditingDisabled) const;
 

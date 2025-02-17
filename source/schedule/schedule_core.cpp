@@ -560,6 +560,11 @@ bool ScheduleCore::existsRowAtIndex(size_t index) const
     return true;
 }
 
+void ScheduleCore::addRow()
+{
+    addRow(getRowCount());
+}
+
 void ScheduleCore::addRow(size_t index)
 {
     std::vector<ElementBase*> elementCopies = {};
@@ -645,6 +650,22 @@ bool ScheduleCore::removeRow(size_t row)
 
     sortColumns();
     return true;
+}
+
+std::optional<size_t> ScheduleCore::duplicateRow(size_t row)
+{
+    if (existsRowAtIndex(row) == false) { return std::nullopt; }
+
+    auto duplicatedRowData = getRow(row);
+    size_t prevRowCount = getRowCount();
+    addRow();
+    // The row was actually added (probably unneeded safety check)
+    if (getRowCount() == prevRowCount + 1)
+    {
+        setRow(prevRowCount, duplicatedRowData);
+        return prevRowCount;
+    }
+    return std::nullopt;
 }
 
 std::vector<ElementBase*> ScheduleCore::getRow(size_t index)

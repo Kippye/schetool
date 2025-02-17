@@ -262,6 +262,49 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
 		ImGui::CloseCurrentPopup();
 }
 
+void ScheduleGui::openCellContextPopup(size_t column, size_t row)
+{
+    m_cellContextColumn = column;
+    m_cellContextRow = row;
+    // ImGui::PushID(m_cellContextColumn);
+    ImGui::OpenPopup("ScheduleTableCellContextPopup", ImGuiPopupFlags_NoOpenOverExistingPopup);
+    // ImGui::PopID();
+}
+
+void ScheduleGui::closeCellContextPopup()
+{
+    m_cellContextColumn = -1;
+    m_cellContextRow = -1;
+}
+
+void ScheduleGui::drawCellContextContent()
+{
+    if (m_cellContextColumn < 0 || m_cellContextRow < 0)
+    {
+        closeCellContextPopup();
+        return;
+    }
+    // ImGui::PushID(m_cellContextColumn);
+    if (ImGui::BeginPopup("ScheduleTableCellContextPopup"))
+    {
+        if (m_cellContextColumn < m_scheduleCore.getColumnCount())
+        {
+            if (ImGui::Button("Duplicate row"))
+            {
+                duplicateRow.invoke((size_t)m_cellContextRow);
+            }
+        }
+
+        if (ImGui::Button("Close"))
+        {
+            ImGui::CloseCurrentPopup();
+            closeCellContextPopup();
+        }
+        ImGui::EndPopup();
+    }
+    // ImGui::PopID();
+}
+
 void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& guiTextures)
 {
     ImGuiStyle& style = ImGui::GetStyle();
@@ -474,6 +517,15 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
                     ImGui::EndTable();
                     return;
                 }
+                if (ImGui::TableGetColumnFlags(column) & ImGuiTableColumnFlags_IsHovered && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::IsMouseReleased(1))
+                {
+                    openCellContextPopup(column, row);
+                }
+                
+                if (column == m_cellContextColumn && row == m_cellContextRow)
+                {
+                    drawCellContextContent();
+                }
             }
             // END OF for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount(); unsortedRow++)
             do_not_draw_row:
@@ -530,6 +582,11 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
         {
             ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(gui_color_calculations::getTableCellHighlightColor(style.Colors[ImGuiCol_WindowBg], style.Colors[ImGuiCol_Text])));
         }
+    }
+    // Hightlight the table row that currently has its context menu open
+    if (m_cellContextRow == row && ImGui::IsPopupOpen("ScheduleTableCellContextPopup"))
+    {
+        ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetColorU32(gui_color_calculations::getTableCellHighlightColor(style.Colors[ImGuiCol_WindowBg], style.Colors[ImGuiCol_Text])));
     }
 
     switch(columnType)

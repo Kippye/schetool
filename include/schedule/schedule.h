@@ -254,13 +254,17 @@ class Schedule
             resetColumn(col, addToHistory);
         };
         // row modification
-        std::function<void(size_t)> addRowListener = [&](size_t col)
+        std::function<void(size_t)> addRowListener = [&](size_t row)
         {
-            addRow(col);
+            addRow(row);
         };
-        std::function<void(size_t)> removeRowListener = [&](size_t col)
+        std::function<void(size_t)> removeRowListener = [&](size_t row)
         {
-            removeRow(col);
+            removeRow(row);
+        };
+        std::function<void(size_t)> duplicateRowListener = [&](size_t row)
+        {
+            duplicateRow(row);
         };
 
     public:
@@ -358,8 +362,11 @@ class Schedule
 
         // ROWS
         size_t getRowCount();
+        // Add a row at the end of the schedule
+        void addRow(bool addToHistory = true);
         void addRow(size_t index, bool addToHistory = true);
         void removeRow(size_t index, bool addToHistory = true);
+        void duplicateRow(size_t index, bool addToHistory = true);
         // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
         std::vector<ElementBase*> getRow(size_t index);
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.

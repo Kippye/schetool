@@ -58,6 +58,7 @@ void Schedule::init(Input& input, Interface& interface)
 
         m_scheduleGui->addRow.addListener(addRowListener);
         m_scheduleGui->removeRow.addListener(removeRowListener);
+        m_scheduleGui->duplicateRow.addListener(duplicateRowListener);
     }
     if (auto mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui"))
     {
@@ -443,6 +444,11 @@ size_t Schedule::getRowCount()
     return m_core.getRowCount();
 }
 
+void Schedule::addRow(bool addToHistory)
+{
+    addRow(m_core.getRowCount(), addToHistory);
+}
+
 void Schedule::addRow(size_t rowIndex, bool addToHistory)
 {
     m_core.addRow(rowIndex);
@@ -476,6 +482,19 @@ void Schedule::removeRow(size_t rowIndex, bool addToHistory)
     for (size_t i = 0; i < originalRowCopies.size(); i++)
     {
         delete originalRowCopies[i];
+    }
+}
+
+void Schedule::duplicateRow(size_t rowIndex, bool addToHistory)
+{
+    auto duplicateRowIndex = m_core.duplicateRow(rowIndex);
+
+    if (duplicateRowIndex.has_value())
+    {
+        if (addToHistory)
+        {
+            m_editHistory.addEdit<RowEdit>(false, duplicateRowIndex.value(), m_core.getRow(duplicateRowIndex.value()));
+        }
     }
 }
 

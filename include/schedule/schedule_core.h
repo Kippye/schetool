@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 #include "filter_rule.h"
 #include "schedule_column.h"
 #include "schedule_constants.h"
@@ -103,8 +104,13 @@ class ScheduleCore
         size_t getRowCount() const;
         bool existsRowAtIndex(size_t index) const;
 
+        // Add a row at the end of the schedule
+        void addRow();
         void addRow(size_t index);
         bool removeRow(size_t index);
+        // Duplicate the row at the given index, return the index of the created row (in the future, this may either be next to the target row or the last row index).
+        // If duplicating the row failed for whatever reason, std::nullopt is returned.
+        std::optional<size_t> duplicateRow(size_t index);
         // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
         std::vector<ElementBase*> getRow(size_t index);
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
