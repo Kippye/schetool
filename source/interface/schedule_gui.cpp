@@ -684,23 +684,12 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
             auto selection = value.getSelection();
             const std::vector<SelectOption>& options = m_scheduleCore.getColumn(column)->selectOptions.getOptions();
 
-            // Temporary error patching
             if (selection.has_value())
             {
-                // error fix attempt: there should never be selection indices that are >= optionNames.size()
-                if (selection.value() >= options.size())
+                if (gui_templates::SelectOptionButton(options[selection.value()], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonMiddle))
                 {
-                    printf("ScheduleGui::draw(): SingleSelect at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection for this frame.\n", column, row, selection.value(), options.size());
-                    selection.reset();
-                }
-            }
-
-            if (selection.has_value())
-            {
-                if (gui_templates::SelectOptionButton(options[selection.value()], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
-                {
-                    // Right clicking erases the option - bonus feature
-                    if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                    // Middle clicking erases the option - bonus feature
+                    if (columnEditDisabled == false) // && ImGui::IsMouseReleased(ImGuiButtonFlags_MouseButtonMiddle))
                     {
                         value.setSelected(selection.value(), false);
                         setElementValueSelect.invoke(column, row, value); 
@@ -738,23 +727,6 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
 
             std::vector<int> selectionIndices = {};
 
-            // error fix attempt: there should never be more selected that options
-            while (selection.size() > options.size())
-            {
-                printf("ScheduleGui::draw: Select at (%zu; %zu) has more indices in selection (%zu) than existing options (%zu). Removing selection indices until valid!\n", column, row, selection.size(), options.size());
-                selection.erase(--selection.end());
-            }
-
-            for (size_t s: selection)
-            {
-                // error fix attempt: there should never be selection indices that are >= optionNames.size()
-                if (s >= options.size())
-                {
-                    printf("ScheduleGui::draw: Select at (%zu; %zu) index (%zu) >= optionNames.size() (%zu). Removing index from selection.\n", column, row, s, options.size());
-                    selection.erase(s);
-                }
-            }
-
             size_t selectedCount = selection.size();
 
             for (size_t s: selection)
@@ -783,11 +755,13 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
                 {
                     currentRowWidth = 0;
                 }
-                if (gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                if (gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{};{}", column, row).c_str(), ImVec2(0, 0), ImGuiButtonFlags_MouseButtonMiddle))
                 {
-                    // right clicking erases the option - bonus feature
-                    if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                    printf("Clicked\n");
+                    // Middle clicking erases the option - bonus feature
+                    if (columnEditDisabled == false)// && ImGui::IsMouseReleased(ImGuiButtonFlags_MouseButtonMiddle))
                     {
+                        printf("Released\n");
                         value.setSelected(selectionIndices[i], false);
                         setElementValueSelect.invoke(column, row, value); 
                     }
@@ -856,10 +830,10 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
                 {
                     currentRowWidth = 0;
                 }
-                if (gui_templates::SelectOptionButton(SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]}, std::format("##{};{}", column, row).c_str(), ImVec2(), ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                if (gui_templates::SelectOptionButton(SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]}, std::format("##{};{}", column, row).c_str(), ImVec2(), ImGuiButtonFlags_MouseButtonMiddle))
                 {
-                    // right clicking erases the option - bonus feature
-                    if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+                    // Middle clicking erases the option - bonus feature
+                    if (columnEditDisabled == false) // && ImGui::IsMouseReleased(ImGuiButtonFlags_MouseButtonMiddle))
                     {
                         value.setSelected(selectionIndices[i], false);
                         setElementValueSelect.invoke(column, row, value); 
