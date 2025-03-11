@@ -24,10 +24,8 @@ include/generated
 schedules/
 config/
 
-# luarocks build files
-*.src.rock
-*.zip
-*.tar.gz
+# shortcuts
+*.lnk
 
 # Object files
 *.o
@@ -83,3 +81,4 @@ imgui.ini
 # Packages
 *.zip
 *.msi
+*.tar.gz

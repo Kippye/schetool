@@ -20,11 +20,15 @@ class ScheduleGui : public Gui
         bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
+        int m_rowContextRow = -1;
         int m_cellContextColumn = -1, m_cellContextRow = -1;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
         void drawColumnHeaderContextContent(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
+        void openRowContextPopup(size_t row);
         void openCellContextPopup(size_t column, size_t row);
+        void closeRowContextPopup();
         void closeCellContextPopup();
+        void drawRowContextContent();
         void drawCellContextContent();
 
         void drawScheduleTable(Window& window, Input& input, GuiTextures& guiTextures);

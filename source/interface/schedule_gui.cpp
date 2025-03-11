@@ -262,19 +262,58 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
 		ImGui::CloseCurrentPopup();
 }
 
+void ScheduleGui::openRowContextPopup(size_t row)
+{
+    m_rowContextRow = row;
+    ImGui::OpenPopup("ScheduleTableRowContextPopup", ImGuiPopupFlags_NoOpenOverExistingPopup);
+}
+
 void ScheduleGui::openCellContextPopup(size_t column, size_t row)
 {
     m_cellContextColumn = column;
     m_cellContextRow = row;
-    // ImGui::PushID(m_cellContextColumn);
     ImGui::OpenPopup("ScheduleTableCellContextPopup", ImGuiPopupFlags_NoOpenOverExistingPopup);
-    // ImGui::PopID();
+}
+
+void ScheduleGui::closeRowContextPopup()
+{
+    m_rowContextRow = -1;
 }
 
 void ScheduleGui::closeCellContextPopup()
 {
     m_cellContextColumn = -1;
     m_cellContextRow = -1;
+}
+
+void ScheduleGui::drawRowContextContent()
+{
+    if (m_rowContextRow < 0)
+    {
+        closeRowContextPopup();
+        return;
+    }
+    if (ImGui::BeginPopup("ScheduleTableRowContextPopup", ImGuiWindowFlags_NoMove))
+    {
+        if (m_rowContextRow < m_scheduleCore.getRowCount())
+        {
+            if (ImGui::Button("Remove row")) 
+            {
+                removeRow.invoke(m_rowContextRow);
+            }
+            if (ImGui::Button("Duplicate row"))
+            {
+                duplicateRow.invoke((size_t)m_rowContextRow);
+            }
+        }
+
+        if (ImGui::Button("Close"))
+        {
+            ImGui::CloseCurrentPopup();
+            closeRowContextPopup();
+        }
+        ImGui::EndPopup();
+    }
 }
 
 void ScheduleGui::drawCellContextContent()
@@ -284,15 +323,11 @@ void ScheduleGui::drawCellContextContent()
         closeCellContextPopup();
         return;
     }
-    // ImGui::PushID(m_cellContextColumn);
-    if (ImGui::BeginPopup("ScheduleTableCellContextPopup"))
+    if (ImGui::BeginPopup("ScheduleTableCellContextPopup", ImGuiWindowFlags_NoMove))
     {
         if (m_cellContextColumn < m_scheduleCore.getColumnCount())
         {
-            if (ImGui::Button("Duplicate row"))
-            {
-                duplicateRow.invoke((size_t)m_cellContextRow);
-            }
+            ImGui::Text("%s", std::format("Cell (Column: {}; Row: {})", m_cellContextColumn, m_cellContextRow).c_str());
         }
 
         if (ImGui::Button("Close"))
@@ -302,7 +337,6 @@ void ScheduleGui::drawCellContextContent()
         }
         ImGui::EndPopup();
     }
-    // ImGui::PopID();
 }
 
 void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& guiTextures)
@@ -507,6 +541,11 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
                 }
             }
 
+            if (row == m_rowContextRow) 
+            {
+                drawRowContextContent();
+            }
+
             ImGui::TableNextRow();
             for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++)
             {
@@ -538,27 +577,39 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
 bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& window, Input& input, GuiTextures& guiTextures)
 {
     ImGuiStyle& style = ImGui::GetStyle();
-    bool removeRowButtonHovered = false;
-    // Row remove buttons are displayed in the first displayed column
+    bool rowMenuButtonHovered = false;
+    // Row button is displayed in the first column
     if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0)
     {
         size_t pushedStyleVars = 0;
-        // HIDE the row remove button unless the row is hovered
+        // HIDE the row button unless the row is hovered
         if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex())
         {
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
             pushedStyleVars++;
         }
         const float labelSize = ImGui::CalcTextSize("X").y;
-        const float rowRemoveButtonSize = labelSize - (int)labelSize % 8; //+ style.FramePadding.y * 2.0f;
-        if (gui_templates::ImageButtonStyleColored(std::format("X##RemoveRow{}", row).c_str(), guiTextures.getOrLoad("icon_remove").ImID, ImVec2(rowRemoveButtonSize, rowRemoveButtonSize)))
+        const float rowMenuButtonSize = labelSize - (int)labelSize % 8; //+ style.FramePadding.y * 2.0f;
+        const bool showAltButton = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
+        if (gui_templates::ImageButtonStyleColored(std::format("##RowMenu{}", row).c_str(), 
+            (showAltButton ? guiTextures.getOrLoad("icon_remove") : guiTextures.getOrLoad("icon_row_menu")).ImID, 
+            ImVec2(rowMenuButtonSize, rowMenuButtonSize)))
         {
-            removeRow.invoke(row);
-            // Return because this row can't be drawn anymore, it was removed.
-            return false;
+            if (showAltButton) 
+            {
+                removeRow.invoke(row);
+                // Return because this row can't be drawn anymore, it was removed.
+                return false;    
+            }
+            else
+            {
+                // TODO: Start row drag & drop
+                openRowContextPopup(row);
+            }
         }
+
         ImGui::PopStyleVar(pushedStyleVars);
-        removeRowButtonHovered = ImGui::IsItemHovered();
+        rowMenuButtonHovered = ImGui::IsItemHovered();
         ImGui::SameLine();
     }
 
@@ -654,7 +705,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
             // element to display the value as a wrapped, multiline text
             ImGui::TextWrapped("%s", displayedValue.c_str());
             // Open text editor if clicked while hovering the current column & row
-            if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
+            if (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)
             {
                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                 {
@@ -696,7 +747,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
                     }
                 }
             }
-            if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
+            if (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)
             {
                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                 {
@@ -771,7 +822,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
                     ? ImGui::GetItemRectSize().x 
                     : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
             }
-            if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
+            if (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)
             {
                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                 {
@@ -845,7 +896,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
                     : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
             }
             // left clicking anywhere in the cell opens the editor
-            if (isEditableElementClicked(columnEditDisabled) && removeRowButtonHovered == false)
+            if (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)
             {
                 if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui"))
                 {
