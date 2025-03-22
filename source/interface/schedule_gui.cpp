@@ -533,8 +533,8 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
                 // Check if the row's Element passes every FilterGroup in this Column
                 bool passesAllFilters = m_scheduleCore.getColumn(column)->checkElementPassesFilters(row, 
                     m_scheduleDateOverride // Pass override date as current (Uses TimeWrapper::getCurrentTime() if it's empty)
-                );  
-                // fails to pass, don't show this row                            
+                );
+                // fails to pass, don't show this row
                 if (passesAllFilters == false)
                 {
                     goto do_not_draw_row;
@@ -595,17 +595,22 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
             (showAltButton ? guiTextures.getOrLoad("icon_remove") : guiTextures.getOrLoad("icon_row_menu")).ImID, 
             ImVec2(rowMenuButtonSize, rowMenuButtonSize)))
         {
-            if (showAltButton) 
+            if (showAltButton)
             {
                 removeRow.invoke(row);
                 // Return because this row can't be drawn anymore, it was removed.
-                return false;    
+                return false;
             }
             else
             {
                 // TODO: Start row drag & drop
                 openRowContextPopup(row);
             }
+        }
+        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) 
+        {
+            printf("DRAGGING %zu\n", row);
+            m_draggedRow = row;
         }
 
         ImGui::PopStyleVar(pushedStyleVars);

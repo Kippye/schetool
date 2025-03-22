@@ -22,6 +22,7 @@ class ScheduleGui : public Gui
         unsigned int m_filterGroupListColumn = 0;
         int m_rowContextRow = -1;
         int m_cellContextColumn = -1, m_cellContextRow = -1;
+        int m_draggedRow = -1;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
         void drawColumnHeaderContextContent(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
         void openRowContextPopup(size_t row);
