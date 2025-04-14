@@ -5,17 +5,22 @@
 #include "filter_constants.h"
 #include "element_base.h"
 
-class FilterGroup
-{
+class FilterGroup {
     private:
         std::vector<Filter> m_filters = {};
         std::string m_name = "Filter Group";
         bool m_enabled = true;
         LogicalOperator m_operator = LogicalOperatorEnum::Or;
+
     public:
         FilterGroup() = default;
-        FilterGroup(const std::vector<Filter>& filters, const std::string& name = "Filter Group", LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::Or, bool enabled = true);
-        bool checkPasses(const ElementBase* element, const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(), bool useDefaultValue = false) const;
+        FilterGroup(const std::vector<Filter>& filters,
+                    const std::string& name = "Filter Group",
+                    LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::Or,
+                    bool enabled = true);
+        bool checkPasses(const ElementBase* element,
+                         const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(),
+                         bool useDefaultValue = false) const;
         bool hasFilterAt(size_t index) const;
 
         Filter& getFilter(size_t index);

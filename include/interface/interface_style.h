@@ -9,19 +9,18 @@
 // Each style has a name (used only for display in the style selector or elsewhere) and a base style.
 // When applying a style, the base style will be applied first and then the deriving style's modifications added on top.
 // The apply function applies the style when called.
-struct GuiStyleDefinition
-{
-    const char* name;
-    std::optional<GuiStyle> baseStyle;
-    std::function<void()> applyFunction;
+struct GuiStyleDefinition {
+        const char* name;
+        std::optional<GuiStyle> baseStyle;
+        std::function<void()> applyFunction;
 };
 
-class InterfaceStyleHandler
-{
+class InterfaceStyleHandler {
     private:
         static std::map<FontSize, ImFont*> loadedFonts;
         GuiStyle m_currentStyle;
         static FontSize currentFontSize;
+
     public:
         static const std::map<GuiStyle, GuiStyleDefinition> styleDefinitions;
         void loadFontSizes(const char* fontPath);

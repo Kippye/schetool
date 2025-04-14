@@ -4,10 +4,9 @@
 
 #include "date_container.h"
 
-TEST_CASE("DateContainer")
-{
+TEST_CASE("DateContainer") {
     DateContainer dateContainer;
-    // TODO: Basic tests 
+    // TODO: Basic tests
 
     /* Test functions:
         getString()
@@ -16,8 +15,7 @@ TEST_CASE("DateContainer")
         operator--
     */
 
-    SECTION("Increment operators")
-    {
+    SECTION("Increment operators") {
         dateContainer.getTime().setYearUTC(2000);
         dateContainer.getTime().setMonthUTC(4);
         dateContainer.getTime().setMonthDayUTC(29);
@@ -30,40 +28,34 @@ TEST_CASE("DateContainer")
         CHECK((--dateContainer).getTime().getMonthDay() == 30);
     }
 
-    SECTION("Function getString() as relative")
-    {
+    SECTION("Function getString() as relative") {
         dateContainer = DateContainer::getCurrentSystemDate();
 
         CHECK(dateContainer.getString(true) == "Today");
 
-        dateContainer++;  
+        dateContainer++;
         CHECK(dateContainer.getString(true) == "Tomorrow");
-         
+
         dateContainer++;
         CHECK(dateContainer.getString(true) == "in 2 days");
     }
 
-    SECTION("Function getDayDifference()")
-    {
+    SECTION("Function getDayDifference()") {
         dateContainer = DateContainer::getCurrentSystemDate();
         DateContainer other = DateContainer::getCurrentSystemDate();
 
-        SECTION("dateContainer < other")
-        {
+        SECTION("dateContainer < other") {
             // dateContainer > other
             int diff = 35;
-            for (int i = 0; i < diff; i++)
-            {
+            for (int i = 0; i < diff; i++) {
                 other++;
             }
             CHECK(dateContainer.getDayDifference(other) == -diff);
         }
-        SECTION("dateContainer > other")
-        {
+        SECTION("dateContainer > other") {
             // dateContainer < other
             int diff = 16;
-            for (int i = 0; i < diff; i++)
-            {
+            for (int i = 0; i < diff; i++) {
                 other--;
             }
             CHECK(dateContainer.getDayDifference(other) == diff);

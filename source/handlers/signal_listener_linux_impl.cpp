@@ -8,13 +8,11 @@
 
 std::atomic<int> gLastFrameSignal = -1;
 
-extern "C" void signalHandler(int signum)
-{
+extern "C" void signalHandler(int signum) {
     gLastFrameSignal.store(signum);
 };
 
-bool SignalListenerLinuxImpl::init()
-{
+bool SignalListenerLinuxImpl::init() {
     // Listen to signals
     signal(SIGTERM, signalHandler);
     signal(SIGSEGV, signalHandler);
@@ -25,34 +23,32 @@ bool SignalListenerLinuxImpl::init()
     return m_haveValidListener;
 }
 
-Signal SignalListenerLinuxImpl::getLastSignal() const
-{
+Signal SignalListenerLinuxImpl::getLastSignal() const {
     Signal lastSignal = Signal::None;
 
-    switch(gLastFrameSignal)
-    {
+    switch (gLastFrameSignal) {
         case SIGTERM:
-        lastSignal = Signal::Close;
-        printf("getLastSignal(): Returning Close\n");
-        break;
+            lastSignal = Signal::Close;
+            printf("getLastSignal(): Returning Close\n");
+            break;
 
         case SIGSEGV:
-        lastSignal = Signal::Segfault;
-        printf("getLastSignal(): Returning Segfault\n");
-        break;
+            lastSignal = Signal::Segfault;
+            printf("getLastSignal(): Returning Segfault\n");
+            break;
 
         case SIGINT:
-        lastSignal = Signal::Interrupt;
-        printf("getLastSignal(): Returning Interrupt\n");
-        break;
+            lastSignal = Signal::Interrupt;
+            printf("getLastSignal(): Returning Interrupt\n");
+            break;
 
         case SIGABRT:
-        lastSignal = Signal::Abort;
-        printf("getLastSignal(): Returning Abort\n");
-        break;
+            lastSignal = Signal::Abort;
+            printf("getLastSignal(): Returning Abort\n");
+            break;
     }
 
-    gLastFrameSignal.store(-1) ;
+    gLastFrameSignal.store(-1);
     return lastSignal;
 }
 #endif

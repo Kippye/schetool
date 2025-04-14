@@ -3,8 +3,7 @@
 #include <set>
 #include <cstddef>
 
-enum OPTION_MODIFICATION
-{
+enum OPTION_MODIFICATION {
     OPTION_MODIFICATION_ADD,
     OPTION_MODIFICATION_REMOVE,
     OPTION_MODIFICATION_MOVE,
@@ -16,57 +15,50 @@ enum OPTION_MODIFICATION
 };
 
 // Argument struct to pass limited info from SelectOptionsModification
-struct SelectOptionUpdateInfo
-{
-    OPTION_MODIFICATION type = OPTION_MODIFICATION_ADD;
-    size_t firstIndex = 0;
-    size_t secondIndex = 0;
+struct SelectOptionUpdateInfo {
+        OPTION_MODIFICATION type = OPTION_MODIFICATION_ADD;
+        size_t firstIndex = 0;
+        size_t secondIndex = 0;
 };
 
-struct SelectContainer
-{
+struct SelectContainer {
     protected:
         std::set<size_t> m_selection = {};
         // updated from SelectOptions each update
         size_t m_optionCount = 0;
+
     public:
         // NOTE: Still passes if the SelectContainers are associated with different SelectOptions
-        bool operator==(const SelectContainer& other)
-        {
+        bool operator==(const SelectContainer& other) {
             return m_selection == other.getSelection();
         }
 
-        bool operator!=(const SelectContainer& other)
-        {
+        bool operator!=(const SelectContainer& other) {
             return m_selection != other.getSelection();
         }
 
-        friend bool operator<(const SelectContainer& left, const SelectContainer& right)
-        {
-            if (left.m_selection.size() == 0)
-            {
-                if (right.m_selection.size() > 0) { return true; }
-                else { return false; }
+        friend bool operator<(const SelectContainer& left, const SelectContainer& right) {
+            if (left.m_selection.size() == 0) {
+                if (right.m_selection.size() > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
-            if (right.m_selection.size() == 0)
-            {
+            if (right.m_selection.size() == 0) {
                 return false;
             }
 
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
 
-            for (auto& s: left.m_selection)
-            {
-                if (leftForemostOption == 1000 || s < leftForemostOption)
-                {
+            for (auto& s : left.m_selection) {
+                if (leftForemostOption == 1000 || s < leftForemostOption) {
                     leftForemostOption = s;
                 }
             }
-            for (auto& s: right.m_selection)
-            {
-                if (rightForemostOption == 1000 || s < rightForemostOption)
-                {
+            for (auto& s : right.m_selection) {
+                if (rightForemostOption == 1000 || s < rightForemostOption) {
                     rightForemostOption = s;
                 }
             }
@@ -74,32 +66,28 @@ struct SelectContainer
             return leftForemostOption < rightForemostOption;
         }
 
-        friend bool operator>(const SelectContainer& left, const SelectContainer& right)
-        {
-            if (right.m_selection.size() == 0)
-            {
-                if (left.m_selection.size() > 0) { return true; }
-                else { return false; }
+        friend bool operator>(const SelectContainer& left, const SelectContainer& right) {
+            if (right.m_selection.size() == 0) {
+                if (left.m_selection.size() > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
-            if (left.m_selection.size() == 0)
-            {
+            if (left.m_selection.size() == 0) {
                 return false;
             }
 
             size_t leftForemostOption = 1000;
             size_t rightForemostOption = 1000;
 
-            for (auto& s: left.m_selection)
-            {
-                if (leftForemostOption == 1000 || s < leftForemostOption)
-                {
+            for (auto& s : left.m_selection) {
+                if (leftForemostOption == 1000 || s < leftForemostOption) {
                     leftForemostOption = s;
                 }
             }
-            for (auto& s: right.m_selection)
-            {
-                if (rightForemostOption == 1000 || s < rightForemostOption)
-                {
+            for (auto& s : right.m_selection) {
+                if (rightForemostOption == 1000 || s < rightForemostOption) {
                     rightForemostOption = s;
                 }
             }

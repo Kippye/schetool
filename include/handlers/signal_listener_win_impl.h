@@ -5,11 +5,10 @@
 // Signal handler implementation for Windows.
 // Uses a Console Control Handler to catch console signals.
 // Uses a Subclass Procedure for other signals. This might cause performance issues since it's an extra step on the way to GLFW rendering.
-class SignalListenerWinImpl : public SignalListenerImpl
-{
+class SignalListenerWinImpl : public SignalListenerImpl {
     public:
-        SignalListenerWinImpl(Window& window) : SignalListenerImpl(window)
-        {}
+        SignalListenerWinImpl(Window& window) : SignalListenerImpl(window) {
+        }
         // Set up the signal listener.
         bool init() override;
         // Get the last signal and clear it.

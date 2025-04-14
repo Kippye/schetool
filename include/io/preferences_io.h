@@ -7,9 +7,9 @@
 
 class IO_Handler;
 
-class PreferencesIO
-{
-    friend class IO_Handler;
+class PreferencesIO {
+        friend class IO_Handler;
+
     private:
         Preferences m_preferences = Preferences::getDefault();
         PreferencesDataConverter m_converter;
@@ -20,6 +20,7 @@ class PreferencesIO
         // Hence why it's a private function.
         // Otherwise, this could easily cause a sort of event loop.
         void setPreferences(const Preferences& preferences);
+
     public:
         // Invoked when the current preferences are modified by anything.
         Event<Preferences> preferencesChangedEvent;

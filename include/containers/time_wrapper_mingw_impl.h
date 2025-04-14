@@ -19,8 +19,7 @@ using namespace std::chrono;
 
 // Expects the time zone to be the same as in getTimeZoneOffsetMinutesUTC().
 // Expects the time provided to have the base UTC offset applied.
-inline minutes getDaylightSavingsOffsetMinutes(const local_time<seconds>& localStdTime, int timezoneIndex = -1)
-{
+inline minutes getDaylightSavingsOffsetMinutes(const local_time<seconds>& localStdTime, int timezoneIndex = -1) {
     DYNAMIC_TIME_ZONE_INFORMATION* dynTimezoneInfo = NULL;
     // DYNAMIC_TIME_ZONE_INFORMATION tzi{};
 
@@ -39,16 +38,15 @@ inline minutes getDaylightSavingsOffsetMinutes(const local_time<seconds>& localS
     // Silly check to see if the weekday is the last of its kind in the month
     auto nextWeekDays = localDays + days{7};
     bool isLastWeekdayIndex = year_month_weekday(nextWeekDays).index() == 1;
-    
+
     // Convert to valid type
     WORD year = (int)date.year();
 
     TIME_ZONE_INFORMATION timeZoneInfo;
-    GetTimeZoneInformationForYear((USHORT)year, dynTimezoneInfo, &timeZoneInfo); 
+    GetTimeZoneInformationForYear((USHORT)year, dynTimezoneInfo, &timeZoneInfo);
 
     // The time zone never uses DST, just return the standard bias (should be 0)
-    if (timeZoneInfo.DaylightDate.wMonth == 0)
-    {
+    if (timeZoneInfo.DaylightDate.wMonth == 0) {
         return minutes{(int)timeZoneInfo.StandardBias};
     }
 
@@ -61,38 +59,47 @@ inline minutes getDaylightSavingsOffsetMinutes(const local_time<seconds>& localS
 
     // Set last weekday index to 5 like the tz info struct does
     weekdayIndex = isLastWeekdayIndex == true ? 5 : weekdayIndex;
-    
-    bool isDST = false;  
+
+    bool isDST = false;
 
     // Daylight start date comes before standard
-    if (timeZoneInfo.DaylightDate.wMonth < timeZoneInfo.StandardDate.wMonth)
-    {
-        isDST = (month > timeZoneInfo.DaylightDate.wMonth || (month == timeZoneInfo.DaylightDate.wMonth 
-        && (weekdayIndex > timeZoneInfo.DaylightDate.wDay || (weekdayIndex == timeZoneInfo.DaylightDate.wDay
-        && (weekday > timeZoneInfo.DaylightDate.wDayOfWeek || (weekday == timeZoneInfo.DaylightDate.wDayOfWeek
-        && (hours > timeZoneInfo.DaylightDate.wHour || (hours == timeZoneInfo.DaylightDate.wHour
-        && mins > timeZoneInfo.DaylightDate.wMinute))))))))
-            &&
-        (month < timeZoneInfo.StandardDate.wMonth || (month == timeZoneInfo.StandardDate.wMonth 
-        && (weekdayIndex < timeZoneInfo.StandardDate.wDay || (weekdayIndex == timeZoneInfo.StandardDate.wDay
-        && (weekday < timeZoneInfo.StandardDate.wDayOfWeek || (weekday == timeZoneInfo.StandardDate.wDayOfWeek
-        && (hours < timeZoneInfo.StandardDate.wHour || (hours == timeZoneInfo.StandardDate.wHour
-        && mins < timeZoneInfo.StandardDate.wMinute))))))));
+    if (timeZoneInfo.DaylightDate.wMonth < timeZoneInfo.StandardDate.wMonth) {
+        isDST = (month > timeZoneInfo.DaylightDate.wMonth ||
+                 (month == timeZoneInfo.DaylightDate.wMonth &&
+                  (weekdayIndex > timeZoneInfo.DaylightDate.wDay ||
+                   (weekdayIndex == timeZoneInfo.DaylightDate.wDay &&
+                    (weekday > timeZoneInfo.DaylightDate.wDayOfWeek ||
+                     (weekday == timeZoneInfo.DaylightDate.wDayOfWeek &&
+                      (hours > timeZoneInfo.DaylightDate.wHour ||
+                       (hours == timeZoneInfo.DaylightDate.wHour && mins > timeZoneInfo.DaylightDate.wMinute)))))))) &&
+            (month < timeZoneInfo.StandardDate.wMonth ||
+             (month == timeZoneInfo.StandardDate.wMonth &&
+              (weekdayIndex < timeZoneInfo.StandardDate.wDay ||
+               (weekdayIndex == timeZoneInfo.StandardDate.wDay &&
+                (weekday < timeZoneInfo.StandardDate.wDayOfWeek ||
+                 (weekday == timeZoneInfo.StandardDate.wDayOfWeek &&
+                  (hours < timeZoneInfo.StandardDate.wHour ||
+                   (hours == timeZoneInfo.StandardDate.wHour && mins < timeZoneInfo.StandardDate.wMinute))))))));
     }
     // Daylight start date comes after standard - the period between standard and daylight, isDST == FALSE
     else
     {
-        isDST = !((month > timeZoneInfo.StandardDate.wMonth || (month == timeZoneInfo.StandardDate.wMonth 
-        && (weekdayIndex > timeZoneInfo.StandardDate.wDay || (weekdayIndex == timeZoneInfo.StandardDate.wDay
-        && (weekday > timeZoneInfo.StandardDate.wDayOfWeek || (weekday == timeZoneInfo.StandardDate.wDayOfWeek
-        && (hours > timeZoneInfo.StandardDate.wHour || (hours == timeZoneInfo.StandardDate.wHour
-        && mins > timeZoneInfo.StandardDate.wMinute))))))))
-            &&
-        (month < timeZoneInfo.DaylightDate.wMonth || (month == timeZoneInfo.DaylightDate.wMonth 
-        && (weekdayIndex < timeZoneInfo.DaylightDate.wDay || (weekdayIndex == timeZoneInfo.DaylightDate.wDay
-        && (weekday < timeZoneInfo.DaylightDate.wDayOfWeek || (weekday == timeZoneInfo.DaylightDate.wDayOfWeek
-        && (hours < timeZoneInfo.DaylightDate.wHour || (hours == timeZoneInfo.DaylightDate.wHour
-        && mins < timeZoneInfo.DaylightDate.wMinute)))))))));
+        isDST = !((month > timeZoneInfo.StandardDate.wMonth ||
+                   (month == timeZoneInfo.StandardDate.wMonth &&
+                    (weekdayIndex > timeZoneInfo.StandardDate.wDay ||
+                     (weekdayIndex == timeZoneInfo.StandardDate.wDay &&
+                      (weekday > timeZoneInfo.StandardDate.wDayOfWeek ||
+                       (weekday == timeZoneInfo.StandardDate.wDayOfWeek &&
+                        (hours > timeZoneInfo.StandardDate.wHour ||
+                         (hours == timeZoneInfo.StandardDate.wHour && mins > timeZoneInfo.StandardDate.wMinute)))))))) &&
+                  (month < timeZoneInfo.DaylightDate.wMonth ||
+                   (month == timeZoneInfo.DaylightDate.wMonth &&
+                    (weekdayIndex < timeZoneInfo.DaylightDate.wDay ||
+                     (weekdayIndex == timeZoneInfo.DaylightDate.wDay &&
+                      (weekday < timeZoneInfo.DaylightDate.wDayOfWeek ||
+                       (weekday == timeZoneInfo.DaylightDate.wDayOfWeek &&
+                        (hours < timeZoneInfo.DaylightDate.wHour ||
+                         (hours == timeZoneInfo.DaylightDate.wHour && mins < timeZoneInfo.DaylightDate.wMinute)))))))));
     }
 
     // std::cout << "INPUT TIME" << std::endl;
@@ -119,13 +126,12 @@ inline minutes getDaylightSavingsOffsetMinutes(const local_time<seconds>& localS
     // std::cout << timeZoneInfo.StandardDate.wHour << ":";
     // std::cout << timeZoneInfo.StandardDate.wMinute << std::endl;
     // std::cout << timeZoneInfo.StandardBias << std::endl;
-    
-    return isDST ? minutes{-timeZoneInfo.DaylightBias} : minutes{-timeZoneInfo.StandardBias}; 
+
+    return isDST ? minutes{-timeZoneInfo.DaylightBias} : minutes{-timeZoneInfo.StandardBias};
 }
 
 // Get the base offset from UTC
-inline minutes getTimeZoneOffsetFromUTC(int year, int timezoneIndex = -1)
-{
+inline minutes getTimeZoneOffsetFromUTC(int year, int timezoneIndex = -1) {
     DYNAMIC_TIME_ZONE_INFORMATION* dynTimezoneInfo = NULL;
     // DYNAMIC_TIME_ZONE_INFORMATION tzi{};
 
@@ -145,8 +151,7 @@ inline minutes getTimeZoneOffsetFromUTC(int year, int timezoneIndex = -1)
 
 // Apply the current UTC and DST offsets for the (current) time zone.
 // Returns the total offset applied in minutes.
-inline minutes applyLocalTimeOffsetFromUTC(local_time<seconds>& utcTime, int timezoneIndex = -1)
-{
+inline minutes applyLocalTimeOffsetFromUTC(local_time<seconds>& utcTime, int timezoneIndex = -1) {
     auto localDays = floor<days>(utcTime);
     year_month_day date = year_month_day(localDays);
     minutes utcOffsetMins = getTimeZoneOffsetFromUTC((int)date.year(), timezoneIndex);

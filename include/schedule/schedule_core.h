@@ -11,8 +11,7 @@
 #include "weekday_container.h"
 #include "select_options.h"
 
-class ScheduleCore
-{
+class ScheduleCore {
     private:
         std::vector<Column> m_schedule = {};
         ColumnSortComparison m_columnSortComparison;
@@ -70,27 +69,39 @@ class ScheduleCore
         bool removeColumnFilter(size_t column, size_t groupIndex, size_t filterIndex);
 
         template <typename T>
-        bool addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filterRule)
-        {
-            if (existsColumnAtIndex(column) == false) { return false; }
+        bool addColumnFilterRule(
+            size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filterRule) {
+            if (existsColumnAtIndex(column) == false) {
+                return false;
+            }
 
             getMutableColumn(column)->addFilterRule(groupIndex, filterIndex, ruleIndex, filterRule);
             return true;
         }
         // Use the count as the rule index
         template <typename T>
-        bool addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule)
-        {
-            if (existsColumnAtIndex(column) == false) { return false; }
-            if (getColumn(column)->hasFilterAt(groupIndex, filterIndex) == false) { return false; }
+        bool addColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, const FilterRule<T>& filterRule) {
+            if (existsColumnAtIndex(column) == false) {
+                return false;
+            }
+            if (getColumn(column)->hasFilterAt(groupIndex, filterIndex) == false) {
+                return false;
+            }
 
-            return addColumnFilterRule(column, groupIndex, filterIndex, getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount(), filterRule);
+            return addColumnFilterRule(
+                column,
+                groupIndex,
+                filterIndex,
+                getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount(),
+                filterRule);
         }
         template <typename T>
-        bool replaceColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filterRule)
-        {
-            if (existsColumnAtIndex(column) == false) { return false; }
-            
+        bool replaceColumnFilterRule(
+            size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, const FilterRule<T>& filterRule) {
+            if (existsColumnAtIndex(column) == false) {
+                return false;
+            }
+
             getMutableColumn(column)->replaceFilterRule(groupIndex, filterIndex, ruleIndex, filterRule);
             return true;
         }
@@ -120,24 +131,20 @@ class ScheduleCore
         // ELEMENTS.
         // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
         template <typename T>
-        T& getValue(ElementBase* element)
-        {
+        T& getValue(ElementBase* element) {
             return ((Element<T>*)element)->getValueReference();
         }
         // Get the value of the element as Element<T> as a CONST ref. NOTE: You MUST provide the correct type.
         template <typename T>
-        const T& getValueConstRef(const ElementBase* element) const
-        {
+        const T& getValueConstRef(const ElementBase* element) const {
             return ((Element<T>*)element)->getConstValueReference();
         }
 
         // Get a pointer to the ElementBase at column; row
-        ElementBase* getElement(size_t column, size_t row)
-        {
+        ElementBase* getElement(size_t column, size_t row) {
             Column* mutableColumn = getMutableColumn(column);
 
-            if (mutableColumn == nullptr || mutableColumn->hasElement(row) == false)
-            {
+            if (mutableColumn == nullptr || mutableColumn->hasElement(row) == false) {
                 printf("ScheduleCore::getElement could not get element at %zu; %zu\n", column, row);
                 return nullptr;
             }
@@ -145,12 +152,10 @@ class ScheduleCore
             return mutableColumn->getElement(row);
         }
         // Get a pointer to the ElementBase at column; row
-        const ElementBase* getElementConst(size_t column, size_t row) const
-        {
+        const ElementBase* getElementConst(size_t column, size_t row) const {
             const Column* col = getColumn(column);
 
-            if (col == nullptr || col->hasElement(row) == false)
-            {
+            if (col == nullptr || col->hasElement(row) == false) {
                 printf("ScheduleCore::getElementConst could not get element at %zu; %zu\n", column, row);
                 return nullptr;
             }
@@ -160,12 +165,10 @@ class ScheduleCore
 
         // Simple function that gets an ElementBase* at column; row and casts it to Element<T>*. In the future, this might check that the returned type is actually correct.
         template <typename T>
-        Element<T>* getElementAsSpecial(size_t column, size_t row)
-        {
+        Element<T>* getElementAsSpecial(size_t column, size_t row) {
             ElementBase* element = getElement(column, row);
 
-            if (element == nullptr)
-            {
+            if (element == nullptr) {
                 printf("ScheduleCore::getElementAsSpecial could not get element at %zu; %zu\n", column, row);
                 return nullptr;
             }
@@ -177,66 +180,55 @@ class ScheduleCore
         // NOTE: If the types match, a copy is performed.
         // If the types do not match, the target element pointer is replaced by the value pointer!
         // NOTE: Currently, does not add to the edit history
-        bool setElement(size_t column, size_t row, ElementBase* other, bool resort = true)
-        {
-            if (getElement(column, row) == nullptr)
-            {
+        bool setElement(size_t column, size_t row, ElementBase* other, bool resort = true) {
+            if (getElement(column, row) == nullptr) {
                 printf("ScheduleCore::setElement failed to set element at %zu; %zu - element does not exist\n", column, row);
                 return false;
             }
 
             // IF the provided Element fits the column's type, set the target Element's value directly
-            if (getColumn(column)->type == other->getType())
-            {
-                switch(other->getType())
-                {
-                    case(SCH_BOOL):
-                    {
+            if (getColumn(column)->type == other->getType()) {
+                switch (other->getType()) {
+                    case (SCH_BOOL): {
                         getElementAsSpecial<bool>(column, row)->setValue(((Element<bool>*)other)->getValue());
                         break;
                     }
-                    case(SCH_NUMBER):
-                    {
+                    case (SCH_NUMBER): {
                         getElementAsSpecial<int>(column, row)->setValue(((Element<int>*)other)->getValue());
                         break;
                     }
-                    case(SCH_DECIMAL):
-                    {
+                    case (SCH_DECIMAL): {
                         getElementAsSpecial<double>(column, row)->setValue(((Element<double>*)other)->getValue());
                         break;
                     }
-                    case(SCH_TEXT):
-                    {
+                    case (SCH_TEXT): {
                         getElementAsSpecial<std::string>(column, row)->setValue(((Element<std::string>*)other)->getValue());
                         break;
                     }
-                    case(SCH_SELECT):
-                    {
-                        getElementAsSpecial<SingleSelectContainer>(column, row)->setValue(((Element<SingleSelectContainer>*)other)->getValue());
+                    case (SCH_SELECT): {
+                        getElementAsSpecial<SingleSelectContainer>(column, row)
+                            ->setValue(((Element<SingleSelectContainer>*)other)->getValue());
                         break;
                     }
-                    case(SCH_MULTISELECT):
-                    {
-                        getElementAsSpecial<SelectContainer>(column, row)->setValue(((Element<SelectContainer>*)other)->getValue());
+                    case (SCH_MULTISELECT): {
+                        getElementAsSpecial<SelectContainer>(column, row)
+                            ->setValue(((Element<SelectContainer>*)other)->getValue());
                         break;
                     }
-                    case(SCH_WEEKDAY):
-                    {
-                        getElementAsSpecial<WeekdayContainer>(column, row)->setValue(((Element<WeekdayContainer>*)other)->getValue());
+                    case (SCH_WEEKDAY): {
+                        getElementAsSpecial<WeekdayContainer>(column, row)
+                            ->setValue(((Element<WeekdayContainer>*)other)->getValue());
                         break;
                     }
-                    case(SCH_TIME):
-                    {
+                    case (SCH_TIME): {
                         getElementAsSpecial<TimeContainer>(column, row)->setValue(((Element<TimeContainer>*)other)->getValue());
                         break;
                     }
-                    case(SCH_DATE):
-                    {
+                    case (SCH_DATE): {
                         getElementAsSpecial<DateContainer>(column, row)->setValue(((Element<DateContainer>*)other)->getValue());
                         break;
                     }
-                    default:
-                    {
+                    default: {
                         printf("ScheduleCore::setElement has not been implemented for Element type %d\n", other->getType());
                     }
                 }
@@ -249,8 +241,7 @@ class ScheduleCore
                 getMutableColumn(column)->rows[row] = other;
             }
 
-            if (resort)
-            {
+            if (resort) {
                 sortColumns();
             }
             return true;
@@ -258,65 +249,57 @@ class ScheduleCore
 
         // Shortcut for getting the value of an Element at column; row
         template <typename T>
-        T& getElementValue(size_t column, size_t row)
-        {
+        T& getElementValue(size_t column, size_t row) {
             const Column* elementColumn = getColumn(column);
-            if (elementColumn == nullptr || elementColumn->hasElement(row) == false)
-            {
+            if (elementColumn == nullptr || elementColumn->hasElement(row) == false) {
                 printf("ScheduleCore::getElementValue could not return value at %zu; %zu\n", column, row);
-                return *(new T()); // memory leak ON PURPOSE
+                return *(new T());  // memory leak ON PURPOSE
             }
             return getValue<T>(elementColumn->rows[row]);
         }
         // Shortcut for getting the value of an Element at column; row as a CONST reference
         template <typename T>
-        const T& getElementValueConstRef(size_t column, size_t row) const
-        {
+        const T& getElementValueConstRef(size_t column, size_t row) const {
             const Column* elementColumn = getColumn(column);
-            if (elementColumn == nullptr || elementColumn->hasElement(row) == false)
-            {
+            if (elementColumn == nullptr || elementColumn->hasElement(row) == false) {
                 printf("ScheduleCore::getElementValueConstRef could not return value at %zu; %zu\n", column, row);
-                return *(new T()); // memory leak ON PURPOSE
+                return *(new T());  // memory leak ON PURPOSE
             }
             return getValueConstRef<T>(elementColumn->rows[row]);
         }
 
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
         template <typename T>
-        bool setElementValue(size_t column, size_t row, const T& value, bool resort = true)
-        {
+        bool setElementValue(size_t column, size_t row, const T& value, bool resort = true) {
             ElementBase* element = getElement(column, row);
 
-            if (element == nullptr)
-            {
-                printf("ScheduleCore::setElementValue failed to set element at %zu; %zu - element does not exist\n", column, row);
+            if (element == nullptr) {
+                printf(
+                    "ScheduleCore::setElementValue failed to set element at %zu; %zu - element does not exist\n", column, row);
                 return false;
             }
 
             ((Element<T>*)element)->setValue(value);
 
             ScheduleColumnFlags columnFlags = getColumn(column)->flags;
-            if (columnFlags & ScheduleColumnFlags_Start)
-            {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)->setValue(
-                    getElementAsSpecial<TimeContainer>(column, row)->getValue() 
-                    + getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)->getValue());
-            }
-            else if (columnFlags & ScheduleColumnFlags_Duration)
-            {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)->setValue(
-                    getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue() 
-                    + getElementAsSpecial<TimeContainer>(column, row)->getValue());
-            }
-            else if (columnFlags & ScheduleColumnFlags_End)
-            {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)->setValue(
-                    getElementAsSpecial<TimeContainer>(column, row)->getValue()
-                    - getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue());
+            if (columnFlags & ScheduleColumnFlags_Start) {
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)
+                    ->setValue(getElementAsSpecial<TimeContainer>(column, row)->getValue() +
+                               getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)
+                                   ->getValue());
+            } else if (columnFlags & ScheduleColumnFlags_Duration) {
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)
+                    ->setValue(
+                        getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue() +
+                        getElementAsSpecial<TimeContainer>(column, row)->getValue());
+            } else if (columnFlags & ScheduleColumnFlags_End) {
+                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)
+                    ->setValue(
+                        getElementAsSpecial<TimeContainer>(column, row)->getValue() -
+                        getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue());
             }
 
-            if (resort)
-            {
+            if (resort) {
                 sortColumns();
             }
             return true;

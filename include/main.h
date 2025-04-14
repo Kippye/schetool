@@ -15,27 +15,26 @@
 #include <libnotify/notify.h>
 #endif
 
-class Program
-{
-	public:
-		Window windowManager;
-		TextureLoader textureLoader;
-		IO_Handler ioHandler;
-		Render render;
-		Input input;
-		Interface programInterface;
-		Schedule schedule;
+class Program {
+    public:
+        Window windowManager;
+        TextureLoader textureLoader;
+        IO_Handler ioHandler;
+        Render render;
+        Input input;
+        Interface programInterface;
+        Schedule schedule;
         TimeHandler timeHandler;
         SignalListener signalListener;
-		NotificationHandler notificationHandler;
-		#ifdef SCHETOOL_LINUX
-		GMainContext* gContext = nullptr;
-		GMainLoop* notifyLoop = nullptr;
-		#endif
+        NotificationHandler notificationHandler;
+#ifdef SCHETOOL_LINUX
+        GMainContext* gContext = nullptr;
+        GMainLoop* notifyLoop = nullptr;
+#endif
 
-		static bool quitProgram;
+        static bool quitProgram;
 
-		Program();
+        Program();
         void handleSignal(Signal signal);
-		void loop();
+        void loop();
 };

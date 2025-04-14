@@ -5,8 +5,7 @@
 #include "time_wrapper.h"
 #include "time_handler.h"
 
-TEST_CASE("TimeHandler")
-{
+TEST_CASE("TimeHandler") {
     IO_Handler ioHandler;
     Schedule schedule;
     NotificationHandler notificationHandler;
@@ -19,8 +18,7 @@ TEST_CASE("TimeHandler")
     schedule.setColumnResetOption(schedule.getColumnCount() - 1, ColumnResetOption::Monthly, false);
     schedule.addRow(0, false);
 
-    for (size_t i = 0; i < schedule.getColumnCount(); i++)
-    {
+    for (size_t i = 0; i < schedule.getColumnCount(); i++) {
         schedule.setElementValue(i, 0, true);
     }
 
@@ -29,8 +27,7 @@ TEST_CASE("TimeHandler")
 
     TimeWrapper::testCurrentTimeOverride.clear();
 
-    SECTION("Same date - no resets")
-    {
+    SECTION("Same date - no resets") {
         TimeWrapper::testCurrentTimeOverride = TimeWrapper(DateWrapper(2012, 6, 15));
         timeHandler.applyResetsSinceEditTime(TimeWrapper::testCurrentTimeOverride);
         timeHandler.timeTick();
@@ -39,8 +36,7 @@ TEST_CASE("TimeHandler")
         CHECK(schedule.getElementValue<bool>(2, 0) == true);
     }
 
-    SECTION("Different day - daily resets")
-    {
+    SECTION("Different day - daily resets") {
         TimeWrapper editTime = TimeWrapper(2016, 7, 4);
         TimeWrapper::testCurrentTimeOverride = editTime;
         TimeWrapper::testCurrentTimeOverride.addDays(1);
@@ -51,12 +47,10 @@ TEST_CASE("TimeHandler")
         CHECK(schedule.getElementValue<bool>(2, 0) == true);
     }
 
-    SECTION("Different week - weekly resets")
-    {
+    SECTION("Different week - weekly resets") {
         TimeWrapper editTime = TimeWrapper::getCurrentTime();
         TimeWrapper::testCurrentTimeOverride = editTime;
-        for (size_t i = 0; i < 8 - editTime.getWeekday(); i++)
-        {
+        for (size_t i = 0; i < 8 - editTime.getWeekday(); i++) {
             TimeWrapper::testCurrentTimeOverride.addDays(1);
         }
         timeHandler.applyResetsSinceEditTime(editTime);
@@ -66,8 +60,7 @@ TEST_CASE("TimeHandler")
         CHECK(schedule.getElementValue<bool>(2, 0) == true);
     }
 
-    SECTION("Different month - monthly resets")
-    {
+    SECTION("Different month - monthly resets") {
         TimeWrapper editTime = TimeWrapper(2024, 8, 7);
         TimeWrapper::testCurrentTimeOverride = editTime;
         TimeWrapper::testCurrentTimeOverride.addMonths(1);
@@ -78,8 +71,7 @@ TEST_CASE("TimeHandler")
         CHECK(schedule.getElementValue<bool>(2, 0) == false);
     }
 
-    SECTION("Error case: Previous time's month day is more recent than current - nothing happens")
-    {
+    SECTION("Error case: Previous time's month day is more recent than current - nothing happens") {
         TimeWrapper editTime = TimeWrapper::getCurrentTime();
         editTime.addDays(1);
         timeHandler.applyResetsSinceEditTime(editTime);
@@ -89,8 +81,7 @@ TEST_CASE("TimeHandler")
         CHECK(schedule.getElementValue<bool>(2, 0) == true);
     }
 
-    SECTION("Error case: Previous time's month is more recent than current - nothing happens")
-    {
+    SECTION("Error case: Previous time's month is more recent than current - nothing happens") {
         TimeWrapper editTime = TimeWrapper::getCurrentTime();
         editTime.addMonths(1);
         timeHandler.applyResetsSinceEditTime(editTime);

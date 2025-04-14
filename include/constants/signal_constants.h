@@ -1,7 +1,6 @@
 #pragma once
 
-enum class Signal
-{
+enum class Signal {
     None,
     Interrupt,
     Close,

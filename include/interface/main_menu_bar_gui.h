@@ -7,49 +7,53 @@
 #include "window.h"
 #include "input.h"
 
-class TextInputModalSubGui : public Gui
-{
+class TextInputModalSubGui : public Gui {
     private:
         std::string m_textBuffer = "";
         size_t m_textMaxLength;
         const char* m_popupName;
         std::string m_acceptButtonText;
         bool m_showCloseButton;
-    public:
-        TextInputModalSubGui(const char* ID, const char* popupName = "Text input", const char* acceptButtonText = "Accept", size_t textMaxLength = 48, bool showCloseButton = true);
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override; 
+    public:
+        TextInputModalSubGui(const char* ID,
+                             const char* popupName = "Text input",
+                             const char* acceptButtonText = "Accept",
+                             size_t textMaxLength = 48,
+                             bool showCloseButton = true);
+
+        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         void open();
         virtual void invokeEvent(const std::string& text);
 };
 
-class NewNameModalSubGui : public TextInputModalSubGui
-{
+class NewNameModalSubGui : public TextInputModalSubGui {
     public:
-        NewNameModalSubGui(const char* ID) : TextInputModalSubGui(ID, "Enter name", "Create schedule") {}
+        NewNameModalSubGui(const char* ID) : TextInputModalSubGui(ID, "Enter name", "Create schedule") {
+        }
 
         Event<std::string> createNewScheduleEvent;
 
         void invokeEvent(const std::string& text) override;
 };
 
-class RenameModalSubGui : public TextInputModalSubGui
-{
+class RenameModalSubGui : public TextInputModalSubGui {
     public:
-        RenameModalSubGui(const char* ID) : TextInputModalSubGui(ID, "Enter new name") {}
+        RenameModalSubGui(const char* ID) : TextInputModalSubGui(ID, "Enter new name") {
+        }
 
         Event<std::string> renameScheduleEvent;
-        
+
         void invokeEvent(const std::string& text) override;
 };
 
-class DeleteModalSubGui : public Gui
-{
+class DeleteModalSubGui : public Gui {
     private:
         std::string m_deleteConfirmationScheduleName = "";
 
     public:
-        DeleteModalSubGui(const char* ID) : Gui(ID) {}
+        DeleteModalSubGui(const char* ID) : Gui(ID) {
+        }
 
         Event<std::string> deleteScheduleEvent;
 
@@ -57,8 +61,7 @@ class DeleteModalSubGui : public Gui
         void setAffectedScheduleName(const std::string& name);
 };
 
-class MainMenuBarGui : public Gui
-{
+class MainMenuBarGui : public Gui {
     private:
         float m_height = 0.0f;
         bool m_openNewNameModal = false;
@@ -72,6 +75,7 @@ class MainMenuBarGui : public Gui
         void renameSchedule();
         void newSchedule();
         void displayScheduleList(GuiTextures& guiTextures);
+
     public:
         MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler);
 

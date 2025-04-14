@@ -7,21 +7,21 @@
 #include "input.h"
 #include "main_menu_bar_gui.h"
 
-class StartPageNewNameModalSubGui : public TextInputModalSubGui
-{
+class StartPageNewNameModalSubGui : public TextInputModalSubGui {
     public:
-        StartPageNewNameModalSubGui(const char* ID) : TextInputModalSubGui(ID, "Enter name   ", "Create schedule") {}
+        StartPageNewNameModalSubGui(const char* ID) : TextInputModalSubGui(ID, "Enter name   ", "Create schedule") {
+        }
 
         Event<std::string> createNewScheduleEvent;
 
         void invokeEvent(const std::string& text) override;
 };
 
-class StartPageGui : public Gui
-{
+class StartPageGui : public Gui {
     private:
         std::vector<std::string> m_fileNames = {};
         bool m_openScheduleNameModal = false;
+
     public:
         StartPageGui(const char* ID);
 

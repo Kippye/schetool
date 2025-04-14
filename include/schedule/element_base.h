@@ -2,12 +2,12 @@
 #include "time_wrapper.h"
 #include "general_constants.h"
 
-class ElementBase
-{
+class ElementBase {
     protected:
         SCHEDULE_TYPE m_type;
         TimeWrapper m_creationTime;
         TimeWrapper m_editTime;
+
     public:
         ElementBase();
         ElementBase(SCHEDULE_TYPE type, const TimeWrapper& creationTime = TimeWrapper::getCurrentTime());

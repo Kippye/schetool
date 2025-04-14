@@ -4,56 +4,50 @@
 #include "blf_base_types.h"
 #include "preferences.h"
 
-struct BLF_Preferences : BLF_Base
-{
-	static constexpr std::string getName()
-	{
-		return "BLF_Preferences";
-	}
+struct BLF_Preferences : BLF_Base {
+        static constexpr std::string getName() {
+            return "BLF_Preferences";
+        }
 
-    int style;
-    int fontSize;
-    bool notificationsEnabled;
+        int style;
+        int fontSize;
+        bool notificationsEnabled;
 
-	BLF_Preferences() : style(0), fontSize(0), notificationsEnabled(false) 
-	{}
-	BLF_Preferences(const Preferences& preferences) : 
-        style((int)preferences.getStyle()), 
-        fontSize((int)preferences.getFontSize()), 
-        notificationsEnabled(preferences.getNotificationsEnabled())
-	{}
+        BLF_Preferences() : style(0), fontSize(0), notificationsEnabled(false) {
+        }
+        BLF_Preferences(const Preferences& preferences)
+            : style((int)preferences.getStyle()),
+              fontSize((int)preferences.getFontSize()),
+              notificationsEnabled(preferences.getNotificationsEnabled()) {
+        }
 
-	Preferences getPreferences() const
-	{
-		return Preferences((GuiStyle)style, (FontSize)fontSize, notificationsEnabled);
-	}
+        Preferences getPreferences() const {
+            return Preferences((GuiStyle)style, (FontSize)fontSize, notificationsEnabled);
+        }
 
-	static void addDefinition(ObjectDefinitions& definitions)
-	{
-		definitions.add(definitions.getObjectTable().define<BLF_Preferences>(getName(),
-			blf::arg("style", &BLF_Preferences::style),
-			blf::arg("fontSize", &BLF_Preferences::fontSize),
-            blf::arg("notificationsEnabled", &BLF_Preferences::notificationsEnabled)
-		));
-	}
+        static void addDefinition(ObjectDefinitions& definitions) {
+            definitions.add(definitions.getObjectTable().define<BLF_Preferences>(
+                getName(),
+                blf::arg("style", &BLF_Preferences::style),
+                blf::arg("fontSize", &BLF_Preferences::fontSize),
+                blf::arg("notificationsEnabled", &BLF_Preferences::notificationsEnabled)));
+        }
 };
 
-class PreferencesDataConverter
-{
+class PreferencesDataConverter {
     private:
         std::string m_extension = ".blf";
         ObjectDefinitions m_definitions;
-        
+
         template <DerivedBlfBase BlfClass>
-        void addObjectDefinition()
-        {
+        void addObjectDefinition() {
             BlfClass::addDefinition(m_definitions);
         }
         template <typename T>
-        const blf::LocalObjectDefinition<T>& getObjectDefinition()
-        {
+        const blf::LocalObjectDefinition<T>& getObjectDefinition() {
             return m_definitions.get<T>();
         }
+
     public:
         // Get the file extension used by the ScheduleDataConverter.
         const std::string& getExtension() const;

@@ -11,8 +11,7 @@
 #include "schedule_core.h"
 #include "schedule_column.h"
 
-class ScheduleGui : public Gui
-{
+class ScheduleGui : public Gui {
     private:
         const ScheduleCore& m_scheduleCore;
         const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
@@ -37,30 +36,34 @@ class ScheduleGui : public Gui
         // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
         bool drawTableCellContents(size_t column, size_t row, Window& window, Input& input, GuiTextures& guiTextures);
         template <typename T>
-        T getElementValue(size_t column, size_t row, bool useDefaultValue) const
-        {
-            return useDefaultValue == true ? Element<T>::getDefaultValue() : m_scheduleCore.getElementValueConstRef<T>(column, row);
+        T getElementValue(size_t column, size_t row, bool useDefaultValue) const {
+            return useDefaultValue == true ? Element<T>::getDefaultValue()
+                                           : m_scheduleCore.getElementValueConstRef<T>(column, row);
         }
+
     public:
-        ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents, const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui);
+        ScheduleGui(const char* ID,
+                    const ScheduleCore& scheduleCore,
+                    ScheduleEvents& scheduleEvents,
+                    const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui);
 
         // Events
         // setElementValue(column, row, value)
-        Event<size_t, size_t, bool>                      setElementValueBool;
-        Event<size_t, size_t, int>                       setElementValueNumber;
-        Event<size_t, size_t, double>                    setElementValueDecimal;
-        Event<size_t, size_t, std::string>        setElementValueText;
-        Event<size_t, size_t, SelectContainer>    setElementValueSelect;
-        Event<size_t, size_t, WeekdayContainer>    setElementValueWeekday;
-        Event<size_t, size_t, TimeContainer>      setElementValueTime;
-        Event<size_t, size_t, DateContainer>      setElementValueDate;
+        Event<size_t, size_t, bool> setElementValueBool;
+        Event<size_t, size_t, int> setElementValueNumber;
+        Event<size_t, size_t, double> setElementValueDecimal;
+        Event<size_t, size_t, std::string> setElementValueText;
+        Event<size_t, size_t, SelectContainer> setElementValueSelect;
+        Event<size_t, size_t, WeekdayContainer> setElementValueWeekday;
+        Event<size_t, size_t, TimeContainer> setElementValueTime;
+        Event<size_t, size_t, DateContainer> setElementValueDate;
         // column add / remove
         Event<size_t> removeColumn;
         Event<size_t, SCHEDULE_TYPE> addDefaultColumn;
         // column modification
-        Event<size_t, SCHEDULE_TYPE>         setColumnType;
-        Event<size_t, COLUMN_SORT>           setColumnSort;
-        Event<size_t, std::string>    setColumnName;
+        Event<size_t, SCHEDULE_TYPE> setColumnType;
+        Event<size_t, COLUMN_SORT> setColumnSort;
+        Event<size_t, std::string> setColumnName;
         Event<size_t, ColumnResetOption> setColumnResetOption;
         // entire column modification
         Event<size_t, bool> resetColumn;

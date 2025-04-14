@@ -3,21 +3,17 @@
 using namespace blf;
 using namespace blf::file;
 
-const std::string& PreferencesDataConverter::getExtension() const
-{
+const std::string& PreferencesDataConverter::getExtension() const {
     return m_extension;
 }
 
-void PreferencesDataConverter::setupObjectTable()
-{
+void PreferencesDataConverter::setupObjectTable() {
     addObjectDefinition<BLF_Base>();
     addObjectDefinition<BLF_Preferences>();
 }
 
-bool PreferencesDataConverter::isValidPreferencesFile(const char* path) const
-{
-    try
-    {
+bool PreferencesDataConverter::isValidPreferencesFile(const char* path) const {
+    try {
         // Try to load the file
         FileReadStream stream(path);
         File file = File::fromData(stream);
@@ -27,14 +23,13 @@ bool PreferencesDataConverter::isValidPreferencesFile(const char* path) const
     }
     // The file is not valid BLF or some other I/O error occurred, catch error and return false
     // OR Some error occurred, probably due to a mismatch in the object tables, return false
-    catch(std::exception& e)
+    catch (std::exception& e)
     {
         return false;
     }
 }
 
-int PreferencesDataConverter::writePreferences(const char* path, const Preferences& preferences)
-{
+int PreferencesDataConverter::writePreferences(const char* path, const Preferences& preferences) {
     FileWriteStream stream(path);
 
     DataTable data;
@@ -48,8 +43,7 @@ int PreferencesDataConverter::writePreferences(const char* path, const Preferenc
     return 0;
 }
 
-std::optional<Preferences> PreferencesDataConverter::readPreferences(const char* path)
-{
+std::optional<Preferences> PreferencesDataConverter::readPreferences(const char* path) {
     FileReadStream stream(path);
 
     auto file = File::fromData(stream);

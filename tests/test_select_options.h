@@ -4,20 +4,16 @@
 
 #include "select_options.h"
 
-TEST_CASE("SelectOptionsModification")
-{
-    SECTION("Equality comparison operators")
-    {
-        SECTION("Basic fields")
-        {
+TEST_CASE("SelectOptionsModification") {
+    SECTION("Equality comparison operators") {
+        SECTION("Basic fields") {
             SelectOptionsModification modA = SelectOptionsModification(OPTION_MODIFICATION_RENAME).firstIndex(6).name("ABC");
             SelectOptionsModification modB = SelectOptionsModification(OPTION_MODIFICATION_RENAME).firstIndex(6).name("ABC");
             CHECK(modA == modB);
             modA.color(SelectColor_Blue);
             CHECK(modA != modB);
         }
-        SECTION("Options")
-        {
+        SECTION("Options") {
             // neither mod has options
             SelectOptionsModification modA = SelectOptionsModification(OPTION_MODIFICATION_ADD).firstIndex(6);
             SelectOptionsModification modB = SelectOptionsModification(OPTION_MODIFICATION_ADD).firstIndex(6);
@@ -34,7 +30,6 @@ TEST_CASE("SelectOptionsModification")
         }
     }
 }
-TEST_CASE("SelectOptions")
-{
+TEST_CASE("SelectOptions") {
     // TODO ...
 }

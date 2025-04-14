@@ -9,8 +9,7 @@
 #include "element_base.h"
 #include "schedule_core.h"
 
-class ElementEditorSubGui : public Gui
-{
+class ElementEditorSubGui : public Gui {
     private:
         const ScheduleCore& m_scheduleCore;
         SCHEDULE_TYPE m_editedType;
@@ -20,7 +19,7 @@ class ElementEditorSubGui : public Gui
         // Drag and drop option reordering
         std::string m_draggedOptionID = "";
         bool m_hasOptionBeenDragged = false;
-        
+
         int m_editorColumn = -1;
         int m_editorRow = -1;
         unsigned int m_viewedYear = 0;
@@ -39,9 +38,10 @@ class ElementEditorSubGui : public Gui
 
         // Select option color chooser: index of the select option being modified
         size_t m_colorChooserOptionIndex = 0;
-        
+
         ImRect m_avoidRect;
         ImVec2 m_textInputBoxSize = ImVec2(0, 0);
+
     public:
         ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore);
 
@@ -54,55 +54,45 @@ class ElementEditorSubGui : public Gui
         // NOTE: Sets m_madeEdits = false
         void open(size_t column, size_t row, SCHEDULE_TYPE type, const ImRect& avoidRect);
         void setTextInputBoxSize(ImVec2 size);
-        void setEditorValue(const std::string& value)
-        {
+        void setEditorValue(const std::string& value) {
             m_editorText = value;
         }
-        void setEditorValue(const TimeContainer& value)
-        {
+        void setEditorValue(const TimeContainer& value) {
             m_editorTime = value;
         }
         // NOTE: Also sets m_viewedMonth and m_viewedYear to the DateContainer's month and year
-        void setEditorValue(const DateContainer& value)
-        {
+        void setEditorValue(const DateContainer& value) {
             m_editorDate = value;
-            m_viewedMonth = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().getMonth() : m_editorDate.getTime().getMonth();
-            m_viewedYear = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().getYear() : m_editorDate.getTime().getYear();
+            m_viewedMonth = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().getMonth()
+                                                      : m_editorDate.getTime().getMonth();
+            m_viewedYear = m_editorDate.getIsEmpty() ? DateContainer::getCurrentSystemDate().getTime().getYear()
+                                                     : m_editorDate.getTime().getYear();
         }
-        void setEditorValue(const SingleSelectContainer& value)
-        {
+        void setEditorValue(const SingleSelectContainer& value) {
             m_editorSingleSelect = value;
         }
-        void setEditorValue(const SelectContainer& value)
-        {
+        void setEditorValue(const SelectContainer& value) {
             m_editorSelect = value;
         }
-        void setEditorValue(const WeekdayContainer& value)
-        {
+        void setEditorValue(const WeekdayContainer& value) {
             m_editorWeekday = value;
         }
-        std::string getEditorValue(const std::string& _typeValueUnused) const
-        {
+        std::string getEditorValue(const std::string& _typeValueUnused) const {
             return m_editorText;
         }
-        const TimeContainer& getEditorValue(const TimeContainer& _typeValueUnused) const
-        {
+        const TimeContainer& getEditorValue(const TimeContainer& _typeValueUnused) const {
             return m_editorTime;
         }
-        const DateContainer& getEditorValue(const DateContainer& _typeValueUnused) const
-        {
+        const DateContainer& getEditorValue(const DateContainer& _typeValueUnused) const {
             return m_editorDate;
         }
-        const SingleSelectContainer& getEditorValue(const SingleSelectContainer& _typeValueUnused) const
-        {
+        const SingleSelectContainer& getEditorValue(const SingleSelectContainer& _typeValueUnused) const {
             return m_editorSingleSelect;
         }
-        const SelectContainer& getEditorValue(const SelectContainer& _typeValueUnused) const
-        {
+        const SelectContainer& getEditorValue(const SelectContainer& _typeValueUnused) const {
             return m_editorSelect;
         }
-        const WeekdayContainer& getEditorValue(const WeekdayContainer& _typeValueUnused) const
-        {
+        const WeekdayContainer& getEditorValue(const WeekdayContainer& _typeValueUnused) const {
             return m_editorWeekday;
         }
         bool getOpenLastFrame() const;
