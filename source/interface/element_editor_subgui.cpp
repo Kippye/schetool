@@ -49,7 +49,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
             }
             case (SCH_SELECT): {
                 auto selection = m_editorSingleSelect.getSelection();
-                const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptions();
+                const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptions();
 
                 if (selection.has_value()) {
                     if (gui_templates::SelectOptionButton(options[selection.value()],
@@ -64,8 +64,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                 }
 
                 // add new options
-                if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable()) {
-                    const SelectOptions& selectOptions = m_scheduleCore.getColumnSelectOptions(m_editorColumn);
+                if (m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable()) {
+                    const SelectOptions& selectOptions = m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column());
 
                     std::string str;
                     str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
@@ -96,7 +96,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 SelectOptionsModification(OPTION_MODIFICATION_ADD)
                                     .options({SelectOption(std::string(buf), addedOptionColor)});
 
-                            modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                            modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
 
                             // HACK: There's currently no way of knowing that the option was successfully added.
                             // We just check the things that we can and if they are true, assume that it did succeed.
@@ -116,14 +116,6 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                         }
                     }
                 }
-                // if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
-                // OK i give up doing this for now
-                // Maybe future me can finger this out.. TODO!
-                // if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !m_giveSelectOptionNameInputFocus)
-                // {
-                //     printf("Regave focus!\n");
-                //     ImGui::ActivateItemByID(ImGui::GetItemID());
-                // }
 
                 int hoveredOptionIndex = -1;
                 int activeOptionIndex = -1;
@@ -136,14 +128,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     std::string optionButtonID = std::string(options[i].name).append("##EditorOption");
 
                     // Draw a name input in place of the usual selectable
-                    if (m_editingSelectOptionName && m_editedOptionIndex == i) {
+                    if (m_selectEditState.editingOptionName && m_selectEditState.editedOptionIndex == i) {
                         std::string name = options[i].name;
                         name.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
                         char* buf = name.data();
 
-                        if (m_giveSelectOptionNameInputFocus) {
+                        if (m_selectEditState.focusOptionNameInput) {
                             ImGui::SetKeyboardFocusHere(0);
-                            m_giveSelectOptionNameInputFocus = false;
+                            m_selectEditState.focusOptionNameInput = false;
                         }
 
                         ImGui::SetNextItemWidth(gui_size_calculations::getSelectOptionSelectableWidth());
@@ -153,15 +145,15 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                              ImGuiInputTextFlags_EnterReturnsTrue,
                                              gui_callbacks::filterAlphanumerics))
                         {
-                            modifyColumnSelectOptions.invoke(m_editorColumn,
+                            modifyColumnSelectOptions.invoke(m_currentElementCoords->column(),
                                                              SelectOptionsModification(OPTION_MODIFICATION_RENAME)
-                                                                 .firstIndex(m_editedOptionIndex)
+                                                                 .firstIndex(m_selectEditState.editedOptionIndex)
                                                                  .name(buf));
-                            m_editingSelectOptionName = false;
+                            m_selectEditState.editingOptionName = false;
                         }
 
                         if (ImGui::IsItemDeactivated()) {
-                            m_editingSelectOptionName = false;
+                            m_selectEditState.editingOptionName = false;
                         }
                     }
                     // Draw the selectable for this select option
@@ -176,7 +168,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0)))
                         {
                             // Don't change option selection when drag is ended
-                            if (m_draggedOptionID == optionButtonID && m_hasOptionBeenDragged) {
+                            if (m_selectEditState.draggedOptionID == optionButtonID && m_selectEditState.hasOptionBeenDragged) {
                                 selected = prevSelected;
                             } else {
                                 m_editorSingleSelect.setSelected(i, selected);
@@ -199,14 +191,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             selected = !selected;
                             m_editorSingleSelect.setSelected(i, selected);
                             // Start editing this select option's name
-                            m_editingSelectOptionName = true;
-                            m_giveSelectOptionNameInputFocus = true;
-                            m_editedOptionIndex = i;
+                            m_selectEditState.editingOptionName = true;
+                            m_selectEditState.focusOptionNameInput = true;
+                            m_selectEditState.editedOptionIndex = i;
                         }
                         // Show a remove button on the right when hovered, only if the options are mutable
                         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped |
                                                  ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) &&
-                            m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
+                            m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable())
                         {
                             float removeButtonSize = ImGui::CalcTextSize("W").y;
                             ImGui::SameLine();
@@ -226,10 +218,10 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             {
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i);
-                                modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                                modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
                                 m_editorSingleSelect.update(
                                     modificationToApply.getUpdateInfo(),
-                                    m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEdits = true;
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
@@ -246,12 +238,12 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             gui_color_calculations::hslToRgb(gui_colors::selectOptionColors.at(options[i].color)),
                             ImGuiColorEditFlags_NoTooltip))
                     {
-                        m_colorChooserOptionIndex = i;
+                        m_selectEditState.colorChooserOptionIndex = i;
                         ImGui::OpenPopup("SelectOptionColorChooserPopup");
                     }
                     ImRect colorChooserButtonAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
                     // Color chooser popup, shows a list of available select option colors.
-                    if (m_colorChooserOptionIndex == i && ImGui::BeginPopup("SelectOptionColorChooserPopup")) {
+                    if (m_selectEditState.colorChooserOptionIndex == i && ImGui::BeginPopup("SelectOptionColorChooserPopup")) {
                         ImGuiWindow* popup = ImGui::GetCurrentWindow();
                         ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
                         ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
@@ -271,7 +263,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                                    ImGuiColorEditFlags_NoTooltip))
                             {
                                 modifyColumnSelectOptions.invoke(
-                                    m_editorColumn,
+                                    m_currentElementCoords->column(),
                                     SelectOptionsModification(OPTION_MODIFICATION_RECOLOR).firstIndex(i).color(colorEnum));
                                 ImGui::CloseCurrentPopup();
                             }
@@ -280,14 +272,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     }
                 }
                 // drag to reorder options
-                if (m_editingSelectOptionName == false && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
+                if (m_selectEditState.editingOptionName == false && m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable())
                 {
                     // ImGui::IsItemToggledSelection()
                     // Some option is active
                     if (activeOptionIndex != -1) {
-                        if (activeOptionID != m_draggedOptionID) {
-                            m_hasOptionBeenDragged = false;
-                            m_draggedOptionID = activeOptionID;
+                        if (activeOptionID != m_selectEditState.draggedOptionID) {
+                            m_selectEditState.hasOptionBeenDragged = false;
+                            m_selectEditState.draggedOptionID = activeOptionID;
                         }
 
                         // Hovering a different option (NOT whitespace!)
@@ -301,15 +293,15 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             }
 
                             if (indexDelta != 0) {
-                                m_hasOptionBeenDragged = true;
+                                m_selectEditState.hasOptionBeenDragged = true;
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_MOVE)
                                         .firstIndex(activeOptionIndex)
                                         .secondIndex(activeOptionIndex + indexDelta);
-                                modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                                modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
                                 m_editorSingleSelect.update(
                                     modificationToApply.getUpdateInfo(),
-                                    m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEdits = true;
                                 ImGui::ResetMouseDragDelta();
                             }
@@ -318,8 +310,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     // Drag ended
                     else
                     {
-                        m_draggedOptionID = "";
-                        m_hasOptionBeenDragged = false;
+                        m_selectEditState.draggedOptionID = "";
+                        m_selectEditState.hasOptionBeenDragged = false;
                     }
                 }
 
@@ -328,7 +320,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
             case (SCH_MULTISELECT): {
                 auto selection = m_editorSelect.getSelection();
                 size_t selectedCount = selection.size();
-                const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptions();
+                const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptions();
 
                 std::vector<size_t> selectionIndices = {};
 
@@ -352,8 +344,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                 }
 
                 // add new options
-                if (m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable()) {
-                    const SelectOptions& selectOptions = m_scheduleCore.getColumnSelectOptions(m_editorColumn);
+                if (m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable()) {
+                    const SelectOptions& selectOptions = m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column());
 
                     std::string str;
                     str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
@@ -384,7 +376,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 SelectOptionsModification(OPTION_MODIFICATION_ADD)
                                     .options({SelectOption(std::string(buf), addedOptionColor)});
 
-                            modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                            modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
 
                             // HACK: There's currently no way of knowing that the option was successfully added.
                             // We just check the things that we can and if they are true, assume that it did succeed.
@@ -400,14 +392,6 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                         }
                     }
                 }
-                // if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0))
-                // OK i give up doing this for now
-                // Maybe future me can finger this out.. TODO!
-                // if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !m_giveSelectOptionNameInputFocus)
-                // {
-                //     printf("Regave focus!\n");
-                //     ImGui::ActivateItemByID(ImGui::GetItemID());
-                // }
 
                 int hoveredOptionIndex = -1;
                 int activeOptionIndex = -1;
@@ -420,14 +404,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     std::string optionButtonID = std::string(options[i].name).append("##EditorOption");
 
                     // Draw a name input in place of the usual selectable
-                    if (m_editingSelectOptionName && m_editedOptionIndex == i) {
+                    if (m_selectEditState.editingOptionName && m_selectEditState.editedOptionIndex == i) {
                         std::string name = options[i].name;
                         name.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
                         char* buf = name.data();
 
-                        if (m_giveSelectOptionNameInputFocus) {
+                        if (m_selectEditState.focusOptionNameInput) {
                             ImGui::SetKeyboardFocusHere(0);
-                            m_giveSelectOptionNameInputFocus = false;
+                            m_selectEditState.focusOptionNameInput = false;
                         }
 
                         ImGui::SetNextItemWidth(gui_size_calculations::getSelectOptionSelectableWidth());
@@ -437,15 +421,15 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                              ImGuiInputTextFlags_EnterReturnsTrue,
                                              gui_callbacks::filterAlphanumerics))
                         {
-                            modifyColumnSelectOptions.invoke(m_editorColumn,
+                            modifyColumnSelectOptions.invoke(m_currentElementCoords->column(),
                                                              SelectOptionsModification(OPTION_MODIFICATION_RENAME)
-                                                                 .firstIndex(m_editedOptionIndex)
+                                                                 .firstIndex(m_selectEditState.editedOptionIndex)
                                                                  .name(buf));
-                            m_editingSelectOptionName = false;
+                            m_selectEditState.editingOptionName = false;
                         }
 
                         if (ImGui::IsItemDeactivated()) {
-                            m_editingSelectOptionName = false;
+                            m_selectEditState.editingOptionName = false;
                         }
                     }
                     // Draw the selectable for this select option
@@ -460,7 +444,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0)))
                         {
                             // Don't change option selection when drag is ended
-                            if (m_draggedOptionID == optionButtonID && m_hasOptionBeenDragged) {
+                            if (m_selectEditState.draggedOptionID == optionButtonID && m_selectEditState.hasOptionBeenDragged) {
                                 selected = prevSelected;
                             } else {
                                 m_editorSelect.setSelected(i, selected);
@@ -483,14 +467,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             selected = !selected;
                             m_editorSelect.setSelected(i, selected);
                             // Start editing this select option's name
-                            m_editingSelectOptionName = true;
-                            m_giveSelectOptionNameInputFocus = true;
-                            m_editedOptionIndex = i;
+                            m_selectEditState.editingOptionName = true;
+                            m_selectEditState.focusOptionNameInput = true;
+                            m_selectEditState.editedOptionIndex = i;
                         }
                         // Show a remove button on the right when hovered, only if the options are mutable
                         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped |
                                                  ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) &&
-                            m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
+                            m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable())
                         {
                             float removeButtonSize = ImGui::CalcTextSize("W").y;
                             ImGui::SameLine();
@@ -510,9 +494,9 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             {
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i);
-                                modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                                modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
                                 m_editorSelect.update(modificationToApply.getUpdateInfo(),
-                                                      m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                                      m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEdits = true;
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
@@ -529,12 +513,12 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             gui_color_calculations::hslToRgb(gui_colors::selectOptionColors.at(options[i].color)),
                             ImGuiColorEditFlags_NoTooltip))
                     {
-                        m_colorChooserOptionIndex = i;
+                        m_selectEditState.colorChooserOptionIndex = i;
                         ImGui::OpenPopup("SelectOptionColorChooserPopup");
                     }
                     ImRect colorChooserButtonAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
                     // Color chooser popup, shows a list of available select option colors.
-                    if (m_colorChooserOptionIndex == i && ImGui::BeginPopup("SelectOptionColorChooserPopup")) {
+                    if (m_selectEditState.colorChooserOptionIndex == i && ImGui::BeginPopup("SelectOptionColorChooserPopup")) {
                         ImGuiWindow* popup = ImGui::GetCurrentWindow();
                         ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
                         ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
@@ -554,7 +538,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                                    ImGuiColorEditFlags_NoTooltip))
                             {
                                 modifyColumnSelectOptions.invoke(
-                                    m_editorColumn,
+                                    m_currentElementCoords->column(),
                                     SelectOptionsModification(OPTION_MODIFICATION_RECOLOR).firstIndex(i).color(colorEnum));
                                 ImGui::CloseCurrentPopup();
                             }
@@ -563,14 +547,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     }
                 }
                 // drag to reorder options
-                if (m_editingSelectOptionName == false && m_scheduleCore.getColumnSelectOptions(m_editorColumn).getIsMutable())
+                if (m_selectEditState.editingOptionName == false && m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable())
                 {
                     // ImGui::IsItemToggledSelection()
                     // Some option is active
                     if (activeOptionIndex != -1) {
-                        if (activeOptionID != m_draggedOptionID) {
-                            m_hasOptionBeenDragged = false;
-                            m_draggedOptionID = activeOptionID;
+                        if (activeOptionID != m_selectEditState.draggedOptionID) {
+                            m_selectEditState.hasOptionBeenDragged = false;
+                            m_selectEditState.draggedOptionID = activeOptionID;
                         }
 
                         // Hovering a different option (NOT whitespace!)
@@ -584,14 +568,14 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             }
 
                             if (indexDelta != 0) {
-                                m_hasOptionBeenDragged = true;
+                                m_selectEditState.hasOptionBeenDragged = true;
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_MOVE)
                                         .firstIndex(activeOptionIndex)
                                         .secondIndex(activeOptionIndex + indexDelta);
-                                modifyColumnSelectOptions.invoke(m_editorColumn, modificationToApply);
+                                modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
                                 m_editorSelect.update(modificationToApply.getUpdateInfo(),
-                                                      m_scheduleCore.getColumnSelectOptions(m_editorColumn).getOptionCount());
+                                                      m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEdits = true;
                                 ImGui::ResetMouseDragDelta();
                             }
@@ -600,8 +584,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     // Drag ended
                     else
                     {
-                        m_draggedOptionID = "";
-                        m_hasOptionBeenDragged = false;
+                        m_selectEditState.draggedOptionID = "";
+                        m_selectEditState.hasOptionBeenDragged = false;
                     }
                 }
 
@@ -670,13 +654,12 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 }
 
 void ElementEditorSubGui::open(size_t column, size_t row, SCHEDULE_TYPE type, const ImRect& avoidRect) {
-    m_editorColumn = column;
-    m_editorRow = row;
+    m_currentElementCoords = ScheduleCoordinates(column, row);
     m_editedType = type;
     m_avoidRect = avoidRect;
 
     m_madeEdits = false;
-    m_editingSelectOptionName = false;
+    m_selectEditState.editingOptionName = false;
 
     ImGui::OpenPopup("Editor");
 }
@@ -697,6 +680,6 @@ bool ElementEditorSubGui::getMadeEdits() const {
     return m_madeEdits;
 }
 
-std::pair<size_t, size_t> ElementEditorSubGui::getCoordinates() const {
-    return {m_editorColumn, m_editorRow};
+std::optional<ScheduleCoordinates> ElementEditorSubGui::getCoordinates() const {
+    return m_currentElementCoords;
 }

@@ -8,6 +8,24 @@
 #include "date_container.h"
 #include "element_base.h"
 #include "schedule_core.h"
+#include "schedule_coordinates.h"
+#include <optional>
+
+struct SelectEditState {
+        // Used to automatically focus the input textbox one frame after it was made visible. Set to false after doing so!
+        bool focusOptionNameInput = false;
+        // Whether or not the name of a select option is being edited
+        bool editingOptionName = false;
+        // The index of the option currently being edited
+        size_t editedOptionIndex = 0;
+        // Select option color chooser: index of the select option being modified
+        size_t colorChooserOptionIndex = 0;
+        // DRAG & DROP option reordering
+        // ID of the option currently being dragged (empty if none)
+        std::string draggedOptionID = "";
+        // Has the currently dragged option been dragged up or down?
+        bool hasOptionBeenDragged = false;
+};
 
 class ElementEditorSubGui : public Gui {
     private:
@@ -16,12 +34,8 @@ class ElementEditorSubGui : public Gui {
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;
         bool m_madeEdits = false;
-        // Drag and drop option reordering
-        std::string m_draggedOptionID = "";
-        bool m_hasOptionBeenDragged = false;
 
-        int m_editorColumn = -1;
-        int m_editorRow = -1;
+        std::optional<ScheduleCoordinates> m_currentElementCoords = std::nullopt;
         unsigned int m_viewedYear = 0;
         unsigned int m_viewedMonth = 0;
         std::string m_editorText;
@@ -31,13 +45,7 @@ class ElementEditorSubGui : public Gui {
         SelectContainer m_editorSelect;
         WeekdayContainer m_editorWeekday;
 
-        // Used to automatically focus the input textbox one frame after it was made visible. Set to false after doing so!
-        bool m_giveSelectOptionNameInputFocus = false;
-        bool m_editingSelectOptionName = false;
-        size_t m_editedOptionIndex = 0;
-
-        // Select option color chooser: index of the select option being modified
-        size_t m_colorChooserOptionIndex = 0;
+        SelectEditState m_selectEditState;
 
         ImRect m_avoidRect;
         ImVec2 m_textInputBoxSize = ImVec2(0, 0);
@@ -98,5 +106,5 @@ class ElementEditorSubGui : public Gui {
         bool getOpenLastFrame() const;
         bool getOpenThisFrame() const;
         bool getMadeEdits() const;
-        std::pair<size_t, size_t> getCoordinates() const;
+        std::optional<ScheduleCoordinates> getCoordinates() const;
 };
