@@ -279,32 +279,30 @@ void ScheduleGui::openRowContextPopup(size_t row) {
 }
 
 void ScheduleGui::openCellContextPopup(size_t column, size_t row) {
-    m_cellContextColumn = column;
-    m_cellContextRow = row;
+    m_cellContextCoords = {column, row};
     ImGui::OpenPopup("ScheduleTableCellContextPopup", ImGuiPopupFlags_NoOpenOverExistingPopup);
 }
 
 void ScheduleGui::closeRowContextPopup() {
-    m_rowContextRow = -1;
+    m_rowContextRow.reset();
 }
 
 void ScheduleGui::closeCellContextPopup() {
-    m_cellContextColumn = -1;
-    m_cellContextRow = -1;
+    m_cellContextCoords.reset();
 }
 
 void ScheduleGui::drawRowContextContent() {
-    if (m_rowContextRow < 0) {
+    if (m_rowContextRow.has_value() == false) {
         closeRowContextPopup();
         return;
     }
     if (ImGui::BeginPopup("ScheduleTableRowContextPopup", ImGuiWindowFlags_NoMove)) {
-        if (m_rowContextRow < m_scheduleCore.getRowCount()) {
+        if (m_rowContextRow.value() < m_scheduleCore.getRowCount()) {
             if (ImGui::Button("Remove row")) {
-                removeRow.invoke(m_rowContextRow);
+                removeRow.invoke(m_rowContextRow.value());
             }
             if (ImGui::Button("Duplicate row")) {
-                duplicateRow.invoke((size_t)m_rowContextRow);
+                duplicateRow.invoke(m_rowContextRow.value());
             }
         }
 
@@ -317,13 +315,14 @@ void ScheduleGui::drawRowContextContent() {
 }
 
 void ScheduleGui::drawCellContextContent() {
-    if (m_cellContextColumn < 0 || m_cellContextRow < 0) {
+    if (m_cellContextCoords.has_value() == false) {
         closeCellContextPopup();
         return;
     }
     if (ImGui::BeginPopup("ScheduleTableCellContextPopup", ImGuiWindowFlags_NoMove)) {
-        if (m_cellContextColumn < m_scheduleCore.getColumnCount()) {
-            ImGui::Text("%s", std::format("Cell (Column: {}; Row: {})", m_cellContextColumn, m_cellContextRow).c_str());
+        if (m_cellContextCoords->column() < m_scheduleCore.getColumnCount()) {
+            auto [col, row] = m_cellContextCoords->getAsPair();
+            ImGui::Text("%s", std::format("Cell (Column: {}; Row: {})", col, row).c_str());
         }
 
         if (ImGui::Button("Close")) {
@@ -549,10 +548,6 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
                 }
             }
 
-            if (row == m_rowContextRow) {
-                drawRowContextContent();
-            }
-
             ImGui::TableNextRow();
             for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
                 ImGui::TableSetColumnIndex(column);
@@ -567,9 +562,13 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
                     openCellContextPopup(column, row);
                 }
 
-                if (column == m_cellContextColumn && row == m_cellContextRow) {
+                if (m_cellContextCoords.has_value() && m_cellContextCoords->is(column, row)) {
                     drawCellContextContent();
                 }
+            }
+            // Draw row context AFTER drawing cell content because the row might be removed before it is drawn
+            if (m_rowContextRow.has_value() && m_rowContextRow.value() == row) {
+                drawRowContextContent();
             }
         // END OF for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount(); unsortedRow++)
         do_not_draw_row:
@@ -628,19 +627,23 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
     }
 
     SCHEDULE_TYPE columnType = m_scheduleCore.getColumn(column)->type;
-    // TODO: i could probably reduce the code repetition here
     ImGui::SetNextItemWidth(-FLT_MIN);
 
+    bool isTableCellHighlighted = false;
     // Hightlight the table cell that is currently being edited in the element editor subgui
     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui")) {
-        if (elementEditor->getOpenThisFrame() && elementEditor->getCoordinates().has_value() && elementEditor->getCoordinates()->is(column, row)) {
-            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg,
-                                   ImGui::GetColorU32(gui_color_calculations::getTableCellHighlightColor(
-                                       style.Colors[ImGuiCol_WindowBg], style.Colors[ImGuiCol_Text])));
-        }
+        isTableCellHighlighted = isTableCellHighlighted ||
+            (elementEditor->getOpenThisFrame() && elementEditor->getCoordinates().has_value() &&
+             elementEditor->getCoordinates()->is(column, row));
     }
-    // Hightlight the table row that currently has its context menu open
-    if (m_cellContextRow == row && ImGui::IsPopupOpen("ScheduleTableCellContextPopup")) {
+    // Hightlight table cells in the row that currently has its row context menu open
+    isTableCellHighlighted = isTableCellHighlighted ||
+        (m_rowContextRow.has_value() && m_rowContextRow.value() == row && ImGui::IsPopupOpen("ScheduleTableRowContextPopup"));
+    // Hightlight the table cell that currently has its context menu open
+    isTableCellHighlighted = isTableCellHighlighted ||
+        (m_cellContextCoords.has_value() && m_cellContextCoords->is(column, row) &&
+         ImGui::IsPopupOpen("ScheduleTableCellContextPopup"));
+    if (isTableCellHighlighted) {
         ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg,
                                ImGui::GetColorU32(gui_color_calculations::getTableCellHighlightColor(
                                    style.Colors[ImGuiCol_WindowBg], style.Colors[ImGuiCol_Text])));

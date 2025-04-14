@@ -1,15 +1,14 @@
 #pragma once
-#include <map>
 #include "gui.h"
 #include "window.h"
 #include "input.h"
 #include "main_menu_bar_gui.h"
-#include "element_base.h"
 #include "select_container.h"
-#include "single_select_container.h"
 #include "schedule_events.h"
 #include "schedule_core.h"
 #include "schedule_column.h"
+#include "schedule_coordinates.h"
+#include <optional>
 
 class ScheduleGui : public Gui {
     private:
@@ -19,9 +18,9 @@ class ScheduleGui : public Gui {
         bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
-        int m_rowContextRow = -1;
-        int m_cellContextColumn = -1, m_cellContextRow = -1;
-        int m_draggedRow = -1;
+        std::optional<size_t> m_rowContextRow = std::nullopt;
+        std::optional<ScheduleCoordinates> m_cellContextCoords = std::nullopt;
+        std::optional<size_t> m_draggedRow = std::nullopt;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
         void drawColumnHeaderContextContent(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
         void openRowContextPopup(size_t row);
