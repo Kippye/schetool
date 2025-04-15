@@ -775,7 +775,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
             }
             if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui")) {
                 std::optional<ScheduleCoordinates> editorCoords = elementEditor->getCoordinates();
-                if (editorCoords->is(column, row)) {
+                if (editorCoords.has_value() && editorCoords->is(column, row)) {
                     elementEditor->draw(window, input, guiTextures);
                     // was editing this Element, made edits and just closed the editor. apply the edits
                     if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
@@ -844,7 +844,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
             }
             if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui")) {
                 std::optional<ScheduleCoordinates> editorCoords = elementEditor->getCoordinates();
-                if (editorCoords->is(column, row)) {
+                if (editorCoords.has_value() && editorCoords->is(column, row)) {
                     elementEditor->draw(window, input, guiTextures);
                     // was editing this Element, made edits and just closed the editor. apply the edits
                     if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&

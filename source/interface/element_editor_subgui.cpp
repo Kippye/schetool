@@ -1,4 +1,5 @@
 #include <regex>
+#include <iostream>
 #include "element_editor_subgui.h"
 #include "gui_templates.h"
 #include "schedule_constants.h"
@@ -11,6 +12,12 @@ ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& sch
 void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
     // give old current open state to the last frame's state
     m_openLastFrame = m_openThisFrame;
+
+    // Something has gone wrong!
+    if (m_currentElementCoords.has_value() == false) {
+        std::cout << "ElementEditorSubGui::draw(): Can't draw because current element coords is empty!" << std::endl;
+        return;
+    }
 
     if (ImGui::BeginPopupEx(ImGui::GetID("Editor"),
                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration |
@@ -49,7 +56,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
             }
             case (SCH_SELECT): {
                 auto selection = m_editorSingleSelect.getSelection();
-                const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptions();
+                const std::vector<SelectOption>& options =
+                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptions();
 
                 if (selection.has_value()) {
                     if (gui_templates::SelectOptionButton(options[selection.value()],
@@ -63,16 +71,17 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     ImGui::SameLine();
                 }
 
-                // add new options
+                // Add new options
                 if (m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable()) {
-                    const SelectOptions& selectOptions = m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column());
+                    const SelectOptions& selectOptions =
+                        m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column());
 
                     std::string str;
                     str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
                     char* buf = str.data();
                     ImGui::SetNextItemWidth(gui_size_calculations::getSelectOptionSelectableWidth());
-                    if (m_openLastFrame == false)  // Give the option name input keyboard focus if the editor was just opened
-                    {
+                    // Give the option name input keyboard focus if the editor was just opened
+                    if (m_openLastFrame == false) {
                         ImGui::SetKeyboardFocusHere();
                     }
                     if (ImGui::InputText("##EditorOptionInput",
@@ -117,11 +126,11 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     }
                 }
 
-                int hoveredOptionIndex = -1;
-                int activeOptionIndex = -1;
-                std::string activeOptionID = "";
+                std::optional<size_t> hoveredOptionIndex = std::nullopt;
+                std::optional<size_t> activeOptionIndex = std::nullopt;
+                std::optional<std::string> activeOptionID = std::nullopt;
 
-                // display existing options
+                // Display existing options
                 for (size_t i = 0; i < options.size(); i++) {
                     bool selected = selection.has_value() && selection.value() == i;
 
@@ -271,19 +280,20 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                         ImGui::EndPopup();
                     }
                 }
-                // drag to reorder options
-                if (m_selectEditState.editingOptionName == false && m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable())
+                // Drag to reorder options
+                if (m_selectEditState.editingOptionName == false &&
+                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable())
                 {
                     // ImGui::IsItemToggledSelection()
                     // Some option is active
-                    if (activeOptionIndex != -1) {
-                        if (activeOptionID != m_selectEditState.draggedOptionID) {
+                    if (activeOptionIndex.has_value()) {
+                        if (activeOptionID.has_value() && activeOptionID != m_selectEditState.draggedOptionID) {
                             m_selectEditState.hasOptionBeenDragged = false;
-                            m_selectEditState.draggedOptionID = activeOptionID;
+                            m_selectEditState.draggedOptionID = activeOptionID.value();
                         }
 
                         // Hovering a different option (NOT whitespace!)
-                        if (hoveredOptionIndex != -1 && hoveredOptionIndex != activeOptionIndex) {
+                        if (hoveredOptionIndex.has_value() && hoveredOptionIndex != activeOptionIndex) {
                             float dragDeltaY = ImGui::GetMouseDragDelta().y;
                             int indexDelta = 0;
                             if (dragDeltaY < 0.0f && activeOptionIndex > 0) {
@@ -296,8 +306,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 m_selectEditState.hasOptionBeenDragged = true;
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_MOVE)
-                                        .firstIndex(activeOptionIndex)
-                                        .secondIndex(activeOptionIndex + indexDelta);
+                                        .firstIndex(activeOptionIndex.value())
+                                        .secondIndex(activeOptionIndex.value() + indexDelta);
                                 modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
                                 m_editorSingleSelect.update(
                                     modificationToApply.getUpdateInfo(),
@@ -320,7 +330,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
             case (SCH_MULTISELECT): {
                 auto selection = m_editorSelect.getSelection();
                 size_t selectedCount = selection.size();
-                const std::vector<SelectOption>& options = m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptions();
+                const std::vector<SelectOption>& options =
+                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptions();
 
                 std::vector<size_t> selectionIndices = {};
 
@@ -345,7 +356,8 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
 
                 // add new options
                 if (m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable()) {
-                    const SelectOptions& selectOptions = m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column());
+                    const SelectOptions& selectOptions =
+                        m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column());
 
                     std::string str;
                     str.reserve(schedule_consts::SELECT_OPTION_NAME_MAX_LENGTH);
@@ -393,9 +405,9 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                     }
                 }
 
-                int hoveredOptionIndex = -1;
-                int activeOptionIndex = -1;
-                std::string activeOptionID = "";
+                std::optional<size_t> hoveredOptionIndex = std::nullopt;
+                std::optional<size_t> activeOptionIndex = std::nullopt;
+                std::optional<std::string> activeOptionID = std::nullopt;
 
                 // display existing options
                 for (size_t i = 0; i < options.size(); i++) {
@@ -495,8 +507,9 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i);
                                 modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
-                                m_editorSelect.update(modificationToApply.getUpdateInfo(),
-                                                      m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
+                                m_editorSelect.update(
+                                    modificationToApply.getUpdateInfo(),
+                                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEdits = true;
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
@@ -546,19 +559,19 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                         ImGui::EndPopup();
                     }
                 }
-                // drag to reorder options
-                if (m_selectEditState.editingOptionName == false && m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable())
+                // Drag to reorder options
+                if (m_selectEditState.editingOptionName == false &&
+                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getIsMutable())
                 {
-                    // ImGui::IsItemToggledSelection()
                     // Some option is active
-                    if (activeOptionIndex != -1) {
-                        if (activeOptionID != m_selectEditState.draggedOptionID) {
+                    if (activeOptionIndex.has_value()) {
+                        if (activeOptionID.has_value() && activeOptionID != m_selectEditState.draggedOptionID) {
                             m_selectEditState.hasOptionBeenDragged = false;
-                            m_selectEditState.draggedOptionID = activeOptionID;
+                            m_selectEditState.draggedOptionID = activeOptionID.value();
                         }
 
                         // Hovering a different option (NOT whitespace!)
-                        if (hoveredOptionIndex != -1 && hoveredOptionIndex != activeOptionIndex) {
+                        if (hoveredOptionIndex.has_value() && hoveredOptionIndex != activeOptionIndex) {
                             float dragDeltaY = ImGui::GetMouseDragDelta().y;
                             int indexDelta = 0;
                             if (dragDeltaY < 0.0f && activeOptionIndex > 0) {
@@ -571,11 +584,12 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 m_selectEditState.hasOptionBeenDragged = true;
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_MOVE)
-                                        .firstIndex(activeOptionIndex)
-                                        .secondIndex(activeOptionIndex + indexDelta);
+                                        .firstIndex(activeOptionIndex.value())
+                                        .secondIndex(activeOptionIndex.value() + indexDelta);
                                 modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
-                                m_editorSelect.update(modificationToApply.getUpdateInfo(),
-                                                      m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
+                                m_editorSelect.update(
+                                    modificationToApply.getUpdateInfo(),
+                                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEdits = true;
                                 ImGui::ResetMouseDragDelta();
                             }
