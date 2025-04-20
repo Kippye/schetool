@@ -109,10 +109,8 @@ bool SelectOptions::getIsMutable() const {
 
 bool SelectOptions::addOption(const SelectOption& option) {
     // Select options can't have identical names.
-    for (const auto& selectOption : m_options) {
-        if (selectOption.name == option.name) {
-            return false;
-        }
+    if (std::ranges::any_of(m_options, [&option](const SelectOption& existing) { return existing.name == option.name; })) {
+        return false;
     }
     m_options.push_back(option);
     return true;
@@ -160,11 +158,8 @@ bool SelectOptions::renameOption(size_t index, const std::string& name) {
     if (name.empty()) {
         return false;
     }
-    // Select options can't have identical names.
-    for (const auto& selectOption : m_options) {
-        if (selectOption.name == name) {
-            return false;
-        }
+    if (std::ranges::any_of(m_options, [&name](const SelectOption& existingOption) { return existingOption.name == name; })) {
+        return false;
     }
 
     m_options.at(index).name = name;

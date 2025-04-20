@@ -250,9 +250,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                             }
                         };
 
-                        if (ImGui::Checkbox(std::string("##SelectFilterEditorCheck").append(std::to_string(i)).c_str(),
-                                            &selected))
-                        {
+                        if (ImGui::Checkbox(std::format("##SelectFilterEditorCheck{}", i).c_str(), &selected)) {
                             setCurrentOptionSelected(selected);
                         }
                         ImGui::SameLine();
@@ -298,9 +296,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                             }
                         };
 
-                        if (ImGui::Checkbox(std::string("##SelectFilterEditorCheck").append(std::to_string(i)).c_str(),
-                                            &selected))
-                        {
+                        if (ImGui::Checkbox(std::format("##SelectFilterEditorCheck{}", i).c_str(), &selected)) {
                             setCurrentOptionSelected(selected);
                         }
                         ImGui::SameLine();
@@ -345,9 +341,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                             }
                         };
 
-                        if (ImGui::Checkbox(std::string("##WeekdayFilterEditorCheck").append(std::to_string(i)).c_str(),
-                                            &selected))
-                        {
+                        if (ImGui::Checkbox(std::format("##WeekdayFilterEditorCheck{}", i).c_str(), &selected)) {
                             setCurrentOptionSelected(selected);
                         }
                         ImGui::SameLine();
@@ -766,13 +760,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
                                 ImGui::GetContentRegionAvail().x - gui_sizes::filter_editor::ruleButtonWidthOffset),
                        0.0f);
 
-            if (ImGui::Button(filter.getRule(ruleIndex)
-                                  .getString()
-                                  .append("##")
-                                  .append(std::to_string(filterIndex))
-                                  .append(";")
-                                  .append(std::to_string(ruleIndex))
-                                  .c_str(),
+            if (ImGui::Button(std::format("{}##{};{}", filter.getRule(ruleIndex).getString(), filterIndex, ruleIndex).c_str(),
                               ruleButtonSize))
             {
                 // Open the filter rule editor to edit this rule
@@ -813,11 +801,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
                     drawFilterRule(f, r);
                     // display operator between each rule except the last
                     if (r < filter.getRules().size() - 1) {
-                        if (ImGui::BeginCombo(std::string("##FilterOperator")
-                                                  .append(std::to_string(f))
-                                                  .append(";")
-                                                  .append(std::to_string(r))
-                                                  .c_str(),
+                        if (ImGui::BeginCombo(std::format("##FilterOperator{};{}", f, r).c_str(),
                                               filter_consts::logicalOperatorStrings.at(filter.getOperatorType())))
                         {
                             for (const auto& [logicalOperator, operatorString] : filter_consts::logicalOperatorStrings) {

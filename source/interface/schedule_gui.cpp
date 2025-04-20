@@ -184,10 +184,8 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
     name.reserve(COLUMN_NAME_MAX_LENGTH);
     char* buf = name.data();
 
-    if (ImGui::InputText(std::string("##columnName").append(std::to_string(columnIndex)).c_str(),
-                         buf,
-                         name.capacity(),
-                         ImGuiInputTextFlags_EnterReturnsTrue))
+    if (ImGui::InputText(
+            std::format("##columnName{}", columnIndex).c_str(), buf, name.capacity(), ImGuiInputTextFlags_EnterReturnsTrue))
     {
         setColumnName.invoke(columnIndex, buf);
     }
@@ -216,9 +214,7 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
     if (ImGui::BeginCombo("##ColumnResetSetting", schedule_consts::columnResetOptionStrings.at(column.resetOption))) {
         for (auto [resetOption, settingString] : schedule_consts::columnResetOptionStrings) {
             bool isSelected = column.resetOption == resetOption;
-            if (ImGui::Selectable(std::string(settingString).append("##").append(std::to_string((int)resetOption)).c_str(),
-                                  isSelected))
-            {
+            if (ImGui::Selectable(std::format("{}##{}", settingString, (int)resetOption).c_str(), isSelected)) {
                 setColumnResetOption.invoke(columnIndex, resetOption);
             }
         }
@@ -386,12 +382,7 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
                         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::inactiveAlpha);
                     }
                     // FilterGroup button with its name
-                    if (ImGui::Button(filterGroup.getName()
-                                          .append("##")
-                                          .append(std::to_string(column))
-                                          .append(";")
-                                          .append(std::to_string(i))
-                                          .c_str(),
+                    if (ImGui::Button(std::format("{}##{};{}", filterGroup.getName(), column, i).c_str(),
                                       ImVec2(buttonWidth, 0)))
                     {
                         openFilterEditor = true;
@@ -451,7 +442,7 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
             }
             // sort button!
             if (ImGui::ArrowButton(
-                    std::string("##sortColumn").append(std::to_string(column)).c_str(),
+                    std::format("##sortColumn{}", column).c_str(),
                     m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE
                         ? ImGuiDir_Right
                         : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
@@ -652,10 +643,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
     switch (columnType) {
         case (SCH_BOOL): {
             bool newValue = getElementValue<bool>(column, row, columnEditDisabled);
-            if (ImGui::Checkbox(
-                    std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(),
-                    &newValue))
-            {
+            if (ImGui::Checkbox(std::format("##{};{}", column, row).c_str(), &newValue)) {
                 setElementValueBool.invoke(column, row, newValue);
             }
             // I will make an exception for this. To avoid the infamous Double Check™ this will have an additional check for whether any item (cough cough, remove row button) is being hovered. Happy now?
@@ -668,11 +656,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
             int newValue = getElementValue<int>(column, row, columnEditDisabled);
             ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
             if (ImGui::InputInt(
-                    std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(),
-                    &newValue,
-                    0,
-                    100,
-                    ImGuiInputTextFlags_EnterReturnsTrue))
+                    std::format("##{};{}", column, row).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
             {
                 setElementValueNumber.invoke(column, row, newValue);
             }
@@ -689,13 +673,12 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
         case (SCH_DECIMAL): {
             double newValue = getElementValue<double>(column, row, columnEditDisabled);
             ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
-            if (ImGui::InputDouble(
-                    std::string("##").append(std::to_string(column)).append(";").append(std::to_string(row)).c_str(),
-                    &newValue,
-                    0.0,
-                    0.0,
-                    "%.15g",
-                    ImGuiInputTextFlags_EnterReturnsTrue))
+            if (ImGui::InputDouble(std::format("##{};{}", column, row).c_str(),
+                                   &newValue,
+                                   0.0,
+                                   0.0,
+                                   "%.15g",
+                                   ImGuiInputTextFlags_EnterReturnsTrue))
             {
                 setElementValueDecimal.invoke(column, row, newValue);
             }
