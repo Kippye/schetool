@@ -159,6 +159,7 @@ class TimeWrapper {
 
         chrono::time_point<chrono::system_clock> getTimeUTC() const;
         chrono::local_time<chrono::seconds> getLocalTime(const std::string& timezoneName = "") const;
+        chrono::minutes getTimezoneOffset() const;
 
         DateWrapper getDateUTC() const;
         DateWrapper getLocalDate() const;
@@ -306,8 +307,8 @@ class TimeWrapper {
         // Time zone: UTC + 2.
         // Output TimeWrapper: 13:30.
         static TimeWrapper getTimeWithOffsetSubtracted(const TimeWrapper& base);
-        // Gets the amount of minutes the current timezone is offset from UTC time (including DST).
+        // Gets the amount of minutes the current timezone is offset from UTC time (including DST) at the time contained in the TimeWrapper.
         // Example: The timezone is UTC + 3, returns 180min. The timezone is UTC - 2, returns -120min.
-        static chrono::minutes getTimezoneOffset();
+        static chrono::minutes getTimezoneOffset(const TimeWrapper& time);
         static int limitYearToValidRange(int year);
 };

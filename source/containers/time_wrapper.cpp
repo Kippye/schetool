@@ -120,6 +120,10 @@ local_time<seconds> TimeWrapper::getLocalTime(const std::string& timezoneName) c
     return localTime;
 }
 
+chrono::minutes TimeWrapper::getTimezoneOffset() const {
+    return TimeWrapper::getTimezoneOffset(*this);
+}
+
 bool TimeWrapper::getIsEmpty() const {
     return m_empty;
 }
@@ -260,7 +264,7 @@ TimeWrapper TimeWrapper::getCurrentTime() {
 }
 
 TimeWrapper TimeWrapper::getTimeWithOffsetSubtracted(const TimeWrapper& base) {
-    return TimeWrapper(base.getTimeUTC() - TimeWrapper::getTimezoneOffset());
+    return TimeWrapper(base.getTimeUTC() - base.getTimezoneOffset());
 }
 
 int TimeWrapper::limitYearToValidRange(int year) {
@@ -269,8 +273,10 @@ int TimeWrapper::limitYearToValidRange(int year) {
     return year;
 }
 
-chrono::minutes TimeWrapper::getTimezoneOffset() {
-    TimeWrapper time = TimeWrapper(DateWrapper(2025, 1, 14), ClockTimeWrapper(18, 00));
+chrono::minutes TimeWrapper::getTimezoneOffset(const TimeWrapper& time) {
+    if (time.getIsEmpty()) {
+        return chrono::minutes(0);
+    }
     return chrono::floor<minutes>(time.getLocalTime().time_since_epoch() - time.getTimeUTC().time_since_epoch());
 }
 
