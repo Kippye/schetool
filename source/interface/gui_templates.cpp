@@ -174,43 +174,6 @@ bool gui_templates::DateEditor(
     return changedDate;
 }
 
-void gui_templates::TextWithBackground(const char* fmt, ...) {
-    // format to label
-    const char *text, *text_end;
-    va_list args;
-    va_start(args, fmt);
-    ImFormatStringToTempBufferV(&text, &text_end, fmt, args);
-    va_end(args);
-
-    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-    ImGui::Button(text);
-    ImGui::PopItemFlag();
-}
-
-void gui_templates::TextWithBackground(const ImVec2& size, const char* fmt, ...) {
-    // format to label
-    const char *text, *text_end;
-    va_list args;
-    va_start(args, fmt);
-    ImFormatStringToTempBufferV(&text, &text_end, fmt, args);
-    va_end(args);
-
-    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-    ImGui::Button(text, size);
-    ImGui::PopItemFlag();
-}
-
-bool gui_templates::ImageButtonStyleColored(const char* idLabel,
-                                            ImTextureID textureID,
-                                            ImVec2 size,
-                                            ImVec2 uv0,
-                                            ImVec2 uv1,
-                                            ImVec4 bgColor,
-                                            ImGuiButtonFlags buttonFlags) {
-    return ImGui::ImageButtonEx(
-        ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonFlags);
-}
-
 bool gui_templates::TimeEditor(TimeContainer& editorTime) {
     bool madeEdits = false;
     TimeWrapper hourFormatTime = TimeWrapper(ClockTimeWrapper(editorTime.getHours(), 0));
@@ -259,6 +222,44 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime) {
 
     return madeEdits;
 }
+
+void gui_templates::TextWithBackground(const char* fmt, ...) {
+    // format to label
+    const char *text, *text_end;
+    va_list args;
+    va_start(args, fmt);
+    ImFormatStringToTempBufferV(&text, &text_end, fmt, args);
+    va_end(args);
+
+    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    ImGui::Button(text);
+    ImGui::PopItemFlag();
+}
+
+void gui_templates::TextWithBackground(const ImVec2& size, const char* fmt, ...) {
+    // format to label
+    const char *text, *text_end;
+    va_list args;
+    va_start(args, fmt);
+    ImFormatStringToTempBufferV(&text, &text_end, fmt, args);
+    va_end(args);
+
+    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    ImGui::Button(text, size);
+    ImGui::PopItemFlag();
+}
+
+bool gui_templates::ImageButtonStyleColored(const char* idLabel,
+                                            ImTextureID textureID,
+                                            ImVec2 size,
+                                            ImVec2 uv0,
+                                            ImVec2 uv1,
+                                            ImVec4 bgColor,
+                                            ImGuiButtonFlags buttonFlags) {
+    return ImGui::ImageButtonEx(
+        ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonFlags);
+}
+
 
 bool gui_templates::SelectOptionButton(const SelectOption& selectOption,
                                        const char* idLabel,

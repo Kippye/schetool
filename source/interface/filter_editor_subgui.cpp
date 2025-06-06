@@ -801,21 +801,16 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
                     drawFilterRule(f, r);
                     // display operator between each rule except the last
                     if (r < filter.getRules().size() - 1) {
-                        if (ImGui::BeginCombo(std::format("##FilterOperator{};{}", f, r).c_str(),
-                                              filter_consts::logicalOperatorStrings.at(filter.getOperatorType())))
+                        if (std::optional<LogicalOperatorEnum> newOperator =
+                                gui_templates::Dropdown(std::format("##FilterOperator{};{}", f, r).c_str(),
+                                                        filter.getOperatorType(),
+                                                        filter_consts::logicalOperatorStrings))
                         {
-                            for (const auto& [logicalOperator, operatorString] : filter_consts::logicalOperatorStrings) {
-                                bool isSelected = filter.getOperatorType() == logicalOperator;
-                                if (ImGui::Selectable(operatorString, isSelected)) {
-                                    filter.setOperator(logicalOperator);
-                                    setColumnFilterOperator.invoke(m_filterGroupState.getColumnIndex(),
-                                                                   m_filterGroupState.getFilterGroupIndex(),
-                                                                   f,
-                                                                   logicalOperator);
-                                }
-                            }
-
-                            ImGui::EndCombo();
+                            filter.setOperator(newOperator.value());
+                            setColumnFilterOperator.invoke(m_filterGroupState.getColumnIndex(),
+                                                           m_filterGroupState.getFilterGroupIndex(),
+                                                           f,
+                                                           newOperator.value());
                         }
                     }
                 }
@@ -846,20 +841,14 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
             ImGui::EndChild();
             // display operator between each Filter except the last
             if (f < m_filterGroupState.getFilterGroup().getFilters().size() - 1) {
-                if (ImGui::BeginCombo(
-                        std::string("##FilterGroupOperator").append(std::to_string(f)).c_str(),
-                        filter_consts::logicalOperatorStrings.at(m_filterGroupState.getFilterGroup().getOperatorType())))
+                if (std::optional<LogicalOperatorEnum> newOperator =
+                        gui_templates::Dropdown(std::format("##FilterGroupOperator{}", f).c_str(),
+                                                m_filterGroupState.getFilterGroup().getOperatorType(),
+                                                filter_consts::logicalOperatorStrings))
                 {
-                    for (const auto& [logicalOperator, operatorString] : filter_consts::logicalOperatorStrings) {
-                        bool isSelected = m_filterGroupState.getFilterGroup().getOperatorType() == logicalOperator;
-                        if (ImGui::Selectable(operatorString, isSelected)) {
-                            m_filterGroupState.getFilterGroup().setOperator(logicalOperator);
-                            setColumnFilterGroupOperator.invoke(
-                                m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), logicalOperator);
-                        }
-                    }
-
-                    ImGui::EndCombo();
+                    m_filterGroupState.getFilterGroup().setOperator(newOperator.value());
+                    setColumnFilterGroupOperator.invoke(
+                        m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), newOperator.value());
                 }
             }
         }

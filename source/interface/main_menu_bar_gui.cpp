@@ -174,43 +174,21 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             ImGui::Text("Interface theme");
             ImGui::SameLine();
             const float styleSelectDropdownX = ImGui::GetCursorPosX();
-            if (ImGui::BeginCombo("##StyleSelectDropdown",
-                                  m_styleHandler->styleDefinitions.at(m_styleHandler->getCurrentStyle()).name))
+            if (std::optional<GuiStyle> newStyle = gui_templates::Dropdown(
+                    "##StyleSelectDropdown", m_styleHandler->getCurrentStyle(), InterfaceStyleHandler::styleNames))
             {
-                for (const auto& [styleEnum, styleDefinition] : m_styleHandler->styleDefinitions) {
-                    bool isSelected = styleEnum == m_styleHandler->getCurrentStyle();
-                    if (ImGui::Selectable(styleDefinition.name, isSelected)) {
-                        m_preferences.setStyle(styleEnum);
-                        preferencesChangedEvent.invoke(m_preferences);
-                    }
-
-                    // Set the initial focus when opening the combo (scroll here)
-                    if (isSelected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-
-                ImGui::EndCombo();
+                m_preferences.setStyle(newStyle.value());
+                preferencesChangedEvent.invoke(m_preferences);
             }
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Font scale");
             ImGui::SameLine();
             ImGui::SetCursorPosX(styleSelectDropdownX);
-            if (ImGui::BeginCombo("##FontSizeSelectDropdown", gui_fonts::fontSizeNames.at(m_styleHandler->getFontSize()))) {
-                for (const auto& [fontSizeEnum, fontSizeName] : gui_fonts::fontSizeNames) {
-                    bool isSelected = fontSizeEnum == m_styleHandler->getFontSize();
-                    if (ImGui::Selectable(fontSizeName, isSelected)) {
-                        m_preferences.setFontSize(fontSizeEnum);
-                        preferencesChangedEvent.invoke(m_preferences);
-                    }
-
-                    // Set the initial focus when opening the combo (scroll here)
-                    if (isSelected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-
-                ImGui::EndCombo();
+            if (std::optional<FontSize> newFontSize = gui_templates::Dropdown(
+                    "##FontSizeSelectDropdown", m_styleHandler->getFontSize(), gui_fonts::fontSizeNames))
+            {
+                m_preferences.setFontSize(newFontSize.value());
+                preferencesChangedEvent.invoke(m_preferences);
             }
             ImGui::EndMenu();
         }

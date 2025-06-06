@@ -6,13 +6,17 @@ enum class GuiStyle {
     Dark
 };
 
+const std::map<GuiStyle, const char*> InterfaceStyleHandler::styleNames = {
+    {GuiStyle::Light, "Light"},
+    {GuiStyle::Dark, "Dark"},
+};
+
 std::map<FontSize, ImFont*> InterfaceStyleHandler::loadedFonts = {};
 
 // NOTE: Do NOT make styles have each other as their base style, it will cause an endless loop -_-
 const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinitions = {
     {GuiStyle::Light,
-     {"Light",
-      std::nullopt,
+     {std::nullopt,
       []() {
           ImVec4* colors = ImGui::GetStyle().Colors;
           colors[ImGuiCol_Text] = ImVec4(0.18f, 0.18f, 0.18f, 1.00f);
@@ -45,8 +49,7 @@ const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinit
           ImGui::GetStyle().WindowRounding = 4.0f;
       }}},
     {GuiStyle::Dark,
-     {"Dark",
-      std::nullopt,
+     {std::nullopt,
       []() {
           ImVec4* colors = ImGui::GetStyle().Colors;
           colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);

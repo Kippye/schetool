@@ -211,14 +211,10 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Reset column:");
     ImGui::SameLine();
-    if (ImGui::BeginCombo("##ColumnResetSetting", schedule_consts::columnResetOptionStrings.at(column.resetOption))) {
-        for (auto [resetOption, settingString] : schedule_consts::columnResetOptionStrings) {
-            bool isSelected = column.resetOption == resetOption;
-            if (ImGui::Selectable(std::format("{}##{}", settingString, (int)resetOption).c_str(), isSelected)) {
-                setColumnResetOption.invoke(columnIndex, resetOption);
-            }
-        }
-        ImGui::EndCombo();
+    if (std::optional<ColumnResetOption> newColumnResetOption = gui_templates::Dropdown(
+        "##ColumnResetSetting", column.resetOption, schedule_consts::columnResetOptionStrings))
+    {
+        setColumnResetOption.invoke(columnIndex, newColumnResetOption.value());
     }
 
     // Resizing
