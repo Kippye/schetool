@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <format>
 #include "schedule_constants.h"
-#include "schedule_gui.h"
-#include "element_editor_subgui.h"
-#include "filter_editor_subgui.h"
+#include "schedule/schedule_gui.h"
+#include "schedule/element_editor_subgui.h"
+#include "schedule/filter_editor_subgui.h"
 #include "gui_templates.h"
 #include "gui_constants.h"
 #include "schedule_coordinates.h"

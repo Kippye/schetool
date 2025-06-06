@@ -1,6 +1,6 @@
 #include "interface.h"
 #include "start_page_gui.h"
-#include "main_menu_bar_gui.h"
+#include "main_menu_bar/main_menu_bar_gui.h"
 #include "edit_history_gui.h"
 #include "autosave_popup_gui.h"
 

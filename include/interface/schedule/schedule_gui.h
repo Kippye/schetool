@@ -2,7 +2,7 @@
 #include "gui.h"
 #include "window.h"
 #include "input.h"
-#include "main_menu_bar_gui.h"
+#include "main_menu_bar/main_menu_bar_gui.h"
 #include "select_container.h"
 #include "schedule_events.h"
 #include "schedule_core.h"

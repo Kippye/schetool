@@ -13,7 +13,7 @@
 #include "interface.h"
 #include "schedule_column.h"
 #include "schedule_core.h"
-#include "schedule_gui.h"
+#include "schedule/schedule_gui.h"
 
 const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 

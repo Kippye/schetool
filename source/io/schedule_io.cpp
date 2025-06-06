@@ -13,17 +13,15 @@ ScheduleIO::ScheduleIO(Schedule& schedule, Interface& programInterface, std::fil
     m_converter.setupObjectTable();
 
     m_startPageGui = programInterface.getGuiByID<StartPageGui>("StartPageGui");
-    m_startPageGui->getSubGui<StartPageNewNameModalSubGui>("StartPageNewNameModalSubGui")
-        ->createNewScheduleEvent.addListener(createNewListener);
+    m_startPageGui->createNewScheduleEventPipe.addListener(createNewListener);
     m_startPageGui->openScheduleFileEvent.addListener(openListener);
 
     m_scheduleGui = programInterface.getGuiByID<ScheduleGui>("ScheduleGui");
 
     m_mainMenuBarGui = programInterface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
-    m_mainMenuBarGui->getSubGui<RenameModalSubGui>("RenameModalSubGui")->renameScheduleEvent.addListener(renameListener);
-    m_mainMenuBarGui->getSubGui<NewNameModalSubGui>("NewNameModalSubGui")
-        ->createNewScheduleEvent.addListener(createNewListener);
-    m_mainMenuBarGui->getSubGui<DeleteModalSubGui>("DeleteModalSubGui")->deleteScheduleEvent.addListener(deleteListener);
+    m_mainMenuBarGui->renameScheduleEventPipe.addListener(renameListener);
+    m_mainMenuBarGui->createNewScheduleEventPipe.addListener(createNewListener);
+    m_mainMenuBarGui->deleteScheduleEventPipe.addListener(deleteListener);
 
     m_mainMenuBarGui->openScheduleFileEvent.addListener(openListener);
     m_mainMenuBarGui->saveEvent.addListener(saveListener);

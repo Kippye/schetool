@@ -1,12 +1,12 @@
 #include "start_page_gui.h"
-
-void StartPageNewNameModalSubGui::invokeEvent(const std::string& text) {
-    createNewScheduleEvent.invoke(text);
-}
+#include "text_input_modal_subgui.h"
 
 StartPageGui::StartPageGui(const char* ID) : Gui(ID) {
     setVisible(false);
-    addSubGui(new StartPageNewNameModalSubGui("StartPageNewNameModalSubGui"));
+    addSubGui(new TextInputModalSubGui("StartPageNewNameModalSubGui", "Enter name   ", "Create schedule"));
+
+    createNewScheduleEventPipe.addEvent(
+        getSubGui<TextInputModalSubGui>("StartPageNewNameModalSubGui")->acceptButtonPressedEvent);
 }
 
 void StartPageGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
@@ -35,7 +35,7 @@ void StartPageGui::draw(Window& window, Input& input, GuiTextures& guiTextures) 
     }
     ImGui::End();
 
-    if (auto nameModalSubGui = getSubGui<StartPageNewNameModalSubGui>("StartPageNewNameModalSubGui")) {
+    if (auto nameModalSubGui = getSubGui<TextInputModalSubGui>("StartPageNewNameModalSubGui")) {
         nameModalSubGui->draw(window, input, guiTextures);
 
         if (m_openScheduleNameModal) {

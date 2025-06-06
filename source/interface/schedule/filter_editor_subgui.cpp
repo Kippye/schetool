@@ -1,4 +1,4 @@
-#include "filter_editor_subgui.h"
+#include "schedule/filter_editor_subgui.h"
 #include "gui_templates.h"
 #include "gui_constants.h"
 #include "filter_constants.h"

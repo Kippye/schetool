@@ -1,6 +1,6 @@
 #include <regex>
 #include <iostream>
-#include "element_editor_subgui.h"
+#include "schedule/element_editor_subgui.h"
 #include "gui_templates.h"
 #include "schedule_constants.h"
 #include "gui_constants.h"

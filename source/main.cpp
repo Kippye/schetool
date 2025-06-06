@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <locale>
 
+#include "event_pipe.h"
+
 #if defined(NDEBUG) && (defined(_WIN32) || defined(_WIN64))
 #define WIN_RELEASE
 #endif
@@ -15,7 +17,6 @@ Program::Program() {
     notifyLoop = g_main_loop_new(nullptr, false);
 #endif
 
-    // TODO: load user preferences here!
 
     // setup and initialize components
     windowManager.init();

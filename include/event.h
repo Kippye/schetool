@@ -28,6 +28,9 @@ class Event {
                 listener.second(args...);
             }
         }
+        size_t getListenerCount() const {
+            return m_listeners.size();
+        }
 };
 
 template <typename TemplateType, typename... ArgTypes>

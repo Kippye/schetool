@@ -10,8 +10,8 @@
 #include "input.h"
 #include "file_info.h"
 #include "start_page_gui.h"
-#include "schedule_gui.h"
-#include "main_menu_bar_gui.h"
+#include "schedule/schedule_gui.h"
+#include "main_menu_bar/main_menu_bar_gui.h"
 #include "autosave_popup_gui.h"
 #include "interface.h"
 
