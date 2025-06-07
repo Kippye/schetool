@@ -34,6 +34,11 @@ class EventPipe {
     public:
         EventPipe() {
         }
+        ~EventPipe() {
+            for (auto [id, pipeLink] : m_links) {
+                pipeLink.disconnect();
+            }
+        }
         // Adds the function as a listener to the output of this event pipe. Returns the ID for the EventPipeLink in the links map (in case it needs to be removed later).
         size_t addListener(const std::function<void(Types...)>& listener) {
             return m_outEvent.addListener(listener);

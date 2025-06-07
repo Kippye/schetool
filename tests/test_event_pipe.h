@@ -7,10 +7,8 @@
 
 TEST_CASE("EventPipe") {
     SECTION("Add listeners") {
-        std::function<void(int)> listener1 = [&](int arg) {
-        };
-        std::function<void(int)> listener2 = [&](int arg) {
-        };
+        std::function<void(int)> listener1 = [&](int arg) {};
+        std::function<void(int)> listener2 = [&](int arg) {};
         EventPipe<int> eventPipe;
         CHECK(eventPipe.getListenerCount() == 0);
         eventPipe.addListener(listener1);
@@ -20,10 +18,8 @@ TEST_CASE("EventPipe") {
     }
 
     SECTION("Remove listeners") {
-        std::function<void(int)> listener1 = [&](int arg) {
-        };
-        std::function<void(int)> listener2 = [&](int arg) {
-        };
+        std::function<void(int)> listener1 = [&](int arg) {};
+        std::function<void(int)> listener2 = [&](int arg) {};
         EventPipe<int> eventPipe;
         CHECK(eventPipe.getListenerCount() == 0);
         size_t firstListenerID = eventPipe.addListener(listener1);
@@ -75,6 +71,18 @@ TEST_CASE("EventPipe") {
         eventPipe.removeEvent(eventID);
         sourceEvent.invoke(invokedCount + 16);
         CHECK(invokedCount == 1);
+    }
+
+    SECTION("Removes listeners from events when destroyed") {
+        Event<int> sourceEvent;
+        {
+            EventPipe<int> eventPipe;
+            eventPipe.addEvent(sourceEvent);
+            CHECK(eventPipe.getLinkedEventCount() == 1);
+            CHECK(sourceEvent.getListenerCount() == 1);
+        }
+        // When the event pipe goes out of scope and gets destroyed, it should automatically remove its listeners from events
+        CHECK(sourceEvent.getListenerCount() == 0);
     }
 
     SECTION("Can't pipe itself") {
