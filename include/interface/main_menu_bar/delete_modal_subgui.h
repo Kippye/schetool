@@ -1,6 +1,6 @@
 #pragma once
 
-#include "text_input_modal_subgui.h"
+#include "gui.h"
 
 class DeleteModalSubGui : public Gui {
     private:

@@ -5,6 +5,8 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 #include "main.h"
 
+#include "test_event.h"
+#include "test_event_pipe.h"
 #include "test_time_wrapper.h"  // tested early because almost everything uses it
 #include "test_date_container.h"  // must be tested before filters since filters use it
 #include "test_select_options.h"
