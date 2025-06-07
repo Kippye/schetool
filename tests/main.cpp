@@ -5,13 +5,13 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 #include "main.h"
 
-#include "test_event.h"
-#include "test_event_pipe.h"
-#include "test_time_wrapper.h"  // tested early because almost everything uses it
-#include "test_date_container.h"  // must be tested before filters since filters use it
-#include "test_select_options.h"
-#include "test_filter.h"  // tested before FilterGroups since they are contained
-#include "test_filter_group.h"
+#include "events/test_event.h"
+#include "events/test_event_pipe.h"
+#include "containers/test_time_wrapper.h"  // tested early because almost everything uses it
+#include "containers/test_date_container.h"  // must be tested before filters since filters use it
+#include "containers/test_select_options.h"
+#include "filters/test_filter.h"  // tested before FilterGroups since they are contained
+#include "filters/test_filter_group.h"
 #include "test_time_handler.h"
 
 class testListener : public Catch::EventListenerBase {

@@ -1,5 +1,5 @@
 #ifdef SCHETOOL_LINUX
-#include "notification_handler_linux_impl.h"
+#include "notifications/notification_handler_linux_impl.h"
 
 #include <format>
 

@@ -2,9 +2,9 @@
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
-#include "filter_rule.h"
+#include "filters/filter_rule.h"
 #include "element_base.h"
-#include "filter_editor_subgui.h"
+#include "schedule/filter_editor_subgui.h"
 
 // TEST_CASE("FilterGroupEditorState")
 // {

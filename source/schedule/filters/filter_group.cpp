@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include "filter_group.h"
+#include "filters/filter_group.h"
 
 FilterGroup::FilterGroup(const std::vector<Filter>& filters,
                          const std::string& name,

@@ -4,7 +4,7 @@
 #define NOMINMAX
 #endif
 
-#include "notification_handler_win_impl.h"
+#include "notifications/notification_handler_win_impl.h"
 
 #include <NotificationActivationCallback.h>
 

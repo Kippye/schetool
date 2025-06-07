@@ -2,7 +2,7 @@
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
-#include "filter.h"
+#include "filters/filter.h"
 #include "element.h"
 #include "date_container.h"
 

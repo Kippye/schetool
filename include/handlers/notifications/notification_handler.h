@@ -1,6 +1,6 @@
 #pragma once
 
-#include "notification_handler_base_impl.h"
+#include "notifications/notification_handler_base_impl.h"
 #include "preferences_io.h"
 #include "preferences.h"
 #include <memory>

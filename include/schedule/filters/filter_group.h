@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "filter.h"
+#include "filters/filter.h"
 #include "filter_constants.h"
 #include "element_base.h"
 

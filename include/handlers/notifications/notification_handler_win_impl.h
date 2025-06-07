@@ -3,7 +3,7 @@
 #include <NotificationActivationCallback.h>
 
 #include "time_wrapper.h"
-#include "notification_handler_base_impl.h"
+#include "notifications/notification_handler_base_impl.h"
 #include "event.h"
 #include <string>
 #include <iostream>

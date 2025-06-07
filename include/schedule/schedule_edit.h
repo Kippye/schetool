@@ -1,6 +1,6 @@
 #pragma once
 
-#include "filter_rule.h"
+#include "filters/filter_rule.h"
 #include "element_base.h"
 #include "element.h"
 #include "schedule_column.h"

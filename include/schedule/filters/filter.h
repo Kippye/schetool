@@ -3,7 +3,7 @@
 #include <vector>
 #include "filter_constants.h"
 #include "element_base.h"
-#include "filter_rule_container.h"
+#include "filters/filter_rule_container.h"
 
 class Filter {
     private:

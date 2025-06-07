@@ -1,7 +1,7 @@
 #pragma once
 
 #include "time_wrapper.h"
-#include "notification_handler_base_impl.h"
+#include "notifications/notification_handler_base_impl.h"
 #include <functional>
 #include <libnotify/notify.h>
 

@@ -3,7 +3,7 @@
 #include "io_handler.h"
 #include "schedule.h"
 #include "time_wrapper.h"
-#include "notification_handler.h"
+#include "notifications/notification_handler.h"
 #include <functional>
 #include <utility>
 

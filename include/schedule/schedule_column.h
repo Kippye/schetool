@@ -5,7 +5,7 @@
 #include <memory>
 #include <optional>
 #include "schedule_constants.h"
-#include "filter_group.h"
+#include "filters/filter_group.h"
 #include "element_base.h"
 #include "element.h"
 #include "select_container.h"

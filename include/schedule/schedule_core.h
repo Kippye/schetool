@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <optional>
-#include "filter_rule.h"
+#include "filters/filter_rule.h"
 #include "schedule_column.h"
 #include "schedule_constants.h"
 #include "element.h"

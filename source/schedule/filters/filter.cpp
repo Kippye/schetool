@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include "filter.h"
+#include "filters/filter.h"
 
 Filter::Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator)
     : m_rules(rules), m_operator(logicalOperator) {

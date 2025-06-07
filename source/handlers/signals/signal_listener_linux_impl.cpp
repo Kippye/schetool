@@ -1,5 +1,5 @@
 #ifdef SCHETOOL_LINUX
-#include "signal_listener_linux_impl.h"
+#include "signals/signal_listener_linux_impl.h"
 
 #include <csignal>
 #include <atomic>

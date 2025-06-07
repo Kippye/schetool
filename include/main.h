@@ -8,8 +8,8 @@
 #include "schedule.h"
 #include "interface.h"
 #include "time_handler.h"
-#include "signal_listener.h"
-#include "notification_handler.h"
+#include "signals/signal_listener.h"
+#include "notifications/notification_handler.h"
 
 #ifdef SCHETOOL_LINUX
 #include <libnotify/notify.h>

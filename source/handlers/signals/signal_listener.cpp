@@ -1,8 +1,8 @@
-#include "signal_listener.h"
+#include "signals/signal_listener.h"
 #ifndef _WIN32
-#include "signal_listener_linux_impl.h"
+#include "signals/signal_listener_linux_impl.h"
 #else
-#include "signal_listener_win_impl.h"
+#include "signals/signal_listener_win_impl.h"
 #endif
 
 void SignalListener::init(Window& window) {

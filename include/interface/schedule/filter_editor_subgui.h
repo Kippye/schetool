@@ -2,7 +2,7 @@
 
 #include <map>
 #include "gui.h"
-#include "filter_rule.h"
+#include "filters/filter_rule.h"
 #include "select_container.h"
 #include "time_container.h"
 #include "date_container.h"

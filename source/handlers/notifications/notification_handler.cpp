@@ -1,10 +1,10 @@
-#include "notification_handler.h"
+#include "notifications/notification_handler.h"
 #ifdef _WIN32
 #ifndef __MINGW32__
-#include "notification_handler_win_impl.h"
+#include "notifications/notification_handler_win_impl.h"
 #endif
 #elif defined(SCHETOOL_LINUX)
-#include "notification_handler_linux_impl.h"
+#include "notifications/notification_handler_linux_impl.h"
 #endif
 #include <iostream>
 

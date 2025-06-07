@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "filter_rule.h"
+#include "filters/filter_rule.h"
 
 // Type to contain and manage a FilterRuleBase pointer.
 class FilterRuleContainer {

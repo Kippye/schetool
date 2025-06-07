@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util_types.h"
-#include "filter_rule_base.h"
+#include "filters/filter_rule_base.h"
 #include "element.h"
 
 template <typename T>
