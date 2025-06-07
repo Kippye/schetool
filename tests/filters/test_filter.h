@@ -60,7 +60,7 @@ TEST_CASE("FilterRule") {
         //     CHECK(filter.checkPasses(&element) == false);
         // }
         SECTION("Date filter") {
-            TimeWrapper time = TimeWrapper(2032, 4, 25);
+            TimeWrapper time = TimeWrapper({2032, 4, 25});
             Element<DateContainer> element = Element<DateContainer>(SCH_DATE, DateContainer(time));
             FilterRule filter = FilterRule(DateContainer(time));
             CHECK(filter.checkPasses(&element) == true);

@@ -151,8 +151,6 @@ class TimeWrapper {
         TimeWrapper(const ClockTimeWrapper& clockTime);
         // Construct TimeWrapper from date and time
         TimeWrapper(const DateWrapper& date, const ClockTimeWrapper& time);
-        // TEMP
-        TimeWrapper(unsigned int year, unsigned int month = 1, unsigned int monthDay = 1);
 
         bool getIsEmpty() const;
         void clear();

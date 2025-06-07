@@ -28,7 +28,7 @@ TEST_CASE("TimeHandler") {
     TimeWrapper::testCurrentTimeOverride.clear();
 
     SECTION("Same date - no resets") {
-        TimeWrapper::testCurrentTimeOverride = TimeWrapper(DateWrapper(2012, 6, 15));
+        TimeWrapper::testCurrentTimeOverride = TimeWrapper({2012, 6, 15});
         timeHandler.applyResetsSinceEditTime(TimeWrapper::testCurrentTimeOverride);
         timeHandler.timeTick();
         CHECK(schedule.getElementValue<bool>(0, 0) == true);
@@ -37,7 +37,7 @@ TEST_CASE("TimeHandler") {
     }
 
     SECTION("Different day - daily resets") {
-        TimeWrapper editTime = TimeWrapper(2016, 7, 4);
+        TimeWrapper editTime = TimeWrapper({2016, 7, 4});
         TimeWrapper::testCurrentTimeOverride = editTime;
         TimeWrapper::testCurrentTimeOverride.addDays(1);
         timeHandler.applyResetsSinceEditTime(editTime);
@@ -61,7 +61,7 @@ TEST_CASE("TimeHandler") {
     }
 
     SECTION("Different month - monthly resets") {
-        TimeWrapper editTime = TimeWrapper(2024, 8, 7);
+        TimeWrapper editTime = TimeWrapper({2024, 8, 7});
         TimeWrapper::testCurrentTimeOverride = editTime;
         TimeWrapper::testCurrentTimeOverride.addMonths(1);
         timeHandler.applyResetsSinceEditTime(editTime);

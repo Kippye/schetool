@@ -76,10 +76,6 @@ TimeWrapper::TimeWrapper(const DateWrapper& date, const ClockTimeWrapper& time) 
     setTimeUTC(date, time);
 }
 
-TimeWrapper::TimeWrapper(unsigned int year, unsigned int month, unsigned int monthDay)
-    : TimeWrapper(DateWrapper{year, month, monthDay}) {
-}
-
 // Static function.
 // Turns the input date and time into a time_t in UTC time.
 // Thanks to the legend Howard Hinnant from StackOverflow!

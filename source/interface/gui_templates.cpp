@@ -102,11 +102,11 @@ bool gui_templates::DateEditor(
     size_t dayIndex = 0;
     unsigned int daysInMonth = mytime::get_month_day_count(viewedYear, viewedMonth);
 
-    TimeWrapper firstOfTheMonth = TimeWrapper(viewedYear, viewedMonth, 1);
+    TimeWrapper firstOfTheMonth = TimeWrapper({viewedYear, viewedMonth, 1});
     // day of the week converted from Sun-Sat to Mon-Sun
     int dayOfTheWeekFirst = firstOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
 
-    TimeWrapper lastOfTheMonth = TimeWrapper(viewedYear, viewedMonth, daysInMonth);
+    TimeWrapper lastOfTheMonth = TimeWrapper({viewedYear, viewedMonth, daysInMonth});
     // day of the week converted from Sun-Sat to Mon-Sun
     int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
 

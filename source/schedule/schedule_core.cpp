@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <numeric>
-#include "filters/filter_rule.h"
+#include "filter_rule.h"
 #include "schedule_core.h"
 #include "element_base.h"
 

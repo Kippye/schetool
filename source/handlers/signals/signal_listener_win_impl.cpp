@@ -15,7 +15,6 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
-// TEMP?
 #include "time_wrapper.h"
 
 Signal gLastSignal = Signal::None;
