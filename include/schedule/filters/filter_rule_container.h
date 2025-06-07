@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <stdexcept>
 #include "filters/filter_rule.h"
 
 // Type to contain and manage a FilterRuleBase pointer.
@@ -89,24 +90,21 @@ class FilterRuleContainer {
         template <typename T>
         FilterRule<T> getAsType() const {
             if (isEmpty()) {
-                printf("FilterRuleContainer::getAsType(): Container is empty!\n");
-                return FilterRule<T>(T());
+                throw std::runtime_error("FilterRuleContainer::getAsType(): Container is empty!");
             }
             return *std::dynamic_pointer_cast<FilterRule<T>>(m_filterRule);
         }
         template <typename T>
         void setPassValue(T passValue) {
             if (isEmpty()) {
-                printf("FilterRuleContainer::setPassValue(): Container is empty!\n");
-                return;
+                throw std::runtime_error("FilterRuleContainer::setPassValue(): Container is empty!");
             }
             std::dynamic_pointer_cast<FilterRule<T>>(m_filterRule)->setPassValue(passValue);
         }
         template <typename T>
         T getPassValue() const {
             if (isEmpty()) {
-                printf("FilterRuleContainer::setPassValue(): Container is empty!\n");
-                return T();
+                throw std::runtime_error("FilterRuleContainer::getPassValue(): Container is empty!");
             }
             return std::dynamic_pointer_cast<FilterRule<T>>(m_filterRule)->getPassValue();
         }

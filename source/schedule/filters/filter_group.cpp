@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <format>
 #include "filters/filter_group.h"
 
 FilterGroup::FilterGroup(const std::vector<Filter>& filters,
@@ -37,8 +38,8 @@ bool FilterGroup::hasFilterAt(size_t index) const {
 
 Filter& FilterGroup::getFilter(size_t index) {
     if (index < m_filters.size() == false) {
-        printf("FilterGroup::getFilter(%zu): Index out of range(size %zu)\n", index, m_filters.size());
-        throw std::out_of_range("Index out of range in reference getter.");
+        throw std::out_of_range(
+            std::format("FilterGroup::getFilter({}): Index out of range(size {})", index, m_filters.size()));
     }
 
     return m_filters.at(index);
@@ -46,8 +47,8 @@ Filter& FilterGroup::getFilter(size_t index) {
 
 const Filter& FilterGroup::getFilterConst(size_t index) const {
     if (index < m_filters.size() == false) {
-        printf("FilterGroup::getFilterConst(%zu): Index out of range(size %zu)\n", index, m_filters.size());
-        throw std::out_of_range("Index out of range in reference getter.");
+        throw std::out_of_range(
+            std::format("FilterGroup::getFilterConst({}): Index out of range(size {})", index, m_filters.size()));
     }
 
     return m_filters.at(index);

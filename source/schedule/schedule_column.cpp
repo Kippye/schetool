@@ -1,4 +1,5 @@
 #include "schedule_column.h"
+#include <iostream>
 
 Column::Column() {
     setupFiltersPerType();
@@ -158,7 +159,8 @@ FilterGroup& Column::getFilterGroup(size_t index) {
     auto& filterGroups = getFilterGroups();
 
     if (index < filterGroups.size() == false) {
-        throw std::out_of_range("Column::getFilterGroup(): Index out of range");
+        throw std::out_of_range(
+            std::format("Column::getFilterGroup(): Index {} is out of range (size: {})", index, filterGroups.size()));
     }
 
     return filterGroups.at(index);
@@ -168,7 +170,8 @@ const FilterGroup& Column::getFilterGroupConst(size_t index) const {
     const auto& filterGroups = getFilterGroupsConst();
 
     if (index < filterGroups.size() == false) {
-        throw std::out_of_range("Column::getFilterGroupConst(): Index out of range");
+        throw std::out_of_range(
+            std::format("Column::getFilterGroupConst(): Index {} is out of range (size: {})", index, filterGroups.size()));
     }
 
     return filterGroups.at(index);
@@ -176,11 +179,10 @@ const FilterGroup& Column::getFilterGroupConst(size_t index) const {
 
 std::vector<FilterGroup>& Column::getFilterGroups() {
     if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) {
-        printf(
-            "Column::getFilterGroups(): Warning: There is no FilterGroup vector for the Column %s's type %d. Can't return reference early!\n",
+        throw std::out_of_range(std::format(
+            "Column::getFilterGroups(): There is no FilterGroup vector for the Column {}'s type {} in Column::m_filterGroupsPerType!",
             name.c_str(),
-            type);
-        throw std::out_of_range("Column::getFilterGroups():Type not present in Column::m_filterGroupsPerType");
+            (size_t)type));
     }
 
     return m_filterGroupsPerType.at(type);
@@ -188,11 +190,10 @@ std::vector<FilterGroup>& Column::getFilterGroups() {
 
 const std::vector<FilterGroup>& Column::getFilterGroupsConst() const {
     if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) {
-        printf(
-            "Column::getFiltersConst(): Warning: There is no FilterGroup vector for the Column %s's type %d. Can't return reference early!\n",
+        throw std::out_of_range(std::format(
+            "Column::getFilterGroupsConst(): There is no FilterGroup vector for the Column {}'s type {} in Column::m_filterGroupsPerType!",
             name.c_str(),
-            type);
-        throw std::out_of_range("Column::getFilterGroupsConst():Type not present in Column::m_filterGroupsPerType");
+            (size_t)type));
     }
 
     return m_filterGroupsPerType.at(type);
@@ -213,8 +214,10 @@ bool Column::hasFilterAt(size_t groupIndex, size_t filterIndex) const {
 
 size_t Column::getFilterGroupCount() const {
     if (m_filterGroupsPerType.find(type) == m_filterGroupsPerType.end()) {
-        printf(
-            "Column::getFilterGroupCount(): There is no FilterGroup vector for the Column %s's type %d\n", name.c_str(), type);
+        std::cout << std::format("Column::getFilterGroupCount(): There is no FilterGroup vector for the Column {}'s type {}",
+                                 name.c_str(),
+                                 (size_t)type)
+                  << std::endl;
         return 0;
     }
 

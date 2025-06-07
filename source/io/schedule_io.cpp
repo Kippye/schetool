@@ -3,6 +3,7 @@
 #include <chrono>
 #include <limits>
 #include <format>
+#include <stdexcept>
 #include "schedule_io.h"
 
 namespace fs = std::filesystem;
@@ -405,7 +406,6 @@ bool ScheduleIO::createAutosave() {
 
     if (writeSchedule(autosaveName.c_str())) {
         return true;
-        printf("ScheduleIO::createAutosave(): Created autosave!\n");
     }
 
     return false;
@@ -431,8 +431,7 @@ std::string ScheduleIO::getFileBaseName(const char* autosaveName) {
 
 long long ScheduleIO::getFileEditTime(fs::path path) {
     if (fs::exists(path) == false) {
-        std::cout << std::format("ScheduleIO::getFileEditTime(): No file exists at path: '{}'", path.string()) << std::endl;
-        return 0;
+        throw std::runtime_error(std::format("ScheduleIO::getFileEditTime(): No file exists at path: '{}'", path.string()));
     }
 
     return fs::last_write_time(path).time_since_epoch().count();
@@ -440,9 +439,7 @@ long long ScheduleIO::getFileEditTime(fs::path path) {
 
 TimeWrapper ScheduleIO::getFileEditTimeWrapped(fs::path path) {
     if (fs::exists(path) == false) {
-        std::cout << std::format("ScheduleIO::getFileEditTimeWrapped(): No file exists at path: '{}'", path.string())
-                  << std::endl;
-        return TimeWrapper();
+        throw std::runtime_error(std::format("ScheduleIO::getFileEditTimeWrapped(): No file exists at path: '{}'", path.string()));
     }
 
     const auto fileEditTime = fs::last_write_time(path);
@@ -461,9 +458,7 @@ TimeWrapper ScheduleIO::getFileEditTimeWrapped(fs::path path) {
 
 std::string ScheduleIO::getFileEditTimeString(fs::path path) {
     if (fs::exists(path) == false) {
-        std::cout << std::format("ScheduleIO::getFileEditTimeString(): No file exists at path: '{}'", path.string())
-                  << std::endl;
-        return std::string("");
+        throw std::runtime_error(std::format("ScheduleIO::getFileEditTimeString(): No file exists at path: '{}'", path.string()));
     }
 
     return getFileEditTimeWrapped(path).getString(TIME_FORMAT_FULL);

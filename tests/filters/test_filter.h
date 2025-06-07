@@ -77,7 +77,7 @@ TEST_CASE("Filter") {
     Filter filter = Filter();
 
     SECTION("Filter rules modification") {
-        CHECK(filter.getRule(13).isEmpty());  // index out of range
+        CHECK_THROWS_AS(filter.getRule(13), std::out_of_range);  // index out of range
         FilterRule<int> filterRule = FilterRule<int>(52);
         filter.addRule(filterRule);
         CHECK(filter.getRuleCount() == 1);  // increased size

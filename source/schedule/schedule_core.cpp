@@ -2,12 +2,8 @@
 #include <string>
 #include <vector>
 #include <numeric>
-#include "filter_rule.h"
 #include "schedule_core.h"
 #include "element_base.h"
-
-// TEMP
-#include <iostream>
 
 ScheduleCore::ScheduleCore() {
 }
@@ -29,8 +25,7 @@ Column* ScheduleCore::getColumnWithFlags(ScheduleColumnFlags flags) {
 
 Column* ScheduleCore::getMutableColumn(size_t column) {
     if (column > getColumnCount()) {
-        std::cout << "ScheduleCore::getMutableColumn: index out of range. Returning last column" << std::endl;
-        return &m_schedule.at(getColumnCount() - 1);
+        throw std::out_of_range(std::format("ScheduleCore::getMutableColumn: column index {} is out of range.", column));
     }
     return &m_schedule.at(column);
 }
@@ -91,7 +86,9 @@ size_t ScheduleCore::getColumnCount() const {
 // Check if the index is less than size. If not, a general "index out of range" error is printed
 bool ScheduleCore::existsColumnAtIndex(size_t index) const {
     if (index < getColumnCount() == false) {
-        printf("ScheduleCore::existsColumnAtIndex(%zu): Index not less than size (%zu)\n", index, getColumnCount());
+        std::cout << std::format(
+                         "ScheduleCore::existsColumnAtIndex({}): Index not less than size ({})", index, getColumnCount())
+                  << std::endl;
         return false;
     }
     return true;
@@ -200,8 +197,7 @@ bool ScheduleCore::removeColumn(size_t column) {
 
 const Column* ScheduleCore::getColumn(size_t column) const {
     if (existsColumnAtIndex(column) == false) {
-        std::cout << "ScheduleCore::getColumn: index out of range. Returning last column" << std::endl;
-        return &m_schedule.at(getColumnCount() - 1);
+        throw std::out_of_range(std::format("ScheduleCore::getColumn: column index {} is out of range.", column));
     }
     return &m_schedule.at(column);
 }
@@ -211,9 +207,11 @@ bool ScheduleCore::setColumnElements(size_t index, const Column& columnData) {
         return false;
     }
     if (getColumn(index)->type != columnData.type) {
-        printf("ScheduleCore::setColumnElements: The target Column and columnData types must match but are %d and %d\n",
-               getColumn(index)->type,
-               columnData.type);
+        std::cout << std::format(
+                         "ScheduleCore::setColumnElements: The target Column and columnData types must match but are {} and {}",
+                         (size_t)getColumn(index)->type,
+                         (size_t)columnData.type)
+                  << std::endl;
         return false;
     }
 
@@ -276,7 +274,11 @@ bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type) {
         return false;
     }
     if (getColumn(column)->permanent == true) {
-        printf("ScheduleCore::setColumnType tried to set type of a permanent Column at %zu! Returning.\n", column);
+        std::cout
+            << std::format(
+                   "ScheduleCore::setColumnType tried to set type of a permanent Column at column index {}! Returning false.",
+                   column)
+            << std::endl;
         return false;
     }
 
@@ -525,7 +527,7 @@ void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type) {
         default: {
             std::cout << "ScheduleCore::resetColumn: Resetting a column to type: " << type << " has not been implemented!"
                       << std::endl;
-            break;
+            return;
         }
     }
 
@@ -540,7 +542,8 @@ size_t ScheduleCore::getRowCount() const {
 
 bool ScheduleCore::existsRowAtIndex(size_t index) const {
     if (index < getRowCount() == false) {
-        printf("ScheduleCore::existsRowAtIndex(%zu): Index not less than size (%zu)\n", index, getRowCount());
+        std::cout << std::format("ScheduleCore::existsRowAtIndex({}): Index not less than size ({})", index, getRowCount())
+                  << std::endl;
         return false;
     }
     return true;
@@ -597,9 +600,8 @@ void ScheduleCore::addRow(size_t index) {
                 break;
             }
             default: {
-                std::cout << "ScheduleCore::addRow: Adding rows of type: " << column.type << " has not been implemented!"
-                          << std::endl;
-                break;
+                throw std::runtime_error(std::format("ScheduleCore::addRow: Adding rows of type: {} has not been implemented!",
+                                                     (size_t)column.type));
             }
         }
     }

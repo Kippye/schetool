@@ -1,4 +1,7 @@
 #include "filter_constants.h"
+#include <stdexcept>
+#include <format>
+#include <iostream>
 
 LogicalOperator::LogicalOperator(LogicalOperatorEnum type) : m_operatorType(type) {
 }
@@ -12,8 +15,7 @@ bool LogicalOperator::apply(bool a, bool b) const {
             return a || b;
         }
         default: {
-            printf("LogicalOperator::apply(%u, %u) Unimplemented binary operator %d\n", a, b, static_cast<int>(m_operatorType));
-            return a;
+            throw std::runtime_error(std::format("LogicalOperator::apply({}, {}) Unimplemented binary operator {}", a, b, static_cast<int>(m_operatorType)));
         }
     }
 }
@@ -26,7 +28,7 @@ using filter_consts::TypeComparisonInfo;
 
 TypeComparisonInfo filter_consts::getComparisonInfo(SCHEDULE_TYPE type) {
     if (typeComparisons.find(type) == typeComparisons.end()) {
-        printf("filter_consts::getComparisonInfo(%d): No comparison info for type.\n", type);
+        std::cout << std::format("filter_consts::getComparisonInfo({}): No comparison info for type.", (size_t)type) << std::endl;
         return TypeComparisonInfo({}, {});
     }
 

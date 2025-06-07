@@ -3,7 +3,8 @@
 #include <vector>
 #include <string>
 #include <optional>
-#include "filters/filter_rule.h"
+#include <format>
+#include <iostream>
 #include "schedule_column.h"
 #include "schedule_constants.h"
 #include "element.h"
@@ -145,7 +146,7 @@ class ScheduleCore {
             Column* mutableColumn = getMutableColumn(column);
 
             if (mutableColumn == nullptr || mutableColumn->hasElement(row) == false) {
-                printf("ScheduleCore::getElement could not get element at %zu; %zu\n", column, row);
+                std::cout << std::format("ScheduleCore::getElement could not get element at {}; {}", column, row) << std::endl;
                 return nullptr;
             }
 
@@ -156,7 +157,8 @@ class ScheduleCore {
             const Column* col = getColumn(column);
 
             if (col == nullptr || col->hasElement(row) == false) {
-                printf("ScheduleCore::getElementConst could not get element at %zu; %zu\n", column, row);
+                std::cout << std::format("ScheduleCore::getElementConst could not get element at {}; {}", column, row)
+                          << std::endl;
                 return nullptr;
             }
 
@@ -169,7 +171,8 @@ class ScheduleCore {
             ElementBase* element = getElement(column, row);
 
             if (element == nullptr) {
-                printf("ScheduleCore::getElementAsSpecial could not get element at %zu; %zu\n", column, row);
+                std::cout << std::format("ScheduleCore::getElementAsSpecial could not get element at {}; {}", column, row)
+                          << std::endl;
                 return nullptr;
             }
 
@@ -182,7 +185,10 @@ class ScheduleCore {
         // NOTE: Currently, does not add to the edit history
         bool setElement(size_t column, size_t row, ElementBase* other, bool resort = true) {
             if (getElement(column, row) == nullptr) {
-                printf("ScheduleCore::setElement failed to set element at %zu; %zu - element does not exist\n", column, row);
+                std::cout << std::format("ScheduleCore::setElement failed to set element at {}; {} - element does not exist",
+                                         column,
+                                         row)
+                          << std::endl;
                 return false;
             }
 
@@ -229,7 +235,10 @@ class ScheduleCore {
                         break;
                     }
                     default: {
-                        printf("ScheduleCore::setElement has not been implemented for Element type %d\n", other->getType());
+                        std::cout << std::format("ScheduleCore::setElement has not been implemented for Element type {}",
+                                                 (size_t)other->getType())
+                                  << std::endl;
+                        return false;
                     }
                 }
             }
@@ -252,8 +261,8 @@ class ScheduleCore {
         T& getElementValue(size_t column, size_t row) {
             const Column* elementColumn = getColumn(column);
             if (elementColumn == nullptr || elementColumn->hasElement(row) == false) {
-                printf("ScheduleCore::getElementValue could not return value at %zu; %zu\n", column, row);
-                return *(new T());  // memory leak ON PURPOSE
+                throw std::runtime_error(
+                    std::format("ScheduleCore::getElementValue could not get element value at {}; {}", column, row));
             }
             return getValue<T>(elementColumn->rows[row]);
         }
@@ -262,8 +271,8 @@ class ScheduleCore {
         const T& getElementValueConstRef(size_t column, size_t row) const {
             const Column* elementColumn = getColumn(column);
             if (elementColumn == nullptr || elementColumn->hasElement(row) == false) {
-                printf("ScheduleCore::getElementValueConstRef could not return value at %zu; %zu\n", column, row);
-                return *(new T());  // memory leak ON PURPOSE
+                throw std::runtime_error(
+                    std::format("ScheduleCore::getElementValueConstRef could not get element value at {}; {}", column, row));
             }
             return getValueConstRef<T>(elementColumn->rows[row]);
         }
@@ -274,8 +283,11 @@ class ScheduleCore {
             ElementBase* element = getElement(column, row);
 
             if (element == nullptr) {
-                printf(
-                    "ScheduleCore::setElementValue failed to set element at %zu; %zu - element does not exist\n", column, row);
+                std::cout << std::format(
+                                 "ScheduleCore::setElementValue failed to set element at {}; {} - element does not exist",
+                                 column,
+                                 row)
+                          << std::endl;
                 return false;
             }
 

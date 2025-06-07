@@ -189,8 +189,6 @@ void Schedule::addDefaultColumn(size_t columnIndex, SCHEDULE_TYPE colType, bool 
 }
 
 void Schedule::removeColumn(size_t columnIndex, bool addToHistory) {
-    // i know it's kinda dumb to have this here too, but..
-    // a permanent column can't be removed
     if (m_core.getColumn(columnIndex)->permanent == true) {
         return;
     }

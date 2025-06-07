@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <format>
 #include "filters/filter.h"
 
 Filter::Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator)
@@ -25,8 +26,7 @@ bool Filter::checkPasses(const ElementBase* element, const TimeWrapper& currentT
 
 FilterRuleContainer Filter::getRule(size_t index) {
     if (index < m_rules.size() == false) {
-        printf("Filter::getRule(%zu): Index out of range(size %zu)\n", index, m_rules.size());
-        return FilterRuleContainer();
+        throw std::out_of_range(std::format("Filter::getRule({}): Index out of range(size {})", index, m_rules.size()));
     }
 
     return m_rules.at(index);
@@ -34,8 +34,7 @@ FilterRuleContainer Filter::getRule(size_t index) {
 
 const FilterRuleContainer& Filter::getRuleConst(size_t index) const {
     if (index < m_rules.size() == false) {
-        printf("Filter::getRuleConst(%zu): Index out of range(size %zu)\n", index, m_rules.size());
-        throw std::out_of_range("Index out of range in reference getter.");
+        throw std::out_of_range(std::format("Filter::getRuleConst({}): Index out of range(size {})", index, m_rules.size()));
     }
 
     return m_rules.at(index);

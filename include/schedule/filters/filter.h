@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <format>
 #include "filter_constants.h"
 #include "element_base.h"
 #include "filters/filter_rule_container.h"
@@ -38,8 +39,7 @@ class Filter {
         template <typename T>
         void replaceRule(size_t index, const FilterRule<T>& filterRule) {
             if (index >= m_rules.size()) {
-                printf("Filter::replaceRule(%zu): Index out of range (size %zu)\n", index, m_rules.size());
-                return;
+                throw std::out_of_range(std::format("Filter::replaceRule({}): Index out of range (size {})\n", index, m_rules.size()));
             }
 
             m_rules.at(index) = FilterRuleContainer(filterRule);

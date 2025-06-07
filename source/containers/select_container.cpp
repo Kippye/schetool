@@ -1,5 +1,6 @@
-#include <select_container.h>
-#include <iostream>
+#include "select_container.h"
+#include <stdexcept>
+#include <format>
 
 const std::set<size_t> SelectContainer::getSelection() const {
     return m_selection;
@@ -7,8 +8,7 @@ const std::set<size_t> SelectContainer::getSelection() const {
 
 void SelectContainer::setSelected(size_t index, bool select) {
     if (index > m_optionCount - 1) {
-        std::cout << "Tried to change selection of an option that does not exist" << std::endl;
-        return;
+        throw std::out_of_range(std::format("SelectContainer::setSelected({}, {}): Tried to change selection of an option that does not exist", index, select));
     }
 
     auto indexInSelection = m_selection.find(index);

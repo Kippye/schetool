@@ -2,6 +2,8 @@
 #include "gui_templates.h"
 #include "gui_constants.h"
 #include "filter_constants.h"
+#include <stdexcept>
+#include <format>
 
 using filter_consts::TypeComparisonInfo;
 
@@ -474,8 +476,8 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                     filter.addRule(m_filterRuleState.getFilterRule().getAsType<DateContainer>());
                     break;
                 default: {
-                    printf("FilterRuleEditorSubGui::draw(): Creating filters of type %d has not been implemented\n",
-                           m_filterRuleState.getType());
+                    throw std::runtime_error(std::format("FilterRuleEditorSubGui::draw(): Creating filters of type {} has not been implemented!",
+                           (size_t)m_filterRuleState.getType()));
                     return;
                 }
             }

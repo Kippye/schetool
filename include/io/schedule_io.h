@@ -136,6 +136,7 @@ class ScheduleIO {
         // Remove the autosave suffix from a file name.
         // If the file name already isn't that of an autosave, the initial name is be returned.
         std::string getFileBaseName(const char* autosaveName);
+        // TODO: Use an optional<long long> instead of throwing on error?
         long long getFileEditTime(std::filesystem::path filePath);
         TimeWrapper getFileEditTimeWrapped(std::filesystem::path filePath);
         std::string getFileEditTimeString(std::filesystem::path filePath);

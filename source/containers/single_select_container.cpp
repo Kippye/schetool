@@ -1,4 +1,6 @@
 #include "single_select_container.h"
+#include <stdexcept>
+#include <format>
 #include <iostream>
 
 std::optional<size_t> SingleSelectContainer::getSelection() const {
@@ -20,8 +22,7 @@ void SingleSelectContainer::replaceSelection(const std::optional<size_t>& select
 
 void SingleSelectContainer::setSelected(size_t index, bool select) {
     if (index > m_optionCount - 1) {
-        printf("Tried to change selection of an option %zu that does not exist\n", index);
-        return;
+        throw std::out_of_range(std::format("SingleSelectContainer::setSelected({}, {}): Tried to change selection of an option that does not exist", index, select));
     }
 
     auto indexInSelection = m_selection.find(index);
