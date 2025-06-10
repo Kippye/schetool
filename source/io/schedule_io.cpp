@@ -51,8 +51,8 @@ fs::path ScheduleIO::makeIniPathFromScheduleName(const char* name) const {
 }
 
 void ScheduleIO::passFileNamesToGui() {
-    m_startPageGui->passFileNames(getScheduleStemNamesSortedByEditTime(true));
-    m_mainMenuBarGui->passFileNames(getScheduleStemNamesSortedByEditTime(false));
+    m_startPageGui->passFileNames(getScheduleStemNames(ScheduleFileFilter::All, ScheduleFileSort::EditTime_Descending));
+    m_mainMenuBarGui->passFileNames(getScheduleStemNames(ScheduleFileFilter::Base, ScheduleFileSort::EditTime_Descending));
 }
 
 void ScheduleIO::sendFileInfoUpdates() {
@@ -351,8 +351,8 @@ void ScheduleIO::openMostRecentFile() {
     if (getScheduleStemNames().size() > 0) {
         std::string lastEditedScheduleName = getLastEditedScheduleStemName();
 
-        // the most recently edited file is an autosave, the program might not have been closed correctly.
-        // show autosave prompt popup
+        // The most recently edited file is an autosave, the program might not have been closed correctly.
+        // Show autosave prompt popup
         if (isAutosave(lastEditedScheduleName)) {
             std::string fileBaseName = getFileBaseName(lastEditedScheduleName.c_str());
             fs::path fileBasePath = makeSchedulePathFromName(fileBaseName.c_str());
@@ -361,11 +361,9 @@ void ScheduleIO::openMostRecentFile() {
             if (std::filesystem::exists(makeSchedulePathFromName(fileBaseName.c_str()))) {
                 fs::path autosavePath = makeSchedulePathFromName(lastEditedScheduleName.c_str());
 
-                // TODO: Make this nicer. Note that we can't pass the scheduleEditTime since the files aren't actually being loaded until the user chooses to.
+                // Note that we can't pass a scheduleEditTime to the FileInfo-s since the files aren't actually being loaded until the user chooses to.
                 m_autosavePopupGui->open(FileInfo(fileBaseName, getFileEditTimeWrapped(fileBasePath), TimeWrapper()),
-                                         FileInfo(lastEditedScheduleName, getFileEditTimeWrapped(autosavePath), TimeWrapper()),
-                                         getFileEditTimeString(fileBasePath),
-                                         getFileEditTimeString(fs::path(autosavePath)));
+                                         FileInfo(lastEditedScheduleName, getFileEditTimeWrapped(autosavePath), TimeWrapper()));
             }
             // Somehow there is only an autosave and no base file.
             // Don't know what to do, open the start page and let the user decide?
@@ -374,7 +372,7 @@ void ScheduleIO::openMostRecentFile() {
                 goToStartPage();
             }
         }
-        // the most recent file is a normal file, read it
+        // The most recent file is a normal file, read it
         else
         {
             if (!readSchedule(getLastEditedScheduleStemName().c_str())) {
@@ -429,48 +427,28 @@ std::string ScheduleIO::getFileBaseName(const char* autosaveName) {
     return autosaveString.substr(0, autosaveString.rfind(m_autosaveSuffix));
 }
 
-long long ScheduleIO::getFileEditTime(fs::path path) {
-    if (fs::exists(path) == false) {
-        throw std::runtime_error(std::format("ScheduleIO::getFileEditTime(): No file exists at path: '{}'", path.string()));
-    }
-
-    return fs::last_write_time(path).time_since_epoch().count();
-}
-
 TimeWrapper ScheduleIO::getFileEditTimeWrapped(fs::path path) {
     if (fs::exists(path) == false) {
-        throw std::runtime_error(std::format("ScheduleIO::getFileEditTimeWrapped(): No file exists at path: '{}'", path.string()));
+        throw std::runtime_error(
+            std::format("ScheduleIO::getFileEditTimeWrapped(): No file exists at path: '{}'", path.string()));
     }
 
     const auto fileEditTime = fs::last_write_time(path);
     std::chrono::system_clock::time_point systemTime;
 
-#if defined(WIN32) && \
-    !defined(__clang__)  // windows implementation using clock_cast (my version of clang / libc++ didn't have it either)
     systemTime = std::chrono::clock_cast<std::chrono::system_clock>(fileEditTime);
-#else  // workaround without clock_cast
-    auto systemNow = std::chrono::system_clock::now();
-    auto fileNow = std::chrono::file_clock::now();
-    systemTime = std::chrono::time_point_cast<std::chrono::system_clock::duration>(fileEditTime - fileNow + systemNow);
-#endif
+
     return TimeWrapper(systemTime);
 }
 
-std::string ScheduleIO::getFileEditTimeString(fs::path path) {
-    if (fs::exists(path) == false) {
-        throw std::runtime_error(std::format("ScheduleIO::getFileEditTimeString(): No file exists at path: '{}'", path.string()));
-    }
+std::vector<std::string> ScheduleIO::getScheduleStemNames(ScheduleFileFilter filter, ScheduleFileSort sort) {
+    std::vector<fs::directory_entry> files = {};
 
-    return getFileEditTimeWrapped(path).getString(TIME_FORMAT_FULL);
-}
-
-std::vector<std::string> ScheduleIO::getScheduleStemNames(bool includeAutosaves) {
-    std::vector<std::string> filenames = {};
     if (fs::exists(m_saveDir) == false) {
         std::cout << std::format("ScheduleIO::getScheduleStemNames(): Schedules directory '{}' does not exist.",
                                  m_saveDir.string())
                   << std::endl;
-        return filenames;
+        return {};
     }
 
     for (const auto& entry : fs::directory_iterator(m_saveDir)) {
@@ -490,96 +468,31 @@ std::vector<std::string> ScheduleIO::getScheduleStemNames(bool includeAutosaves)
                       << " (not a valid schedule file)" << std::endl;
             continue;
         }
-        // Skip autosave files if includeAutosaves == false
-        if (includeAutosaves == false && isAutosave(entry.path().stem().string())) {
-            continue;
+        // Add file to list if it passes the filter
+        if (getScheduleFileFilter(filter)(entry)) {
+            files.push_back(entry);
         }
-
-        filenames.push_back(entry.path().stem().string());
     }
-    return filenames;
-}
-
-std::vector<std::string> ScheduleIO::getScheduleStemNamesSortedByEditTime(bool includeAutosaves) {
-    std::vector<std::string> filenames = {};
-    std::map<std::string, long long> filenamesEditTimes = {};
-
-    if (fs::exists(m_saveDir) == false) {
-        std::cout << std::format("ScheduleIO::getScheduleStemNamesSortedByEditTime(): Schedules directory '{}' does not exist.",
-                                 m_saveDir.string())
-                  << std::endl;
-        return filenames;
+    // Sort if needed
+    if (sort != ScheduleFileSort::None) {
+        std::sort(files.begin(), files.end(), getScheduleFileSort(sort));
     }
 
-    for (const auto& entry : fs::directory_iterator(m_saveDir)) {
-        // Skip non-regular files
-        if (entry.is_regular_file() == false) {
-            std::cout << "ScheduleIO::getScheduleStemNamesSortedByEditTime(): Skipped file " << entry.path().string()
-                      << " (entry.is_regular_file() == false)" << std::endl;
-            continue;
-        }
-        // Skip non-schedule files
-        if (isScheduleFilePath(entry.path()) == false) {
-            continue;
-        }
-        // Skip invalid (probably outdated) schedule files
-        if (isValidScheduleFile(entry.path()) == false) {
-            std::cout << "ScheduleIO::getScheduleStemNamesSortedByEditTime(): Skipped file " << entry.path().string()
-                      << " (not a valid schedule file)" << std::endl;
-            continue;
-        }
-        // Skip autosave files if includeAutosaves == false
-        if (includeAutosaves == false && isAutosave(entry.path().stem().string())) {
-            continue;
-        }
-
-        filenames.push_back(entry.path().stem().string());
-        filenamesEditTimes.insert({entry.path().stem().string(), getFileEditTime(entry)});
-    }
-
-    std::sort(filenames.begin(), filenames.end(), [&](std::string fs1, std::string fs2) {
-        return filenamesEditTimes.at(fs1) > filenamesEditTimes.at(fs2);
+    std::vector<std::string> filenames(files.size());
+    std::transform(files.begin(), files.end(), filenames.begin(), [](const fs::directory_entry& entry) {
+        return entry.path().stem().string();
     });
     return filenames;
 }
 
 std::string ScheduleIO::getLastEditedScheduleStemName() {
-    if (fs::exists(m_saveDir) == false) {
-        std::cout << std::format("ScheduleIO::getLastEditedScheduleStemName(): Schedules directory '{}' does not exist.",
-                                 m_saveDir.string())
-                  << std::endl;
-        return std::string("");
-    }
+    return getScheduleStemNames(ScheduleFileFilter::All, ScheduleFileSort::EditTime_Descending).front();
+}
 
-    long long latestEditTime = std::numeric_limits<long long>::min();
-    fs::path latestEditedPath;
-    fs::directory_iterator dirIterator = fs::directory_iterator(m_saveDir);
+const filter_func& ScheduleIO::getScheduleFileFilter(ScheduleFileFilter filter) const {
+    return m_scheduleFileFilterFunctions.at(filter);
+}
 
-    for (const auto& entry : dirIterator) {
-        // Skip non-regular files
-        if (entry.is_regular_file() == false) {
-            std::cout << "ScheduleIO::getLastEditedScheduleStemName(): Skipped file " << entry.path().string()
-                      << " (entry.is_regular_file() == false)" << std::endl;
-            continue;
-        }
-        // Skip non-schedule files
-        if (isScheduleFilePath(entry.path()) == false) {
-            continue;
-        }
-        // Skip invalid (probably outdated) schedule files
-        if (isValidScheduleFile(entry.path()) == false) {
-            std::cout << "ScheduleIO::getLastEditedScheduleStemName(): Skipped file " << entry.path().string()
-                      << " (not a valid schedule file)" << std::endl;
-            continue;
-        }
-
-        fs::file_time_type editTime = fs::last_write_time(entry);
-
-        if (latestEditTime == std::numeric_limits<long long>::min() || editTime.time_since_epoch().count() > latestEditTime) {
-            latestEditedPath = entry;
-            latestEditTime = editTime.time_since_epoch().count();
-        }
-    }
-
-    return latestEditedPath.stem().string();
+const sort_func& ScheduleIO::getScheduleFileSort(ScheduleFileSort sort) const {
+    return m_scheduleFileSortFunctions.at(sort);
 }

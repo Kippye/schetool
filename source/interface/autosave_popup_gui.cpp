@@ -10,11 +10,9 @@ void AutosavePopupGui::draw(Window& window, Input& input, GuiTextures& guiTextur
         const ImVec2 labelSize = ImVec2(128.0f, 0.0f);
         const ImVec2 buttonSize = ImVec2(128.0f, 0.0f);
         ImGui::BeginColumns("testColumns", 2, ImGuiOldColumnFlags_NoResize);
-        // ImGui::SetColumnWidth(0, buttonSize.x);
-        // ImGui::SetColumnWidth(1, buttonSize.x);
         gui_templates::TextWithBackground(labelSize, "Autosave file");
         gui_templates::TextWithBackground(labelSize, "%s", m_autosaveInfo.getName().c_str());
-        gui_templates::TextWithBackground(labelSize, "%s", m_autosaveEditTimeString.c_str());
+        gui_templates::TextWithBackground(labelSize, "%s", m_autosaveInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
         if (ImGui::Button("Apply autosave", buttonSize)) {
             applyAutosaveEvent.invoke();
             ImGui::CloseCurrentPopup();
@@ -27,7 +25,7 @@ void AutosavePopupGui::draw(Window& window, Input& input, GuiTextures& guiTextur
 
         gui_templates::TextWithBackground(labelSize, "Base file");
         gui_templates::TextWithBackground(labelSize, "%s", m_baseInfo.getName().c_str());
-        gui_templates::TextWithBackground(labelSize, "%s", m_baseEditTimeString.c_str());
+        gui_templates::TextWithBackground(labelSize, "%s", m_baseInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
         if (ImGui::Button("Open file", buttonSize)) {
             deleteAutosaveEvent.invoke();
             ImGui::CloseCurrentPopup();
@@ -47,12 +45,8 @@ void AutosavePopupGui::draw(Window& window, Input& input, GuiTextures& guiTextur
 }
 
 void AutosavePopupGui::open(const FileInfo& baseInfo,
-                            const FileInfo& autosaveInfo,
-                            const std::string& baseEditTime,
-                            const std::string& autosaveEditTime) {
+                            const FileInfo& autosaveInfo) {
     m_baseInfo = baseInfo;
-    m_baseEditTimeString = baseEditTime;
     m_autosaveInfo = autosaveInfo;
-    m_autosaveEditTimeString = autosaveEditTime;
     m_openNextFrame = true;
 }
