@@ -9,6 +9,7 @@ class TextInputModalSubGui : public Gui {
         const char* m_popupName;
         std::string m_acceptButtonText;
         bool m_showCloseButton;
+        bool m_focusInput = false;
 
     public:
         Event<std::string> acceptButtonPressedEvent;
@@ -20,6 +21,6 @@ class TextInputModalSubGui : public Gui {
                              bool showCloseButton = true);
 
         void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
-        void open();
+        void open(const std::string& fillText = "");
         virtual void invokeEvent(const std::string& text);
 };

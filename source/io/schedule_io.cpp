@@ -51,7 +51,7 @@ fs::path ScheduleIO::makeIniPathFromScheduleName(const char* name) const {
 }
 
 void ScheduleIO::passFileNamesToGui() {
-    m_startPageGui->passFileNames(getScheduleStemNames(ScheduleFileFilter::All, ScheduleFileSort::EditTime_Descending));
+    m_startPageGui->passFileNames(getScheduleStemNames(ScheduleFileFilter::Base, ScheduleFileSort::EditTime_Descending));
     m_mainMenuBarGui->passFileNames(getScheduleStemNames(ScheduleFileFilter::Base, ScheduleFileSort::EditTime_Descending));
 }
 

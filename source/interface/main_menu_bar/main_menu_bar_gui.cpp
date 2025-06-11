@@ -27,7 +27,7 @@ std::string getInputEventShortcutsString(const Input& input, INPUT_EVENT inputEv
 void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (m_haveFileOpen == false) {
+            if (m_openFileName.has_value() == false) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             auto renameShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_RENAME);
@@ -36,7 +36,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             {
                 renameSchedule();
             }
-            if (m_haveFileOpen == false) {
+            if (m_openFileName.has_value() == false) {
                 ImGui::PopItemFlag();
             }
             auto newFileShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_NEW);
@@ -48,14 +48,14 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             if (ImGui::BeginMenu("Open", m_fileNames.empty() == false)) {
                 displayScheduleList(guiTextures);
             }
-            if (m_haveFileOpen == false) {
+            if (m_openFileName.has_value() == false) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             auto saveShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_SAVE);
             if (ImGui::MenuItem("Save", saveShortcuts.size() > 0 ? saveShortcuts.front().getShortcutString().c_str() : NULL)) {
                 saveEvent.invoke();
             }
-            if (m_haveFileOpen == false) {
+            if (m_openFileName.has_value() == false) {
                 ImGui::PopItemFlag();
             }
             ImGui::EndMenu();
@@ -109,7 +109,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
     ImGui::EndMainMenuBar();
 
     // check shortcuts (dunno if this is the best place for this? TODO )
-    if (m_haveFileOpen && input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
+    if (m_openFileName.has_value() && input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
         renameSchedule();
     }
     if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) {
@@ -126,24 +126,18 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
 
     if (auto renameModalSubGui = getSubGui<TextInputModalSubGui>("RenameModalSubGui")) {
         renameModalSubGui->draw(window, input, guiTextures);
+        if (m_openRenameModal) {
+            renameModalSubGui->open(m_openFileName.value_or(""));
+            m_openRenameModal = false;
+        }
     }
 
     if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui")) {
         deleteModalSubGui->draw(window, input, guiTextures);
-    }
-
-    // if (m_openNewNameModal)
-    // {
-    // 	ImGui::OpenPopup("Enter name");
-    // 	m_openNewNameModal = false;
-    // }
-    if (m_openRenameModal) {
-        ImGui::OpenPopup("Enter new name");
-        m_openRenameModal = false;
-    }
-    if (m_openDeleteConfirmationModal) {
-        ImGui::OpenPopup("Confirm Schedule deletion");
-        m_openDeleteConfirmationModal = false;
+        if (m_openDeleteConfirmationModal) {
+            ImGui::OpenPopup("Confirm Schedule deletion");
+            m_openDeleteConfirmationModal = false;
+        }
     }
 }
 
@@ -202,8 +196,8 @@ void MainMenuBarGui::passFileNames(const std::vector<std::string>& fileNames) {
     m_fileNames = fileNames;
 }
 
-void MainMenuBarGui::passHaveFileOpen(bool haveFileOpen) {
-    m_haveFileOpen = haveFileOpen;
+void MainMenuBarGui::passOpenFileName(const std::optional<std::string>& openFileName) {
+    m_openFileName = openFileName;
 }
 
 void MainMenuBarGui::passPreferences(const Preferences& preferences) {

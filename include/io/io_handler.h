@@ -26,7 +26,8 @@ class IO_Handler {
         std::function<void(FileInfo)> openFileInfoChangeListener = [&](FileInfo fileInfo) {
             m_windowManager->setTitleSuffix(std::string(" - ").append(fileInfo.getName()));
             m_schedule->setName(fileInfo.getName());
-            m_mainMenuBarGui->passHaveFileOpen(fileInfo.empty() == false);
+            m_mainMenuBarGui->passOpenFileName(fileInfo.empty() ? std::nullopt
+                                                                : std::optional<std::string>(fileInfo.getName()));
         };
 
         // input listeners

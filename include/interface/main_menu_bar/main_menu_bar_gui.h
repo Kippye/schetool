@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include "interface_style.h"
 #include "preferences.h"
 #include "gui.h"
@@ -14,7 +15,7 @@ class MainMenuBarGui : public Gui {
         bool m_openRenameModal = false;
         bool m_openDeleteConfirmationModal = false;
         std::shared_ptr<const InterfaceStyleHandler> m_styleHandler = nullptr;
-        bool m_haveFileOpen = false;
+        std::optional<std::string> m_openFileName = std::nullopt;
         std::vector<std::string> m_fileNames = {};
         Preferences m_preferences = Preferences::getDefault();
 
@@ -36,12 +37,12 @@ class MainMenuBarGui : public Gui {
         // Event pipes
         EventPipe<std::string> createNewScheduleEventPipe;
         EventPipe<std::string> deleteScheduleEventPipe;
-        EventPipe<std::string> renameScheduleEventPipe; 
+        EventPipe<std::string> renameScheduleEventPipe;
 
         void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
         float getHeight() const;
         void closeModal();
         void passFileNames(const std::vector<std::string>& fileNames);
-        void passHaveFileOpen(bool haveFileOpen);
+        void passOpenFileName(const std::optional<std::string>& openFileName);
         void passPreferences(const Preferences& preferences);
 };

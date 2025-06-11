@@ -23,11 +23,15 @@ void TextInputModalSubGui::draw(Window& window, Input& input, GuiTextures& guiTe
     {
         m_textBuffer.reserve(m_textMaxLength);
         char* buf = m_textBuffer.data();
+        if (m_focusInput) {
+            ImGui::SetKeyboardFocusHere();
+            m_focusInput = false;
+        }
         ImGui::PushItemWidth(nameInputWidth - style.FramePadding.x * 2.0f);
         ImGui::InputText(std::string("##TextInput").append(m_popupName).c_str(),
                          buf,
                          m_textMaxLength,
-                         ImGuiInputTextFlags_CallbackCharFilter,
+                         ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll,
                          gui_callbacks::filterAlphanumerics);
         ImGui::PopItemWidth();
         if (std::string(buf).empty() == false) {
@@ -45,9 +49,10 @@ void TextInputModalSubGui::draw(Window& window, Input& input, GuiTextures& guiTe
     }
 }
 
-// Open the popup and empty the text buffer
-void TextInputModalSubGui::open() {
-    m_textBuffer = "";
+// Open the popup and reset the text buffer.
+void TextInputModalSubGui::open(const std::string& fillText) {
+    m_textBuffer = fillText;
+    m_focusInput = true;
     ImGui::OpenPopup(m_popupName);
 }
 
