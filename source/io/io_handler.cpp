@@ -10,9 +10,8 @@
 
 namespace fs = std::filesystem;
 
-fs::path IO_Handler::getWinBestDataDirPath() const
-{
-    #ifdef SCHETOOL_WINDOWS
+fs::path IO_Handler::getWinBestDataDirPath() const {
+#ifdef SCHETOOL_WINDOWS
     std::filesystem::path path;
     PWSTR path_tmp;
 
@@ -32,54 +31,48 @@ fs::path IO_Handler::getWinBestDataDirPath() const
     CoTaskMemFree(path_tmp);
     path /= "schetool";
     return path;
-    #else
+#else
     return ".";
-    #endif
+#endif
 }
 
-fs::path IO_Handler::getBestScheduleSavePath() const
-{
+fs::path IO_Handler::getBestScheduleSavePath() const {
     // The existence of a relative schedules dir overrides other save paths
-    if (fs::exists("./schedules"))
-    {
+    if (fs::exists("./schedules")) {
         return "./schedules";
     }
-    #if defined (SCHETOOL_WINDOWS)
+#if defined(SCHETOOL_WINDOWS)
     return getWinBestDataDirPath() / "schedules";
-    #elif defined(SCHETOOL_LINUX)
+#elif defined(SCHETOOL_LINUX)
     fs::path base = std::getenv("HOME") ? fs::path(std::getenv("HOME")) / ".local/share" : ".";
     // If the home/.local/share directory doesn't exist, it would be pretty weird for schetool to create it.
     base = fs::exists(base) ? base : fs::path(".");
     return base / "schetool/schedules";
-    #endif
+#endif
 }
 
-fs::path IO_Handler::getBestConfigSavePath() const
-{
+fs::path IO_Handler::getBestConfigSavePath() const {
     // The existence of a relative config dir overrides other save paths
-    if (fs::exists("./config"))
-    {
+    if (fs::exists("./config")) {
         return "./config";
     }
-    #if defined(SCHETOOL_WINDOWS)
+#if defined(SCHETOOL_WINDOWS)
     return getWinBestDataDirPath() / "config";
-    #elif defined(SCHETOOL_LINUX)
+#elif defined(SCHETOOL_LINUX)
     fs::path base = std::getenv("HOME") ? fs::path(std::getenv("HOME")) / ".config" : ".";
     // If the home/.config directory doesn't exist, it would be pretty weird for schetool to create it.
     base = fs::exists(base) ? base : fs::path(".");
     return base / "schetool/config";
-    #endif
+#endif
 }
 
-void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interface& programInterface)
-{
+void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interface& programInterface) {
     m_schedule = schedule;
     m_windowManager = window;
 
     // EVENT LISTENERS
     m_mainMenuBarGui = programInterface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
-    if (m_mainMenuBarGui)
-    {
+    if (m_mainMenuBarGui) {
         m_mainMenuBarGui->preferencesChangedEvent.addListener(preferencesModifiedListener);
     }
 
@@ -94,38 +87,31 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     // TODO: I don't like this pointer dereferencing
     m_scheduleIO = std::make_shared<ScheduleIO>(*schedule, programInterface, savesDir);
     m_preferencesIO = std::make_shared<PreferencesIO>(configDir);
-    
+
     m_scheduleIO->openFileInfoChangeEvent.addListener(openFileInfoChangeListener);
     m_preferencesIO->preferencesLoadedEvent.addListener(preferencesLoadedListener);
 }
 
-void IO_Handler::addToAutosaveTimer(double delta)
-{
+void IO_Handler::addToAutosaveTimer(double delta) {
     m_timeSinceAutosave += delta;
 
-    if (m_timeSinceAutosave > (double)AUTOSAVE_DELAY_SECONDS)
-    {
-        if (m_scheduleIO)
-        {
+    if (m_timeSinceAutosave > (double)AUTOSAVE_DELAY_SECONDS) {
+        if (m_scheduleIO) {
             m_scheduleIO->createAutosave();
         }
         m_timeSinceAutosave = 0;
     }
 }
 
-std::shared_ptr<ScheduleIO> IO_Handler::getScheduleIO()
-{
-    if (!m_scheduleIO)
-    {
+std::shared_ptr<ScheduleIO> IO_Handler::getScheduleIO() {
+    if (!m_scheduleIO) {
         std::cout << "WARNING: IO_Handler::getScheduleIO(): Returned shared_ptr is empty." << std::endl;
     }
     return m_scheduleIO;
 }
 
-std::shared_ptr<PreferencesIO> IO_Handler::getPreferencesIO()
-{
-    if (!m_preferencesIO)
-    {
+std::shared_ptr<PreferencesIO> IO_Handler::getPreferencesIO() {
+    if (!m_preferencesIO) {
         std::cout << "WARNING: IO_Handler::getPreferencesIO(): Returned shared_ptr is empty." << std::endl;
     }
     return m_preferencesIO;

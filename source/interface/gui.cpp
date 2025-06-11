@@ -1,44 +1,33 @@
 #include <gui.h>
 
-Gui::Gui()
-{
-    
+Gui::Gui() {
 }
 
-Gui::Gui(const char* ID)
-{
+Gui::Gui(const char* ID) {
     m_ID = std::string(ID);
 }
 
-std::string Gui::getID() const
-{
+std::string Gui::getID() const {
     return m_ID;
 }
 
-bool Gui::getVisible() const
-{
+bool Gui::getVisible() const {
     return m_visible;
 }
 
 // NOTE: Guis should not modify m_visible themselves. So this is the main way to make them visible / hidden
-void Gui::setVisible(bool visible)
-{
+void Gui::setVisible(bool visible) {
     m_visible = visible;
 }
 
-void Gui::draw(Window& window, Input& input, GuiTextures& guiTextures)
-{
+void Gui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
 }
 
-void Gui::addSubGui(Gui* subGui)
-{
+void Gui::addSubGui(Gui* subGui) {
     std::shared_ptr<Gui> subGuiPtr = std::shared_ptr<Gui>(subGui);
-    if (subGuiPtr)
-    {
+    if (subGuiPtr) {
         subGuis.insert({subGuiPtr->getID(), subGuiPtr});
-    }
-    else
-    {
+    } else {
         printf("Gui::addSubGui(%s, %p): Failed to add subGui - invalid pointer\n", "ID", (void*)subGui);
     }
 }

@@ -1,0 +1,50 @@
+Language: Cpp
+BasedOnStyle: Google
+IndentWidth: 4
+AccessModifierOffset: -4
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlinesLeft: true
+AlignOperands: false
+AlignTrailingComments: false
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: true
+
+AllowAllArgumentsOnNextLine: true
+AllowShortEnumsOnASingleLine: false
+BinPackArguments: false
+# clang-format 21 BinPackLongBracedList: false
+BinPackParameters: false
+BreakStringLiterals: false
+ColumnLimit: 128
+IndentAccessModifiers: true
+# IndentCaseBlocks  ?
+PackConstructorInitializers: NextLine
+PointerAlignment: Left
+NamespaceIndentation: All
+QualifierAlignment: Custom
+QualifierOrder: [inline, static, const, constexpr, volatile, type]
+ReferenceAlignment: Pointer
+ReflowComments: false
+SortIncludes: Never
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeRangeBasedForLoopColon: true
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterControlStatement: MultiLine # Only put the opening { on a newline after an "if" when it is multiline 
+  SplitEmptyFunction: false # Empty functions have both the braces on the same line
+  SplitEmptyRecord: false # Empty classes, structs, etc have both the braces on the same line

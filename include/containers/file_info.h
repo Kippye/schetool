@@ -3,20 +3,20 @@
 #include <string>
 #include "time_wrapper.h"
 
-class FileInfo
-{
+class FileInfo {
     private:
         bool m_isEmpty = true;
         std::string m_filename = "";
         TimeWrapper m_fileEditTime;
         TimeWrapper m_scheduleEditTime;
+
     public:
         FileInfo();
         FileInfo(const std::string& filename, const TimeWrapper& fileEditTime, const TimeWrapper& scheduleEditTime);
 
         bool empty() const;
         std::string getName() const;
-        // Change the contained name. 
+        // Change the contained name.
         // NOTE: Only use when the file itself was renamed! To change the contained file, use fill().
         void rename(const std::string& name);
         TimeWrapper getFileEditTime() const;

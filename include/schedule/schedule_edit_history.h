@@ -4,8 +4,7 @@
 #include <schedule_edit.h>
 #include <schedule_core.h>
 
-class ScheduleEditHistory
-{
+class ScheduleEditHistory {
     private:
         std::deque<std::shared_ptr<ScheduleEdit>> m_editHistory = {};
         ScheduleCore& m_core;
@@ -13,6 +12,7 @@ class ScheduleEditHistory
         bool m_editedSinceWrite = false;
 
         void addEdit(std::shared_ptr<ScheduleEdit> edit);
+
     public:
         ScheduleEditHistory() = delete;
         ScheduleEditHistory(ScheduleCore& scheduleCore);
@@ -27,8 +27,7 @@ class ScheduleEditHistory
         // Construct an edit of the given type and add it to the edit history.
         // Tip: Call the edit class constructor to see what arguments are required, then replace the constructor part with this function.
         template <typename T, typename... Args>
-        void addEdit(Args&&... args)
-        {
+        void addEdit(Args&&... args) {
             addEdit(std::make_shared<T>(std::forward<Args>(args)...));
         }
         void removeFollowingEditHistory();

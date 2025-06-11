@@ -3,12 +3,13 @@
 #include <gui.h>
 #include <schedule_edit_history.h>
 
-class EditHistoryGui : public Gui
-{
+class EditHistoryGui : public Gui {
     private:
         const ScheduleEditHistory* m_scheduleEditHistory;
+
     public:
-        EditHistoryGui(const char* ID) : Gui(ID) { }
+        EditHistoryGui(const char* ID) : Gui(ID) {
+        }
 
         Event<> undoEvent;
         Event<> redoEvent;

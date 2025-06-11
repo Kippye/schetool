@@ -7,19 +7,16 @@
 #include "gui_constants.h"
 #include "select_container.h"
 
-struct SelectOption
-{
-    std::string name;
-    SelectColor color;
+struct SelectOption {
+        std::string name;
+        SelectColor color;
 
-    bool operator==(const SelectOption& other)
-    {
-        return name == other.name && color == other.color;
-    }
+        bool operator==(const SelectOption& other) {
+            return name == other.name && color == other.color;
+        }
 };
 
-class SelectOptionsModification
-{
+class SelectOptionsModification {
     private:
         friend class SelectOptions;
         friend class Column;
@@ -29,29 +26,24 @@ class SelectOptionsModification
         std::optional<std::string> m_name = std::nullopt;
         std::optional<SelectColor> m_color = std::nullopt;
         std::optional<std::vector<SelectOption>> m_options = std::nullopt;
-    
+
     public:
-        bool operator==(const SelectOptionsModification& other)
-        {
-            bool others_equal = m_type == other.m_type &&
-                m_firstIndex == other.m_firstIndex &&
-                m_secondIndex == other.m_secondIndex &&
-                m_name == other.m_name &&
-                m_color == other.m_color;
+        bool operator==(const SelectOptionsModification& other) {
+            bool others_equal = m_type == other.m_type && m_firstIndex == other.m_firstIndex &&
+                m_secondIndex == other.m_secondIndex && m_name == other.m_name && m_color == other.m_color;
 
             // Quit early to avoid the more expensive comparison
-            if (others_equal == false)
-            {
+            if (others_equal == false) {
                 return false;
             }
 
-            // Both options vecs are empty therefore equal 
-            if (m_options.has_value() == false && other.m_options.has_value() == false)
-            {
+            // Both options vecs are empty therefore equal
+            if (m_options.has_value() == false && other.m_options.has_value() == false) {
                 return true;
             }
             // Option vecs differ in emptiness or size, therefore unequal
-            else if (m_options.has_value() != other.m_options.has_value() || m_options.value().size() != other.m_options.value().size())
+            else if (m_options.has_value() != other.m_options.has_value() ||
+                     m_options.value().size() != other.m_options.value().size())
             {
                 return false;
             }
@@ -62,8 +54,7 @@ class SelectOptionsModification
             }
         }
 
-        bool operator!=(const SelectOptionsModification& other)
-        {
+        bool operator!=(const SelectOptionsModification& other) {
             return !(*this == other);
         }
 
@@ -87,48 +78,41 @@ class SelectOptionsModification
         SelectOptionUpdateInfo getUpdateInfo() const;
 };
 
-inline SelectOptionsModification::SelectOptionsModification(OPTION_MODIFICATION type)
-{
+inline SelectOptionsModification::SelectOptionsModification(OPTION_MODIFICATION type) {
     m_type = type;
 }
 
-inline SelectOptionsModification& SelectOptionsModification::firstIndex(size_t index)
-{
+inline SelectOptionsModification& SelectOptionsModification::firstIndex(size_t index) {
     m_firstIndex = index;
     return *this;
 }
 
-inline SelectOptionsModification& SelectOptionsModification::secondIndex(size_t index)
-{
+inline SelectOptionsModification& SelectOptionsModification::secondIndex(size_t index) {
     m_secondIndex = index;
     return *this;
 }
 
-inline SelectOptionsModification& SelectOptionsModification::name(const std::string& name)
-{
+inline SelectOptionsModification& SelectOptionsModification::name(const std::string& name) {
     m_name = name;
     return *this;
 }
 
-inline SelectOptionsModification& SelectOptionsModification::color(SelectColor color)
-{
+inline SelectOptionsModification& SelectOptionsModification::color(SelectColor color) {
     m_color = color;
     return *this;
 }
 
-inline SelectOptionsModification& SelectOptionsModification::options(const std::vector<SelectOption>& options)
-{
+inline SelectOptionsModification& SelectOptionsModification::options(const std::vector<SelectOption>& options) {
     m_options = options;
     return *this;
 }
 
-
-class SelectOptions
-{
+class SelectOptions {
     private:
         std::vector<SelectOption> m_options = {};
         std::optional<SelectOptionsModification> m_lastModification = std::nullopt;
         bool m_mutable = true;
+
     public:
         SelectOptions();
         SelectOptions(const std::vector<SelectOption>& options);

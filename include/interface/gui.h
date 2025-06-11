@@ -13,11 +13,11 @@
 #include "input.h"
 #include "gui_textures.h"
 
-class Gui
-{
+class Gui {
     protected:
         std::string m_ID;
         bool m_visible = true;
+
     public:
         Gui();
         Gui(const char* ID);
@@ -33,12 +33,12 @@ class Gui
         virtual void draw(Window& window, Input& input, GuiTextures& guiTextures);
         void addSubGui(Gui* subGui);
         template <typename T>
-        std::shared_ptr<T> getSubGui(const std::string& ID)
-        {
+        std::shared_ptr<T> getSubGui(const std::string& ID) {
             static_assert(std::is_base_of_v<Gui, T>, "Gui::getSubGui<T>: Provided type must derive from Gui!");
-            if (subGuis.find(ID) == subGuis.end())
-            {
-                printf("Gui::getSubGui(ID: %s): Failed to get subGui of Gui with ID: %s. Returning shared_ptr to nullptr\n", ID.c_str(), m_ID.c_str());
+            if (subGuis.find(ID) == subGuis.end()) {
+                printf("Gui::getSubGui(ID: %s): Failed to get subGui of Gui with ID: %s. Returning shared_ptr to nullptr\n",
+                       ID.c_str(),
+                       m_ID.c_str());
                 return std::shared_ptr<T>(nullptr);
             }
             return std::dynamic_pointer_cast<T>(subGuis.at(ID));
