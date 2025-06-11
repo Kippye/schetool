@@ -154,24 +154,24 @@ void TimeWrapper::setDateUTC(const DateWrapper& date) {
     setTimeUTC(date, getClockTimeUTC());
 }
 
-unsigned int TimeWrapper::getMonthDayUTC(bool basedness) const {
+unsigned int TimeWrapper::getMonthDayUTC(Base basedness) const {
     return getMonthDay(m_time, basedness);
 }
 
-unsigned int TimeWrapper::getMonthDay(bool basedness) const {
+unsigned int TimeWrapper::getMonthDay(Base basedness) const {
     return getMonthDay(getLocalTime(), basedness);
 }
 
-void TimeWrapper::setMonthDayUTC(unsigned int day, bool basedness) {
+void TimeWrapper::setMonthDayUTC(unsigned int day, Base basedness) {
     DateWrapper currentDate = getLocalDate();
-    unsigned int max = basedness == ONE_BASED
+    unsigned int max = basedness == Base::One
         ? mytime::get_month_day_count(currentDate.getYear(), currentDate.getMonth())  // 1..dayCount
         : mytime::get_month_day_count(currentDate.getYear(), currentDate.getMonth()) - 1;  // 0..dayCount - 1
 
     day = std::max(day, (unsigned int)basedness);  // day >= basedness
     day = std::min(day, max);  // day <= max day
 
-    DateWrapper newDate = DateWrapper(currentDate.getYear(), currentDate.getMonth(), basedness == ONE_BASED ? day : day + 1);
+    DateWrapper newDate = DateWrapper(currentDate.getYear(), currentDate.getMonth(), basedness == Base::One ? day : day + 1);
     setTimeUTC(newDate, getLocalClockTime());
 }
 
@@ -179,27 +179,27 @@ void TimeWrapper::addDays(int dayCount) {
     m_time += days{dayCount};
 }
 
-unsigned int TimeWrapper::getWeekdayUTC(bool weekStart, bool basedness) const {
+unsigned int TimeWrapper::getWeekdayUTC(WeekStart weekStart, Base basedness) const {
     return getWeekday(m_time, weekStart, basedness);
 }
 
-unsigned int TimeWrapper::getWeekday(bool weekStart, bool basedness) const {
+unsigned int TimeWrapper::getWeekday(WeekStart weekStart, Base basedness) const {
     return getWeekday(getLocalTime(), weekStart, basedness);
 }
 
-unsigned int TimeWrapper::getMonthUTC(bool basedness) const {
+unsigned int TimeWrapper::getMonthUTC(Base basedness) const {
     return getMonth(m_time, basedness);
 }
 
-unsigned int TimeWrapper::getMonth(bool basedness) const {
+unsigned int TimeWrapper::getMonth(Base basedness) const {
     return getMonth(getLocalTime(), basedness);
 }
 
-void TimeWrapper::setMonthUTC(int month, bool basedness) {
+void TimeWrapper::setMonthUTC(int month, Base basedness) {
     DateWrapper currentDate = getLocalDate();
     DateWrapper newDate = DateWrapper(
         currentDate.getYear(),
-        basedness == ONE_BASED ? (month < 1 ? 12 : (month > 12 ? 1 : month)) : (month < 0 ? 12 : (month > 11 ? 1 : month + 1)),
+        basedness == Base::One ? (month < 1 ? 12 : (month > 12 ? 1 : month)) : (month < 0 ? 12 : (month > 11 ? 1 : month + 1)),
         currentDate.getMonthDay());
     setTimeUTC(newDate, getLocalClockTime());
 }

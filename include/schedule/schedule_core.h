@@ -279,7 +279,7 @@ class ScheduleCore {
 
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
         template <typename T>
-        bool setElementValue(size_t column, size_t row, const T& value, bool resort = true) {
+        bool setElementValue(size_t column, size_t row, const T& value) {
             ElementBase* element = getElement(column, row);
 
             if (element == nullptr) {
@@ -311,9 +311,7 @@ class ScheduleCore {
                         getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue());
             }
 
-            if (resort) {
-                sortColumns();
-            }
+            sortColumns();
             return true;
         }
 };

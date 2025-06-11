@@ -89,15 +89,15 @@ TEST_CASE("TimeWrapper") {
 
     SECTION("getUtcWeekday()") {
         timeWrapper = TimeWrapper(DateWrapper(2024, 8, 6));  // Tuesday
-        CHECK(timeWrapper.getWeekdayUTC(WEEK_START_MONDAY) == 2);
-        CHECK(timeWrapper.getWeekdayUTC(WEEK_START_SUNDAY) == 3);
-        CHECK(timeWrapper.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED) == 1);
-        CHECK(timeWrapper.getWeekdayUTC(WEEK_START_SUNDAY, ZERO_BASED) == 2);
+        CHECK(timeWrapper.getWeekdayUTC(WeekStart::Monday) == 2);
+        CHECK(timeWrapper.getWeekdayUTC(WeekStart::Sunday) == 3);
+        CHECK(timeWrapper.getWeekdayUTC(WeekStart::Monday, Base::Zero) == 1);
+        CHECK(timeWrapper.getWeekdayUTC(WeekStart::Sunday, Base::Zero) == 2);
         timeWrapper.setMonthDayUTC(25);  // Sunday
-        CHECK(timeWrapper.getWeekdayUTC(WEEK_START_MONDAY) == 7);
-        CHECK(timeWrapper.getWeekdayUTC(WEEK_START_SUNDAY) == 1);
-        CHECK(timeWrapper.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED) == 6);
-        CHECK(timeWrapper.getWeekdayUTC(WEEK_START_SUNDAY, ZERO_BASED) == 0);
+        CHECK(timeWrapper.getWeekdayUTC(WeekStart::Monday) == 7);
+        CHECK(timeWrapper.getWeekdayUTC(WeekStart::Sunday) == 1);
+        CHECK(timeWrapper.getWeekdayUTC(WeekStart::Monday, Base::Zero) == 6);
+        CHECK(timeWrapper.getWeekdayUTC(WeekStart::Sunday, Base::Zero) == 0);
     }
 
     SECTION("getDifference()") {

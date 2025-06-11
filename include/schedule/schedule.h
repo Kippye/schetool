@@ -413,16 +413,6 @@ class Schedule {
             return m_core.getElementAsSpecial<T>(column, row);
         }
 
-        // Use this function to completely replace the element at column; row with the ElementBase in value.
-        // NOTE: If the types match, a copy is performed.
-        // If the types do not match, the target element pointer is replaced by the value pointer!
-        // NOTE: Currently, does not add to the edit history
-        void setElement(size_t column, size_t row, ElementBase* other, bool resort = true) {
-            if (m_core.setElement(column, row, other, resort)) {
-                m_editHistory.setEditedSinceWrite(true);
-            }
-        }
-
         // Shortcut for getting the value of an Element at column; row
         template <typename T>
         T getElementValue(size_t column, size_t row) {
@@ -437,7 +427,7 @@ class Schedule {
 
         // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
         template <typename T>
-        void setElementValue(size_t column, size_t row, const T& value, bool resort = true, bool addToHistory = true) {
+        void setElementValue(size_t column, size_t row, const T& value, bool addToHistory = true) {
             ElementBase* element = m_core.getElement(column, row);
 
             if (element == nullptr) {
@@ -452,7 +442,7 @@ class Schedule {
                     column, row, element->getType(), ((Element<T>*)element)->getValue(), value);
             }
 
-            m_core.setElementValue<T>(column, row, value, resort);
+            m_core.setElementValue<T>(column, row, value);
 
             m_editHistory.setEditedSinceWrite(true);
         }

@@ -20,15 +20,19 @@ bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, boo
     return false;
 }
 
-bool gui_templates::DateEditor(
-    DateContainer& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate, bool displayClearButton) {
-    return DateEditor(editorDate.getTime(), viewedYear, viewedMonth, displayDate, displayClearButton);
+bool gui_templates::DateEditor(DateContainer& editorDate,
+                               unsigned int& viewedYear,
+                               unsigned int& viewedMonth,
+                               DateEditorFlags flags) {
+    return DateEditor(editorDate.getTime(), viewedYear, viewedMonth, flags);
 }
 
-bool gui_templates::DateEditor(
-    TimeWrapper& editorDate, unsigned int& viewedYear, unsigned int& viewedMonth, bool displayDate, bool displayClearButton) {
+bool gui_templates::DateEditor(TimeWrapper& editorDate,
+                               unsigned int& viewedYear,
+                               unsigned int& viewedMonth,
+                               DateEditorFlags flags) {
     bool changedDate = false;
-    if (displayDate) {
+    if (!(flags & DateEditorFlags_NoDate)) {
         // Display the date, with a minimum width for empty dates
         TextWithBackground(editorDate.getIsEmpty()
                                ? ImVec2(ImGui::CalcTextSize("01.01.1990").x + ImGui::GetStyle().FramePadding.x * 2.0f, 0)
@@ -38,7 +42,7 @@ bool gui_templates::DateEditor(
                            viewedYear,
                            viewedMonth);
     }
-    if (displayClearButton) {
+    if (!(flags & DateEditorFlags_NoClearButton)) {
         ImGui::SameLine();
         if (ImGui::Button("Clear")) {
             editorDate.clear();
@@ -104,11 +108,11 @@ bool gui_templates::DateEditor(
 
     TimeWrapper firstOfTheMonth = TimeWrapper({viewedYear, viewedMonth, 1});
     // day of the week converted from Sun-Sat to Mon-Sun
-    int dayOfTheWeekFirst = firstOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
+    int dayOfTheWeekFirst = firstOfTheMonth.getWeekdayUTC(WeekStart::Monday, Base::Zero);
 
     TimeWrapper lastOfTheMonth = TimeWrapper({viewedYear, viewedMonth, daysInMonth});
     // day of the week converted from Sun-Sat to Mon-Sun
-    int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WEEK_START_MONDAY, ZERO_BASED);
+    int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WeekStart::Monday, Base::Zero);
 
     unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
     const float monthDayButtonSize =
@@ -259,7 +263,6 @@ bool gui_templates::ImageButtonStyleColored(const char* idLabel,
     return ImGui::ImageButtonEx(
         ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonFlags);
 }
-
 
 bool gui_templates::SelectOptionButton(const SelectOption& selectOption,
                                        const char* idLabel,

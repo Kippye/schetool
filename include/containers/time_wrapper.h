@@ -16,10 +16,15 @@ struct is_time_point : std::false_type {};
 template <class Clock, class Duration>
 struct is_time_point<chrono::time_point<Clock, Duration>> : std::true_type {};
 
-inline const bool WEEK_START_MONDAY = 0;
-inline const bool WEEK_START_SUNDAY = 1;
-inline const bool ZERO_BASED = 0;
-inline const bool ONE_BASED = 1;
+enum WeekStart : bool {
+    Monday = 0,
+    Sunday = 1
+};
+
+enum Base : bool {
+    Zero = 0,
+    One = 1
+};
 
 enum TIME_FORMAT {
     TIME_FORMAT_DATE = 1,
@@ -113,28 +118,30 @@ class TimeWrapper {
             return getTimeComponents(tp).second;
         }
         template <typename Timepoint>
-        static unsigned int getMonthDay(const Timepoint& tp, bool basedness = ONE_BASED) {
+        static unsigned int getMonthDay(const Timepoint& tp, Base basedness = Base::One) {
             static_assert(is_time_point<Timepoint>::value,
                           "TimeWrapper::getMonthDay() only works with std::chrono::time_point types!");
-            return basedness == ONE_BASED ? getDate(tp).getMonthDay() : getDate(tp).getMonthDay() - 1;
+            return basedness == Base::One ? getDate(tp).getMonthDay() : getDate(tp).getMonthDay() - 1;
         }
         template <typename Timepoint>
-        static unsigned int getWeekday(const Timepoint& tp, bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) {
+        static unsigned int getWeekday(const Timepoint& tp,
+                                       WeekStart weekStart = WeekStart::Monday,
+                                       Base basedness = Base::One) {
             static_assert(is_time_point<Timepoint>::value,
                           "TimeWrapper::getWeekday() only works with std::chrono::time_point types!");
             auto zonedDays = chrono::floor<chrono::days>(tp);
             chrono::year_month_weekday ymw = chrono::year_month_weekday(zonedDays);
-            unsigned int weekday = weekStart == WEEK_START_MONDAY
+            unsigned int weekday = weekStart == WeekStart::Monday
                 ? ymw.weekday().iso_encoding() - 1  // The ISO encoding means Monday = 1,  Sunday = 7
                 : ymw.weekday().c_encoding();  // The C encoding means Sunday = 0, Saturday = 6
 
             return basedness + weekday;
         }
         template <typename Timepoint>
-        static unsigned int getMonth(const Timepoint& tp, bool basedness = ONE_BASED) {
+        static unsigned int getMonth(const Timepoint& tp, Base basedness = Base::One) {
             static_assert(is_time_point<Timepoint>::value,
                           "TimeWrapper::getMonth() only works with std::chrono::time_point types!");
-            return basedness == ONE_BASED ? getDate(tp).getMonth() : getDate(tp).getMonth() - 1;
+            return basedness == Base::One ? getDate(tp).getMonth() : getDate(tp).getMonth() - 1;
         }
 
     public:
@@ -169,40 +176,40 @@ class TimeWrapper {
         // Set the UTC date while keeping the clock time the same
         void setDateUTC(const DateWrapper& date);
 
-        // ONE_BASED: Get the UTC month day (1..dayCount).
-        // ZERO_BASED: (0..dayCount - 1).
-        unsigned int getMonthDayUTC(bool basedness = ONE_BASED) const;
-        // ONE_BASED: Get the month day (1..dayCount).
-        // ZERO_BASED: (0..dayCount - 1).
-        unsigned int getMonthDay(bool basedness = ONE_BASED) const;
-        // ONE_BASED: Set the month day (1..dayCount).
-        // ZERO_BASED: (0.. dayCount - 1).
+        // Base::One: Get the UTC month day (1..dayCount).
+        // Base::Zero: (0..dayCount - 1).
+        unsigned int getMonthDayUTC(Base basedness = Base::One) const;
+        // Base::One: Get the month day (1..dayCount).
+        // Base::Zero: (0..dayCount - 1).
+        unsigned int getMonthDay(Base basedness = Base::One) const;
+        // Base::One: Set the month day (1..dayCount).
+        // Base::Zero: (0.. dayCount - 1).
         // NOTE: If the day provided is more than the days in the current month, the day will be set to it
-        void setMonthDayUTC(unsigned int day, bool basedness = ONE_BASED);
+        void setMonthDayUTC(unsigned int day, Base basedness = Base::One);
         // Add this number of days to the time.
         // Can be a negative number to subtract days.
         void addDays(int days);
 
-        // WEEK_START_MONDAY: Get the UTC weekday from MON to SUN.
-        // WEEK_START_SUNDAY: Get the UTC weekday from SUN to SAT.
-        // ONE_BASED: (1..7).
-        // ZERO_BASED: (0..6).
-        unsigned int getWeekdayUTC(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
-        // WEEK_START_MONDAY: Get the weekday from MON to SUN.
-        // WEEK_START_SUNDAY: Get the weekday from SUN to SAT.
-        // ONE_BASED: (1..7).
-        // ZERO_BASED: (0..6).
-        unsigned int getWeekday(bool weekStart = WEEK_START_MONDAY, bool basedness = ONE_BASED) const;
+        // WeekStart::Monday: Get the UTC weekday from MON to SUN.
+        // WeekStart::Sunday: Get the UTC weekday from SUN to SAT.
+        // Base::One: (1..7).
+        // Base::Zero: (0..6).
+        unsigned int getWeekdayUTC(WeekStart weekStart = WeekStart::Monday, Base basedness = Base::One) const;
+        // WeekStart::Monday: Get the weekday from MON to SUN.
+        // WeekStart::Sunday: Get the weekday from SUN to SAT.
+        // Base::One: (1..7).
+        // Base::Zero: (0..6).
+        unsigned int getWeekday(WeekStart weekStart = WeekStart::Monday, Base basedness = Base::One) const;
 
-        // ONE_BASED: Get the UTC month (1..12).
-        // ZERO_BASED: (0..11).
-        unsigned int getMonthUTC(bool basedness = ONE_BASED) const;
-        // ONE_BASED: Get the month (1..12).
-        // ZERO_BASED: (0..11).
-        unsigned int getMonth(bool basedness = ONE_BASED) const;
-        // ONE_BASED: If the given month is < 1, it will be passed as 12. If it's > 12, it will passed as 1.
-        // ZERO_BASED: If the given month is < 0, it will be set to 11. If it's > 11, it will be set to 0.
-        void setMonthUTC(int month, bool basedness = ONE_BASED);
+        // Base::One: Get the UTC month (1..12).
+        // Base::Zero: (0..11).
+        unsigned int getMonthUTC(Base basedness = Base::One) const;
+        // Base::One: Get the month (1..12).
+        // Base::Zero: (0..11).
+        unsigned int getMonth(Base basedness = Base::One) const;
+        // Base::One: If the given month is < 1, it will be passed as 12. If it's > 12, it will passed as 1.
+        // Base::Zero: If the given month is < 0, it will be set to 11. If it's > 11, it will be set to 0.
+        void setMonthUTC(int month, Base basedness = Base::One);
         // Add this number of months to the time.
         // Can be a negative number to subtract.
         void addMonths(int months);

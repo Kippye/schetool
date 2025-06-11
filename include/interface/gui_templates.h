@@ -8,6 +8,13 @@
 #include "time_container.h"
 #include "date_container.h"
 
+typedef int DateEditorFlags;
+enum DateEditorFlags_ {
+    DateEditorFlags_None = 0,
+    DateEditorFlags_NoDate = 1 << 0,  // Don't display the selected date text
+    DateEditorFlags_NoClearButton = 1 << 1,  // Don't display the clear button to clear the selected date
+};
+
 namespace gui_callbacks {
     int filterNumbers(ImGuiInputTextCallbackData* data);
     int filterAlphanumerics(ImGuiInputTextCallbackData* data);
@@ -19,14 +26,12 @@ namespace gui_templates {
     bool DateEditor(DateContainer& editorDate,
                     unsigned int& viewedYear,
                     unsigned int& viewedMonth,
-                    bool displayDate = true,
-                    bool displayClearButton = true);
+                    DateEditorFlags flags = DateEditorFlags_None);
     // Displays a date editor, applies date edits to the provided TimeWrapper& and uses viewedYear and viewedMonth to store the *viewed* Date. Returns true if the TimeWrapper was modified.
     bool DateEditor(TimeWrapper& editorDate,
                     unsigned int& viewedYear,
                     unsigned int& viewedMonth,
-                    bool displayDate = true,
-                    bool displayClearButton = true);
+                    DateEditorFlags flags = DateEditorFlags_None);
     // Displays a time editor, applies edits to the provided TimeContainer&. Returns true if the TimeContainer was modified.
     bool TimeEditor(TimeContainer& editorTime);
     void TextWithBackground(const char* fmt, ...);

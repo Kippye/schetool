@@ -78,12 +78,12 @@ class ElementEdit : public ElementEditBase {
         }
 
         void revert(ScheduleCore& scheduleCore) override {
-            scheduleCore.setElementValue(m_column, m_row, m_previousValue, true);
+            scheduleCore.setElementValue(m_column, m_row, m_previousValue);
             m_isReverted = true;
         }
 
         void apply(ScheduleCore& scheduleCore) override {
-            scheduleCore.setElementValue(m_column, m_row, m_newValue, true);
+            scheduleCore.setElementValue(m_column, m_row, m_newValue);
             m_isReverted = false;
         }
 };

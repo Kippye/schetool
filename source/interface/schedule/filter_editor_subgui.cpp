@@ -421,7 +421,9 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                     pushedStyleVars = 0;
                 }
 
-                if (gui_templates::DateEditor(value, m_viewedYear, m_viewedMonth, false, false)) {
+                if (gui_templates::DateEditor(
+                        value, m_viewedYear, m_viewedMonth, DateEditorFlags_NoDate | DateEditorFlags_NoClearButton))
+                {
                     // Choosing a specific date makes an "IsEmpty" filter default to the "Is" comparison
                     if (newComparison == Comparison::IsEmpty) {
                         m_filterRuleState.getFilterRule().setComparison(Comparison::Is);
@@ -476,8 +478,9 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                     filter.addRule(m_filterRuleState.getFilterRule().getAsType<DateContainer>());
                     break;
                 default: {
-                    throw std::runtime_error(std::format("FilterRuleEditorSubGui::draw(): Creating filters of type {} has not been implemented!",
-                           (size_t)m_filterRuleState.getType()));
+                    throw std::runtime_error(
+                        std::format("FilterRuleEditorSubGui::draw(): Creating filters of type {} has not been implemented!",
+                                    (size_t)m_filterRuleState.getType()));
                     return;
                 }
             }

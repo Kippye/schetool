@@ -8,7 +8,7 @@ void WeekdayContainer::update(const SelectOptionUpdateInfo& change, size_t optio
 WeekdayContainer WeekdayContainer::getCurrentSystemWeekday(const TimeWrapper& currentTime) {
     WeekdayContainer currentWeekday;
     currentWeekday.setSelected(
-        (currentTime.getIsEmpty() ? TimeWrapper::getCurrentTime() : currentTime).getWeekday(WEEK_START_MONDAY, ZERO_BASED),
+        (currentTime.getIsEmpty() ? TimeWrapper::getCurrentTime() : currentTime).getWeekday(WeekStart::Monday, Base::Zero),
         true);
     return currentWeekday;
 }

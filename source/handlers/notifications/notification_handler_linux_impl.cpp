@@ -17,6 +17,14 @@ void notifyActionCallbackWrapper(NotifyNotification* notification, char* action,
     }
 }
 
+void NotificationHandlerLinuxImpl::addNotificationAction(NotifyNotification* notification,
+                                                         const char* action,
+                                                         const char* label,
+                                                         NotificationInfo* notificationInfo) {
+    notify_notification_add_action(
+        notification, action, label, notifyActionCallbackWrapper, notificationInfo, notifyFreeUserDataCallback);
+}
+
 bool NotificationHandlerLinuxImpl::init() {
     if (notify_init("schetool") == TRUE) {
         notifyActionCallback = notificationActionCallback;
@@ -65,26 +73,12 @@ bool NotificationHandlerLinuxImpl::showItemNotification(const std::string& name,
                                 "appointment-new");
     notify_notification_set_timeout(notif, ITEM_NOTIFICATION_TIMEOUT_SEC * 1000);
     // Callback for clicking on the notification itself
-    notify_notification_add_action(notif,
-                                   "default",
-                                   "Clicked on",
-                                   notifyActionCallbackWrapper,
-                                   new NotificationInfo(m_notificationID, name, beginning, end),
-                                   notifyFreeUserDataCallback);
+    addNotificationAction(notif, "default", "Clicked on", new NotificationInfo(m_notificationID, name, beginning, end));
     // Mark previous done button
-    notify_notification_add_action(notif,
-                                   "markPreviousDone",
-                                   "Mark previous done",
-                                   notifyActionCallbackWrapper,
-                                   new NotificationInfo(m_notificationID, name, beginning, end),
-                                   notifyFreeUserDataCallback);
+    addNotificationAction(
+        notif, "markPreviousDone", "Mark previous done", new NotificationInfo(m_notificationID, name, beginning, end));
     // Dismiss button
-    notify_notification_add_action(notif,
-                                   "dismiss",
-                                   "Dismiss",
-                                   notifyActionCallbackWrapper,
-                                   new NotificationInfo(m_notificationID, name, beginning, end),
-                                   notifyFreeUserDataCallback);
+    addNotificationAction(notif, "dismiss", "Dismiss", new NotificationInfo(m_notificationID, name, beginning, end));
     if (notify_notification_show(notif, NULL)) {
         m_notificationID++;
         return true;

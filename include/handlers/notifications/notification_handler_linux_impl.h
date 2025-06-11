@@ -25,6 +25,11 @@ class NotificationHandlerLinuxImpl : public NotificationHandlerImpl {
                 }
             };
 
+        void addNotificationAction(NotifyNotification* notification,
+                                   const char* action,
+                                   const char* label,
+                                   NotificationInfo* notificationInfo);
+
     public:
         bool init() override;
         bool showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec) override;
