@@ -168,9 +168,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                 bool comparisonChanged = displayComparisonCombo(SCH_NUMBER).first;
                 ImGui::SameLine();
 
-                if (ImGui::InputInt("##filterRuleEditor", &newValue, 1, 100, ImGuiInputTextFlags_EnterReturnsTrue) ||
-                    comparisonChanged)
-                {
+                if (gui_templates::InputInt("##filterRuleEditor", &newValue) || comparisonChanged) {
                     m_filterRuleState.getFilterRule().setPassValue(newValue);
                     if (m_editing == true) {
                         filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<int>());
@@ -186,10 +184,7 @@ void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& gui
                 bool comparisonChanged = displayComparisonCombo(SCH_DECIMAL).first;
                 ImGui::SameLine();
 
-                if (ImGui::InputDouble(
-                        "##filterRuleEditor", &newValue, 0.0, 0.0, "%.15g", ImGuiInputTextFlags_EnterReturnsTrue) ||
-                    comparisonChanged)
-                {
+                if (gui_templates::InputDouble("##filterRuleEditor", &newValue, "%.15g") || comparisonChanged) {
                     m_filterRuleState.getFilterRule().setPassValue(newValue);
                     if (m_editing == true) {
                         filter.replaceRule(filterRuleIndex, m_filterRuleState.getFilterRule().getAsType<double>());

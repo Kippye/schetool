@@ -27,6 +27,37 @@ bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, boo
     return submitted;
 }
 
+bool gui_templates::InputInt(const char* label, int* value, bool drawBackground, ImGuiInputTextFlags flags) {
+    bool returnValue = false;
+    if (drawBackground == false) {
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
+    }
+    if (ImGui::InputInt(label, value, 0, 0, flags | ImGuiInputTextFlags_CharsDecimal) && ImGui::IsItemDeactivatedAfterEdit()) {
+        returnValue = true;
+    }
+    if (drawBackground == false) {
+        ImGui::PopStyleColor();
+    }
+    return returnValue;
+}
+
+bool gui_templates::InputDouble(
+    const char* label, double* value, const char* format, bool drawBackground, ImGuiInputTextFlags flags) {
+    bool returnValue = false;
+    if (drawBackground == false) {
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
+    }
+    if (ImGui::InputDouble(label, value, 0.0, 0.0, format, flags | ImGuiInputTextFlags_CharsDecimal) &&
+        ImGui::IsItemDeactivatedAfterEdit())
+    {
+        returnValue = true;
+    }
+    if (drawBackground == false) {
+        ImGui::PopStyleColor();
+    }
+    return returnValue;
+}
+
 bool gui_templates::DateEditor(DateContainer& editorDate,
                                unsigned int& viewedYear,
                                unsigned int& viewedMonth,
@@ -98,7 +129,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate,
     }
     ImGui::SameLine();
     ImGui::SetNextItemWidth(inputLabelWidth);
-    if (ImGui::InputInt("##YearInput", &yearInput, 0, 0, ImGuiInputTextFlags_EnterReturnsTrue)) {
+    if (gui_templates::InputInt("##YearInput", &yearInput)) {
         viewedYear = TimeWrapper::limitYearToValidRange(yearInput);
     }
     ImGui::SameLine();

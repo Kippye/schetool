@@ -42,6 +42,9 @@ class ScheduleCore {
         // Add a column with default values of the given type at the given index.
         void addDefaultColumn(size_t index, SCHEDULE_TYPE columnType = SCH_TEXT);
         bool removeColumn(size_t column);
+        // Duplicate the column at the given index, return the index of the created column (in the future, this may either be next to the target column or the last column index).
+        // If duplicating the column failed for whatever reason, std::nullopt is returned.
+        std::optional<size_t> duplicateColumn(size_t index);
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column) const;
         // Get the index of the first column with the given flags

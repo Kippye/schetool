@@ -27,6 +27,12 @@ namespace gui_templates {
     }  // namespace
 
     bool TextEditor(std::string& editorText, ImVec2 inputBoxSize = ImVec2(0, 0), bool captureKeyboardFocus = false);
+    bool InputInt(const char* label, int* value, bool drawBackground = true, ImGuiInputTextFlags flags = 0);
+    bool InputDouble(const char* label,
+                     double* value,
+                     const char* format = "%.6f",
+                     bool drawBackground = true,
+                     ImGuiInputTextFlags flags = 0);
     // Displays a date editor, applies date edits to the provided DateContainer& and uses viewedYear and viewedMonth to store the *viewed* Date. Returns true if the DateContainer was modified.
     bool DateEditor(DateContainer& editorDate,
                     unsigned int& viewedYear,

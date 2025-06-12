@@ -195,6 +195,21 @@ bool ScheduleCore::removeColumn(size_t column) {
     return true;
 }
 
+std::optional<size_t> ScheduleCore::duplicateColumn(size_t column) {
+    if (existsColumnAtIndex(column) == false || getColumn(column)->permanent) {
+        return std::nullopt;
+    }
+
+    const auto& columnData = *getColumn(column);
+    size_t prevColumnCount = getColumnCount();
+    addColumn(getColumnCount(), columnData);
+    // The row was actually added (probably unneeded safety check)
+    if (getColumnCount() == prevColumnCount + 1) {
+        return prevColumnCount;
+    }
+    return std::nullopt;
+}
+
 const Column* ScheduleCore::getColumn(size_t column) const {
     if (existsColumnAtIndex(column) == false) {
         throw std::out_of_range(std::format("ScheduleCore::getColumn: column index {} is out of range.", column));

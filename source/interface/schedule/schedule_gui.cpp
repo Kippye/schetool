@@ -191,13 +191,30 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
     }
 
     // Select type (for non-permanent columns)
-    if (column.permanent == false) {
-        ImGui::Separator();
-        SCHEDULE_TYPE selected = column.type;
-        for (unsigned int i = 0; i < (unsigned int)SCH_LAST; i++) {
-            if (ImGui::Selectable(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)i), selected == (SCHEDULE_TYPE)i))
-                setColumnType.invoke(columnIndex, SCHEDULE_TYPE(i));
-        }
+    ImGui::Separator();
+    if (column.permanent) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    }
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Type:");
+    ImGui::SameLine();
+    if (std::optional<SCHEDULE_TYPE> newColumnType =
+            gui_templates::Dropdown("##ColumnType", column.type, schedule_consts::scheduleTypeNames))
+    {
+        setColumnType.invoke(columnIndex, newColumnType.value());
+    }
+    if (column.permanent) {
+        ImGui::PopItemFlag();
+    }
+
+    ImGui::Separator();
+
+    if (ImGui::MenuItem("Remove", NULL, false, !column.permanent)) {
+        removeColumn.invoke(columnIndex);
+    }
+
+    if (ImGui::MenuItem("Duplicate", NULL, false, !column.permanent)) {
+        duplicateColumn.invoke(columnIndex);
     }
 
     ImGui::Separator();
@@ -216,6 +233,8 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
     {
         setColumnResetOption.invoke(columnIndex, newColumnResetOption.value());
     }
+
+    ImGui::Separator();
 
     // Resizing
     if (tableFlags & ImGuiTableFlags_Resizable) {
@@ -337,7 +356,7 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
 
         // ROW 0: Filters
         ImGui::TableNextRow();
-        for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
+        for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
             ImGui::TableSetColumnIndex(column);
 
             const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
@@ -424,7 +443,7 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
 
         // ROW 1: Custom column header row
         ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
-        for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
+        for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
             ImGui::TableSetColumnIndex(column);
             bool isColumnHeaderHovered =
                 (ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
@@ -519,7 +538,9 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
         // DRAW SCHEDULE ELEMENTS
         std::vector<size_t> sortedRowIndices = m_scheduleCore.getSortedRowIndices();
 
-        for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount(); unsortedRow++) {
+        for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount() && unsortedRow < sortedRowIndices.size();
+             unsortedRow++)
+        {
             size_t row = sortedRowIndices[unsortedRow];
 
             // CHECK FILTERS BEFORE DRAWING ROW
@@ -536,7 +557,8 @@ void ScheduleGui::drawScheduleTable(Window& window, Input& input, GuiTextures& g
             }
 
             ImGui::TableNextRow();
-            for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
+            for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++)
+            {
                 ImGui::TableSetColumnIndex(column);
                 if (drawTableCellContents(column, row, window, input, guiTextures) == false) {
                     // Failed to draw the entire row. Probably shouldn't draw the others, either.
@@ -594,7 +616,7 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
             }
         }
         if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-            printf("DRAGGING %zu\n", row);
+            // printf("DRAGGING %zu\n", row);
             m_draggedRow = row;
         }
 
@@ -650,13 +672,9 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
         }
         case (SCH_NUMBER): {
             int newValue = getElementValue<int>(column, row, columnEditDisabled);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
-            if (ImGui::InputInt(
-                    std::format("##{};{}", column, row).c_str(), &newValue, 0, 100, ImGuiInputTextFlags_EnterReturnsTrue))
-            {
+            if (gui_templates::InputInt(std::format("##{};{}", column, row).c_str(), &newValue, false)) {
                 setElementValueNumber.invoke(column, row, newValue);
             }
-            ImGui::PopStyleColor();
             // TEMP HACK Workaround to not lose focus instantly when clicking?
             if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) &&
                 ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
@@ -668,17 +686,9 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, Window& windo
         }
         case (SCH_DECIMAL): {
             double newValue = getElementValue<double>(column, row, columnEditDisabled);
-            ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
-            if (ImGui::InputDouble(std::format("##{};{}", column, row).c_str(),
-                                   &newValue,
-                                   0.0,
-                                   0.0,
-                                   "%.15g",
-                                   ImGuiInputTextFlags_EnterReturnsTrue))
-            {
+            if (gui_templates::InputDouble(std::format("##{};{}", column, row).c_str(), &newValue, "%.15g", false)) {
                 setElementValueDecimal.invoke(column, row, newValue);
             }
-            ImGui::PopStyleColor();
             // TEMP HACK Workaround to not lose focus instantly when clicking?
             if (columnEditDisabled == false && ImGui::IsMouseReleased(ImGuiMouseButton_Left) &&
                 ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&

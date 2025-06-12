@@ -248,6 +248,7 @@ class Schedule {
             addDefaultColumn(col, colType);
         };
         std::function<void(size_t)> removeColumnListener = [&](size_t col) { removeColumn(col); };
+        std::function<void(size_t)> duplicateColumnListener = [&](size_t col) { duplicateColumn(col); };
         // column modification
         std::function<void(size_t, SCHEDULE_TYPE)> setColumnTypeListener = [&](size_t col, SCHEDULE_TYPE type) {
             setColumnType(col, type);
@@ -301,6 +302,7 @@ class Schedule {
         void addColumn(size_t index, const Column& column, bool addToHistory = true);
         void addDefaultColumn(size_t index, SCHEDULE_TYPE colType = SCH_TEXT, bool addToHistory = true);
         void removeColumn(size_t column, bool addToHistory = true);
+        void duplicateColumn(size_t index, bool addToHistory = true);
         // Get a constant pointer to the Column at the index.
         const Column* getColumn(size_t column);
         // Get the index of the first column with the given flags

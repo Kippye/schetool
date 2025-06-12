@@ -13,6 +13,8 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     // imgui setup
     imGui = ImGui::CreateContext();
     imGuiIO = &ImGui::GetIO();
+    // TODO: Investigate if there is some better way than to put this line here randomly
+    ImGui::GetPlatformIO().Platform_LocaleDecimalPoint = *localeconv()->decimal_point;
     // Disable automatically making an "imgui.ini" file in the working directory.
     imGuiIO->IniFilename = NULL;
     // Note that there is no actual saving rate.

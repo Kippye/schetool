@@ -45,6 +45,7 @@ void Schedule::init(Input& input, Interface& interface) {
 
         m_scheduleGui->addDefaultColumn.addListener(addDefaultColumnListener);
         m_scheduleGui->removeColumn.addListener(removeColumnListener);
+        m_scheduleGui->duplicateColumn.addListener(duplicateColumnListener);
         m_scheduleGui->resetColumn.addListener(resetColumnListener);
 
         m_scheduleGui->setColumnType.addListener(setColumnTypeListener);
@@ -202,6 +203,17 @@ void Schedule::removeColumn(size_t columnIndex, bool addToHistory) {
         }
 
         m_scheduleEvents.columnRemoved.invoke(columnIndex);
+    }
+}
+
+void Schedule::duplicateColumn(size_t columnIndex, bool addToHistory) {
+    auto duplicateColumnIndex = m_core.duplicateColumn(columnIndex);
+
+    if (duplicateColumnIndex.has_value()) {
+        if (addToHistory) {
+            m_editHistory.addEdit<ColumnEdit>(
+                false, duplicateColumnIndex.value(), *m_core.getColumn(duplicateColumnIndex.value()));
+        }
     }
 }
 
