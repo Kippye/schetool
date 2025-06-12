@@ -211,8 +211,8 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Reset column:");
     ImGui::SameLine();
-    if (std::optional<ColumnResetOption> newColumnResetOption = gui_templates::Dropdown(
-        "##ColumnResetSetting", column.resetOption, schedule_consts::columnResetOptionStrings))
+    if (std::optional<ColumnResetOption> newColumnResetOption =
+            gui_templates::Dropdown("##ColumnResetSetting", column.resetOption, schedule_consts::columnResetOptionStrings))
     {
         setColumnResetOption.invoke(columnIndex, newColumnResetOption.value());
     }
@@ -241,7 +241,7 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
 
     // Hiding / Visibility
     if (tableFlags & ImGuiTableFlags_Hideable) {
-        ImGui::PushItemFlag(ImGuiItemFlags_SelectableDontClosePopup, true);
+        ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
         for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++) {
             if (column.permanent) {
                 continue;

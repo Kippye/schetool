@@ -1,5 +1,5 @@
-#include "imgui_stdlib.h"
 #include "gui_templates.h"
+#include "imgui_stdlib.h"
 #include "schedule_constants.h"
 #include "gui_constants.h"
 #include "util.h"
@@ -9,15 +9,22 @@ bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, boo
         ImGui::SetKeyboardFocusHere();
     }
 
-    if (ImGui::InputTextMultiline("##editorTextInput",
-                                  &editorText,
-                                  inputBoxSize,
-                                  ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine))
+    bool submitted = false;
+
+    if (ImGui::InputTextMultiline(
+            "##editorTextInput",
+            &editorText,
+            inputBoxSize,
+            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackAlways,
+            gui_callbacks::inputTextCursorToEnd,
+            &textEditorActivated))
     {
-        return true;
+        submitted = true;
     }
 
-    return false;
+    textEditorActivated = captureKeyboardFocus;
+
+    return submitted;
 }
 
 bool gui_templates::DateEditor(DateContainer& editorDate,
@@ -337,6 +344,16 @@ int gui_callbacks::filterAlphanumerics(ImGuiInputTextCallbackData* data) {
         return 0;
     }
     return 1;
+}
+
+int gui_callbacks::inputTextCursorToEnd(ImGuiInputTextCallbackData* data) {
+    bool wasActivated = *static_cast<bool*>(data->UserData);
+
+    if (wasActivated) {
+        data->CursorPos = data->BufTextLen;
+        data->SelectionStart = data->SelectionEnd = data->CursorPos;
+    }
+    return 0;
 }
 
 void gui_helpers::PushStyleColorHsl(ImGuiCol color, ImVec4 hslColor) {

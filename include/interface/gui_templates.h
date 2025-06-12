@@ -18,9 +18,14 @@ enum DateEditorFlags_ {
 namespace gui_callbacks {
     int filterNumbers(ImGuiInputTextCallbackData* data);
     int filterAlphanumerics(ImGuiInputTextCallbackData* data);
+    int inputTextCursorToEnd(ImGuiInputTextCallbackData* data);
 }  // namespace gui_callbacks
 
 namespace gui_templates {
+    namespace {
+        bool textEditorActivated = false;
+    }  // namespace
+
     bool TextEditor(std::string& editorText, ImVec2 inputBoxSize = ImVec2(0, 0), bool captureKeyboardFocus = false);
     // Displays a date editor, applies date edits to the provided DateContainer& and uses viewedYear and viewedMonth to store the *viewed* Date. Returns true if the DateContainer was modified.
     bool DateEditor(DateContainer& editorDate,
