@@ -14,8 +14,7 @@
 
 const unsigned int AUTOSAVE_DELAY_SECONDS = 1 * 60;
 
-class IO_Handler
-{
+class IO_Handler {
     private:
         Schedule* m_schedule = NULL;
         Window* m_windowManager = NULL;
@@ -24,42 +23,37 @@ class IO_Handler
         std::shared_ptr<PreferencesIO> m_preferencesIO = nullptr;
         double m_timeSinceAutosave = 0.0;
 
-        std::function<void(FileInfo)> openFileInfoChangeListener = [&](FileInfo fileInfo)
-        {
+        std::function<void(FileInfo)> openFileInfoChangeListener = [&](FileInfo fileInfo) {
             m_windowManager->setTitleSuffix(std::string(" - ").append(fileInfo.getName()));
             m_schedule->setName(fileInfo.getName());
-            m_mainMenuBarGui->passHaveFileOpen(fileInfo.empty() == false);
+            m_mainMenuBarGui->passOpenFileName(fileInfo.empty() ? std::nullopt
+                                                                : std::optional<std::string>(fileInfo.getName()));
         };
 
         // input listeners
-        std::function<void()> saveInputListener = std::function<void()>([&]()
-        {
-            if (m_scheduleIO)
-            {
+        std::function<void()> saveInputListener = std::function<void()>([&]() {
+            if (m_scheduleIO) {
                 FileInfo currentFileInfo = m_scheduleIO->getCurrentFileInfo();
-                if (currentFileInfo.empty()) { return; }
+                if (currentFileInfo.empty()) {
+                    return;
+                }
                 m_scheduleIO->writeSchedule(currentFileInfo.getName().c_str());
             }
         });
         // window event listeners
-        std::function<void()> windowCloseListener = std::function<void()>([&]()
-        {
-            if (m_scheduleIO)
-            {
+        std::function<void()> windowCloseListener = std::function<void()>([&]() {
+            if (m_scheduleIO) {
                 m_scheduleIO->closeCurrentFile();
             }
         });
 
-        std::function<void(Preferences)> preferencesModifiedListener = [&](Preferences preferences)
-        {
-            if (m_preferencesIO)
-            {
+        std::function<void(Preferences)> preferencesModifiedListener = [&](Preferences preferences) {
+            if (m_preferencesIO) {
                 m_preferencesIO->setPreferences(preferences);
             }
         };
 
-        std::function<void(Preferences)> preferencesLoadedListener = [&](Preferences preferences)
-        {
+        std::function<void(Preferences)> preferencesLoadedListener = [&](Preferences preferences) {
             m_mainMenuBarGui->passPreferences(preferences);
         };
 
@@ -71,6 +65,7 @@ class IO_Handler
         std::filesystem::path getBestScheduleSavePath() const;
         // Appends the configs save subdirectory to the best available data dir path.
         std::filesystem::path getBestConfigSavePath() const;
+
     public:
         // Initialise the IO handler and the specific IO classes.
         void init(Schedule* schedule, Window* window, Input& input, Interface& interface);

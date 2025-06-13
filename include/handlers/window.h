@@ -12,35 +12,34 @@ extern "C" {
 #include "textures.h"
 #include "event.h"
 
-enum CURSOR_TYPE
-{
-	NORMAL,
-	DRAW
+enum CURSOR_TYPE {
+    NORMAL,
+    DRAW
 };
 
-class Window
-{
-	private:
+class Window {
+    private:
         static std::map<std::string, std::string> m_versionGlToGLSL;
         std::string m_glVersionString = "";
         std::string m_glslVersionString = "#version 140";
-		std::string m_titleBase = "";
-		std::string m_title = "";
+        std::string m_titleBase = "";
+        std::string m_title = "";
         // window events
         std::function<void(Window*, int, int)> framebuffer_size_callback;
         std::function<void(Window*, int)> window_focus_callback;
         std::function<void(Window*)> window_close_callback;
-	public:
-		GLFWwindow* window;
-		CURSOR_TYPE cursor = NORMAL;
-		GLFWcursor* cursors[2] = {};
-		int SCREEN_WIDTH = 800;
-		int SCREEN_HEIGHT = 600;
-		int WINDOW_MIN_WIDTH = 220;
-		int WINDOW_MIN_HEIGHT = 160;
-		bool firstMouseMovement = true;
-		bool hasFocus = true;
-		bool shouldClose = false;
+
+    public:
+        GLFWwindow* window;
+        CURSOR_TYPE cursor = NORMAL;
+        GLFWcursor* cursors[2] = {};
+        int SCREEN_WIDTH = 800;
+        int SCREEN_HEIGHT = 600;
+        int WINDOW_MIN_WIDTH = 220;
+        int WINDOW_MIN_HEIGHT = 160;
+        bool firstMouseMovement = true;
+        bool hasFocus = true;
+        bool shouldClose = false;
         Event<> windowCloseEvent;
 
         std::string getGlVersionString() const;

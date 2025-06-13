@@ -4,8 +4,7 @@
 #include <vector>
 #include <string>
 
-enum SCHEDULE_TYPE
-{
+enum SCHEDULE_TYPE {
     SCH_BOOL,
     SCH_NUMBER,
     SCH_DECIMAL,
@@ -18,10 +17,8 @@ enum SCHEDULE_TYPE
     SCH_LAST,
 };
 
-namespace general_consts
-{
-    const std::vector<std::string> weekdayNames =
-    {
+namespace general_consts {
+    const std::vector<std::string> weekdayNames = {
         "Monday",
         "Tuesday",
         "Wednesday",

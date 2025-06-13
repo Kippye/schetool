@@ -3,10 +3,10 @@
 #include <string>
 #include "time_wrapper.h"
 
-struct DateContainer
-{
+struct DateContainer {
     private:
         TimeWrapper m_time;
+
     public:
         DateContainer();
         DateContainer(const TimeWrapper& time);
@@ -24,7 +24,7 @@ struct DateContainer
         void incrementMonthDay();
         // Subtract 1 from the month day. Handles decrementing months as well.
         void decrementMonthDay();
-        
+
         // Add 1 to the month. Handles incrementing year as well.
         void incrementMonth();
         // Subtract 1 from the month. Handles decrementing year as well.
@@ -37,52 +37,44 @@ struct DateContainer
         int getDayDifference(const DateContainer& other) const;
 
         // Prefix increment. Increment month day by +1
-        DateContainer& operator++()
-        {
+        DateContainer& operator++() {
             incrementMonthDay();
-            return *this; // return new value by reference
-        }
-    
-        // Postfix increment. Increment month day by +1
-        DateContainer operator++(int)
-        {
-            DateContainer old = *this; // copy old value
-            operator++();  // prefix increment
-            return old;    // return old value
-        }
-    
-        // Prefix decrement. Reduce month day by 1
-        DateContainer& operator--()
-        {
-            decrementMonthDay();
-            return *this; // return new value by reference
-        }
-    
-        // Prefix decrement. Reduce month day by 1
-        DateContainer operator--(int)
-        {
-            DateContainer old = *this; // copy old value
-            operator--();  // prefix decrement
-            return old;    // return old value
+            return *this;  // return new value by reference
         }
 
-        bool operator==(const DateContainer& other) const
-        {
+        // Postfix increment. Increment month day by +1
+        DateContainer operator++(int) {
+            DateContainer old = *this;  // copy old value
+            operator++();  // prefix increment
+            return old;  // return old value
+        }
+
+        // Prefix decrement. Reduce month day by 1
+        DateContainer& operator--() {
+            decrementMonthDay();
+            return *this;  // return new value by reference
+        }
+
+        // Prefix decrement. Reduce month day by 1
+        DateContainer operator--(int) {
+            DateContainer old = *this;  // copy old value
+            operator--();  // prefix decrement
+            return old;  // return old value
+        }
+
+        bool operator==(const DateContainer& other) const {
             return getTimeConst().getLocalDate() == other.getTimeConst().getLocalDate();
         }
 
-        bool operator!=(const DateContainer& other) const
-        {
+        bool operator!=(const DateContainer& other) const {
             return getTimeConst().getLocalDate() != other.getTimeConst().getLocalDate();
         }
 
-        friend bool operator<(const DateContainer& left, const DateContainer& right)
-        {
+        friend bool operator<(const DateContainer& left, const DateContainer& right) {
             return left.getTimeConst().getLocalDate() < right.getTimeConst().getLocalDate();
         }
 
-        friend bool operator>(const DateContainer& left, const DateContainer& right)
-        {
+        friend bool operator>(const DateContainer& left, const DateContainer& right) {
             return left.getTimeConst().getLocalDate() > right.getTimeConst().getLocalDate();
         }
 
