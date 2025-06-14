@@ -12,6 +12,7 @@ resources/
 
 # package dir
 _CPACK_Packages/
+_CPack_Packages/
 
 # vcpkg
 vcpkg/
@@ -80,5 +81,6 @@ imgui.ini
 
 # Packages
 *.zip
-*.msi
+*.7z
 *.tar.gz
+*.msi

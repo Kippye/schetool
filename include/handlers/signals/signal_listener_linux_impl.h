@@ -1,6 +1,6 @@
 #pragma once
 
-#include "signals/signal_listener_impl_base.h"
+#include "signals/signal_listener_base_impl.h"
 
 // Signal handler implementation for Linux.
 // Note that on Linux, closing the program and shutting down the OS both result in Signal::Close

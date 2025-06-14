@@ -2,7 +2,7 @@
 
 #include "event.h"
 #include "signal_constants.h"
-#include "signals/signal_listener_impl_base.h"
+#include "signals/signal_listener_base_impl.h"
 #include "window.h"
 #include <memory>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "signals/signal_listener_impl_base.h"
+#include "signals/signal_listener_base_impl.h"
 
 // Signal handler implementation for Windows.
 // Uses a Console Control Handler to catch console signals.
