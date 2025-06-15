@@ -3,8 +3,7 @@
 
 namespace fs = std::filesystem;
 
-PreferencesIO::PreferencesIO(fs::path dataDir) : m_dataDir(dataDir) {
-    m_converter = PreferencesDataConverter();
+PreferencesIO::PreferencesIO(fs::path dataDir) : m_dataDir(dataDir), m_converter() {
     m_converter.setupObjectTable();
 }
 

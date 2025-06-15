@@ -1,37 +1,37 @@
 #pragma once
 #include "blf/include/blf.hpp"
+#include "blf_static.hpp"
 #include <memory>
 
 struct BLF_Base;
 
 class ObjectDefinitions {
     private:
-        std::map<std::string, const std::shared_ptr<blf::ObjectDefinition>> m_localObjectDefinitions = {};
-        blf::LocalObjectTable m_objectTable;
+        std::map<std::string, const std::shared_ptr<blf::st::StaticDefinition>> m_objectDefinitions = {};
+        blf::StaticObjectTable m_objectTable;
 
     public:
-        blf::LocalObjectTable& getObjectTable() {
+        blf::StaticObjectTable& getObjectTable() {
             return m_objectTable;
         }
-        const blf::LocalObjectTable& getObjectTableConst() const {
+        const blf::StaticObjectTable& getObjectTableConst() const {
             return m_objectTable;
         }
 
         template <typename T>
-        void add(blf::LocalObjectDefinition<T>& definition) {
+        void add(blf::StaticDefinition<T>& definition) {
             static_assert(std::is_base_of_v<BLF_Base, T> == true);
-            if (m_localObjectDefinitions.contains(definition.getName())) {
+            if (m_objectDefinitions.contains(definition.getName())) {
                 printf("ObjectDefinitions::add(definition): Tried to add duplicate object definition with name %s\n",
-                       definition.getName().getBuffer());
+                       definition.getName().c_str());
                 return;
             }
-            m_localObjectDefinitions.insert(
-                {definition.getName(), std::make_shared<blf::LocalObjectDefinition<T>>(definition)});
+            m_objectDefinitions.insert({definition.getName(), std::make_shared<blf::StaticDefinition<T>>(definition)});
         }
         template <typename T>
-        const blf::LocalObjectDefinition<T>& get() {
+        const blf::StaticDefinition<T>& get() {
             static_assert(std::is_base_of_v<BLF_Base, T> == true);
-            return *std::dynamic_pointer_cast<blf::LocalObjectDefinition<T>>(m_localObjectDefinitions.at(T::getName()));
+            return *std::dynamic_pointer_cast<blf::StaticDefinition<T>>(m_objectDefinitions.at(T::getName()));
         }
 };
 

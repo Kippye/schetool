@@ -9,8 +9,7 @@
 namespace fs = std::filesystem;
 
 ScheduleIO::ScheduleIO(Schedule& schedule, Interface& programInterface, std::filesystem::path saveDir)
-    : m_schedule(schedule), m_saveDir(saveDir) {
-    m_converter = ScheduleDataConverter();
+    : m_schedule(schedule), m_saveDir(saveDir), m_converter() {
     m_converter.setupObjectTable();
 
     m_startPageGui = programInterface.getGuiByID<StartPageGui>("StartPageGui");

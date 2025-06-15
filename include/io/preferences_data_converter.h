@@ -44,7 +44,7 @@ class PreferencesDataConverter {
             BlfClass::addDefinition(m_definitions);
         }
         template <typename T>
-        const blf::LocalObjectDefinition<T>& getObjectDefinition() {
+        const blf::StaticDefinition<T>& getObjectDefinition() {
             return m_definitions.get<T>();
         }
 
