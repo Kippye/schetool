@@ -9,7 +9,7 @@
 
 class MainMenuBarGui : public Gui {
     private:
-        float m_height = 0.0f;
+        static float height;
         bool m_openNewNameModal = false;
         bool m_openRenameModal = false;
         bool m_openDeleteConfirmationModal = false;
@@ -39,7 +39,9 @@ class MainMenuBarGui : public Gui {
         EventPipe<std::string> renameScheduleEventPipe;
 
         void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
-        float getHeight() const;
+        // Static function. Assuming that there is only one MainMenuBarGui instance or they are all the same height.
+        // Get the height of the MainMenuBarGui.
+        static float getHeight();
         void closeModal();
         void passFileNames(const std::vector<std::string>& fileNames);
         void passOpenFileName(const std::optional<std::string>& openFileName);

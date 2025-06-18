@@ -5,6 +5,8 @@
 #include "gui_constants.h"
 #include "util.h"
 
+float MainMenuBarGui::height = 0.0f;
+
 MainMenuBarGui::MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler) : Gui(ID) {
     m_styleHandler = styleHandler;
     // Add subguis
@@ -104,7 +106,7 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
             }
             ImGui::EndMenu();
         }
-        m_height = ImGui::GetWindowHeight();
+        height = ImGui::GetWindowHeight();
     }
     ImGui::EndMainMenuBar();
 
@@ -141,9 +143,9 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
     }
 }
 
-float MainMenuBarGui::getHeight() const {
-    return m_height;
-}
+float MainMenuBarGui::getHeight() {
+    return height;
+}  // STATIC
 
 void MainMenuBarGui::newSchedule() {
     m_openNewNameModal = true;

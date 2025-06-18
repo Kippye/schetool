@@ -2,7 +2,6 @@
 #include "gui.h"
 #include "window.h"
 #include "input.h"
-#include "main_menu_bar/main_menu_bar_gui.h"
 #include "select_container.h"
 #include "schedule_events.h"
 #include "schedule_core.h"
@@ -13,7 +12,6 @@
 class ScheduleGui : public Gui {
     private:
         const ScheduleCore& m_scheduleCore;
-        const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
         bool m_openDateSelectPopup = false;
         bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
@@ -42,10 +40,7 @@ class ScheduleGui : public Gui {
         }
 
     public:
-        ScheduleGui(const char* ID,
-                    const ScheduleCore& scheduleCore,
-                    ScheduleEvents& scheduleEvents,
-                    const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui);
+        ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
         // setElementValue(column, row, value)

@@ -9,15 +9,13 @@
 #include "schedule/schedule_gui.h"
 #include "schedule/element_editor_subgui.h"
 #include "schedule/filter_editor_subgui.h"
+#include "main_menu_bar/main_menu_bar_gui.h"
 #include "gui_templates.h"
 #include "gui_constants.h"
 #include "schedule_coordinates.h"
 
-ScheduleGui::ScheduleGui(const char* ID,
-                         const ScheduleCore& scheduleCore,
-                         ScheduleEvents& scheduleEvents,
-                         const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui)
-    : m_scheduleCore(scheduleCore), Gui(ID), m_mainMenuBarGui(mainMenuBarGui) {
+ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
+    : m_scheduleCore(scheduleCore), Gui(ID) {
     addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
     addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 }
@@ -51,9 +49,7 @@ void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
     // Add menu bar height as offset
-    if (m_mainMenuBarGui) {
-        ImGui::SetCursorPosY(m_mainMenuBarGui->getHeight());
-    }
+    ImGui::SetCursorPosY(MainMenuBarGui::getHeight());
     // Current date text
     const TimeWrapper& currentDate =
         m_scheduleDateOverride.getIsEmpty() == false ? m_scheduleDateOverride : TimeWrapper::getCurrentTime();
@@ -117,8 +113,7 @@ void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
         ImGui::PopStyleVar();
     }
 
-    const float SCHEDULE_TOP_BAR_HEIGHT =
-        scheduleHeaderTextHeight + m_mainMenuBarGui->getHeight();  // + style.ItemSpacing.y * 2;
+    const float SCHEDULE_TOP_BAR_HEIGHT = scheduleHeaderTextHeight + MainMenuBarGui::getHeight();  // + style.ItemSpacing.y * 2;
     const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
     const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
     const float CHILD_WINDOW_WIDTH = (float)(windowSize.getWidth() - ADD_COLUMN_BUTTON_WIDTH - 8);
