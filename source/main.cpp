@@ -17,7 +17,6 @@ Program::Program() {
     notifyLoop = g_main_loop_new(nullptr, false);
 #endif
 
-
     // setup and initialize components
     windowManager.init();
     // NOTE: MUST be initialised AFTER windowManager!
@@ -84,14 +83,16 @@ void Program::handleSignal(Signal signal) {
 
 void Program::loop() {
     while (quitProgram == false) {
-        input.processInput(windowManager.window);
+        input.processInput();
 
-        if (glfwWindowShouldClose(windowManager.window)) {
+        if (windowManager.getShouldClose()) {
             std::cout << "GLFW window should close. Quitting program." << std::endl;
             quitProgram = true;
         }
-        if (quitProgram)
+        if (quitProgram) {
             break;
+        }
+
         render.render();
         ioHandler.addToAutosaveTimer(render.deltaTime);
         timeHandler.timeTick();

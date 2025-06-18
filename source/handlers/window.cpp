@@ -41,8 +41,8 @@ void Window::init() {
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);  //might be needed for bigger monitors?
 
-    window = glfwCreateWindow(m_windowWidth, m_windowHeight, m_titleBase.c_str(), NULL, NULL);
-    if (window == NULL) {
+    m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, m_titleBase.c_str(), NULL, NULL);
+    if (m_window == NULL) {
         std::cout << "Could not create a GLFW window." << std::endl;
         const char* description;
         int code = glfwGetError(&description);
@@ -59,10 +59,10 @@ void Window::init() {
 
     setTitle(m_titleBase);
     // make the window current and maximize 8)
-    glfwMakeContextCurrent(window);
-    glfwMaximizeWindow(window);
-    glfwSetWindowSizeLimits(window, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
-    glfwSetWindowUserPointer(window, this);
+    glfwMakeContextCurrent(m_window);
+    glfwMaximizeWindow(m_window);
+    glfwSetWindowSizeLimits(m_window, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    glfwSetWindowUserPointer(m_window, this);
     // load address of OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cout << "Could not initialize GLAD." << std::endl;
@@ -82,7 +82,7 @@ void Window::init() {
 
     // set up the viewport (xpos, ypos, w, h)
     int currentWidth, currentHeight;
-    glfwGetWindowSize(window, &currentWidth, &currentHeight);
+    glfwGetWindowSize(m_window, &currentWidth, &currentHeight);
     m_windowWidth = currentWidth;
     m_windowHeight = currentHeight;
     glViewport(0, 0, m_windowWidth, m_windowHeight);
@@ -95,14 +95,14 @@ void Window::init() {
     }
 
     // Window callbacks
-    glfwSetFramebufferSizeCallback(window, genericCallback(framebuffer_size_callback));
-    glfwSetWindowFocusCallback(window, genericCallback(window_focus_callback));
-    glfwSetWindowCloseCallback(window, genericCallback(window_close_callback));
+    glfwSetFramebufferSizeCallback(m_window, genericCallback(framebuffer_size_callback));
+    glfwSetWindowFocusCallback(m_window, genericCallback(window_focus_callback));
+    glfwSetWindowCloseCallback(m_window, genericCallback(window_close_callback));
     // Input callbacks (not handled here)
-    glfwSetKeyCallback(window, genericCallback(key_callback));
-    glfwSetMouseButtonCallback(window, genericCallback(mouse_button_callback));
-    glfwSetCursorPosCallback(window, genericCallback(cursor_pos_callback));
-    glfwSetScrollCallback(window, genericCallback(scroll_callback));
+    glfwSetKeyCallback(m_window, genericCallback(key_callback));
+    glfwSetMouseButtonCallback(m_window, genericCallback(mouse_button_callback));
+    glfwSetCursorPosCallback(m_window, genericCallback(cursor_pos_callback));
+    glfwSetScrollCallback(m_window, genericCallback(scroll_callback));
 
     // Linking callback events
     this->framebuffer_size_callback = [this](auto self, int width, int height) {
@@ -115,18 +115,20 @@ void Window::init() {
 
     this->window_focus_callback = [](auto self, int focused) {
         if (focused) {
-            //program->file_system.updateTextures();
-            //glfwSetInputMode(self->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            self->giveFocus();
         } else {
-            //glfwSetInputMode(self->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            self->takeFocus();
         }
-        self->hasFocus = focused;
     };
 
-    this->window_close_callback = [](auto self) {
-        self->shouldClose = true;
-        self->windowCloseEvent.invoke();
+    this->window_close_callback = [this](auto self) {
+        this->m_shouldClose = true;
+        this->windowCloseEvent.invoke();
     };
+}
+
+GLFWwindow* Window::getGlfwWindow() {
+    return m_window;
 }
 
 std::string Window::getGlVersionString() const {
@@ -146,7 +148,7 @@ void Window::loadIcon(TextureLoader& textureLoader) {
     images[0].pixels = textureLoader.loadTextureData(
         textureLoader.getRelativePathFromTextureFolder("icon.png"), &images[0].width, &images[0].height, nullptr, false);
     if (images[0].pixels) {
-        glfwSetWindowIcon(window, 1, images);
+        glfwSetWindowIcon(m_window, 1, images);
     } else {
         printf("Window::init(): Failed to load program icon from path: %s\n",
                (textureLoader.textureFolder + "icon.png").c_str());
@@ -155,7 +157,7 @@ void Window::loadIcon(TextureLoader& textureLoader) {
 
 void Window::setTitle(std::string title) {
     m_title = title;
-    glfwSetWindowTitle(window, m_title.c_str());
+    glfwSetWindowTitle(m_window, m_title.c_str());
 }
 
 void Window::setTitleSuffix(const std::string& suffix) {
@@ -168,9 +170,34 @@ std::string Window::getTitle() const {
     return m_title;
 }
 
+bool Window::getHasFocus() const {
+    return m_hasFocus;
+}
+
+void Window::giveFocus() {
+    m_hasFocus = true;
+}
+
+void Window::takeFocus() {
+    m_hasFocus = false;
+}
+
+void Window::swapBuffers() {
+    glfwSwapBuffers(m_window);
+}
+
+bool Window::getShouldClose() const {
+    return m_shouldClose | glfwWindowShouldClose(m_window);
+}
+
+void Window::cancelClose() {
+    m_shouldClose = false;
+    glfwSetWindowShouldClose(m_window, GLFW_FALSE);
+}
+
 void Window::terminate() {
     printf("Window::terminate(): Invoking windowCloseEvent.\n");
     windowCloseEvent.invoke();
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(m_window);
     glfwTerminate();
 }

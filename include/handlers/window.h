@@ -13,33 +13,29 @@ extern "C" {
 #include "textures.h"
 #include "event.h"
 
-enum CURSOR_TYPE {
-    NORMAL,
-    DRAW
-};
-
 class Window {
     private:
+        static std::map<std::string, std::string> m_versionGlToGLSL;
+        const size_t WINDOW_MIN_WIDTH = 220;
+        const size_t WINDOW_MIN_HEIGHT = 160;
         size_t m_windowWidth = 800;
         size_t m_windowHeight = 600;
-        static std::map<std::string, std::string> m_versionGlToGLSL;
+        GLFWwindow* m_window = NULL;
         std::string m_glVersionString = "";
         std::string m_glslVersionString = "#version 140";
         std::string m_titleBase = "";
         std::string m_title = "";
+        bool m_hasFocus = false;
+        bool m_shouldClose = false;
         // window events
         std::function<void(Window*, int, int)> framebuffer_size_callback;
         std::function<void(Window*, int)> window_focus_callback;
         std::function<void(Window*)> window_close_callback;
-        const size_t WINDOW_MIN_WIDTH = 220;
-        const size_t WINDOW_MIN_HEIGHT = 160;
 
     public:
-        GLFWwindow* window;
-        bool firstMouseMovement = true;
-        bool hasFocus = true;
-        bool shouldClose = false;
         Event<> windowCloseEvent;
+
+        GLFWwindow* getGlfwWindow();
 
         std::string getGlVersionString() const;
         std::string getGlslVersionString() const;
@@ -51,8 +47,18 @@ class Window {
         void setTitle(std::string title);
         void setTitleSuffix(const std::string& suffix);
         std::string getTitle() const;
+        // Focus
+        bool getHasFocus() const;
+        void giveFocus();
+        void takeFocus();
+        // Rendering
+        void swapBuffers();
         // Lifecycle functions
         void init();
+        // Check if the window should close
+        bool getShouldClose() const;
+        // Cancel closing the window, notify glfw as well.
+        void cancelClose();
         // Call the windowCloseEvent, destroy the window and terminate glfw.
         void terminate();
 

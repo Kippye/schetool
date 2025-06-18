@@ -14,6 +14,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     imGui = ImGui::CreateContext();
     imGuiIO = &ImGui::GetIO();
     // TODO: Investigate if there is some better way than to put this line here randomly
+    // Extra: This was added so that numeric inputs can use the locale's decimal point (either , or .)
     ImGui::GetPlatformIO().Platform_LocaleDecimalPoint = *localeconv()->decimal_point;
     // Disable automatically making an "imgui.ini" file in the working directory.
     imGuiIO->IniFilename = NULL;
@@ -21,7 +22,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     // This is just so imgui doesn't take 5 seconds after a change before it tells me that a change needs to be saved.
     imGuiIO->IniSavingRate = 0.1f;
     // set up platform / renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(m_windowManager->window, true);
+    ImGui_ImplGlfw_InitForOpenGL(m_windowManager->getGlfwWindow(), true);
     ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());
     // Load fonts
     m_styleHandler->loadFontSizes("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf");
