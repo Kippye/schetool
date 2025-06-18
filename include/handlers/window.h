@@ -9,6 +9,7 @@ extern "C" {
 #include <functional>
 #include <string>
 #include <map>
+#include "window_size.h"
 #include "textures.h"
 #include "event.h"
 
@@ -19,6 +20,8 @@ enum CURSOR_TYPE {
 
 class Window {
     private:
+        size_t m_windowWidth = 800;
+        size_t m_windowHeight = 600;
         static std::map<std::string, std::string> m_versionGlToGLSL;
         std::string m_glVersionString = "";
         std::string m_glslVersionString = "#version 140";
@@ -28,15 +31,11 @@ class Window {
         std::function<void(Window*, int, int)> framebuffer_size_callback;
         std::function<void(Window*, int)> window_focus_callback;
         std::function<void(Window*)> window_close_callback;
+        const size_t WINDOW_MIN_WIDTH = 220;
+        const size_t WINDOW_MIN_HEIGHT = 160;
 
     public:
         GLFWwindow* window;
-        CURSOR_TYPE cursor = NORMAL;
-        GLFWcursor* cursors[2] = {};
-        int SCREEN_WIDTH = 800;
-        int SCREEN_HEIGHT = 600;
-        int WINDOW_MIN_WIDTH = 220;
-        int WINDOW_MIN_HEIGHT = 160;
         bool firstMouseMovement = true;
         bool hasFocus = true;
         bool shouldClose = false;
@@ -44,16 +43,17 @@ class Window {
 
         std::string getGlVersionString() const;
         std::string getGlslVersionString() const;
-        // window functions
-        // load and set the window's icon
+        // Window functions
+        // Get window size as a readonly class
+        WindowSize getSize() const;
+        // Load and set the window's icon
         void loadIcon(TextureLoader& textureLoader);
-        void setCursor(CURSOR_TYPE _cursor);
         void setTitle(std::string title);
         void setTitleSuffix(const std::string& suffix);
         std::string getTitle() const;
-        // lifecycle functions
+        // Lifecycle functions
         void init();
-        // call the windowCloseEvent, destroy the window and terminate glfw.
+        // Call the windowCloseEvent, destroy the window and terminate glfw.
         void terminate();
 
         // input events

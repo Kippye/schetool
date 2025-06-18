@@ -9,7 +9,7 @@
 #include "imgui/include/imgui_impl_glfw.h"
 #include "imgui/include/imgui_impl_opengl3.h"
 #include "event.h"
-#include "window.h"
+#include "window_size.h"
 #include "input.h"
 #include "gui_textures.h"
 
@@ -30,7 +30,7 @@ class Gui {
         std::string getID() const;
         bool getVisible() const;
         void setVisible(bool visible);
-        virtual void draw(Window& window, Input& input, GuiTextures& guiTextures);
+        virtual void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
         void addSubGui(Gui* subGui);
         template <typename T>
         std::shared_ptr<T> getSubGui(const std::string& ID) {

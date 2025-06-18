@@ -41,7 +41,7 @@ void Window::init() {
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);  //might be needed for bigger monitors?
 
-    window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, m_titleBase.c_str(), NULL, NULL);
+    window = glfwCreateWindow(m_windowWidth, m_windowHeight, m_titleBase.c_str(), NULL, NULL);
     if (window == NULL) {
         std::cout << "Could not create a GLFW window." << std::endl;
         const char* description;
@@ -80,18 +80,12 @@ void Window::init() {
     }
     std::cout << "Chose suitable GLSL version: " << m_glslVersionString << std::endl;
 
-    // load and create cursors
-    // cursors[NORMAL] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
-    // GLFWimage drawCursor = GLFWimage();
-    // drawCursor.pixels = program->textureLoader.loadTextureData("cursor_draw.png", &drawCursor.width, &drawCursor.height, program->textureLoader.textureFolder, false);
-    // cursors[DRAW] = glfwCreateCursor(&drawCursor, 8, 8);
-
     // set up the viewport (xpos, ypos, w, h)
     int currentWidth, currentHeight;
     glfwGetWindowSize(window, &currentWidth, &currentHeight);
-    SCREEN_WIDTH = currentWidth;
-    SCREEN_HEIGHT = currentHeight;
-    glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    m_windowWidth = currentWidth;
+    m_windowHeight = currentHeight;
+    glViewport(0, 0, m_windowWidth, m_windowHeight);
 
 #define genericCallback(functionName)                                       \
     [](GLFWwindow* win, auto... args) {                                     \
@@ -100,21 +94,21 @@ void Window::init() {
             pointer->functionName(pointer, args...);                        \
     }
 
-    // window callbacks
+    // Window callbacks
     glfwSetFramebufferSizeCallback(window, genericCallback(framebuffer_size_callback));
     glfwSetWindowFocusCallback(window, genericCallback(window_focus_callback));
     glfwSetWindowCloseCallback(window, genericCallback(window_close_callback));
-    // input callbacks (not handled here)
+    // Input callbacks (not handled here)
     glfwSetKeyCallback(window, genericCallback(key_callback));
     glfwSetMouseButtonCallback(window, genericCallback(mouse_button_callback));
     glfwSetCursorPosCallback(window, genericCallback(cursor_pos_callback));
     glfwSetScrollCallback(window, genericCallback(scroll_callback));
 
-    // linking callback events
-    this->framebuffer_size_callback = [](auto self, int width, int height) {
+    // Linking callback events
+    this->framebuffer_size_callback = [this](auto self, int width, int height) {
         if (width > 0 && height > 0) {
-            self->SCREEN_WIDTH = width;
-            self->SCREEN_HEIGHT = height;
+            this->m_windowWidth = width;
+            this->m_windowHeight = height;
             glViewport(0, 0, width, height);
         }
     };
@@ -143,6 +137,10 @@ std::string Window::getGlslVersionString() const {
     return m_glslVersionString;
 }
 
+WindowSize Window::getSize() const {
+    return WindowSize(m_windowWidth, m_windowHeight);
+}
+
 void Window::loadIcon(TextureLoader& textureLoader) {
     GLFWimage images[1] = {GLFWimage()};
     images[0].pixels = textureLoader.loadTextureData(
@@ -153,10 +151,6 @@ void Window::loadIcon(TextureLoader& textureLoader) {
         printf("Window::init(): Failed to load program icon from path: %s\n",
                (textureLoader.textureFolder + "icon.png").c_str());
     }
-}
-
-void Window::setCursor(CURSOR_TYPE cursor) {
-    glfwSetCursor(window, cursors[cursor]);
 }
 
 void Window::setTitle(std::string title) {

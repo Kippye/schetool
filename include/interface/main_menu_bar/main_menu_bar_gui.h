@@ -4,7 +4,6 @@
 #include "interface_style.h"
 #include "preferences.h"
 #include "gui.h"
-#include "window.h"
 #include "input.h"
 #include "event_pipe.h"
 
@@ -39,7 +38,7 @@ class MainMenuBarGui : public Gui {
         EventPipe<std::string> deleteScheduleEventPipe;
         EventPipe<std::string> renameScheduleEventPipe;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
+        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
         float getHeight() const;
         void closeModal();
         void passFileNames(const std::vector<std::string>& fileNames);

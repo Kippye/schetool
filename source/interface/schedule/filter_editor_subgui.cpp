@@ -68,7 +68,7 @@ FilterRuleEditorSubGui::FilterRuleEditorSubGui(const char* ID,
     scheduleEvents.editRedone.addListener(editRedoListener);
 }
 
-void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void FilterRuleEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     if (ImGui::BeginPopupEx(ImGui::GetID("FilterRule Editor"),
                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration |
                                 ImGuiWindowFlags_AlwaysAutoResize))
@@ -675,7 +675,7 @@ FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore& sched
     addSubGui(new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, scheduleEvents, m_filterGroupState));
 }
 
-void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     if (ImGui::BeginPopupEx(ImGui::GetID("FilterGroup Editor"),
                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration |
                                 ImGuiWindowFlags_AlwaysAutoResize))
@@ -859,7 +859,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
         }
 
         if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui")) {
-            filterRuleEditor->draw(window, input, guiTextures);
+            filterRuleEditor->draw(windowSize, input, guiTextures);
         }
         ImGui::EndPopup();
     } else {

@@ -70,7 +70,7 @@ void Interface::draw() {
     // Apply font
     ImGui::PushFont(m_styleHandler->getFontData(m_styleHandler->getFontSize()));
     for (auto& [id, gui] : m_guis) {
-        gui->draw(*m_windowManager, *m_input, *m_guiTextures.get());
+        gui->draw(m_windowManager->getSize(), *m_input, *m_guiTextures.get());
     }
 
     guiHovered = imGuiIO->WantCaptureMouse;

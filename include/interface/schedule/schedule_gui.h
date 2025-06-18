@@ -30,10 +30,11 @@ class ScheduleGui : public Gui {
         void drawRowContextContent();
         void drawCellContextContent();
 
-        void drawScheduleTable(Window& window, Input& input, GuiTextures& guiTextures);
+        void drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
         // Draws the contents of the table cell at the given column and row.
         // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
-        bool drawTableCellContents(size_t column, size_t row, Window& window, Input& input, GuiTextures& guiTextures);
+        bool drawTableCellContents(
+            size_t column, size_t row, const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
         template <typename T>
         T getElementValue(size_t column, size_t row, bool useDefaultValue) const {
             return useDefaultValue == true ? Element<T>::getDefaultValue()
@@ -74,6 +75,6 @@ class ScheduleGui : public Gui {
 
         bool isEditableElementClicked(bool isEditingDisabled) const;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
+        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
         void clearDateOverride();
 };

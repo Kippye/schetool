@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gui.h"
-#include "window.h"
 #include "input.h"
 #include "file_info.h"
 
@@ -18,7 +17,6 @@ class AutosavePopupGui : public Gui {
         Event<> applyAutosaveEvent;
         Event<> deleteAutosaveEvent;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
-        void open(const FileInfo& baseInfo,
-                  const FileInfo& autosaveInfo);
+        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void open(const FileInfo& baseInfo, const FileInfo& autosaveInfo);
 };

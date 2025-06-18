@@ -9,7 +9,7 @@ ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& sch
     : m_scheduleCore(scheduleCore), Gui(ID) {
 }
 
-void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     // give old current open state to the last frame's state
     m_openLastFrame = m_openThisFrame;
 

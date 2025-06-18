@@ -4,7 +4,7 @@
 #include "schedule_constants.h"
 #include "filter_constants.h"
 
-void EditHistoryGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void EditHistoryGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     if (ImGui::Begin("Edit History", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         auto editHistory = m_scheduleEditHistory->getEditHistory();
 
