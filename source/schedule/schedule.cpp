@@ -56,6 +56,12 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->removeRow.addListener(removeRowListener);
         m_scheduleGui->duplicateRow.addListener(duplicateRowListener);
     }
+
+    // m_calendarGui = interface.addGui<CalendarGui>("CalendarGui");
+
+    if (m_calendarGui) {
+    }
+
     if (auto mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")) {
         mainMenuBarGui->undoEvent.addListener(undoListener);
         mainMenuBarGui->redoEvent.addListener(redoListener);

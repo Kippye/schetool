@@ -34,9 +34,7 @@ bool ScheduleGui::isEditableElementClicked(bool isEditingDisabled) const {
 }
 
 void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
-    if (m_visible == false) {
-        return;
-    }
+    setVisible(false);
 
     ImGuiStyle style = ImGui::GetStyle();
     ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight()));

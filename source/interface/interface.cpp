@@ -1,6 +1,7 @@
 #include "interface.h"
 #include "start_page_gui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
+#include "view_tab_bar_gui.h"
 #include "edit_history_gui.h"
 #include "autosave_popup_gui.h"
 
@@ -33,6 +34,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     // ADD GUIS
     addGui<StartPageGui>("StartPageGui");
     addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler);
+    addGui<ViewTabBarGui>("ViewTabBarGui");
     // simple popups
     addGui<AutosavePopupGui>("AutosavePopupGui");
 #if DEBUG
@@ -71,7 +73,9 @@ void Interface::draw() {
     // Apply font
     ImGui::PushFont(m_styleHandler->getFontData(m_styleHandler->getFontSize()));
     for (auto& [id, gui] : m_guis) {
-        gui->draw(m_windowManager->getSize(), *m_input, *m_guiTextures.get());
+        if (gui->getVisible()) {
+            gui->draw(m_windowManager->getSize(), *m_input, *m_guiTextures.get());
+        }
     }
 
     guiHovered = imGuiIO->WantCaptureMouse;

@@ -14,6 +14,7 @@
 #include "schedule_column.h"
 #include "schedule_core.h"
 #include "schedule/schedule_gui.h"
+#include "calendar/calendar_gui.h"
 
 const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
@@ -23,6 +24,7 @@ class Schedule {
         ScheduleCore m_core;
         ScheduleEvents m_scheduleEvents;
         std::shared_ptr<ScheduleGui> m_scheduleGui;
+        std::shared_ptr<CalendarGui> m_calendarGui;
         std::string m_scheduleName;
 
         // input listeners AND gui listeners
