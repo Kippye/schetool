@@ -2,6 +2,7 @@
 #include <string>
 #include "schedule.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
+#include "view_tab_bar_gui.h"
 #include "schedule/element_editor_subgui.h"
 #include "schedule/filter_editor_subgui.h"
 #include "edit_history_gui.h"
@@ -13,6 +14,8 @@ void Schedule::init(Input& input, Interface& interface) {
     m_scheduleGui = interface.addGui<ScheduleGui>("ScheduleGui", m_core, m_scheduleEvents);
 
     if (m_scheduleGui) {
+        m_scheduleGui->setVisible(m_currentView == ScheduleView::Table);
+
         if (auto elementEditorSubGui = m_scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui")) {
             elementEditorSubGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
         }
@@ -57,14 +60,20 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->duplicateRow.addListener(duplicateRowListener);
     }
 
-    // m_calendarGui = interface.addGui<CalendarGui>("CalendarGui");
+    m_calendarGui = interface.addGui<CalendarGui>("CalendarGui");
 
     if (m_calendarGui) {
+        m_calendarGui->setVisible(m_currentView == ScheduleView::Calendar);
     }
 
     if (auto mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")) {
         mainMenuBarGui->undoEvent.addListener(undoListener);
         mainMenuBarGui->redoEvent.addListener(redoListener);
+    }
+    if (auto viewTabBarGui = interface.getGuiByID<ViewTabBarGui>("ViewTabBarGui")) {
+        viewTabBarGui->viewSwitched.addListener(viewSwitchListener);
+        // Pipe the viewedDateChanged event through an EventPipe in ScheduleEvents so that guis using ScheduleEvents can listen to it easily.
+        m_scheduleEvents.viewedDateChanged.addEvent(viewTabBarGui->viewedDateChanged);
     }
     if (auto editHistoryGui = interface.getGuiByID<EditHistoryGui>("EditHistoryGui")) {
         editHistoryGui->passScheduleEditHistory(&m_editHistory);
@@ -77,8 +86,8 @@ void Schedule::init(Input& input, Interface& interface) {
 }
 
 void Schedule::setName(const std::string& name) {
-    if (name.size() > SCHEDULE_NAME_MAX_LENGTH) {
-        m_scheduleName = name.substr(0, SCHEDULE_NAME_MAX_LENGTH);
+    if (name.size() > schedule_consts::SCHEDULE_NAME_MAX_LENGTH) {
+        m_scheduleName = name.substr(0, schedule_consts::SCHEDULE_NAME_MAX_LENGTH);
     } else {
         m_scheduleName = name;
     }

@@ -13,10 +13,9 @@
 #include "interface.h"
 #include "schedule_column.h"
 #include "schedule_core.h"
+#include "schedule_constants.h"
 #include "schedule/schedule_gui.h"
 #include "calendar/calendar_gui.h"
-
-const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
 class Schedule {
     private:
@@ -27,9 +26,25 @@ class Schedule {
         std::shared_ptr<CalendarGui> m_calendarGui;
         std::string m_scheduleName;
 
+        ScheduleView m_currentView = ScheduleView::Table;
+
         // input listeners AND gui listeners
-        std::function<void()> undoListener = std::function<void()>([&]() { undo(); });
-        std::function<void()> redoListener = std::function<void()>([&]() { redo(); });
+        std::function<void()> undoListener = [&]() { undo(); };
+        std::function<void()> redoListener = [&]() { redo(); };
+
+        std::function<void(ScheduleView)> viewSwitchListener = [&](ScheduleView view) {
+            switch (view) {
+                case ScheduleView::Table:
+                    m_calendarGui->setVisible(false);
+                    m_scheduleGui->setVisible(true);
+                    break;
+                case ScheduleView::Calendar:
+                    m_scheduleGui->setVisible(false);
+                    m_calendarGui->setVisible(true);
+                    break;
+            }
+            m_currentView = view;
+        };
 
         // modifyColumnSelectOptions (ElementEditorSubGui)
         std::function<void(size_t, SelectOptionsModification)> modifyColumnSelectOptionsListener =

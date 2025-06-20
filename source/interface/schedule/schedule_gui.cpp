@@ -10,6 +10,7 @@
 #include "schedule/element_editor_subgui.h"
 #include "schedule/filter_editor_subgui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
+#include "view_tab_bar_gui.h"
 #include "gui_templates.h"
 #include "gui_constants.h"
 #include "schedule_coordinates.h"
@@ -18,6 +19,8 @@ ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     : m_scheduleCore(scheduleCore), Gui(ID) {
     addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
     addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
+
+    scheduleEvents.viewedDateChanged.addListener(viewedDateChangedListener);
 }
 
 // Checks if the current table cell was clicked to edit.
@@ -34,90 +37,27 @@ bool ScheduleGui::isEditableElementClicked(bool isEditingDisabled) const {
 }
 
 void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
-    setVisible(false);
-
+    const float offsetFromTop = MainMenuBarGui::getHeight() + ViewTabBarGui::getHeight();
     ImGuiStyle style = ImGui::GetStyle();
-    ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight()));
-    ImGui::SetNextWindowContentSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight()) -
+    ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight() - offsetFromTop));
+    ImGui::SetNextWindowContentSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight() - offsetFromTop) -
                                     style.WindowPadding * 2.0f);
-    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowPos(ImVec2(0.0f, offsetFromTop));
 
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::Begin(m_ID.c_str(),
                  NULL,
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
-    // Add menu bar height as offset
-    ImGui::SetCursorPosY(MainMenuBarGui::getHeight());
-    // Current date text
-    const TimeWrapper& currentDate =
-        m_scheduleDateOverride.getIsEmpty() == false ? m_scheduleDateOverride : TimeWrapper::getCurrentTime();
-    const std::string_view currentDateFmt = currentDate.getMonthDayUTC() < 10 ? "{:%A,%e. %B %Y}" : "{:%A, %e. %B %Y}";
-    std::string viewedDateText = m_scheduleDateOverride.getIsEmpty() == true
-        ? currentDate.getDynamicFmtString(currentDateFmt)
-        : currentDate.getDynamicFmtStringUTC(currentDateFmt);
-    ImGui::PushFont(InterfaceStyleHandler::getFontData(InterfaceStyleHandler::getFontSize() == FontSize::Large
-                                                           ? FontSize::Large
-                                                           : (FontSize)((int)InterfaceStyleHandler::getFontSize() + 1)));
-    ImGui::SetCursorPosX(ImGui::GetWindowWidth() / 2.0f -
-                         gui_size_calculations::getTextButtonWidth(viewedDateText.c_str()) / 2.0f);
-    auto currentTimeUTC = TimeWrapper::getCurrentTime().getTimeUTC();
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(ImGui::GetStyle().WindowPadding.x, 0.0f));
-    ImGui::PushStyleVar(
-        ImGuiStyleVar_Alpha,
-        m_scheduleDateOverride.getIsEmpty() ? 1.0f
-                                            : 0.25f +
-                std::abs(std::sin(std::chrono::milliseconds(std::chrono::floor<std::chrono::milliseconds>(currentTimeUTC) -
-                                                            std::chrono::floor<std::chrono::days>(currentTimeUTC))
-                                      .count() /
-                                  800.f)));
-    if (ImGui::Button(std::format("{}##ScheduleViewDateButton", viewedDateText).c_str())) {
-        m_openDateSelectPopup = true;
-    }
-    const float scheduleHeaderTextHeight = ImGui::GetItemRectSize().y;
-    ImGui::PopStyleVar(2);
-    ImGui::PopFont();
-    // Viewed date selector popup
-    if (ImGui::BeginPopup("Schedule Date Selector")) {
-        // Display date editor to edit m_scheduleDateOverride.
-        // If the current date was selected, just clear m_scheduleDateOverride again.
-        if (gui_templates::DateEditor(m_scheduleDateOverride, m_dateSelectorYear, m_dateSelectorMonth) &&
-            m_scheduleDateOverride.getDateUTC() == TimeWrapper::getCurrentTime().getLocalDate())
-        {
-            m_scheduleDateOverride.clear();
-        }
-        ImGui::EndPopup();
-    }
-    if (m_openDateSelectPopup) {
-        TimeWrapper currentTime = TimeWrapper::getCurrentTime();
-        m_dateSelectorYear = currentTime.getYearUTC();
-        m_dateSelectorMonth = currentTime.getMonthUTC();
-        ImGui::OpenPopup("Schedule Date Selector");
-        m_openDateSelectPopup = false;
-    }
-    // Show a reset button when viewing a different date
-    // Preset button size because it uses a preset size texture variant
-    const float resetButtonSize =
-        24.0f;  //ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
-    if (m_scheduleDateOverride.getIsEmpty() == false) {
-        ImGui::SameLine();
-        ImGui::SetCursorPosY(ImGui::GetItemRectMin().y + ImGui::GetItemRectSize().y / 2.0f - resetButtonSize / 2.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
-        if (gui_templates::ImageButtonStyleColored("##ResetToTodayButton",
-                                                   guiTextures.getOrLoad("icon_reset_24px").ImID,
-                                                   ImVec2(resetButtonSize, resetButtonSize)))
-        {
-            m_scheduleDateOverride.clear();
-        }
-        ImGui::PopStyleVar();
-    }
+    ImGui::PopStyleVar();
 
-    const float SCHEDULE_TOP_BAR_HEIGHT = scheduleHeaderTextHeight + MainMenuBarGui::getHeight();  // + style.ItemSpacing.y * 2;
+    const float SCHEDULE_TOP_MARGIN = offsetFromTop;
     const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
     const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
     const float CHILD_WINDOW_WIDTH = (float)(windowSize.getWidth() - ADD_COLUMN_BUTTON_WIDTH - 8);
-    const float CHILD_WINDOW_HEIGHT = (float)(windowSize.getHeight() - SCHEDULE_TOP_BAR_HEIGHT - ADD_ROW_BUTTON_HEIGHT - 16.0f);
+    const float CHILD_WINDOW_HEIGHT = (float)(windowSize.getHeight() - SCHEDULE_TOP_MARGIN - ADD_ROW_BUTTON_HEIGHT - 16.0f);
 
-    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_TOP_BAR_HEIGHT));
+    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_TOP_MARGIN));
     ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
     // Avoid imgui 0 column abort by not beginning the table at all if there are no columns in the schedule
     if (m_scheduleCore.getColumnCount() > 0) {
@@ -970,8 +910,4 @@ bool ScheduleGui::drawTableCellContents(
         ImGui::EndTooltip();
     }
     return true;
-}
-
-void ScheduleGui::clearDateOverride() {
-    m_scheduleDateOverride.clear();
 }

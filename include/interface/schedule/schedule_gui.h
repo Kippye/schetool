@@ -1,6 +1,5 @@
 #pragma once
 #include "gui.h"
-#include "window.h"
 #include "input.h"
 #include "select_container.h"
 #include "schedule_events.h"
@@ -8,18 +7,22 @@
 #include "schedule_column.h"
 #include "schedule_coordinates.h"
 #include <optional>
+#include <functional>
 
 class ScheduleGui : public Gui {
     private:
         const ScheduleCore& m_scheduleCore;
-        bool m_openDateSelectPopup = false;
         bool m_nextMouseReleaseOpenColumnContext = true;
-        unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
         std::optional<size_t> m_rowContextRow = std::nullopt;
         std::optional<ScheduleCoordinates> m_cellContextCoords = std::nullopt;
         std::optional<size_t> m_draggedRow = std::nullopt;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
+
+        std::function<void(TimeWrapper)> viewedDateChangedListener = [&](TimeWrapper newDateOverride) {
+            m_scheduleDateOverride = newDateOverride;
+        };
+
         void drawColumnHeaderContextContent(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
         void openRowContextPopup(size_t row);
         void openCellContextPopup(size_t column, size_t row);
@@ -71,5 +74,4 @@ class ScheduleGui : public Gui {
         bool isEditableElementClicked(bool isEditingDisabled) const;
 
         void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
-        void clearDateOverride();
 };
