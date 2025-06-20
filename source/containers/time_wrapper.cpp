@@ -218,7 +218,7 @@ unsigned int TimeWrapper::getYear() const {
 
 void TimeWrapper::setYearUTC(unsigned int year) {
     DateWrapper currentDate = getLocalDate();
-    DateWrapper newDate = DateWrapper(year, currentDate.getMonth(), currentDate.getMonthDay());
+    DateWrapper newDate = DateWrapper(limitYearToValidRange(year), currentDate.getMonth(), currentDate.getMonthDay());
     setTimeUTC(newDate, getLocalClockTime());
 }
 

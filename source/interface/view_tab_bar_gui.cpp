@@ -16,11 +16,10 @@ void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures
                                                                 : (FontSize)((int)InterfaceStyleHandler::getFontSize() + 1));
 
     ImGui::PushFont(dateSelectorFontData);
-    ImVec2 tabItemSize = ImGui::CalcTextSize("TEST") + style.FramePadding * 2.0f;
+    ImVec2 dateButtonSize = ImGui::CalcTextSize("TEST") + style.FramePadding * 2.0f;
     ImGui::PopFont();
     ImVec2 tabSize = ImGui::TabItemCalcSize("TAB", false);
-    ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), tabItemSize.y));
-    //ImGui::SetNextWindowContentSize(ImVec2((float)windowSize.getWidth() - style.WindowPadding.x * 2.0f, tabItemSize.y));
+    ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), dateButtonSize.y));
     ImGui::SetNextWindowPos(ImVec2(0.0f, MainMenuBarGui::getHeight()));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(style.WindowPadding.x, 0.0f));

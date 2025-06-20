@@ -70,10 +70,13 @@ void Schedule::init(Input& input, Interface& interface) {
         mainMenuBarGui->undoEvent.addListener(undoListener);
         mainMenuBarGui->redoEvent.addListener(redoListener);
     }
-    if (auto viewTabBarGui = interface.getGuiByID<ViewTabBarGui>("ViewTabBarGui")) {
-        viewTabBarGui->viewSwitched.addListener(viewSwitchListener);
+
+    m_viewTabBarGui = interface.getGuiByID<ViewTabBarGui>("ViewTabBarGui");
+
+    if (m_viewTabBarGui) {
+        m_viewTabBarGui->viewSwitched.addListener(viewSwitchListener);
         // Pipe the viewedDateChanged event through an EventPipe in ScheduleEvents so that guis using ScheduleEvents can listen to it easily.
-        m_scheduleEvents.viewedDateChanged.addEvent(viewTabBarGui->viewedDateChanged);
+        m_scheduleEvents.viewedDateChanged.addEvent(m_viewTabBarGui->viewedDateChanged);
     }
     if (auto editHistoryGui = interface.getGuiByID<EditHistoryGui>("EditHistoryGui")) {
         editHistoryGui->passScheduleEditHistory(&m_editHistory);
@@ -476,8 +479,8 @@ void Schedule::applyColumnTimeBasedReset(size_t columnIndex) {
     // Reset the column and do not add to history since the user didn't make the edit.
     resetColumn(columnIndex, false);
 
-    // Reset the m_scheduleGui's date override just in case.
-    if (m_scheduleGui) {
-        m_scheduleGui->clearDateOverride();
+    // Reset the viewed date override just in case.
+    if (m_viewTabBarGui) {
+        m_viewTabBarGui->clearDateOverride();
     }
 }

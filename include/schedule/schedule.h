@@ -14,6 +14,7 @@
 #include "schedule_column.h"
 #include "schedule_core.h"
 #include "schedule_constants.h"
+#include "view_tab_bar_gui.h"
 #include "schedule/schedule_gui.h"
 #include "calendar/calendar_gui.h"
 
@@ -22,6 +23,7 @@ class Schedule {
         ScheduleEditHistory m_editHistory;
         ScheduleCore m_core;
         ScheduleEvents m_scheduleEvents;
+        std::shared_ptr<ViewTabBarGui> m_viewTabBarGui;
         std::shared_ptr<ScheduleGui> m_scheduleGui;
         std::shared_ptr<CalendarGui> m_calendarGui;
         std::string m_scheduleName;
