@@ -9,6 +9,7 @@ class CalendarGui : public Gui {
         TimeWrapper m_selectedDate;
 
         void drawWeekdayHeaders(float headerWidth);
+        void drawCalendarTable();
 
     public:
         CalendarGui(const char* ID);

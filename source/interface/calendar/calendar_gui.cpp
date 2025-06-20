@@ -14,7 +14,7 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
         m_viewedMonth = TimeWrapper(TimeWrapper::getCurrentTime().getDateUTC());
     }
 
-    ImGuiStyle style = ImGui::GetStyle();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     const float offsetFromTop = MainMenuBarGui::getHeight() + ViewTabBarGui::getHeight();
 
@@ -76,90 +76,7 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
             m_viewedMonth.addMonths(1);
         }
 
-        // TODO: Make height dependent on the number of visible columns, but at least fill the window (might cause a scrollbar to appear)
-        ImVec2 monthDaySquareSize = ImVec2(ImGui::GetContentRegionAvail().x / 7.0f, 0.0f);
-        drawWeekdayHeaders(monthDaySquareSize.x);
-        monthDaySquareSize.y = ImGui::GetContentRegionAvail().y / 6.0f;
-
-        // MONTH DAYS
-        size_t dayIndex = 0;
-        unsigned int daysInMonth = mytime::get_month_day_count(m_viewedMonth.getYearUTC(), m_viewedMonth.getMonthUTC());
-
-        TimeWrapper firstOfTheMonth = TimeWrapper(m_viewedMonth.getDateUTC());
-        firstOfTheMonth.setMonthDayUTC(1);
-        // Day of the week that the first day of the month is
-        int dayOfTheWeekFirst = firstOfTheMonth.getWeekdayUTC(WeekStart::Monday, Base::Zero);
-
-        TimeWrapper lastOfTheMonth = TimeWrapper(m_viewedMonth.getDateUTC());
-        lastOfTheMonth.setMonthDayUTC(daysInMonth);
-        // Day of the week that the last day of the month is
-        int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WeekStart::Monday, Base::Zero);
-        // Total number of days to display (including days from the previous and next months)
-        unsigned int totalDisplayedDays = (dayOfTheWeekFirst) + (daysInMonth) + (6 - dayOfTheWeekLast);
-
-        auto addCalendarDay = [&](int month, int dayDisplayNumber) {
-            unsigned int pushedColorCount = 0;
-            unsigned int pushedVarCount = 0;
-            unsigned int calendarDayYear = m_viewedMonth.getYearUTC();
-            // Calendar day is from the previous or next year
-            if (m_viewedMonth.getMonthUTC() == 1 && month == 12) {
-                calendarDayYear--;
-            } else if (m_viewedMonth.getMonthUTC() == 12 && month == 1) {
-                calendarDayYear++;
-            }
-            DateWrapper calendarDayDate = DateWrapper(calendarDayYear, month, dayDisplayNumber);
-            // Highlight the selected day in its correct month
-            if (m_selectedDate.getIsEmpty() == false && calendarDayDate == m_selectedDate.getDateUTC()) {
-                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered));
-                pushedColorCount++;
-            }
-            // Display days from other months as slightly darker, even if selected
-            if (month != m_viewedMonth.getMonthUTC()) {
-                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
-                pushedVarCount++;
-            }
-            formatTime.setMonthUTC(month);
-            std::string dayNumberText =
-                dayDisplayNumber == 1 ? formatTime.getDynamicFmtStringUTC("{:%b} 1") : std::to_string(dayDisplayNumber);
-            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
-            if (ImGui::BeginChild(
-                    std::format("##{};{}", month, dayNumberText).c_str(), monthDaySquareSize, ImGuiChildFlags_Border))
-            {
-            }
-            ImGui::EndChild();
-            ImGui::PopStyleVar();
-            // if (ImGui::Button(std::format("{}##{}", dayNumberText, month).c_str(), monthDayButtonSize)) {
-            //     m_viewedMonth.setDateUTC(calendarDayDate);
-            //     m_selectedDate.setDateUTC(calendarDayDate);
-            // }
-            ImGui::PopStyleColor(pushedColorCount);
-            ImGui::PopStyleVar(pushedVarCount);
-
-            // sameline when not the last day of the week and not the last day of the month (trailing sameline = bad)
-            if ((dayIndex + 1) % 7 != 0 && dayIndex < totalDisplayedDays) {
-                ImGui::SameLine(0, gui_sizes::date_editor::monthDayButtonSpacing.x);
-            }
-            dayIndex++;
-        };
-
-        // Days from previous month
-        for (size_t i = dayOfTheWeekFirst; i > 0; i--) {
-            int previousMonth = m_viewedMonth.getMonthUTC() == 1 ? 12 : m_viewedMonth.getMonthUTC() - 1;
-            addCalendarDay(
-                previousMonth,
-                mytime::get_month_day_count(previousMonth < 12 ? m_viewedMonth.getYearUTC() : m_viewedMonth.getYearUTC() - 1,
-                                            previousMonth) -
-                    (i - 1));
-        }
-        // Days of the viewed month
-        for (size_t i = 0; i < daysInMonth; i++) {
-            addCalendarDay(m_viewedMonth.getMonthUTC(), i + 1);
-        }
-        // Days from next month
-        for (size_t i = 0; i < 6 - dayOfTheWeekLast; i++) {
-            int nextMonth = m_viewedMonth.getMonthUTC() == 12 ? 1 : m_viewedMonth.getMonthUTC() + 1;
-            addCalendarDay(nextMonth, i + 1);
-        }
+        drawCalendarTable();
     }
     ImGui::PopStyleVar();  // WindowRounding = 0.0f
     ImGui::End();
@@ -183,4 +100,97 @@ void CalendarGui::drawWeekdayHeaders(float width) {
         }
     }
     ImGui::PopStyleColor();
+}
+
+void CalendarGui::drawCalendarTable() {
+    drawWeekdayHeaders(ImGui::GetContentRegionAvail().x / 7.0f);
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    // MONTH DAYS
+    size_t dayIndex = 0;
+    unsigned int daysInMonth = mytime::get_month_day_count(m_viewedMonth.getYearUTC(), m_viewedMonth.getMonthUTC());
+
+    TimeWrapper firstOfTheMonth = TimeWrapper(m_viewedMonth.getDateUTC());
+    firstOfTheMonth.setMonthDayUTC(1);
+    // Day of the week that the first day of the month is
+    int dayOfTheWeekFirst = firstOfTheMonth.getWeekdayUTC(WeekStart::Monday, Base::Zero);
+
+    TimeWrapper lastOfTheMonth = TimeWrapper(m_viewedMonth.getDateUTC());
+    lastOfTheMonth.setMonthDayUTC(daysInMonth);
+    // Day of the week that the last day of the month is
+    int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WeekStart::Monday, Base::Zero);
+
+    TimeWrapper formatTime;
+    auto addCalendarDay = [&](int month, int dayDisplayNumber) {
+        unsigned int pushedColorCount = 0;
+        unsigned int pushedVarCount = 0;
+        unsigned int calendarDayYear = m_viewedMonth.getYearUTC();
+        // Calendar day is from the previous or next year
+        if (m_viewedMonth.getMonthUTC() == 1 && month == 12) {
+            calendarDayYear--;
+        } else if (m_viewedMonth.getMonthUTC() == 12 && month == 1) {
+            calendarDayYear++;
+        }
+        DateWrapper calendarDayDate = DateWrapper(calendarDayYear, month, dayDisplayNumber);
+        // Highlight today's date
+        if (calendarDayDate == TimeWrapper::getCurrentTime().getLocalDate()) {
+            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg,
+                                   ImGui::GetColorU32(gui_color_calculations::getTableCellHighlightColor(
+                                       style.Colors[ImGuiCol_WindowBg], style.Colors[ImGuiCol_Text])));
+        }
+        // Display days from other months as slightly darker
+        if (month != m_viewedMonth.getMonthUTC()) {
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
+            pushedVarCount++;
+        }
+        formatTime.setMonthUTC(month);
+        std::string dayNumberText =
+            dayDisplayNumber == 1 ? formatTime.getDynamicFmtStringUTC("{:%b} 1") : std::to_string(dayDisplayNumber);
+        ImGui::Text("%s", dayNumberText.c_str());
+        ImGui::PopStyleColor(pushedColorCount);
+        ImGui::PopStyleVar(pushedVarCount);
+        dayIndex++;
+    };
+
+    const float minSquareHeight = ImGui::GetContentRegionAvail().y / 6.0f;
+    ImGuiTableFlags tableFlags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame;
+    ImGuiTableRowFlags rowFlags = ImGuiTableRowFlags_None;
+
+    if (ImGui::BeginTable("CalendarTable", 7, tableFlags, ImGui::GetContentRegionAvail())) {
+        // If i add the weekday text as part of the table:
+        // ImGui::TableSetupScrollFreeze(7, 1);
+        ImGui::TableNextRow(rowFlags, minSquareHeight);
+        // Days from previous month
+        for (size_t i = dayOfTheWeekFirst; i > 0; i--) {
+            if (ImGui::TableGetColumnIndex() == 6) {
+                ImGui::TableNextRow(rowFlags, minSquareHeight);
+            }
+            ImGui::TableSetColumnIndex(dayIndex % 7);
+            int previousMonth = m_viewedMonth.getMonthUTC() == 1 ? 12 : m_viewedMonth.getMonthUTC() - 1;
+            addCalendarDay(
+                previousMonth,
+                mytime::get_month_day_count(previousMonth < 12 ? m_viewedMonth.getYearUTC() : m_viewedMonth.getYearUTC() - 1,
+                                            previousMonth) -
+                    (i - 1));
+        }
+        // Days of the viewed month
+        for (size_t i = 0; i < daysInMonth; i++) {
+            if (ImGui::TableGetColumnIndex() == 6) {
+                ImGui::TableNextRow(rowFlags, minSquareHeight);
+            }
+            ImGui::TableSetColumnIndex(dayIndex % 7);
+            addCalendarDay(m_viewedMonth.getMonthUTC(), i + 1);
+        }
+        // Days from next month
+        for (size_t i = 0; i < 6 - dayOfTheWeekLast; i++) {
+            int nextMonth = m_viewedMonth.getMonthUTC() == 12 ? 1 : m_viewedMonth.getMonthUTC() + 1;
+            if (ImGui::TableGetColumnIndex() == 6) {
+                ImGui::TableNextRow(rowFlags, minSquareHeight);
+            }
+            ImGui::TableSetColumnIndex(dayIndex % 7);
+            addCalendarDay(nextMonth, i + 1);
+        }
+
+        ImGui::EndTable();
+    }
 }
