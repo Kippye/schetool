@@ -1,71 +1,13 @@
-#pragma once
+#include "element_display_templates.h"
 
-#include <utility>
-#include <memory>
-#include "imgui.h"
-#include "schedule_coordinates.h"
-#include "schedule_core.h"
-#include "gui_templates.h"
-#include "schedule/element_editor_subgui.h"
-
-struct GuiPassReferences {
-        const WindowSize& windowSize;
-        Input& input;
-        GuiTextures& guiTextures;
-};
-
-template <typename T>
-inline bool showElementInput(T& value, ScheduleCoordinates coords) {
-    static_assert(false, "No showElementInput specialisation for the provided type!");
-}
-
-template <>
-inline bool showElementInput(bool& value, ScheduleCoordinates coords) {
-    return ImGui::Checkbox(std::format("##{};{}", coords.column(), coords.row()).c_str(), &value);
-}
-
-template <>
-inline bool showElementInput(int& value, ScheduleCoordinates coords) {
-    return gui_templates::InputInt(std::format("##{}", coords.getString()).c_str(), &value, false);
-}
-
-template <>
-inline bool showElementInput(double& value, ScheduleCoordinates coords) {
-    return gui_templates::InputDouble(std::format("##{}", coords.getString()).c_str(), &value, "%.15g", false);
-}
-
-// Generic ElementDisplay for types:
-// - bool
-// - int
-// - double
-template <typename T>
-std::pair<bool, T> ElementDisplay(T& value,
-                                  const ScheduleCore&,
-                                  std::shared_ptr<ElementEditorSubGui>,
-                                  ScheduleCoordinates coords,
-                                  float availableWidth,
-                                  bool allowEdit = false) {
-    T prevValue = value;
-    bool modified = showElementInput(value, coords);
-    if (allowEdit && modified) {
-        return {true, value};
-    } else {
-        // Editing is not allowed, revert to previous value
-        if (modified) {
-            value = prevValue;
-        }
-        return {false, value};
-    }
-}
-
-inline std::pair<bool, std::string> ElementDisplay(std::string& value,
-                                                   ScheduleCoordinates coords,
-                                                   std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                                   GuiPassReferences guiPass,
-                                                   bool openEditor,
-                                                   float editorWidth,
-                                                   ImRect avoidRect,
-                                                   bool allowEdit) {
+bool element_display_templates::ElementDisplay(std::string& value,
+                                               ScheduleCoordinates coords,
+                                               std::shared_ptr<ElementEditorSubGui> elementEditor,
+                                               GuiPassReferences guiPass,
+                                               bool openEditor,
+                                               float editorWidth,
+                                               ImRect avoidRect,
+                                               bool allowEdit) {
     std::string prevValue = value;
     std::string displayedValue = value;
 
@@ -94,22 +36,21 @@ inline std::pair<bool, std::string> ElementDisplay(std::string& value,
             if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
                 elementEditor->getMadeEdits())
             {
-                return {true, elementEditor->getEditorValue(value)};
+                value = elementEditor->getEditorValue(value);
+                return true;
             }
         }
     }
-    return {false, value};
+    return false;
 }
 
-inline std::pair<bool, SingleSelectContainer> ElementDisplay(SingleSelectContainer& value,
-                                                             const ScheduleCore& scheduleCore,
-                                                             ScheduleCoordinates coords,
-                                                             std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                                             GuiPassReferences guiPass,
-                                                             bool openEditor,
-                                                             float editorWidth,
-                                                             ImRect avoidRect,
-                                                             bool allowEdit) {
+bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
+                                               const ScheduleCore& scheduleCore,
+                                               ScheduleCoordinates coords,
+                                               std::shared_ptr<ElementEditorSubGui> elementEditor,
+                                               GuiPassReferences guiPass,
+                                               bool openEditor,
+                                               bool allowEdit) {
     auto selection = value.getSelection();
     const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
 
@@ -122,7 +63,7 @@ inline std::pair<bool, SingleSelectContainer> ElementDisplay(SingleSelectContain
             // Middle clicking erases the option - bonus feature
             if (allowEdit) {
                 value.setSelected(selection.value(), false);
-                return {true, value};
+                return true;
             }
         }
     }
@@ -141,23 +82,23 @@ inline std::pair<bool, SingleSelectContainer> ElementDisplay(SingleSelectContain
             if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
                 elementEditor->getMadeEdits())
             {
-                return {true, elementEditor->getEditorValue(value)};
+                value = elementEditor->getEditorValue(value);
+                return true;
             }
         }
     }
-    return {false, value};
+    return false;
 }
 
-inline std::pair<bool, SelectContainer> ElementDisplay(SelectContainer& value,
-                                                       const ScheduleCore& scheduleCore,
-                                                       ScheduleCoordinates coords,
-                                                       std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                                       GuiPassReferences guiPass,
-                                                       float availableWidth,
-                                                       bool openEditor,
-                                                       float editorWidth,
-                                                       ImRect avoidRect,
-                                                       bool allowEdit) {
+bool element_display_templates::ElementDisplay(SelectContainer& value,
+                                               const ScheduleCore& scheduleCore,
+                                               ScheduleCoordinates coords,
+                                               std::shared_ptr<ElementEditorSubGui> elementEditor,
+                                               GuiPassReferences guiPass,
+                                               float availableWidth,
+                                               bool openEditor,
+                                               ImRect avoidRect,
+                                               bool allowEdit) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto selection = value.getSelection();
     const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
@@ -195,7 +136,7 @@ inline std::pair<bool, SelectContainer> ElementDisplay(SelectContainer& value,
             // Middle clicking erases the option - bonus feature
             if (allowEdit) {
                 value.setSelected(selectionIndices[i], false);
-                return {true, value};
+                return true;
             }
         }
 
@@ -204,8 +145,7 @@ inline std::pair<bool, SelectContainer> ElementDisplay(SelectContainer& value,
     }
     if (openEditor) {
         if (elementEditor) {
-            elementEditor->open(
-                coords.column(), coords.row(), SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+            elementEditor->open(coords.column(), coords.row(), SCH_MULTISELECT, avoidRect);
             elementEditor->setEditorValue(value);
         }
     }
@@ -217,23 +157,22 @@ inline std::pair<bool, SelectContainer> ElementDisplay(SelectContainer& value,
             if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
                 elementEditor->getMadeEdits())
             {
-                return {true, elementEditor->getEditorValue(value)};
+                value = elementEditor->getEditorValue(value);
+                return true;
             }
         }
     }
-    return {false, value};
+    return false;
 }
 
-inline std::pair<bool, WeekdayContainer> ElementDisplay(WeekdayContainer& value,
-                                                        const ScheduleCore& scheduleCore,
-                                                        ScheduleCoordinates coords,
-                                                        std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                                        GuiPassReferences guiPass,
-                                                        float availableWidth,
-                                                        bool openEditor,
-                                                        float editorWidth,
-                                                        ImRect avoidRect,
-                                                        bool allowEdit) {
+bool element_display_templates::ElementDisplay(WeekdayContainer& value,
+                                               ScheduleCoordinates coords,
+                                               std::shared_ptr<ElementEditorSubGui> elementEditor,
+                                               GuiPassReferences guiPass,
+                                               float availableWidth,
+                                               bool openEditor,
+                                               ImRect avoidRect,
+                                               bool allowEdit) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto selection = value.getSelection();
     const std::vector<std::string>& optionNames = general_consts::weekdayNames;
@@ -272,7 +211,7 @@ inline std::pair<bool, WeekdayContainer> ElementDisplay(WeekdayContainer& value,
             // Middle clicking erases the option - bonus feature
             if (allowEdit) {
                 value.setSelected(selectionIndices[i], false);
-                return {true, value};
+                return true;
             }
         }
 
@@ -281,8 +220,7 @@ inline std::pair<bool, WeekdayContainer> ElementDisplay(WeekdayContainer& value,
     }
     if (openEditor) {
         if (elementEditor) {
-            elementEditor->open(
-                coords.column(), coords.row(), SCH_WEEKDAY, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+            elementEditor->open(coords.column(), coords.row(), SCH_WEEKDAY, avoidRect);
             elementEditor->setEditorValue(value);
         }
     }
@@ -294,23 +232,20 @@ inline std::pair<bool, WeekdayContainer> ElementDisplay(WeekdayContainer& value,
             if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
                 elementEditor->getMadeEdits())
             {
-                return {true, elementEditor->getEditorValue(value)};
+                value = elementEditor->getEditorValue(value);
+                return true;
             }
         }
     }
-    return {false, value};
+    return false;
 }
 
-inline std::pair<bool, TimeContainer> ElementDisplay(TimeContainer& value,
-                                                     const ScheduleCore& scheduleCore,
-                                                     ScheduleCoordinates coords,
-                                                     std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                                     GuiPassReferences guiPass,
-                                                     float availableWidth,
-                                                     bool openEditor,
-                                                     float editorWidth,
-                                                     ImRect avoidRect,
-                                                     bool allowEdit) {
+bool element_display_templates::ElementDisplay(TimeContainer& value,
+                                               ScheduleCoordinates coords,
+                                               std::shared_ptr<ElementEditorSubGui> elementEditor,
+                                               GuiPassReferences guiPass,
+                                               bool openEditor,
+                                               bool allowEdit) {
     ImGui::Text("%s", value.getString().c_str());
     if (openEditor) {
         if (elementEditor) {
@@ -324,26 +259,21 @@ inline std::pair<bool, TimeContainer> ElementDisplay(TimeContainer& value,
         if (editorCoords.has_value() && editorCoords.value() == coords) {
             elementEditor->draw(guiPass.windowSize, guiPass.input, guiPass.guiTextures);
             // was editing this Element, made edits and just closed the editor. apply the edits
-            if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
-                elementEditor->getMadeEdits())
-            {
-                return {true, elementEditor->getEditorValue(value)};
+            if (elementEditor->getOpenThisFrame() && elementEditor->getMadeEditsThisFrame()) {
+                value = elementEditor->getEditorValue(value);
+                return true;
             }
         }
     }
-    return {false, value};
+    return false;
 }
 
-inline std::pair<bool, DateContainer> ElementDisplay(DateContainer& value,
-                                                     const ScheduleCore& scheduleCore,
-                                                     ScheduleCoordinates coords,
-                                                     std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                                     GuiPassReferences guiPass,
-                                                     float availableWidth,
-                                                     bool openEditor,
-                                                     float editorWidth,
-                                                     ImRect avoidRect,
-                                                     bool allowEdit) {
+bool element_display_templates::ElementDisplay(DateContainer& value,
+                                               ScheduleCoordinates coords,
+                                               std::shared_ptr<ElementEditorSubGui> elementEditor,
+                                               GuiPassReferences guiPass,
+                                               bool openEditor,
+                                               bool allowEdit) {
     ImGui::Text("%s", value.getString().c_str());  // Display the date of the current Date element
     if (openEditor) {
         if (elementEditor) {
@@ -357,12 +287,11 @@ inline std::pair<bool, DateContainer> ElementDisplay(DateContainer& value,
         if (editorCoords.has_value() && editorCoords.value() == coords) {
             elementEditor->draw(guiPass.windowSize, guiPass.input, guiPass.guiTextures);
             // was editing this Element, made edits and just closed the editor. apply the edits
-            if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
-                elementEditor->getMadeEdits())
-            {
-                return {true, elementEditor->getEditorValue(value)};
+            if (elementEditor->getOpenThisFrame() && elementEditor->getMadeEditsThisFrame()) {
+                value = elementEditor->getEditorValue(value);
+                return true;
             }
         }
     }
-    return {false, value};
+    return false;
 }

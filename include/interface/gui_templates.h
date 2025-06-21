@@ -45,6 +45,8 @@ namespace gui_templates {
                     DateEditorFlags flags = DateEditorFlags_None);
     // Displays a time editor, applies edits to the provided TimeContainer&. Returns true if the TimeContainer was modified.
     bool TimeEditor(TimeContainer& editorTime);
+    // Displays a time editor, applies edits to the provided TimeContainer&. Returns true and modifies the TimeContainer only on submit (enter pressed).
+    bool TimeEditor(TimeContainer& editorTime, TimeContainer& bufferTime);
     void TextWithBackground(const char* fmt, ...);
     void TextWithBackground(const ImVec2& size, const char* fmt, ...);
     // Displays an image button that is tinted to match the style color of text. Returns true if the button was pressed.

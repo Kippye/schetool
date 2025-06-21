@@ -200,6 +200,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/autosave_popup_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/calendar/calendar_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/edit_history_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/element_display_templates.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule/element_editor_subgui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule/filter_editor_subgui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/gui.cpp"
