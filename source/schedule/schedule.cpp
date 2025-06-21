@@ -60,7 +60,7 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->duplicateRow.addListener(duplicateRowListener);
     }
 
-    m_calendarGui = interface.addGui<CalendarGui>("CalendarGui");
+    m_calendarGui = interface.addGui<CalendarGui>("CalendarGui", m_core);
 
     if (m_calendarGui) {
         m_calendarGui->setVisible(m_currentView == ScheduleView::Calendar);
@@ -152,6 +152,8 @@ void Schedule::createDefaultSchedule() {
         Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("Duration"), true, ScheduleColumnFlags_Duration));
     m_core.addColumn(getColumnCount(),
                      Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("End"), true, ScheduleColumnFlags_End));
+    m_core.addColumn(getColumnCount(),
+                     Column(std::vector<ElementBase*>{}, SCH_DATE, std::string("Date"), true, ScheduleColumnFlags_Date));
     m_core.sortColumns();
 }
 

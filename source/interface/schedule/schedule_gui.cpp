@@ -125,15 +125,17 @@ void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable*
     }
 
     // Select type (for non-permanent columns)
+    ImGuiComboFlags typeDropdownFlags = ImGuiComboFlags_None;
     ImGui::Separator();
     if (column.permanent) {
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        typeDropdownFlags |= ImGuiComboFlags_NoArrowButton;
     }
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Type:");
     ImGui::SameLine();
     if (std::optional<SCHEDULE_TYPE> newColumnType =
-            gui_templates::Dropdown("##ColumnType", column.type, schedule_consts::scheduleTypeNames))
+            gui_templates::Dropdown("##ColumnType", column.type, schedule_consts::scheduleTypeNames, typeDropdownFlags))
     {
         setColumnType.invoke(columnIndex, newColumnType.value());
     }

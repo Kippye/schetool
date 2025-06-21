@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <string>
 
 class ScheduleCoordinates {
     private:
@@ -25,6 +26,10 @@ class ScheduleCoordinates {
 
         std::pair<size_t, size_t> getAsPair() const {
             return std::pair(m_column, m_row);
+        }
+
+        std::string getString() const {
+            return std::to_string(m_column) + "; " + std::to_string(m_row);
         }
 
         size_t column() const {

@@ -72,9 +72,10 @@ namespace gui_templates {
     template <typename OptionType>
     std::optional<OptionType> Dropdown(const char* idLabel,
                                        OptionType currentSelection,
-                                       const std::map<OptionType, const char*>& optionStrings) {
+                                       const std::map<OptionType, const char*>& optionStrings,
+                                       ImGuiComboFlags flags = ImGuiComboFlags_None) {
         std::optional<OptionType> newSelection = std::nullopt;
-        if (ImGui::BeginCombo(idLabel, optionStrings.at(currentSelection))) {
+        if (ImGui::BeginCombo(idLabel, optionStrings.at(currentSelection), flags)) {
             for (const auto& [option, optionName] : optionStrings) {
                 bool isSelected = option == currentSelection;
                 // Use idLabel with "##" removed to make sure that the Selectable has a unique ID

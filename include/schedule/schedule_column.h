@@ -24,7 +24,8 @@ enum ScheduleColumnFlags_ {
     ScheduleColumnFlags_Finished = 1 << 1,
     ScheduleColumnFlags_Start = 1 << 2,
     ScheduleColumnFlags_Duration = 1 << 3,
-    ScheduleColumnFlags_End = 1 << 4,
+    ScheduleColumnFlags_Date = 1 << 4,
+    ScheduleColumnFlags_End = 1 << 5,
 };
 
 typedef int COLUMN_SORT;
