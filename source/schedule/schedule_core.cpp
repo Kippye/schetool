@@ -79,6 +79,20 @@ void ScheduleCore::sortColumns() {
     }
 }
 
+bool ScheduleCore::checkPassesAllFilters(size_t row, const std::optional<TimeWrapper>& currentTime) const {
+    for (const Column& column : m_schedule) {
+        // Check if the row's Element passes every FilterGroup in this Column
+        bool passesAllFilters = column.checkElementPassesFilters(
+            row,
+            currentTime  // Pass override date as current (Uses TimeWrapper::getCurrentTime() if it's empty)
+        );
+        if (passesAllFilters == false) {
+            return false;
+        }
+    }
+    return true;
+}
+
 size_t ScheduleCore::getColumnCount() const {
     return m_schedule.size();
 }

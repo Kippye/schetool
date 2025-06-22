@@ -6,6 +6,7 @@
 #include "schedule_core.h"
 #include "gui_templates.h"
 #include "schedule/element_editor_subgui.h"
+#include "element.h"
 
 struct GuiPassReferences {
         const WindowSize& windowSize;
@@ -43,15 +44,16 @@ namespace element_display_templates {
     // - double
     template <typename T>
     bool ElementDisplay(T& value, ScheduleCoordinates coords, bool allowEdit = false) {
-        T prevValue = value;
-        bool modified = showElementInput(value, coords);
-        if (allowEdit && modified) {
-            return true;
+        if (allowEdit) {
+            return showElementInput(value, coords);
         } else {
-            // Editing is not allowed, revert to previous value
-            if (modified) {
-                value = prevValue;
-            }
+            // HACK: We can't actually pass the correct SCHEDULE_TYPE here
+            // But it currently doesn't matter if we just want to get the element as a string.
+
+            // Also, a bool would just get displayed as "checked" or "unchecked".
+            // But this isn't an issue either, because currently checkboxes always have allowEdit = true (or they are disabled externally)
+            Element<T> element = Element<T>(SCH_NUMBER, value);
+            ImGui::Text("%s", element.getString().c_str());
             return false;
         }
     }

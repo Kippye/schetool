@@ -64,6 +64,28 @@ void Schedule::init(Input& input, Interface& interface) {
 
     if (m_calendarGui) {
         m_calendarGui->setVisible(m_currentView == ScheduleView::Calendar);
+
+        m_calendarGui->setElementValueBool.addListener(setElementValueListenerBool);
+        m_calendarGui->setElementValueNumber.addListener(setElementValueListenerNumber);
+        m_calendarGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
+        m_calendarGui->setElementValueText.addListener(setElementValueListenerText);
+        m_calendarGui->setElementValueSelect.addListener(setElementValueListenerSelect);
+        m_calendarGui->setElementValueWeekday.addListener(setElementValueListenerWeekday);
+        m_calendarGui->setElementValueTime.addListener(setElementValueListenerTime);
+        m_calendarGui->setElementValueDate.addListener(setElementValueListenerDate);
+
+        m_calendarGui->addDefaultColumn.addListener(addDefaultColumnListener);
+        m_calendarGui->removeColumn.addListener(removeColumnListener);
+        // m_calendarGui->duplicateColumn.addListener(duplicateColumnListener);
+        m_calendarGui->resetColumn.addListener(resetColumnListener);
+
+        m_calendarGui->setColumnType.addListener(setColumnTypeListener);
+        m_calendarGui->setColumnName.addListener(setColumnNameListener);
+        m_calendarGui->setColumnResetOption.addListener(setColumnResetOptionListener);
+
+        m_calendarGui->addRow.addListener(addRowListener);
+        m_calendarGui->removeRow.addListener(removeRowListener);
+        m_calendarGui->duplicateRow.addListener(duplicateRowListener);
     }
 
     if (auto mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")) {

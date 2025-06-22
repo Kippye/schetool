@@ -66,6 +66,8 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
                 return true;
             }
         }
+    } else {
+        ImGui::NewLine();
     }
     if (openEditor) {
         if (elementEditor) {
@@ -117,6 +119,9 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
     size_t currentRowWidth = 0;
     const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
 
+    if (selectedCount == 0) {
+        ImGui::NewLine();
+    }
     for (size_t i = 0; i < selectedCount; i++) {
         const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
             options[selectionIndices[i]].name.length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
@@ -191,6 +196,9 @@ bool element_display_templates::ElementDisplay(WeekdayContainer& value,
     size_t currentRowWidth = 0;
     const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
 
+    if (selectedCount == 0) {
+        ImGui::NewLine();
+    }
     for (size_t i = 0; i < selectedCount; i++) {
         const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
             optionNames[selectionIndices[i]].length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;

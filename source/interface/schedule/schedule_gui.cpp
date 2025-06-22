@@ -16,6 +16,8 @@
 #include "gui_constants.h"
 #include "schedule_coordinates.h"
 
+const ImGuiTable* ScheduleGui::scheduleTable = nullptr;
+
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
     : m_scheduleCore(scheduleCore), Gui(ID) {
     addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
@@ -286,7 +288,9 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
     ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
         ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX;
     if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags, ImGui::GetContentRegionAvail())) {
-        ImGui::GetCurrentTable()->DisableDefaultContextMenu = true;
+        ImGuiTable* currentTable = ImGui::GetCurrentTable();
+        scheduleTable = currentTable;
+        currentTable->DisableDefaultContextMenu = true;
         for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
             ImGui::TableSetupColumn(m_scheduleCore.getColumn(column)->name.c_str());
         }
@@ -410,7 +414,6 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
             ImGui::TableHeader(ImGui::TableGetColumnName(column));
             ImGuiID tableHeaderID = ImGui::GetItemID();
-            ImGuiTable* currentTable = ImGui::GetCurrentTable();
             // Show a close button on the right when hovered
             // permanent columns can't be removed so there's no need for a remove button
             if (isColumnHeaderHovered && m_scheduleCore.getColumn(column)->permanent == false) {
@@ -481,16 +484,8 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             size_t row = sortedRowIndices[unsortedRow];
 
             // CHECK FILTERS BEFORE DRAWING ROW
-            for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
-                // Check if the row's Element passes every FilterGroup in this Column
-                bool passesAllFilters = m_scheduleCore.getColumn(column)->checkElementPassesFilters(
-                    row,
-                    m_scheduleDateOverride  // Pass override date as current (Uses TimeWrapper::getCurrentTime() if it's empty)
-                );
-                // fails to pass, don't show this row
-                if (passesAllFilters == false) {
-                    goto do_not_draw_row;
-                }
+            if (!m_scheduleCore.checkPassesAllFilters(row, m_scheduleDateOverride)) {
+                goto do_not_draw_row;
             }
 
             ImGui::TableNextRow();
@@ -752,3 +747,7 @@ bool ScheduleGui::drawTableCellContents(
     }
     return true;
 }
+
+const ImGuiTable* ScheduleGui::getScheduleTable() {
+    return scheduleTable;
+}  // Static

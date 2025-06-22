@@ -11,6 +11,7 @@
 
 class ScheduleGui : public Gui {
     private:
+        static const ImGuiTable* scheduleTable;
         const ScheduleCore& m_scheduleCore;
         bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_filterGroupListColumn = 0;
@@ -74,4 +75,6 @@ class ScheduleGui : public Gui {
         bool isEditableElementClicked(bool isEditingDisabled) const;
 
         void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+
+        static const ImGuiTable* getScheduleTable();
 };

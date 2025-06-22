@@ -1,6 +1,7 @@
 #include "calendar/calendar_gui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
 #include "view_tab_bar_gui.h"
+#include "schedule/schedule_gui.h"
 #include "gui_templates.h"
 #include "util.h"
 #include "filters/filter_rule.h"
@@ -215,7 +216,27 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
     auto dateColumn = m_scheduleCore.getColumn(dateColumnIndex);
     FilterRule<DateContainer> isThisDate = FilterRule<DateContainer>(calendarDayDate);
 
+    std::vector<size_t> orderedColumnIndices = std::vector<size_t>(m_scheduleCore.getColumnCount());
+    // Display item properties according to the schedule table's column order, if the table exists.
+    if (auto scheduleTable = ScheduleGui::getScheduleTable()) {
+        size_t columnIndex = 0;
+        for (const auto& column : scheduleTable->Columns) {
+            orderedColumnIndices.at(column.DisplayOrder) = columnIndex;
+            columnIndex++;
+        }
+    } else  // No scheduleTable for whatever reason. Just display columns in the order they are in ScheduleCore.
+    {
+        for (size_t i = 0; i < orderedColumnIndices.size(); i++) {
+            orderedColumnIndices[i] = i;
+        }
+    }
+
     for (size_t row = 0; row < m_scheduleCore.getRowCount(); row++) {
+        // CHECK FILTERS BEFORE DRAWING ITEM / ROW
+        if (!m_scheduleCore.checkPassesAllFilters(row, m_scheduleDateOverride)) {
+            continue;
+        }
+
         // This row is on the current calendar day date
         if (isThisDate.checkPasses(m_scheduleCore.getElementConst(dateColumnIndex, row))) {
             std::string childLabelString = std::format("CalendarItem##{};{};{}",
@@ -237,7 +258,8 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
             {
                 const size_t nameColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Name);
                 drawItemProperty({nameColumnIndex, row});
-                for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
+                for (size_t unorderedCol = 0; unorderedCol < m_scheduleCore.getColumnCount(); unorderedCol++) {
+                    size_t col = orderedColumnIndices.at(unorderedCol);
                     // The date doesn't need to be shown and the name has already been shown
                     if (col == dateColumnIndex || col == nameColumnIndex) {
                         continue;
@@ -296,7 +318,11 @@ void CalendarGui::drawItemProperty(ScheduleCoordinates coords) {
     switch (column->type) {
         case (SCH_BOOL): {
             bool value = getElementValue<bool>(coords, columnEditDisabled);
-            element_display_templates::ElementDisplay(value, coords);
+            if (element_display_templates::ElementDisplay(value, coords, true)) {
+                setElementValueBool.invoke(coords.column(), coords.row(), value);
+            }
+            ImGui::SameLine();
+            ImGui::Text("%s", column->name.c_str());
             break;
         }
         case (SCH_NUMBER): {

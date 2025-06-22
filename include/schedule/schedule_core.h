@@ -34,6 +34,9 @@ class ScheduleCore {
         std::vector<Column>& getAllColumnsMutable();
         void sortColumns();
 
+        // Checks if the row at the given index passes every FilterGroup in every column.
+        bool checkPassesAllFilters(size_t row, const std::optional<TimeWrapper>& currentTime = std::nullopt) const;
+
         // COLUMNS
         size_t getColumnCount() const;
         bool existsColumnAtIndex(size_t index) const;
