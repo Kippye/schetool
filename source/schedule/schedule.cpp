@@ -60,7 +60,7 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->duplicateRow.addListener(duplicateRowListener);
     }
 
-    m_calendarGui = interface.addGui<CalendarGui>("CalendarGui", m_core);
+    m_calendarGui = interface.addGui<CalendarGui>("CalendarGui", m_core, m_scheduleEvents);
 
     if (m_calendarGui) {
         m_calendarGui->setVisible(m_currentView == ScheduleView::Calendar);

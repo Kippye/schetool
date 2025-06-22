@@ -64,7 +64,7 @@ namespace element_display_templates {
                         bool openEditor,
                         float editorWidth,
                         ImRect avoidRect,
-                        bool allowEdit);
+                        bool allowEdit = false);
     // Single select
     bool ElementDisplay(SingleSelectContainer& value,
                         const ScheduleCore& scheduleCore,
@@ -72,7 +72,7 @@ namespace element_display_templates {
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
                         GuiPassReferences guiPass,
                         bool openEditor,
-                        bool allowEdit);
+                        bool allowEdit = false);
     // Multiselect
     bool ElementDisplay(SelectContainer& value,
                         const ScheduleCore& scheduleCore,
@@ -82,7 +82,7 @@ namespace element_display_templates {
                         float availableWidth,
                         bool openEditor,
                         ImRect avoidRect,
-                        bool allowEdit);
+                        bool allowEdit = false);
     // Weekday
     bool ElementDisplay(WeekdayContainer& value,
                         ScheduleCoordinates coords,
@@ -91,19 +91,19 @@ namespace element_display_templates {
                         float availableWidth,
                         bool openEditor,
                         ImRect avoidRect,
-                        bool allowEdit);
+                        bool allowEdit = false);
     // Time
     bool ElementDisplay(TimeContainer& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
                         GuiPassReferences guiPass,
                         bool openEditor,
-                        bool allowEdit);
+                        bool allowEdit = false);
     // Date
     bool ElementDisplay(DateContainer& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
                         GuiPassReferences guiPass,
                         bool openEditor,
-                        bool allowEdit);
+                        bool allowEdit = false);
 }  // namespace element_display_templates
