@@ -252,6 +252,7 @@ void Schedule::duplicateColumn(size_t columnIndex, bool addToHistory) {
             m_editHistory.addEdit<ColumnEdit>(
                 false, duplicateColumnIndex.value(), *m_core.getColumn(duplicateColumnIndex.value()));
         }
+        m_scheduleEvents.columnAdded.invoke(duplicateColumnIndex.value());
     }
 }
 
@@ -451,6 +452,8 @@ void Schedule::addRow(size_t rowIndex, bool addToHistory) {
     if (addToHistory) {
         m_editHistory.addEdit<RowEdit>(false, rowIndex, m_core.getRow(rowIndex));
     }
+
+    m_scheduleEvents.rowAdded.invoke(rowIndex);
 }
 
 void Schedule::removeRow(size_t rowIndex, bool addToHistory) {
@@ -467,6 +470,7 @@ void Schedule::removeRow(size_t rowIndex, bool addToHistory) {
             // add a remove RowEdit to the edit history with copies of the removed Elements
             m_editHistory.addEdit<RowEdit>(true, rowIndex, originalRowCopies);
         }
+        m_scheduleEvents.rowRemoved.invoke(rowIndex);
     }
 
     for (size_t i = 0; i < originalRowCopies.size(); i++) {
@@ -481,6 +485,7 @@ void Schedule::duplicateRow(size_t rowIndex, bool addToHistory) {
         if (addToHistory) {
             m_editHistory.addEdit<RowEdit>(false, duplicateRowIndex.value(), m_core.getRow(duplicateRowIndex.value()));
         }
+        m_scheduleEvents.rowAdded.invoke(rowIndex);
     }
 }
 

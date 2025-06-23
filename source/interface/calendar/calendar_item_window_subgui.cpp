@@ -27,9 +27,11 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
     // TODO: I would really like this modal to have rounded corners, but it seems quite difficult to accomplish that.
     if (ImGui::BeginPopupModal("CalendarItemWindowPopup", NULL, windowFlags)) {
         ImGui::PopStyleVar();
-
+        // If there is no row for the viewed item, the popup closes itself.
         if (m_currentItemRow.has_value() == false) {
             ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+            return;
         }
         size_t row = m_currentItemRow.value();
         std::vector<size_t> orderedColumnIndices = std::vector<size_t>(m_scheduleCore.getColumnCount());
@@ -243,4 +245,15 @@ void CalendarItemWindowSubGui::passScheduleDateOverride(const TimeWrapper& dateO
 void CalendarItemWindowSubGui::open(size_t itemRow) {
     m_currentItemRow = itemRow;
     ImGui::OpenPopup("CalendarItemWindowPopup");
+}
+
+void CalendarItemWindowSubGui::updateItemRow(size_t newItemRow) {
+    // Only valid if an item is already being viewed
+    if (m_currentItemRow.has_value()) {
+        m_currentItemRow = newItemRow;
+    }
+}
+
+void CalendarItemWindowSubGui::close() {
+    m_currentItemRow.reset();
 }

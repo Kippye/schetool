@@ -12,6 +12,10 @@
 CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
     : Gui(ID), m_scheduleCore(scheduleCore) {
     scheduleEvents.viewedDateChanged.addListener(viewedDateChangedListener);
+    scheduleEvents.rowAdded.addListener(rowAddedListener);
+    scheduleEvents.rowRemoved.addListener(rowRemovedListener);
+    scheduleEvents.editUndone.addListener(editUndoneListener);
+    scheduleEvents.editRedone.addListener(editRedoneListener);
     addSubGui(new CalendarItemWindowSubGui("CalendarItemWindowSubGui", scheduleCore));
     m_itemWindowSubGui = getSubGui<CalendarItemWindowSubGui>("CalendarItemWindowSubGui");
 
@@ -38,9 +42,6 @@ CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, Sched
 }
 
 void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
-    // It could always be the same, but windowSize changes.
-    m_guiPass.emplace(windowSize, input, guiTextures);
-
     // If for whatever reason the TimeWrapper containing the viewed month + year becomes empty, fill it with the current date.
     if (m_viewedMonth.getIsEmpty()) {
         m_viewedMonth = TimeWrapper(TimeWrapper::getCurrentTime().getDateUTC());
@@ -114,6 +115,14 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
     }
     ImGui::PopStyleVar();  // WindowRounding = 0.0f
     ImGui::End();
+
+    if (m_itemWindowSubGui) {
+        m_itemWindowSubGui->draw(windowSize, input, guiTextures);
+        if (m_openItemWindowAtRow.has_value()) {
+            m_itemWindowSubGui->open(m_openItemWindowAtRow.value());
+            m_openItemWindowAtRow.reset();
+        }
+    }
 }
 
 void CalendarGui::drawWeekdayHeaders(float width) {
@@ -304,21 +313,12 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
                         drawItemProperty({col, row});
                     }
                 }
-                // Draw the item window subgui if this item is open in it
-                if (m_itemWindowSubGui->getCurrentItemRow() == row) {
-                    m_itemWindowSubGui->draw(m_guiPass->windowSize, m_guiPass->input, m_guiPass->guiTextures);
-                }
                 // The child window of this item is being hovered
                 if (ImGui::IsWindowHovered()) {
                     m_hoveredItemChildID = ImGui::GetCurrentWindow()->ChildId;
                     // This child window was clicked
                     if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                        std::cout << "Clicked on item: "
-                                  << m_scheduleCore.getElementValueConstRef<std::string>(nameColumnIndex, row).c_str()
-                                  << std::endl;
-                        if (auto itemWindowSubGui = getSubGui<CalendarItemWindowSubGui>("CalendarItemWindowSubGui")) {
-                            itemWindowSubGui->open(row);
-                        }
+                        m_openItemWindowAtRow = row;
                     }
                 } else if (m_hoveredItemChildID == ImGui::GetCurrentWindow()->ChildId) {
                     m_hoveredItemChildID.reset();

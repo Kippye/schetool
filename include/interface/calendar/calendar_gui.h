@@ -23,13 +23,66 @@ class CalendarGui : public Gui {
         std::optional<ImGuiID> m_hoveredItemChildID;
         // Only meaningful while draw() - specifically drawCalendarTable() - is running.
         TableCoordinates m_currentTableCoords = TableCoordinates(0, 0);
-        // TEMP?
-        std::optional<GuiPassReferences> m_guiPass = std::nullopt;
+
+        // If this has a value, the CalendarItemWindowSubGui will be opened and the value passed to it
+        std::optional<size_t> m_openItemWindowAtRow = std::nullopt;
 
         std::function<void(TimeWrapper)> viewedDateChangedListener = [&](TimeWrapper newDateOverride) {
             m_scheduleDateOverride = newDateOverride;
             if (m_itemWindowSubGui) {
                 m_itemWindowSubGui->passScheduleDateOverride(newDateOverride);
+            }
+        };
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> editUndoneListener =
+            [&](std::shared_ptr<const ScheduleEdit> undoneEdit) {
+                if (undoneEdit->getType() == ScheduleEditType::RowAddOrRemove) {
+                    auto rowAddOrRemoveEdit = std::dynamic_pointer_cast<const RowEdit>(undoneEdit);
+                    // Remove undone -> Row added
+                    if (rowAddOrRemoveEdit->getIsRemove()) {
+                        rowAddedListener(rowAddOrRemoveEdit->getRow());
+                    } else  // Add undone -> Row removed
+                    {
+                        rowRemovedListener(rowAddOrRemoveEdit->getRow());
+                    }
+                }
+            };
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> editRedoneListener =
+            [&](std::shared_ptr<const ScheduleEdit> redoneEdit) {
+                if (redoneEdit->getType() == ScheduleEditType::RowAddOrRemove) {
+                    auto rowAddOrRemoveEdit = std::dynamic_pointer_cast<const RowEdit>(redoneEdit);
+                    // Remove redone -> Row removed
+                    if (rowAddOrRemoveEdit->getIsRemove()) {
+                        rowRemovedListener(rowAddOrRemoveEdit->getRow());
+                    } else  // Add redone -> Row added
+                    {
+                        rowAddedListener(rowAddOrRemoveEdit->getRow());
+                    }
+                }
+            };
+        std::function<void(size_t)> rowAddedListener = [&](size_t addedRowIndex) {
+            // Item window is open
+            if (m_itemWindowSubGui && m_itemWindowSubGui->getCurrentItemRow().has_value()) {
+                size_t itemWindowRow = m_itemWindowSubGui->getCurrentItemRow().value();
+                if (addedRowIndex > itemWindowRow) {
+                    return;
+                }
+                // A row was added before (or at) the open row -> bump it up by 1
+                m_itemWindowSubGui->updateItemRow(itemWindowRow + 1);
+            }
+        };
+        std::function<void(size_t)> rowRemovedListener = [&](size_t removedRowIndex) {
+            // Item window is open
+            if (m_itemWindowSubGui && m_itemWindowSubGui->getCurrentItemRow().has_value()) {
+                size_t itemWindowRow = m_itemWindowSubGui->getCurrentItemRow().value();
+                if (removedRowIndex > itemWindowRow) {
+                    return;
+                }
+                // The row for the item that is open in the window was removed -> close the window.
+                if (removedRowIndex == itemWindowRow) {
+                    m_itemWindowSubGui->close();
+                }
+                // A row was removed before the open row -> bump it down by 1
+                m_itemWindowSubGui->updateItemRow(itemWindowRow - 1);
             }
         };
 

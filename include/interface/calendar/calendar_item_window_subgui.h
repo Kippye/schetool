@@ -50,4 +50,9 @@ class CalendarItemWindowSubGui : public Gui {
         std::optional<size_t> getCurrentItemRow() const;
         void passScheduleDateOverride(const TimeWrapper& dateOverride);
         void open(size_t itemRow);
+        // Use only to update the item row when rows are added / removed while the window is open
+        // To open the window with a specific item row, use open() instead.
+        void updateItemRow(size_t newItemRow);
+        // Clear item row and close the popup
+        void close();
 };
