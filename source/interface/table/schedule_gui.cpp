@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <format>
 #include "schedule_constants.h"
-#include "schedule/schedule_gui.h"
+#include "table/schedule_gui.h"
 #include "schedule/element_editor_subgui.h"
 #include "schedule/filter_editor_subgui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
@@ -21,6 +21,7 @@ const ImGuiTable* ScheduleGui::scheduleTable = nullptr;
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
     : m_scheduleCore(scheduleCore), Gui(ID) {
     addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
+    modifyColumnSelectOptions.addEvent(getSubGui<ElementEditorSubGui>("ElementEditorSubGui")->modifyColumnSelectOptions);
     addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 
     scheduleEvents.viewedDateChanged.addListener(viewedDateChangedListener);
@@ -643,8 +644,7 @@ bool ScheduleGui::drawTableCellContents(
                     guiPass,
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
                     ImGui::GetColumnWidth(column),
-                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column)),
-                    true))
+                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column))))
             {
                 setElementValueText.invoke(column, row, value);
             }
@@ -659,8 +659,7 @@ bool ScheduleGui::drawTableCellContents(
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
                     guiPass,
-                    (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
-                    true))
+                    (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)))
             {
                 setElementValueSelect.invoke(column, row, value);
             }
@@ -677,8 +676,7 @@ bool ScheduleGui::drawTableCellContents(
                     guiPass,
                     ImGui::GetColumnWidth(column),
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
-                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column)),
-                    true))
+                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column))))
             {
                 setElementValueSelect.invoke(column, row, value);
             }
@@ -694,8 +692,7 @@ bool ScheduleGui::drawTableCellContents(
                     guiPass,
                     ImGui::GetColumnWidth(column),
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
-                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column)),
-                    true))
+                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column))))
             {
                 setElementValueWeekday.invoke(column, row, value);
             }
@@ -709,8 +706,7 @@ bool ScheduleGui::drawTableCellContents(
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
                     guiPass,
-                    (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
-                    true))
+                    (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)))
             {
                 setElementValueTime.invoke(column, row, value);
             }
@@ -724,8 +720,7 @@ bool ScheduleGui::drawTableCellContents(
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
                     guiPass,
-                    (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
-                    true))
+                    (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)))
             {
                 setElementValueDate.invoke(column, row, value);
             }

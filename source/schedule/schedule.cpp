@@ -15,11 +15,6 @@ void Schedule::init(Input& input, Interface& interface) {
 
     if (m_scheduleGui) {
         m_scheduleGui->setVisible(m_currentView == ScheduleView::Table);
-
-        if (auto elementEditorSubGui = m_scheduleGui->getSubGui<ElementEditorSubGui>("ElementEditorSubGui")) {
-            elementEditorSubGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
-        }
-
         if (auto filterEditorSubGui = m_scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui")) {
             filterEditorSubGui->addColumnFilterGroup.addListener(addFilterGroupListener);
             filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
@@ -54,6 +49,7 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->setColumnSort.addListener(setColumnSortListener);
         m_scheduleGui->setColumnName.addListener(setColumnNameListener);
         m_scheduleGui->setColumnResetOption.addListener(setColumnResetOptionListener);
+        m_scheduleGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
 
         m_scheduleGui->addRow.addListener(addRowListener);
         m_scheduleGui->removeRow.addListener(removeRowListener);
@@ -76,12 +72,13 @@ void Schedule::init(Input& input, Interface& interface) {
 
         m_calendarGui->addDefaultColumn.addListener(addDefaultColumnListener);
         m_calendarGui->removeColumn.addListener(removeColumnListener);
-        // m_calendarGui->duplicateColumn.addListener(duplicateColumnListener);
+        m_calendarGui->duplicateColumn.addListener(duplicateColumnListener);
         m_calendarGui->resetColumn.addListener(resetColumnListener);
 
         m_calendarGui->setColumnType.addListener(setColumnTypeListener);
         m_calendarGui->setColumnName.addListener(setColumnNameListener);
         m_calendarGui->setColumnResetOption.addListener(setColumnResetOptionListener);
+        m_calendarGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
 
         m_calendarGui->addRow.addListener(addRowListener);
         m_calendarGui->removeRow.addListener(removeRowListener);

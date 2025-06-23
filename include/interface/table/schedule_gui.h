@@ -6,6 +6,7 @@
 #include "schedule_core.h"
 #include "schedule_column.h"
 #include "schedule_coordinates.h"
+#include "event_pipe.h"
 #include <optional>
 #include <functional>
 
@@ -71,6 +72,8 @@ class ScheduleGui : public Gui {
         Event<size_t> addRow;
         Event<size_t> removeRow;
         Event<size_t> duplicateRow;
+        // Event pipes
+        EventPipe<size_t, SelectOptionsModification> modifyColumnSelectOptions;
 
         bool isEditableElementClicked(bool isEditingDisabled) const;
 

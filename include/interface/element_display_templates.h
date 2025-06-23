@@ -65,16 +65,16 @@ namespace element_display_templates {
                         GuiPassReferences guiPass,
                         bool openEditor,
                         float editorWidth,
-                        ImRect avoidRect,
-                        bool allowEdit = false);
+                        ImRect avoidRect);
+    void ElementDisplay(std::string& value);
     // Single select
     bool ElementDisplay(SingleSelectContainer& value,
                         const ScheduleCore& scheduleCore,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
                         GuiPassReferences guiPass,
-                        bool openEditor,
-                        bool allowEdit = false);
+                        bool openEditor);
+    void ElementDisplay(SingleSelectContainer& value, const ScheduleCore& scheduleCore, ScheduleCoordinates coords);
     // Multiselect
     bool ElementDisplay(SelectContainer& value,
                         const ScheduleCore& scheduleCore,
@@ -83,8 +83,11 @@ namespace element_display_templates {
                         GuiPassReferences guiPass,
                         float availableWidth,
                         bool openEditor,
-                        ImRect avoidRect,
-                        bool allowEdit = false);
+                        ImRect avoidRect);
+    void ElementDisplay(SelectContainer& value,
+                        const ScheduleCore& scheduleCore,
+                        ScheduleCoordinates coords,
+                        float availableWidth);
     // Weekday
     bool ElementDisplay(WeekdayContainer& value,
                         ScheduleCoordinates coords,
@@ -92,20 +95,20 @@ namespace element_display_templates {
                         GuiPassReferences guiPass,
                         float availableWidth,
                         bool openEditor,
-                        ImRect avoidRect,
-                        bool allowEdit = false);
+                        ImRect avoidRect);
+    void ElementDisplay(WeekdayContainer& value, ScheduleCoordinates coords, float availableWidth);
     // Time
     bool ElementDisplay(TimeContainer& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
                         GuiPassReferences guiPass,
-                        bool openEditor,
-                        bool allowEdit = false);
+                        bool openEditor);
+    void ElementDisplay(TimeContainer& value);
     // Date
     bool ElementDisplay(DateContainer& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
                         GuiPassReferences guiPass,
-                        bool openEditor,
-                        bool allowEdit = false);
+                        bool openEditor);
+    void ElementDisplay(DateContainer& value);
 }  // namespace element_display_templates

@@ -15,7 +15,7 @@
 #include "schedule_core.h"
 #include "schedule_constants.h"
 #include "view_tab_bar_gui.h"
-#include "schedule/schedule_gui.h"
+#include "table/schedule_gui.h"
 #include "calendar/calendar_gui.h"
 
 class Schedule {

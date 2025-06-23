@@ -82,7 +82,7 @@ const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinit
 FontSize InterfaceStyleHandler::currentFontSize = FontSize::Normal;
 
 void InterfaceStyleHandler::loadFontSizes(const char* fontPath) {
-    for (FontSize fontSize = FontSize::Small; fontSize <= FontSize::Large; fontSize = (FontSize)((int)fontSize + 1)) {
+    for (FontSize fontSize = FontSize::Small; fontSize <= FontSize::Huge; fontSize = (FontSize)((int)fontSize + 1)) {
         loadedFonts.insert_or_assign(
             fontSize, ImGui::GetIO().Fonts->AddFontFromFileTTF(fontPath, gui_fonts::fontSizePixelSizes.at(fontSize)));
     }

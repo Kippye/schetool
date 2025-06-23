@@ -6,8 +6,7 @@ bool element_display_templates::ElementDisplay(std::string& value,
                                                GuiPassReferences guiPass,
                                                bool openEditor,
                                                float editorWidth,
-                                               ImRect avoidRect,
-                                               bool allowEdit) {
+                                               ImRect avoidRect) {
     std::string prevValue = value;
     std::string displayedValue = value;
 
@@ -44,13 +43,16 @@ bool element_display_templates::ElementDisplay(std::string& value,
     return false;
 }
 
+void element_display_templates::ElementDisplay(std::string& value) {
+    ImGui::TextWrapped("%s", value.c_str());
+}
+
 bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
                                                const ScheduleCore& scheduleCore,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
                                                GuiPassReferences guiPass,
-                                               bool openEditor,
-                                               bool allowEdit) {
+                                               bool openEditor) {
     auto selection = value.getSelection();
     const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
 
@@ -61,10 +63,8 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
                                               ImGuiButtonFlags_MouseButtonMiddle))
         {
             // Middle clicking erases the option - bonus feature
-            if (allowEdit) {
-                value.setSelected(selection.value(), false);
-                return true;
-            }
+            value.setSelected(selection.value(), false);
+            return true;
         }
     } else {
         ImGui::NewLine();
@@ -92,6 +92,19 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
     return false;
 }
 
+void element_display_templates::ElementDisplay(SingleSelectContainer& value,
+                                               const ScheduleCore& scheduleCore,
+                                               ScheduleCoordinates coords) {
+    auto selection = value.getSelection();
+    const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
+
+    if (selection.has_value()) {
+        gui_templates::SelectOptionButton(options[selection.value()], std::format("##{}", coords.getString()).c_str());
+    } else {
+        ImGui::NewLine();
+    }
+}
+
 bool element_display_templates::ElementDisplay(SelectContainer& value,
                                                const ScheduleCore& scheduleCore,
                                                ScheduleCoordinates coords,
@@ -99,8 +112,7 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
                                                GuiPassReferences guiPass,
                                                float availableWidth,
                                                bool openEditor,
-                                               ImRect avoidRect,
-                                               bool allowEdit) {
+                                               ImRect avoidRect) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto selection = value.getSelection();
     const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
@@ -139,10 +151,8 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
                                               ImGuiButtonFlags_MouseButtonMiddle))
         {
             // Middle clicking erases the option - bonus feature
-            if (allowEdit) {
-                value.setSelected(selectionIndices[i], false);
-                return true;
-            }
+            value.setSelected(selectionIndices[i], false);
+            return true;
         }
 
         currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
@@ -170,14 +180,56 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
     return false;
 }
 
+void element_display_templates::ElementDisplay(SelectContainer& value,
+                                               const ScheduleCore& scheduleCore,
+                                               ScheduleCoordinates coords,
+                                               float availableWidth) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    auto selection = value.getSelection();
+    const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
+
+    std::vector<int> selectionIndices = {};
+
+    size_t selectedCount = selection.size();
+
+    for (size_t s : selection) {
+        selectionIndices.push_back(s);
+    }
+
+    // sort indices so that the same options are always displayed in the same order
+    std::sort(std::begin(selectionIndices), std::end(selectionIndices));
+
+    size_t currentRowWidth = 0;
+    const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
+
+    if (selectedCount == 0) {
+        ImGui::NewLine();
+    }
+    for (size_t i = 0; i < selectedCount; i++) {
+        const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
+            options[selectionIndices[i]].name.length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
+        if (currentRowWidth + nextOptionAddedWidth < availableWidth) {
+            if (i > 0)  // Don't add padding to the first option
+            {
+                ImGui::SameLine();
+            }
+        } else {
+            currentRowWidth = 0;
+        }
+        gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{}", coords.getString()).c_str());
+
+        currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
+                                               : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
+    }
+}
+
 bool element_display_templates::ElementDisplay(WeekdayContainer& value,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
                                                GuiPassReferences guiPass,
                                                float availableWidth,
                                                bool openEditor,
-                                               ImRect avoidRect,
-                                               bool allowEdit) {
+                                               ImRect avoidRect) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto selection = value.getSelection();
     const std::vector<std::string>& optionNames = general_consts::weekdayNames;
@@ -217,10 +269,8 @@ bool element_display_templates::ElementDisplay(WeekdayContainer& value,
                 ImGuiButtonFlags_MouseButtonMiddle))
         {
             // Middle clicking erases the option - bonus feature
-            if (allowEdit) {
-                value.setSelected(selectionIndices[i], false);
-                return true;
-            }
+            value.setSelected(selectionIndices[i], false);
+            return true;
         }
 
         currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
@@ -248,12 +298,53 @@ bool element_display_templates::ElementDisplay(WeekdayContainer& value,
     return false;
 }
 
+void element_display_templates::ElementDisplay(WeekdayContainer& value, ScheduleCoordinates coords, float availableWidth) {
+    ImGuiStyle& style = ImGui::GetStyle();
+    auto selection = value.getSelection();
+    const std::vector<std::string>& optionNames = general_consts::weekdayNames;
+
+    std::vector<int> selectionIndices = {};
+
+    size_t selectedCount = selection.size();
+
+    for (size_t s : selection) {
+        selectionIndices.push_back(s);
+    }
+
+    // sort indices so that the same options are always displayed in the same order
+    std::sort(std::begin(selectionIndices), std::end(selectionIndices));
+
+    size_t currentRowWidth = 0;
+    const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
+
+    if (selectedCount == 0) {
+        ImGui::NewLine();
+    }
+    for (size_t i = 0; i < selectedCount; i++) {
+        const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
+            optionNames[selectionIndices[i]].length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
+        if (currentRowWidth + nextOptionAddedWidth < availableWidth) {
+            if (i > 0)  // Don't add padding to the first option
+            {
+                ImGui::SameLine();
+            }
+        } else {
+            currentRowWidth = 0;
+        }
+        gui_templates::SelectOptionButton(
+            SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]},
+            std::format("##{}", coords.getString()).c_str());
+
+        currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
+                                               : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
+    }
+}
+
 bool element_display_templates::ElementDisplay(TimeContainer& value,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
                                                GuiPassReferences guiPass,
-                                               bool openEditor,
-                                               bool allowEdit) {
+                                               bool openEditor) {
     ImGui::Text("%s", value.getString().c_str());
     if (openEditor) {
         if (elementEditor) {
@@ -276,12 +367,15 @@ bool element_display_templates::ElementDisplay(TimeContainer& value,
     return false;
 }
 
+void element_display_templates::ElementDisplay(TimeContainer& value) {
+    ImGui::Text("%s", value.getString().c_str());
+}
+
 bool element_display_templates::ElementDisplay(DateContainer& value,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
                                                GuiPassReferences guiPass,
-                                               bool openEditor,
-                                               bool allowEdit) {
+                                               bool openEditor) {
     ImGui::Text("%s", value.getString().c_str());  // Display the date of the current Date element
     if (openEditor) {
         if (elementEditor) {
@@ -302,4 +396,8 @@ bool element_display_templates::ElementDisplay(DateContainer& value,
         }
     }
     return false;
+}
+
+void element_display_templates::ElementDisplay(DateContainer& value) {
+    ImGui::Text("%s", value.getString().c_str());  // Display the date of the current Date element
 }

@@ -1,16 +1,40 @@
 #include "calendar/calendar_gui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
 #include "view_tab_bar_gui.h"
-#include "schedule/schedule_gui.h"
+#include "table/schedule_gui.h"
 #include "gui_templates.h"
 #include "util.h"
 #include "filters/filter_rule.h"
+#include "calendar/calendar_item_window_subgui.h"
 #include <algorithm>
 #include <format>
 
 CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
     : Gui(ID), m_scheduleCore(scheduleCore) {
     scheduleEvents.viewedDateChanged.addListener(viewedDateChangedListener);
+    addSubGui(new CalendarItemWindowSubGui("CalendarItemWindowSubGui", scheduleCore));
+    m_itemWindowSubGui = getSubGui<CalendarItemWindowSubGui>("CalendarItemWindowSubGui");
+
+    // Add events from CalendarItemWindowSubGui to pipe through
+    setElementValueBool.addEvent(m_itemWindowSubGui->setElementValueBool);
+    setElementValueNumber.addEvent(m_itemWindowSubGui->setElementValueNumber);
+    setElementValueDecimal.addEvent(m_itemWindowSubGui->setElementValueDecimal);
+    setElementValueText.addEvent(m_itemWindowSubGui->setElementValueText);
+    setElementValueSelect.addEvent(m_itemWindowSubGui->setElementValueSelect);
+    setElementValueWeekday.addEvent(m_itemWindowSubGui->setElementValueWeekday);
+    setElementValueTime.addEvent(m_itemWindowSubGui->setElementValueTime);
+    setElementValueDate.addEvent(m_itemWindowSubGui->setElementValueDate);
+    // column add / remove
+    addDefaultColumn.addEvent(m_itemWindowSubGui->addDefaultColumn);
+    removeColumn.addEvent(m_itemWindowSubGui->removeColumn);
+    // Event<size_t> duplicateColumn;
+    // column modification
+    setColumnType.addEvent(m_itemWindowSubGui->setColumnType);
+    setColumnName.addEvent(m_itemWindowSubGui->setColumnName);
+    setColumnResetOption.addEvent(m_itemWindowSubGui->setColumnResetOption);
+    modifyColumnSelectOptions.addEvent(m_itemWindowSubGui->modifyColumnSelectOptions);
+    // entire column modification
+    resetColumn.addEvent(m_itemWindowSubGui->resetColumn);
 }
 
 void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
@@ -280,6 +304,10 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
                         drawItemProperty({col, row});
                     }
                 }
+                // Draw the item window subgui if this item is open in it
+                if (m_itemWindowSubGui->getCurrentItemRow() == row) {
+                    m_itemWindowSubGui->draw(m_guiPass->windowSize, m_guiPass->input, m_guiPass->guiTextures);
+                }
                 // The child window of this item is being hovered
                 if (ImGui::IsWindowHovered()) {
                     m_hoveredItemChildID = ImGui::GetCurrentWindow()->ChildId;
@@ -288,6 +316,9 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
                         std::cout << "Clicked on item: "
                                   << m_scheduleCore.getElementValueConstRef<std::string>(nameColumnIndex, row).c_str()
                                   << std::endl;
+                        if (auto itemWindowSubGui = getSubGui<CalendarItemWindowSubGui>("CalendarItemWindowSubGui")) {
+                            itemWindowSubGui->open(row);
+                        }
                     }
                 } else if (m_hoveredItemChildID == ImGui::GetCurrentWindow()->ChildId) {
                     m_hoveredItemChildID.reset();
@@ -300,13 +331,6 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
 }
 
 void CalendarGui::drawItemProperty(ScheduleCoordinates coords) {
-    if (m_guiPass.has_value() == false) {
-        // Can't draw item properties without this.
-        // But also don't want to cause an error because of GUI.
-        std::cout << "CalendarGui::drawItemProperty(): m_guiPass has no value!" << std::endl;
-        return;
-    }
-
     bool columnEditDisabled = false;
     const Column* column = m_scheduleCore.getColumn(coords.column());
     // If viewing a different date and the column has a reset option then show it disabled
@@ -337,45 +361,33 @@ void CalendarGui::drawItemProperty(ScheduleCoordinates coords) {
         }
         case (SCH_TEXT): {
             std::string value = getElementValue<std::string>(coords, columnEditDisabled);
-            element_display_templates::ElementDisplay(value, coords, nullptr, m_guiPass.value(), false, 0.0f, ImRect());
+            element_display_templates::ElementDisplay(value);
             break;
         }
         case (SCH_SELECT): {
             SingleSelectContainer value = getElementValue<SingleSelectContainer>(coords, columnEditDisabled);
-            element_display_templates::ElementDisplay(value, m_scheduleCore, coords, nullptr, m_guiPass.value(), false);
+            element_display_templates::ElementDisplay(value, m_scheduleCore, coords);
             break;
         }
         case (SCH_MULTISELECT): {
             SelectContainer value = getElementValue<SelectContainer>(coords, columnEditDisabled);
-            element_display_templates::ElementDisplay(value,
-                                                      m_scheduleCore,
-                                                      coords,
-                                                      nullptr,
-                                                      m_guiPass.value(),
-                                                      ImGui::GetColumnWidth(m_currentTableCoords.column()),
-                                                      false,
-                                                      ImRect());
+            element_display_templates::ElementDisplay(
+                value, m_scheduleCore, coords, ImGui::GetColumnWidth(m_currentTableCoords.column()));
             break;
         }
         case (SCH_WEEKDAY): {
             WeekdayContainer value = getElementValue<WeekdayContainer>(coords, columnEditDisabled);
-            element_display_templates::ElementDisplay(value,
-                                                      coords,
-                                                      nullptr,
-                                                      m_guiPass.value(),
-                                                      ImGui::GetColumnWidth(m_currentTableCoords.column()),
-                                                      false,
-                                                      ImRect());
+            element_display_templates::ElementDisplay(value, coords, ImGui::GetColumnWidth(m_currentTableCoords.column()));
             break;
         }
         case (SCH_TIME): {
             TimeContainer value = getElementValue<TimeContainer>(coords, columnEditDisabled);
-            element_display_templates::ElementDisplay(value, coords, nullptr, m_guiPass.value(), false);
+            element_display_templates::ElementDisplay(value);
             break;
         }
         case (SCH_DATE): {
             DateContainer value = getElementValue<DateContainer>(coords, columnEditDisabled);
-            element_display_templates::ElementDisplay(value, coords, nullptr, m_guiPass.value(), false);
+            element_display_templates::ElementDisplay(value);
             break;
         }
     }

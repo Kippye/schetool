@@ -87,7 +87,9 @@ enum class FontSize {
     // Font size of 24px
     Big,
     // Font size of 32px
-    Large
+    Large,
+    // Font size of 40px
+    Huge,
 };
 
 namespace gui_fonts {
@@ -102,6 +104,7 @@ namespace gui_fonts {
         {FontSize::Normal, 16},
         {FontSize::Big, 24},
         {FontSize::Large, 32},
+        {FontSize::Huge, 40},
     };
 }  // namespace gui_fonts
 
