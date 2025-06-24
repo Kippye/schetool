@@ -96,6 +96,10 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 ImGui::TableNextColumn();
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("%s", m_scheduleCore.getColumn(col)->name.c_str());
+                if (ImGui::BeginItemTooltip()) {
+                    ImGui::Text("%s", m_scheduleCore.getColumn(col)->name.c_str());
+                    ImGui::EndTooltip();
+                }
                 ImGui::TableNextColumn();
                 ScheduleColumnFlags columnFlags = m_scheduleCore.getColumn(col)->flags;
                 drawItemProperty({windowSize, input, guiTextures}, {col, row});
