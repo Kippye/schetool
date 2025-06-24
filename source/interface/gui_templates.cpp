@@ -562,7 +562,7 @@ ImVec4 gui_color_calculations::getDisabledColorFromBase(ImVec4 base) {
 }
 
 ImVec4 gui_color_calculations::getTableCellHighlightColor(ImVec4 backgroundColor, ImVec4 fontColor) {
-    ImVec4 sum = ImVec4(
-        backgroundColor.x + fontColor.x, backgroundColor.y + fontColor.y, backgroundColor.z + fontColor.z, backgroundColor.w);
-    return ImVec4(sum.x / 2.0f, sum.y / 2.0f, sum.z / 2.0f, sum.w);
+    ImVec4 highlightColor = ImLerp(backgroundColor, fontColor, 0.1f);
+    highlightColor.w = 1.0f;
+    return highlightColor;
 }

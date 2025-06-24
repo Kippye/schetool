@@ -310,6 +310,9 @@ void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateConta
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_ButtonActive]);
                 pushedColorCount++;
             }
+        } else {
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_WindowBg]);
+            pushedColorCount++;
         }
         if (ImGui::BeginChild(childLabelString.c_str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders)) {
             const size_t nameColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Name);
