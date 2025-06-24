@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
+include(FetchContent)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ############ PROJECT DEFINITION ############
@@ -56,6 +58,13 @@ IF (LINUX)
     find_package(GDKPixBuf REQUIRED)
 ENDIF()
 
+######### REMOTE FETCH LIBRARIES #########
+FetchContent_Declare(
+    GLFW
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG e7ea71be039836da3a98cea55ae5569cb5eb885c # latest as of 23.05.2025; GLFW 3.5
+)
+FetchContent_MakeAvailable(GLFW)
 ######### SUBDIRS / LOCAL LIBRARIES #########
 add_subdirectory("${LIBRARY_DIR}/blf")
 add_subdirectory("${LIBRARY_DIR}/glad")
@@ -84,7 +93,6 @@ IF (WINDOWS_MSVC)
     ENDIF()
 ENDIF()
 
-find_package(glfw3 REQUIRED)
 add_subdirectory("${LIBRARY_DIR}/imgui") # imgui 1.90.4
 target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
 

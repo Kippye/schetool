@@ -35,6 +35,9 @@ void Window::init() {
 #endif
     );
 
+    int major, minor, rev;
+    glfwGetVersion(&major, &minor, &rev);
+    std::cout << "GLFW version " << std::format("{}.{}.{}", major, minor, rev) << std::endl;
     glfwInit();
     //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -43,7 +46,7 @@ void Window::init() {
 
     m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, m_titleBase.c_str(), NULL, NULL);
     if (m_window == NULL) {
-        std::cout << "Could not create a GLFW window." << std::endl;
+        std::cout << "GLFW window creation failed." << std::endl;
         const char* description;
         int code = glfwGetError(&description);
         if (code != GLFW_NO_ERROR) {
@@ -58,29 +61,31 @@ void Window::init() {
     }
 
     setTitle(m_titleBase);
-    // make the window current and maximize 8)
     glfwMakeContextCurrent(m_window);
     glfwMaximizeWindow(m_window);
     glfwSetWindowSizeLimits(m_window, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(m_window, this);
-    // load address of OpenGL function pointers
+    // Load address of OpenGL function pointers
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cout << "Could not initialize GLAD." << std::endl;
+        std::cout << "GLAD initialization failed." << std::endl;
         window_close_callback(this);
         return;
     }
     auto glVersionString = glGetString(GL_VERSION);
-    std::cout << "Using OpenGL " << glVersionString << std::endl;
+    std::cout << "OpenGL version " << glVersionString << std::endl;
     std::string glVersionNormalString = std::string(reinterpret_cast<const char*>(glVersionString));
     // Get the first 3 characters (x.y) and get rid of the rest.
     m_glVersionString = glVersionNormalString.substr(0, 3);
     // Try to map the OpenGL version to its GLSL version
     if (m_versionGlToGLSL.count(m_glVersionString) != 0) {
         m_glslVersionString = m_versionGlToGLSL.at(m_glVersionString);
+        std::cout << "Chose suitable GLSL version: " << m_glslVersionString << std::endl;
+    } else {
+        std::cout << "No mapping from OpenGL version string " << m_glVersionString
+                  << " to GLSL version. Falling back to default GLSL version: " << m_glslVersionString << std::endl;
     }
-    std::cout << "Chose suitable GLSL version: " << m_glslVersionString << std::endl;
 
-    // set up the viewport (xpos, ypos, w, h)
+    // Set up the viewport (xpos, ypos, w, h)
     int currentWidth, currentHeight;
     glfwGetWindowSize(m_window, &currentWidth, &currentHeight);
     m_windowWidth = currentWidth;
@@ -149,9 +154,14 @@ void Window::loadIcon(TextureLoader& textureLoader) {
         textureLoader.getRelativePathFromTextureFolder("icon.png"), &images[0].width, &images[0].height, nullptr, false);
     if (images[0].pixels) {
         glfwSetWindowIcon(m_window, 1, images);
+        const char* desc;
+        auto error = glfwGetError(&desc);
+        if (error != GLFW_NO_ERROR) {
+            std::cout << "GLFW error when setting window icon: " << error << ". Description: '" << desc << "'." << std::endl;
+        }
     } else {
-        printf("Window::init(): Failed to load program icon from path: %s\n",
-               (textureLoader.textureFolder + "icon.png").c_str());
+        std::cout << "Window::loadIcon(): Failed to load program icon from path: " << textureLoader.textureFolder << "icon.png"
+                  << std::endl;
     }
 }
 
@@ -196,7 +206,7 @@ void Window::cancelClose() {
 }
 
 void Window::terminate() {
-    printf("Window::terminate(): Invoking windowCloseEvent.\n");
+    std::cout << "Window::terminate(): Invoking windowCloseEvent and terminating GLFW window." << std::endl;
     windowCloseEvent.invoke();
     glfwDestroyWindow(m_window);
     glfwTerminate();
