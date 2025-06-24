@@ -356,7 +356,7 @@ bool gui_templates::ImageButtonStyleColored(const char* idLabel,
                                             ImVec4 bgColor,
                                             ImGuiButtonFlags buttonFlags) {
     return ImGui::ImageButtonEx(
-        ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonFlags);
+        ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_CheckMark), buttonFlags);
 }
 
 bool gui_templates::SelectOptionButton(const SelectOption& selectOption,

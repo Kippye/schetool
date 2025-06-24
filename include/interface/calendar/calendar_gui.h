@@ -87,9 +87,9 @@ class CalendarGui : public Gui {
         };
 
         void drawWeekdayHeaders(float headerWidth);
-        void drawCalendarTable();
-        void drawCalendarDayContent(size_t& dayIndex, int month, int dayNumber);
-        void drawCalendarDayItems(const DateContainer& calendarDayDate);
+        void drawCalendarTable(GuiTextures& guiTextures);
+        void drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIndex, int month, int dayNumber);
+        void drawCalendarDayItems(GuiTextures& guiTextures, const DateContainer& calendarDayDate);
         void drawItemProperty(ScheduleCoordinates coords);
         template <typename T>
         T getElementValue(ScheduleCoordinates coords, bool useDefaultValue) const {

@@ -59,7 +59,9 @@ namespace gui_templates {
     bool TimeEditor(TimeContainer& editorTime, TimeContainer& bufferTime);
     void TextWithBackground(const char* fmt, ...);
     void TextWithBackground(const ImVec2& size, const char* fmt, ...);
-    // Displays an image button that is tinted to match the style color of text. Returns true if the button was pressed.
+    // Displays an image button that is tinted to match the style color of ImGuiCol_CheckMark.
+    // This is because the text color is typically too extreme to use for normal textures (text is thin and anti-aliased)
+    // Returns true if the button was pressed.
     bool ImageButtonStyleColored(const char* idLabel,
                                  ImTextureID textureID,
                                  ImVec2 size,
@@ -142,6 +144,6 @@ namespace gui_color_calculations {
     ImVec4 getActiveColorFromBase(ImVec4 base);
     ImVec4 getDisabledColorFromBase(ImVec4 base);
     // Calculate a likely suitable table cell highlight color (RGB) based on the text color (RGB) and window background color (RGB).
-    // Essentially gets the average of those two colors.
+    // Essentially gets the (biased) average of those two colors.
     ImVec4 getTableCellHighlightColor(ImVec4 backgroundColor, ImVec4 fontColor);
 }  // namespace gui_color_calculations

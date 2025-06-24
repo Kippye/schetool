@@ -14,6 +14,8 @@ const std::map<GuiStyle, const char*> InterfaceStyleHandler::styleNames = {
 std::map<FontSize, ImFont*> InterfaceStyleHandler::loadedFonts = {};
 
 // NOTE: Do NOT make styles have each other as their base style, it will cause an endless loop -_-
+// NOTE: ImGuiCol_CheckMark is also used to color EVERY texture button that should be colored according to the style
+// Currently, this mostly means gui_templates::ImageButtonStyleColored()
 const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinitions = {
     {GuiStyle::Light,
      {std::nullopt,
@@ -29,7 +31,6 @@ const std::map<GuiStyle, GuiStyleDefinition> InterfaceStyleHandler::styleDefinit
           colors[ImGuiCol_TitleBgActive] = ImVec4(0.44f, 0.75f, 0.87f, 1.00f);
           colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.16f, 0.16f, 0.16f, 0.51f);
           colors[ImGuiCol_MenuBarBg] = ImVec4(0.54f, 0.68f, 0.90f, 1.00f);
-          colors[ImGuiCol_CheckMark] = ImVec4(0.23f, 0.23f, 0.23f, 1.00f);
           colors[ImGuiCol_Button] = ImVec4(0.85f, 0.92f, 0.93f, 1.00f);
           colors[ImGuiCol_ButtonHovered] = ImVec4(0.79f, 0.86f, 0.87f, 1.00f);
           colors[ImGuiCol_ButtonActive] = ImVec4(0.66f, 0.71f, 0.72f, 1.00f);

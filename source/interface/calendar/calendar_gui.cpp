@@ -111,7 +111,7 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
 
         drawWeekdayHeaders(ImGui::GetContentRegionAvail().x / 7.0f);
 
-        drawCalendarTable();
+        drawCalendarTable(guiTextures);
     }
     ImGui::PopStyleVar();  // WindowRounding = 0.0f
     ImGui::End();
@@ -145,7 +145,7 @@ void CalendarGui::drawWeekdayHeaders(float width) {
     ImGui::PopStyleColor();
 }
 
-void CalendarGui::drawCalendarTable() {
+void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     // MONTH DAYS
@@ -180,6 +180,7 @@ void CalendarGui::drawCalendarTable() {
             m_currentTableCoords = {static_cast<size_t>(ImGui::TableGetColumnIndex()),
                                     static_cast<size_t>(ImGui::TableGetRowIndex())};
             drawCalendarDayContent(
+                guiTextures,
                 dayIndex,
                 previousMonth,
                 mytime::get_month_day_count(previousMonth < 12 ? m_viewedMonth.getYearUTC() : m_viewedMonth.getYearUTC() - 1,
@@ -194,7 +195,7 @@ void CalendarGui::drawCalendarTable() {
             ImGui::TableSetColumnIndex(dayIndex % 7);
             m_currentTableCoords = {static_cast<size_t>(ImGui::TableGetColumnIndex()),
                                     static_cast<size_t>(ImGui::TableGetRowIndex())};
-            drawCalendarDayContent(dayIndex, m_viewedMonth.getMonthUTC(), i + 1);
+            drawCalendarDayContent(guiTextures, dayIndex, m_viewedMonth.getMonthUTC(), i + 1);
         }
         // Days from next month
         for (size_t i = 0; i < 6 - dayOfTheWeekLast; i++) {
@@ -205,16 +206,16 @@ void CalendarGui::drawCalendarTable() {
             ImGui::TableSetColumnIndex(dayIndex % 7);
             m_currentTableCoords = {static_cast<size_t>(ImGui::TableGetColumnIndex()),
                                     static_cast<size_t>(ImGui::TableGetRowIndex())};
-            drawCalendarDayContent(dayIndex, nextMonth, i + 1);
+            drawCalendarDayContent(guiTextures, dayIndex, nextMonth, i + 1);
         }
 
         ImGui::EndTable();
     }
 }
 
-void CalendarGui::drawCalendarDayContent(size_t& dayIndex, int month, int dayNumber) {
+void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIndex, int month, int dayNumber) {
     ImGuiStyle& style = ImGui::GetStyle();
-    unsigned int pushedColorCount = 0, pushedVarCount = 0;
+    unsigned int pushedVarCount = 0;
     unsigned int calendarDayYear = m_viewedMonth.getYearUTC();
     // Calendar day is from the previous or next year
     if (m_viewedMonth.getMonthUTC() == 1 && month == 12) {
@@ -237,17 +238,37 @@ void CalendarGui::drawCalendarDayContent(size_t& dayIndex, int month, int dayNum
     TimeWrapper calendarDayTime = TimeWrapper(calendarDayDate);
     std::string dayNumberText = dayNumber == 1 ? calendarDayTime.getDynamicFmtStringUTC("{:%b} 1") : std::to_string(dayNumber);
     ImGui::Text("%s", dayNumberText.c_str());
-    drawCalendarDayItems(DateContainer(calendarDayTime));
-    ImGui::PopStyleColor(pushedColorCount);
+    const float calendayDayTextWidth = ImGui::GetItemRectSize().x;
+    // + button to add a calendar item to this calendar day
+    const ImVec2 label_size = ImGui::CalcTextSize("+");
+    const float addItemButtonSize =
+        ImGui::CalcItemSize(
+            ImVec2(0.0f, 0.0f), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f)
+            .y;
+    ImGui::SameLine(0.0f, ImGui::GetColumnWidth(ImGui::TableGetColumnIndex()) - calendayDayTextWidth - addItemButtonSize);
+    // Adds a row and then sets its Date column value to this calendar day's date
+    if (ImGui::Button(std::format("+##addCalendarItem{};{}", month, dayNumber).c_str(),
+                      ImVec2(addItemButtonSize, addItemButtonSize)))
+    {
+        size_t rowsBefore = m_scheduleCore.getRowCount();
+        addRow.invoke(m_scheduleCore.getRowCount());
+        // The row was actually added. We can't be TOTALLY sure, but probably it was?
+        if (m_scheduleCore.getRowCount() == rowsBefore + 1) {
+            size_t dateColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Date);
+            setElementValueDate.invoke(dateColumnIndex, rowsBefore, DateContainer(calendarDayTime));
+            // Also open the item window subgui for this item so it can be quickly edited
+            m_openItemWindowAtRow = rowsBefore;
+        }
+    }
+    drawCalendarDayItems(guiTextures, DateContainer(calendarDayTime));
     ImGui::PopStyleVar(pushedVarCount);
     dayIndex++;
 }
 
-void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
+void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateContainer& calendarDayDate) {
     ImGuiStyle& style = ImGui::GetStyle();
     const size_t dateColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Date);
     auto dateColumn = m_scheduleCore.getColumn(dateColumnIndex);
-    FilterRule<DateContainer> isThisDate = FilterRule<DateContainer>(calendarDayDate);
 
     std::vector<size_t> orderedColumnIndices = std::vector<size_t>(m_scheduleCore.getColumnCount());
     // Display item properties according to the schedule table's column order, if the table exists.
@@ -257,13 +278,13 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
             orderedColumnIndices.at(column.DisplayOrder) = columnIndex;
             columnIndex++;
         }
-    } else  // No scheduleTable for whatever reason. Just display columns in the order they are in ScheduleCore.
-    {
+    } else {  // No scheduleTable for whatever reason. Just display columns in the order they are in ScheduleCore.
         for (size_t i = 0; i < orderedColumnIndices.size(); i++) {
             orderedColumnIndices[i] = i;
         }
     }
 
+    FilterRule<DateContainer> isThisDate = FilterRule<DateContainer>(calendarDayDate);
     std::vector<size_t> sortedRowIndices = m_scheduleCore.getSortedRowIndices();
     for (size_t unsortedRow = 0; unsortedRow < sortedRowIndices.size(); unsortedRow++) {
         size_t row = sortedRowIndices[unsortedRow];
@@ -271,64 +292,94 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
         if (!m_scheduleCore.checkPassesAllFilters(row, m_scheduleDateOverride)) {
             continue;
         }
-
-        // This row is on the current calendar day date
-        if (isThisDate.checkPasses(m_scheduleCore.getElementConst(dateColumnIndex, row))) {
-            std::string childLabelString = std::format("CalendarItem##{};{};{}",
-                                                       row,
-                                                       calendarDayDate.getTimeConst().getMonthUTC(),
-                                                       calendarDayDate.getTimeConst().getMonthDayUTC());
-            unsigned int pushedColorCount = 0;
-            if (m_hoveredItemChildID.has_value() && m_hoveredItemChildID.value() == ImGui::GetID(childLabelString.c_str())) {
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_ButtonHovered]);
-                pushedColorCount++;
-                // The button is pressed but not dragging
-                if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-                    ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_ButtonActive]);
-                    pushedColorCount++;
-                }
-            }
-            if (ImGui::BeginChild(
-                    childLabelString.c_str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
-            {
-                const size_t nameColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Name);
-                drawItemProperty({nameColumnIndex, row});
-                for (size_t unorderedCol = 0; unorderedCol < m_scheduleCore.getColumnCount(); unorderedCol++) {
-                    size_t col = orderedColumnIndices.at(unorderedCol);
-                    // The date doesn't need to be shown and the name has already been shown
-                    if (col == dateColumnIndex || col == nameColumnIndex) {
-                        continue;
-                    }
-                    ScheduleColumnFlags columnFlags = m_scheduleCore.getColumn(col)->flags;
-                    // Duration and End columns are ignored
-                    if ((columnFlags & ScheduleColumnFlags_Duration) || (columnFlags & ScheduleColumnFlags_End)) {
-                        continue;
-                    }
-                    // Display the time as "Start - End", e.g. "11:00 - 13:30"
-                    if (columnFlags & ScheduleColumnFlags_Start) {
-                        TimeContainer endTime = m_scheduleCore.getElementValueConstRef<TimeContainer>(
-                            m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_End), row);
-                        std::string timeText =
-                            std::format("{} - {}", m_scheduleCore.getElementConst(col, row)->getString(), endTime.getString());
-                        ImGui::Text("%s", timeText.c_str());
-                    } else {
-                        drawItemProperty({col, row});
-                    }
-                }
-                // The child window of this item is being hovered
-                if (ImGui::IsWindowHovered()) {
-                    m_hoveredItemChildID = ImGui::GetCurrentWindow()->ChildId;
-                    // This child window was clicked
-                    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                        m_openItemWindowAtRow = row;
-                    }
-                } else if (m_hoveredItemChildID == ImGui::GetCurrentWindow()->ChildId) {
-                    m_hoveredItemChildID.reset();
-                }
-            }
-            ImGui::EndChild();
-            ImGui::PopStyleColor(pushedColorCount);
+        // This row is NOT on the current calendar day date
+        if (!isThisDate.checkPasses(m_scheduleCore.getElementConst(dateColumnIndex, row))) {
+            continue;
         }
+
+        std::string childLabelString = std::format("CalendarItem##{};{};{}",
+                                                   row,
+                                                   calendarDayDate.getTimeConst().getMonthUTC(),
+                                                   calendarDayDate.getTimeConst().getMonthDayUTC());
+        unsigned int pushedColorCount = 0;
+        if (m_hoveredItemChildID.has_value() && m_hoveredItemChildID.value() == ImGui::GetID(childLabelString.c_str())) {
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_ButtonHovered]);
+            pushedColorCount++;
+            // The button is pressed but not dragging
+            if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_ButtonActive]);
+                pushedColorCount++;
+            }
+        }
+        if (ImGui::BeginChild(childLabelString.c_str(), ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders)) {
+            const size_t nameColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Name);
+            drawItemProperty({nameColumnIndex, row});
+
+            // Remove item / row button (only visible while the item is hovered)
+            if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
+                const float removeButtonSize = ImGui::CalcTextSize("X").y;
+                ImGui::SameLine(style.WindowPadding.x + ImGui::GetCurrentWindow()->ContentRegionRect.GetSize().x -
+                                removeButtonSize);
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+                if (gui_templates::ImageButtonStyleColored(std::format("##RemoveCalendarItem{};{};{}",
+                                                                       row,
+                                                                       calendarDayDate.getTimeConst().getMonthUTC(),
+                                                                       calendarDayDate.getTimeConst().getMonthDayUTC())
+                                                               .c_str(),
+                                                           guiTextures.getOrLoad("icon_remove").ImID,
+                                                           ImVec2(removeButtonSize, removeButtonSize)))
+                {
+                    removeRow.invoke(row);
+                    if (m_hoveredItemChildID == ImGui::GetCurrentWindow()->ChildId) {
+                        m_hoveredItemChildID.reset();
+                    }
+                    // Skip drawing rest of the items for this calendar day
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleColor(pushedColorCount);
+                    ImGui::PopStyleVar();
+                    ImGui::EndChild();
+                    return;
+                }
+                ImGui::PopStyleVar();
+                ImGui::PopStyleColor();
+            }
+
+            for (size_t unorderedCol = 0; unorderedCol < m_scheduleCore.getColumnCount(); unorderedCol++) {
+                size_t col = orderedColumnIndices.at(unorderedCol);
+                // The date doesn't need to be shown and the name has already been shown
+                if (col == dateColumnIndex || col == nameColumnIndex) {
+                    continue;
+                }
+                ScheduleColumnFlags columnFlags = m_scheduleCore.getColumn(col)->flags;
+                // Duration and End columns are ignored
+                if ((columnFlags & ScheduleColumnFlags_Duration) || (columnFlags & ScheduleColumnFlags_End)) {
+                    continue;
+                }
+                // Display the time as "Start - End", e.g. "11:00 - 13:30"
+                if (columnFlags & ScheduleColumnFlags_Start) {
+                    TimeContainer endTime = m_scheduleCore.getElementValueConstRef<TimeContainer>(
+                        m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_End), row);
+                    std::string timeText =
+                        std::format("{} - {}", m_scheduleCore.getElementConst(col, row)->getString(), endTime.getString());
+                    ImGui::Text("%s", timeText.c_str());
+                } else {
+                    drawItemProperty({col, row});
+                }
+            }
+            // The child window of this item is being hovered
+            if (ImGui::IsWindowHovered()) {
+                m_hoveredItemChildID = ImGui::GetCurrentWindow()->ChildId;
+                // This child window was clicked -> open the item window for it next frame
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                    m_openItemWindowAtRow = row;
+                }
+            } else if (m_hoveredItemChildID == ImGui::GetCurrentWindow()->ChildId) {
+                m_hoveredItemChildID.reset();
+            }
+        }
+        ImGui::EndChild();
+        ImGui::PopStyleColor(pushedColorCount);
     }
 }
 
