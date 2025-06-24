@@ -109,7 +109,8 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
             elementEditorIsOpen = elementEditorSubGui->getOpenThisFrame();
         }
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-            (ImGui::IsMouseHoveringRect(ImGui::GetCurrentWindow()->Rect().Min, ImGui::GetCurrentWindow()->Rect().Max) ||
+            (ImGui::IsMouseHoveringRect(
+                 ImGui::GetCurrentWindow()->OuterRectClipped.Min, ImGui::GetCurrentWindow()->OuterRectClipped.Max, false) ||
              elementEditorIsOpen) == false)
         {
             ImGui::CloseCurrentPopup();
