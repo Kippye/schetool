@@ -26,7 +26,17 @@ namespace gui_templates {
         bool textEditorActivated = false;
     }  // namespace
 
-    bool TextEditor(std::string& editorText, ImVec2 inputBoxSize = ImVec2(0, 0), bool captureKeyboardFocus = false);
+    /* Display a multi-line text input box.
+    *  Returns true on edit / submit, depending on flags.
+    *  - std::string& editorText - string to use as the buffer and to modify
+    *  - ImVec2 inputBoxSize = ImVec2(0, 0) - The size of the input box
+    *  - bool captureKeyboardFocus = false - Pass "true" when the TextEditor should gain focus (usually the first frame it is shown)
+    *  - ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine - Flags to pass to ImGui (in addition to ImGuiInputTextFlags_CallbackAlways)
+    */
+    bool TextEditor(std::string& editorText,
+                    ImVec2 inputBoxSize = ImVec2(0, 0),
+                    bool captureKeyboardFocus = false,
+                    ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine);
     bool InputInt(const char* label, int* value, bool drawBackground = true, ImGuiInputTextFlags flags = 0);
     bool InputDouble(const char* label,
                      double* value,

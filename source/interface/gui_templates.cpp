@@ -4,20 +4,22 @@
 #include "gui_constants.h"
 #include "util.h"
 
-bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, bool captureKeyboardFocus) {
+bool gui_templates::TextEditor(std::string& editorText,
+                               ImVec2 inputBoxSize,
+                               bool captureKeyboardFocus,
+                               ImGuiInputTextFlags flags) {
     if (captureKeyboardFocus) {
         ImGui::SetKeyboardFocusHere();
     }
 
     bool submitted = false;
 
-    if (ImGui::InputTextMultiline(
-            "##editorTextInput",
-            &editorText,
-            inputBoxSize,
-            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackAlways,
-            gui_callbacks::inputTextCursorToEnd,
-            &textEditorActivated))
+    if (ImGui::InputTextMultiline("##editorTextInput",
+                                  &editorText,
+                                  inputBoxSize,
+                                  flags | ImGuiInputTextFlags_CallbackAlways,
+                                  gui_callbacks::inputTextCursorToEnd,
+                                  &textEditorActivated))
     {
         submitted = true;
     }

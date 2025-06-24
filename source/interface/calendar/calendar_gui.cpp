@@ -264,7 +264,9 @@ void CalendarGui::drawCalendarDayItems(const DateContainer& calendarDayDate) {
         }
     }
 
-    for (size_t row = 0; row < m_scheduleCore.getRowCount(); row++) {
+    std::vector<size_t> sortedRowIndices = m_scheduleCore.getSortedRowIndices();
+    for (size_t unsortedRow = 0; unsortedRow < sortedRowIndices.size(); unsortedRow++) {
+        size_t row = sortedRowIndices[unsortedRow];
         // CHECK FILTERS BEFORE DRAWING ITEM / ROW
         if (!m_scheduleCore.checkPassesAllFilters(row, m_scheduleDateOverride)) {
             continue;

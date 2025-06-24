@@ -3,6 +3,7 @@
 #include "table/schedule_gui.h"
 #include "interface_style.h"
 #include "schedule_column.h"
+#include "imgui_stdlib.h"
 #include <string>
 
 CalendarItemWindowSubGui::CalendarItemWindowSubGui(const char* ID, const ScheduleCore& scheduleCore)
@@ -29,6 +30,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
         ImGui::PopStyleVar();
         // If there is no row for the viewed item, the popup closes itself.
         if (m_currentItemRow.has_value() == false) {
+            m_editingItemName = false;
             ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
             return;
@@ -51,8 +53,31 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
         // Draw the name bigger than other properties
         const size_t nameColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Name);
         ImFont* nameFontData = InterfaceStyleHandler::getFontData((FontSize)((int)InterfaceStyleHandler::getFontSize() + 1));
+        bool nameColumnEditDisabled = m_scheduleDateOverride.getIsEmpty() == false &&
+            m_scheduleCore.getColumn(nameColumnIndex)->resetOption != ColumnResetOption::Never;
+        std::string value = getElementValue<std::string>({nameColumnIndex, row}, nameColumnEditDisabled);
         ImGui::PushFont(nameFontData);
-        drawItemProperty({windowSize, input, guiTextures}, {nameColumnIndex, row}, false);
+        float height = ImGui::CalcTextSize(value.c_str()).y + style.FramePadding.y * 2.0f;
+        if (m_editingItemName == false) {
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
+            ImGui::InputText("##ItemNameDummyInput", &value, ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopStyleColor();
+            if (ImGui::IsItemClicked()) {
+                m_editingItemName = true;
+                m_editingItemNameJustStarted = true;
+            }
+        } else {
+            gui_templates::TextEditor(value, ImVec2(ImGui::GetContentRegionAvail().x, height), m_editingItemNameJustStarted);
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                setElementValueText.invoke(nameColumnIndex, row, value);
+                m_editingItemName = false;
+            }
+            if (ImGui::IsItemDeactivated()) {
+                m_editingItemName = false;
+            }
+            m_editingItemNameJustStarted = false;
+        }
+        // ImGui::PopStyleColor();
         ImGui::PopFont();
         ImGuiTableFlags propertyTableFlags = ImGuiTableFlags_NoBordersInBody;
         if (ImGui::BeginTable("PropertyColumnsTable", 2, propertyTableFlags)) {
@@ -96,7 +121,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
     }
 }
 
-void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, ScheduleCoordinates coords, bool showName) {
+void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, ScheduleCoordinates coords) {
     ImGuiStyle& style = ImGui::GetStyle();
     size_t column = coords.column();
     size_t row = coords.row();
