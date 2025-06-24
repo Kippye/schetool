@@ -63,12 +63,14 @@ void Interface::addGui(std::shared_ptr<Gui> gui) {
     m_guis.insert({gui->getID(), gui});
 }
 
-void Interface::draw() {
+void Interface::draw(float deltaTime) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     m_input->setGuiWantKeyboard(imGuiIO->WantCaptureKeyboard);
+
+    m_styleHandler->transitionStyle(deltaTime);
 
     // Apply font
     ImGui::PushFont(m_styleHandler->getFontData(m_styleHandler->getFontSize()));

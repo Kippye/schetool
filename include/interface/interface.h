@@ -62,5 +62,5 @@ class Interface {
             }
             return std::dynamic_pointer_cast<T>(m_guis.at(ID));
         }
-        void draw();
+        void draw(float deltaTime);
 };

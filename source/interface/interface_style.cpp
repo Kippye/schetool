@@ -114,12 +114,20 @@ void InterfaceStyleHandler::loadFontSizes(const char* fontPath) {
     }
 }
 
+void InterfaceStyleHandler::beginStyleTransition() {
+    m_transitionInfo.progress = 0.0f;
+    m_transitioningBetweenStyles = true;
+}
+
 void InterfaceStyleHandler::applyStyle(GuiStyle style) {
     // The style has no definition. It probably shouldn't be applied.
     if (styleDefinitions.contains(style) == false) {
         return;
     }
     const GuiStyleDefinition& styleDefinition = styleDefinitions.at(style);
+    // Copy previous colors to transition info
+    std::copy(
+        std::begin(ImGui::GetStyle().Colors), std::end(ImGui::GetStyle().Colors), std::begin(m_transitionInfo.previousColors));
     // If the style has a base style, apply that first.
     if (styleDefinition.baseStyle.has_value()) {
         if (styleDefinition.baseStyle.value() !=
@@ -128,7 +136,15 @@ void InterfaceStyleHandler::applyStyle(GuiStyle style) {
             applyStyle(styleDefinition.baseStyle.value());
         }
     }
+
     styleDefinition.applyFunction();
+    // Copy the new colors after style application to transition info
+    std::copy(std::begin(ImGui::GetStyle().Colors), std::end(ImGui::GetStyle().Colors), std::begin(m_transitionInfo.newColors));
+    // Apply the previous colors again so the transition can start
+    std::copy(std::begin(m_transitionInfo.previousColors),
+              std::end(m_transitionInfo.previousColors),
+              std::begin(ImGui::GetStyle().Colors));
+    beginStyleTransition();
     m_currentStyle = style;
 }
 
@@ -158,4 +174,21 @@ ImFont* InterfaceStyleHandler::getFontData(FontSize fontSize) {
     }
 
     return loadedFonts.at(fontSize);
+}
+
+void InterfaceStyleHandler::transitionStyle(float deltaTime) {
+    if (m_transitioningBetweenStyles == false) {
+        return;
+    }
+
+    auto imguiColors = ImGui::GetStyle().Colors;
+
+    const float addition = deltaTime * 2.2f;
+    if (m_transitionInfo.progress + (deltaTime * TRANSITION_TIME_SECS) >= 1.0f) {
+        m_transitioningBetweenStyles = false;
+    }
+    m_transitionInfo.progress = std::min(m_transitionInfo.progress + (deltaTime * TRANSITION_TIME_SECS), 1.0f);
+    for (size_t i = 0; i < std::size(m_transitionInfo.previousColors); i++) {
+        imguiColors[i] = ImLerp(m_transitionInfo.previousColors[i], m_transitionInfo.newColors[i], m_transitionInfo.progress);
+    }
 }

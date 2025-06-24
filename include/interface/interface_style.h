@@ -14,13 +14,24 @@ struct GuiStyleDefinition {
         std::function<void()> applyFunction;
 };
 
+struct GuiStyleTransition {
+        float progress = 0.0f;
+        ImVec4 previousColors[ImGuiCol_COUNT];
+        ImVec4 newColors[ImGuiCol_COUNT];
+};
+
 class InterfaceStyleHandler {
     private:
         static std::map<FontSize, ImFont*> loadedFonts;
-        GuiStyle m_currentStyle;
         static FontSize currentFontSize;
-        
-        public:
+        const float TRANSITION_TIME_SECS = 2.2f;
+        GuiStyle m_currentStyle;
+        bool m_transitioningBetweenStyles = false;
+        GuiStyleTransition m_transitionInfo;
+
+        void beginStyleTransition();
+
+    public:
         static const std::map<GuiStyle, const char*> styleNames;
         static const std::map<GuiStyle, GuiStyleDefinition> styleDefinitions;
         void loadFontSizes(const char* fontPath);
@@ -34,4 +45,7 @@ class InterfaceStyleHandler {
         static FontSize getFontSize();
         // Get the font data for the given size or nullptr if there is none.
         static ImFont* getFontData(FontSize fontSize);
+        // Transition from the previous style's colors to the current style's colors using the given deltaTime.
+        // Does nothing if a transition isn't active.
+        void transitionStyle(float deltaTime);
 };
