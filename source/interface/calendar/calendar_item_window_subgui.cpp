@@ -177,8 +177,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
                     guiPass,
                     isEditablePropertyClicked(columnEditDisabled),
-                    ImGui::GetColumnWidth(coords.column()),
-                    ImRect()))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
+                    ImGui::GetColumnWidth(coords.column())))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
             {
                 setElementValueText.invoke(coords.column(), row, value);
             }
@@ -208,8 +207,8 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
                     guiPass,
                     ImGui::GetColumnWidth(column),
-                    isEditablePropertyClicked(columnEditDisabled),
-                    ImRect()))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
+                    isEditablePropertyClicked(
+                        columnEditDisabled)))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
             {
                 setElementValueSelect.invoke(column, row, value);
             }
@@ -224,8 +223,8 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
                     guiPass,
                     ImGui::GetColumnWidth(column),
-                    isEditablePropertyClicked(columnEditDisabled),
-                    ImRect()))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
+                    isEditablePropertyClicked(
+                        columnEditDisabled)))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
             {
                 setElementValueWeekday.invoke(column, row, value);
             }

@@ -58,14 +58,14 @@ namespace element_display_templates {
         }
     }
 
-    // Text
+    // Text. If no avoidRect is passed, the ElementDisplay will use the rect of the text.
     bool ElementDisplay(std::string& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
                         GuiPassReferences guiPass,
                         bool openEditor,
                         float editorWidth,
-                        ImRect avoidRect);
+                        ImRect avoidRect = ImRect());
     void ElementDisplay(std::string& value);
     // Single select
     bool ElementDisplay(SingleSelectContainer& value,
@@ -75,7 +75,7 @@ namespace element_display_templates {
                         GuiPassReferences guiPass,
                         bool openEditor);
     void ElementDisplay(SingleSelectContainer& value, const ScheduleCore& scheduleCore, ScheduleCoordinates coords);
-    // Multiselect
+    // Multiselect. If no avoidRect is passed, the ElementDisplay will calculate a rect from the top-left of the displayed options to the bottom-right and pass that as the avoid rect.
     bool ElementDisplay(SelectContainer& value,
                         const ScheduleCore& scheduleCore,
                         ScheduleCoordinates coords,
@@ -83,19 +83,19 @@ namespace element_display_templates {
                         GuiPassReferences guiPass,
                         float availableWidth,
                         bool openEditor,
-                        ImRect avoidRect);
+                        ImRect avoidRect = ImRect());
     void ElementDisplay(SelectContainer& value,
                         const ScheduleCore& scheduleCore,
                         ScheduleCoordinates coords,
                         float availableWidth);
-    // Weekday
+    // Weekday. If no avoidRect is passed, the ElementDisplay will calculate a rect from the top-left of the displayed options to the bottom-right and pass that as the avoid rect.
     bool ElementDisplay(WeekdayContainer& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
                         GuiPassReferences guiPass,
                         float availableWidth,
                         bool openEditor,
-                        ImRect avoidRect);
+                        ImRect avoidRect = ImRect());
     void ElementDisplay(WeekdayContainer& value, ScheduleCoordinates coords, float availableWidth);
     // Time
     bool ElementDisplay(TimeContainer& value,

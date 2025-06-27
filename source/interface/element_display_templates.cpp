@@ -24,7 +24,13 @@ bool element_display_templates::ElementDisplay(std::string& value,
         if (elementEditor) {
             elementEditor->setEditorValue(value);
             elementEditor->setTextInputBoxSize(ImVec2(editorWidth, 0));
-            elementEditor->open(coords.column(), coords.row(), SCH_TEXT, avoidRect);
+            elementEditor->open(coords.column(),
+                                coords.row(),
+                                SCH_TEXT,
+                                avoidRect.GetArea() > 0.0f
+                                    ? avoidRect
+                                    : (displayedValue.empty() ? ImRect(ImGui::GetMousePos(), ImGui::GetMousePos())
+                                                              : ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())));
         }
     }
     if (elementEditor) {
@@ -71,8 +77,11 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
     }
     if (openEditor) {
         if (elementEditor) {
-            elementEditor->open(
-                coords.column(), coords.row(), SCH_SELECT, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+            elementEditor->open(coords.column(),
+                                coords.row(),
+                                SCH_SELECT,
+                                selection.has_value() ? ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax())
+                                                      : ImRect(ImGui::GetMousePos(), ImGui::GetMousePos()));
             elementEditor->setEditorValue(value);
         }
     }
@@ -121,42 +130,57 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
 
     size_t selectedCount = selection.size();
 
-    for (size_t s : selection) {
-        selectionIndices.push_back(s);
-    }
-
-    // sort indices so that the same options are always displayed in the same order
-    std::sort(std::begin(selectionIndices), std::end(selectionIndices));
-
-    size_t currentRowWidth = 0;
-    const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
-
     if (selectedCount == 0) {
         ImGui::NewLine();
-    }
-    for (size_t i = 0; i < selectedCount; i++) {
-        const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
-            options[selectionIndices[i]].name.length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
-        if (currentRowWidth + nextOptionAddedWidth < availableWidth) {
-            if (i > 0)  // Don't add padding to the first option
-            {
-                ImGui::SameLine();
-            }
-        } else {
-            currentRowWidth = 0;
-        }
-        if (gui_templates::SelectOptionButton(options[selectionIndices[i]],
-                                              std::format("##{}", coords.getString()).c_str(),
-                                              ImVec2(0, 0),
-                                              ImGuiButtonFlags_MouseButtonMiddle))
-        {
-            // Middle clicking erases the option - bonus feature
-            value.setSelected(selectionIndices[i], false);
-            return true;
+        avoidRect = ImRect(ImGui::GetMousePos(), ImGui::GetMousePos());
+    } else {
+        for (size_t s : selection) {
+            selectionIndices.push_back(s);
         }
 
-        currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
-                                               : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
+        // sort indices so that the same options are always displayed in the same order
+        std::sort(std::begin(selectionIndices), std::end(selectionIndices));
+
+        size_t currentRowWidth = 0;
+        const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
+        ImVec2 rectMin, rectMax;
+
+        for (size_t i = 0; i < selectedCount; i++) {
+            const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
+                options[selectionIndices[i]].name.length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
+            if (currentRowWidth + nextOptionAddedWidth < availableWidth) {
+                if (i > 0)  // Don't add padding to the first option
+                {
+                    ImGui::SameLine();
+                }
+            } else {
+                currentRowWidth = 0;
+            }
+            if (gui_templates::SelectOptionButton(options[selectionIndices[i]],
+                                                  std::format("##{}", coords.getString()).c_str(),
+                                                  ImVec2(0, 0),
+                                                  ImGuiButtonFlags_MouseButtonMiddle))
+            {
+                // Middle clicking erases the option - bonus feature
+                value.setSelected(selectionIndices[i], false);
+                return true;
+            }
+            // Top left of the options
+            if (i == 0) {
+                rectMin = ImGui::GetItemRectMin();
+            }
+            // Bottom of the options (right is calculated above)
+            if (i == selectedCount - 1) {
+                rectMax.y = ImGui::GetItemRectMax().y;
+            }
+            currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
+                                                   : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
+            // Make the rect of the option list as wide as the widest row
+            rectMax.x = std::max(rectMax.x, rectMin.x + currentRowWidth);
+        }
+        if (avoidRect.GetArea() == 0.0f) {
+            avoidRect = ImRect(rectMin, rectMax);
+        }
     }
     if (openEditor) {
         if (elementEditor) {
@@ -238,43 +262,59 @@ bool element_display_templates::ElementDisplay(WeekdayContainer& value,
 
     size_t selectedCount = selection.size();
 
-    for (size_t s : selection) {
-        selectionIndices.push_back(s);
-    }
-
-    // sort indices so that the same options are always displayed in the same order
-    std::sort(std::begin(selectionIndices), std::end(selectionIndices));
-
-    size_t currentRowWidth = 0;
-    const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
-
     if (selectedCount == 0) {
         ImGui::NewLine();
-    }
-    for (size_t i = 0; i < selectedCount; i++) {
-        const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
-            optionNames[selectionIndices[i]].length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
-        if (currentRowWidth + nextOptionAddedWidth < availableWidth) {
-            if (i > 0)  // Don't add padding to the first option
-            {
-                ImGui::SameLine();
-            }
-        } else {
-            currentRowWidth = 0;
-        }
-        if (gui_templates::SelectOptionButton(
-                SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]},
-                std::format("##{}", coords.getString()).c_str(),
-                ImVec2(),
-                ImGuiButtonFlags_MouseButtonMiddle))
-        {
-            // Middle clicking erases the option - bonus feature
-            value.setSelected(selectionIndices[i], false);
-            return true;
+        avoidRect = ImRect(ImGui::GetMousePos(), ImGui::GetMousePos());
+    } else {
+        for (size_t s : selection) {
+            selectionIndices.push_back(s);
         }
 
-        currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
-                                               : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
+        // sort indices so that the same options are always displayed in the same order
+        std::sort(std::begin(selectionIndices), std::end(selectionIndices));
+
+        size_t currentRowWidth = 0;
+        const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
+        ImVec2 rectMin, rectMax;
+
+        for (size_t i = 0; i < selectedCount; i++) {
+            const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
+                optionNames[selectionIndices[i]].length() * pixelsPerCharacter + style.FramePadding.x * 2.0f;
+            if (currentRowWidth + nextOptionAddedWidth < availableWidth) {
+                if (i > 0)  // Don't add padding to the first option
+                {
+                    ImGui::SameLine();
+                }
+            } else {
+                currentRowWidth = 0;
+            }
+            if (gui_templates::SelectOptionButton(
+                    SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]},
+                    std::format("##{}", coords.getString()).c_str(),
+                    ImVec2(),
+                    ImGuiButtonFlags_MouseButtonMiddle))
+            {
+                // Middle clicking erases the option - bonus feature
+                value.setSelected(selectionIndices[i], false);
+                return true;
+            }
+            // Top left of the options
+            if (i == 0) {
+                rectMin = ImGui::GetItemRectMin();
+            }
+            // Bottom of the options (right is calculated above)
+            if (i == selectedCount - 1) {
+                rectMax.y = ImGui::GetItemRectMax().y;
+            }
+
+            currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
+                                                   : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
+            // Make the rect of the option list as wide as the widest row
+            rectMax.x = std::max(rectMax.x, rectMin.x + currentRowWidth);
+        }
+        if (avoidRect.GetArea() == 0.0f) {
+            avoidRect = ImRect(rectMin, rectMax);
+        }
     }
     if (openEditor) {
         if (elementEditor) {
