@@ -114,176 +114,6 @@ void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
     ImGui::End();
 }
 
-void ScheduleGui::drawColumnHeaderContextContent(size_t columnIndex, ImGuiTable* table, ImGuiTableFlags tableFlags) {
-    const Column& column = *m_scheduleCore.getColumn(columnIndex);
-
-    // Renaming
-    std::string name = column.name.c_str();
-    name.reserve(COLUMN_NAME_MAX_LENGTH);
-    char* buf = name.data();
-
-    if (ImGui::InputText(
-            std::format("##columnName{}", columnIndex).c_str(), buf, name.capacity(), ImGuiInputTextFlags_EnterReturnsTrue))
-    {
-        setColumnName.invoke(columnIndex, buf);
-    }
-
-    // Select type (for non-permanent columns)
-    ImGuiComboFlags typeDropdownFlags = ImGuiComboFlags_None;
-    ImGui::Separator();
-    if (column.permanent) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        typeDropdownFlags |= ImGuiComboFlags_NoArrowButton;
-    }
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Type:");
-    ImGui::SameLine();
-    if (std::optional<SCHEDULE_TYPE> newColumnType =
-            gui_templates::Dropdown("##ColumnType", column.type, schedule_consts::scheduleTypeNames, typeDropdownFlags))
-    {
-        setColumnType.invoke(columnIndex, newColumnType.value());
-    }
-    if (column.permanent) {
-        ImGui::PopItemFlag();
-    }
-
-    ImGui::Separator();
-
-    if (ImGui::MenuItem("Remove", NULL, false, !column.permanent)) {
-        removeColumn.invoke(columnIndex);
-    }
-
-    if (ImGui::MenuItem("Duplicate", NULL, false, !column.permanent)) {
-        duplicateColumn.invoke(columnIndex);
-    }
-
-    ImGui::Separator();
-
-    // Reset values
-    if (ImGui::MenuItem("Reset default values", NULL, false)) {
-        resetColumn.invoke(columnIndex, true);
-    }
-
-    // Reset setting dropdown
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("Reset column:");
-    ImGui::SameLine();
-    if (std::optional<ColumnResetOption> newColumnResetOption =
-            gui_templates::Dropdown("##ColumnResetSetting", column.resetOption, schedule_consts::columnResetOptionStrings))
-    {
-        setColumnResetOption.invoke(columnIndex, newColumnResetOption.value());
-    }
-
-    ImGui::Separator();
-
-    // Resizing
-    if (tableFlags & ImGuiTableFlags_Resizable) {
-        if (ImGui::MenuItem("Size column to fit###SizeOne", NULL, false))
-            ImGui::TableSetColumnWidthAutoSingle(table, columnIndex);
-
-        const char* size_all_desc;
-        //if (table->ColumnsEnabledFixedCount == table->ColumnsEnabledCount && (table->Flags & ImGuiTableFlags_SizingMask_) != ImGuiTableFlags_SizingFixedSame)
-        //	size_all_desc = "Size all columns to fit###SizeAll";        // All fixed
-        //else
-        size_all_desc = "Size all columns to default###SizeAll";  // All stretch or mixed
-        if (ImGui::MenuItem(size_all_desc, NULL))
-            ImGui::TableSetColumnWidthAutoAll(table);
-    }
-
-    // Ordering
-    if (tableFlags & ImGuiTableFlags_Reorderable) {
-        if (ImGui::MenuItem("Reset order", NULL, false, !table->IsDefaultDisplayOrder))
-            table->IsResetDisplayOrderRequest = true;
-    }
-
-    ImGui::Separator();
-
-    // Hiding / Visibility
-    if (tableFlags & ImGuiTableFlags_Hideable) {
-        ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
-        for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++) {
-            if (column.permanent) {
-                continue;
-            }
-            ImGuiTableColumn* otherColumn = &table->Columns[otherColumnIndex];
-            const char* name = ImGui::TableGetColumnName(table, otherColumnIndex);
-            if (name == NULL || name[0] == 0)
-                name = "Unnamed";
-
-            // Make sure we can't hide the last active column
-            bool menu_item_active = (otherColumn->Flags & ImGuiTableColumnFlags_NoHide) ? false : true;
-            if (otherColumn->IsEnabled && table->ColumnsEnabledCount <= 1)
-                menu_item_active = false;
-            if (ImGui::MenuItem(name, NULL, otherColumn->IsEnabled, menu_item_active))
-                otherColumn->IsUserEnabledNextFrame = !otherColumn->IsEnabled;
-        }
-        ImGui::PopItemFlag();
-    }
-
-    if (ImGui::Button("Close"))
-        ImGui::CloseCurrentPopup();
-}
-
-void ScheduleGui::openRowContextPopup(size_t row) {
-    m_rowContextRow = row;
-    ImGui::OpenPopup("ScheduleTableRowContextPopup", ImGuiPopupFlags_NoOpenOverExistingPopup);
-}
-
-void ScheduleGui::openCellContextPopup(size_t column, size_t row) {
-    m_cellContextCoords = {column, row};
-    ImGui::OpenPopup("ScheduleTableCellContextPopup", ImGuiPopupFlags_NoOpenOverExistingPopup);
-}
-
-void ScheduleGui::closeRowContextPopup() {
-    m_rowContextRow.reset();
-}
-
-void ScheduleGui::closeCellContextPopup() {
-    m_cellContextCoords.reset();
-}
-
-void ScheduleGui::drawRowContextContent() {
-    if (m_rowContextRow.has_value() == false) {
-        closeRowContextPopup();
-        return;
-    }
-    if (ImGui::BeginPopup("ScheduleTableRowContextPopup", ImGuiWindowFlags_NoMove)) {
-        if (m_rowContextRow.value() < m_scheduleCore.getRowCount()) {
-            if (ImGui::Button("Remove row")) {
-                removeRow.invoke(m_rowContextRow.value());
-            }
-            if (ImGui::Button("Duplicate row")) {
-                duplicateRow.invoke(m_rowContextRow.value());
-            }
-        }
-
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-            closeRowContextPopup();
-        }
-        ImGui::EndPopup();
-    }
-}
-
-void ScheduleGui::drawCellContextContent() {
-    if (m_cellContextCoords.has_value() == false) {
-        closeCellContextPopup();
-        return;
-    }
-    if (ImGui::BeginPopup("ScheduleTableCellContextPopup", ImGuiWindowFlags_NoMove)) {
-        if (m_cellContextCoords->column() < m_scheduleCore.getColumnCount()) {
-            auto [col, row] = m_cellContextCoords->getAsPair();
-            ImGui::Text("%s", std::format("Cell (Column: {}; Row: {})", col, row).c_str());
-        }
-
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-            closeCellContextPopup();
-        }
-        ImGui::EndPopup();
-    }
-}
-
 void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
@@ -460,7 +290,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             if (ImGui::GetCurrentTable()->ContextPopupColumn == column &&
                 ImGui::TableBeginContextMenuPopup(ImGui::GetCurrentTable()))
             {
-                drawColumnHeaderContextContent(column, currentTable, tableFlags);
+                drawColumnHeaderContext(column, currentTable, tableFlags);
                 ImGui::EndPopup();
             }
             // The column context menu was closed this frame (probably through a mouse click)
@@ -505,12 +335,12 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                 }
 
                 if (m_cellContextCoords.has_value() && m_cellContextCoords->is(column, row)) {
-                    drawCellContextContent();
+                    drawCellContext();
                 }
             }
             // Draw row context AFTER drawing cell content because the row might be removed before it is drawn
             if (m_rowContextRow.has_value() && m_rowContextRow.value() == row) {
-                drawRowContextContent();
+                drawRowContext();
             }
         // END OF for (size_t unsortedRow = 0; unsortedRow < m_scheduleCore.getRowCount(); unsortedRow++)
         do_not_draw_row:
@@ -741,6 +571,166 @@ bool ScheduleGui::drawTableCellContents(
         ImGui::EndTooltip();
     }
     return true;
+}
+
+void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table, ImGuiTableFlags tableFlags) {
+    const Column& column = *m_scheduleCore.getColumn(columnIndex);
+
+    // Renaming
+    std::string name = column.name.c_str();
+    name.reserve(COLUMN_NAME_MAX_LENGTH);
+    char* buf = name.data();
+
+    if (ImGui::InputText(
+            std::format("##columnName{}", columnIndex).c_str(), buf, name.capacity(), ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        setColumnName.invoke(columnIndex, buf);
+    }
+
+    // Select type (for non-permanent columns)
+    ImGuiComboFlags typeDropdownFlags = ImGuiComboFlags_None;
+    ImGui::Separator();
+    if (column.permanent) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        typeDropdownFlags |= ImGuiComboFlags_NoArrowButton;
+    }
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Type:");
+    ImGui::SameLine();
+    if (std::optional<SCHEDULE_TYPE> newColumnType =
+            gui_templates::Dropdown("##ColumnType", column.type, schedule_consts::scheduleTypeNames, typeDropdownFlags))
+    {
+        setColumnType.invoke(columnIndex, newColumnType.value());
+    }
+    if (column.permanent) {
+        ImGui::PopItemFlag();
+    }
+
+    ImGui::Separator();
+
+    if (ImGui::MenuItem("Remove", NULL, false, !column.permanent)) {
+        removeColumn.invoke(columnIndex);
+    }
+
+    if (ImGui::MenuItem("Duplicate", NULL, false, !column.permanent)) {
+        duplicateColumn.invoke(columnIndex);
+    }
+
+    ImGui::Separator();
+
+    // Reset values
+    if (ImGui::MenuItem("Reset default values", NULL, false)) {
+        resetColumn.invoke(columnIndex, true);
+    }
+
+    // Reset setting dropdown
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("Reset column:");
+    ImGui::SameLine();
+    if (std::optional<ColumnResetOption> newColumnResetOption =
+            gui_templates::Dropdown("##ColumnResetSetting", column.resetOption, schedule_consts::columnResetOptionStrings))
+    {
+        setColumnResetOption.invoke(columnIndex, newColumnResetOption.value());
+    }
+
+    ImGui::Separator();
+
+    // Resizing
+    if (tableFlags & ImGuiTableFlags_Resizable) {
+        if (ImGui::MenuItem("Size column to fit###SizeOne", NULL, false))
+            ImGui::TableSetColumnWidthAutoSingle(table, columnIndex);
+
+        const char* size_all_desc;
+        //if (table->ColumnsEnabledFixedCount == table->ColumnsEnabledCount && (table->Flags & ImGuiTableFlags_SizingMask_) != ImGuiTableFlags_SizingFixedSame)
+        //	size_all_desc = "Size all columns to fit###SizeAll";        // All fixed
+        //else
+        size_all_desc = "Size all columns to default###SizeAll";  // All stretch or mixed
+        if (ImGui::MenuItem(size_all_desc, NULL))
+            ImGui::TableSetColumnWidthAutoAll(table);
+    }
+
+    // Ordering
+    if (tableFlags & ImGuiTableFlags_Reorderable) {
+        if (ImGui::MenuItem("Reset order", NULL, false, !table->IsDefaultDisplayOrder))
+            table->IsResetDisplayOrderRequest = true;
+    }
+
+    ImGui::Separator();
+
+    // Hiding / Visibility
+    if (tableFlags & ImGuiTableFlags_Hideable) {
+        ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
+        for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++) {
+            if (column.permanent) {
+                continue;
+            }
+            ImGuiTableColumn* otherColumn = &table->Columns[otherColumnIndex];
+            const char* name = ImGui::TableGetColumnName(table, otherColumnIndex);
+            if (name == NULL || name[0] == 0)
+                name = "Unnamed";
+
+            // Make sure we can't hide the last active column
+            bool menu_item_active = (otherColumn->Flags & ImGuiTableColumnFlags_NoHide) ? false : true;
+            if (otherColumn->IsEnabled && table->ColumnsEnabledCount <= 1)
+                menu_item_active = false;
+            if (ImGui::MenuItem(name, NULL, otherColumn->IsEnabled, menu_item_active))
+                otherColumn->IsUserEnabledNextFrame = !otherColumn->IsEnabled;
+        }
+        ImGui::PopItemFlag();
+    }
+
+    if (ImGui::Button("Close"))
+        ImGui::CloseCurrentPopup();
+}
+
+void ScheduleGui::openRowContextPopup(size_t row) {
+    m_rowContextRow = row;
+    ImGui::OpenPopup("ScheduleTableRowContextPopup", ImGuiPopupFlags_NoOpenOverExistingPopup);
+}
+
+void ScheduleGui::drawRowContext() {
+    if (m_rowContextRow.has_value() == false) {
+        return;
+    }
+    if (ImGui::BeginPopup("ScheduleTableRowContextPopup", ImGuiWindowFlags_NoMove)) {
+        if (m_rowContextRow.value() < m_scheduleCore.getRowCount()) {
+            if (ImGui::Button("Remove row")) {
+                removeRow.invoke(m_rowContextRow.value());
+            }
+            if (ImGui::Button("Duplicate row")) {
+                duplicateRow.invoke(m_rowContextRow.value());
+            }
+        }
+
+        if (ImGui::Button("Close")) {
+            ImGui::CloseCurrentPopup();
+            m_rowContextRow.reset();
+        }
+        ImGui::EndPopup();
+    }
+}
+
+void ScheduleGui::openCellContextPopup(size_t column, size_t row) {
+    m_cellContextCoords = {column, row};
+    ImGui::OpenPopup("ScheduleTableCellContextPopup", ImGuiPopupFlags_NoOpenOverExistingPopup);
+}
+
+void ScheduleGui::drawCellContext() {
+    if (m_cellContextCoords.has_value() == false) {
+        return;
+    }
+    if (ImGui::BeginPopup("ScheduleTableCellContextPopup", ImGuiWindowFlags_NoMove)) {
+        if (m_cellContextCoords->column() < m_scheduleCore.getColumnCount()) {
+            auto [col, row] = m_cellContextCoords->getAsPair();
+            ImGui::Text("%s", std::format("Cell (Column: {}; Row: {})", col, row).c_str());
+        }
+
+        if (ImGui::Button("Close")) {
+            ImGui::CloseCurrentPopup();
+            m_cellContextCoords.reset();
+        }
+        ImGui::EndPopup();
+    }
 }
 
 const ImGuiTable* ScheduleGui::getScheduleTable() {

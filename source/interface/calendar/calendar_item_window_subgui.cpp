@@ -94,6 +94,38 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                     continue;
                 }
                 ImGui::TableNextColumn();
+
+                GuiTextureInfo contextButtonTexture;
+                guiTextures.exists("icon_row_menu", contextButtonTexture);
+                const float labelSize = ImGui::CalcTextSize("X").y;
+                const float contextButtonSize = labelSize - (int)labelSize % 8;  //+ style.FramePadding.y * 2.0f;
+                const bool turnIntoRemove = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
+                if (turnIntoRemove) {
+                    guiTextures.exists("icon_remove", contextButtonTexture);
+                }
+                if (gui_templates::ImageButtonStyleColored(
+                        std::format("##propertyContextButton{}", col).c_str(),
+                        contextButtonTexture.ImID,
+                        ImVec2(contextButtonSize, contextButtonSize),
+                        ImVec2(),
+                        ImVec2(1, 1),
+                        ImVec4(),
+                        ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                {
+                    if (turnIntoRemove) {
+                        removeColumn.invoke(col);
+                        break;
+                    }
+                }
+                bool needToBreak = false;
+                if (!turnIntoRemove) {
+                    drawPropertyContext(col, needToBreak);
+                }
+                // Quit early if the property context menu adds or removes a column
+                if (needToBreak) {
+                    break;
+                }
+                ImGui::SameLine();
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("%s", m_scheduleCore.getColumn(col)->name.c_str());
                 if (ImGui::BeginItemTooltip()) {
@@ -101,21 +133,16 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                     ImGui::EndTooltip();
                 }
                 ImGui::TableNextColumn();
-                ScheduleColumnFlags columnFlags = m_scheduleCore.getColumn(col)->flags;
                 drawItemProperty({windowSize, input, guiTextures}, {col, row});
             }
             ImGui::EndTable();
         }
 
-        // Clicking out of the modal closes it
-        bool elementEditorIsOpen = false;
-        if (auto elementEditorSubGui = getSubGui<ElementEditorSubGui>("ElementEditorSubGui")) {
-            elementEditorIsOpen = elementEditorSubGui->getOpenThisFrame();
-        }
+        // Clicking out of the modal closes it, unless closing a popup covering the modal
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
             (ImGui::IsMouseHoveringRect(
                  ImGui::GetCurrentWindow()->OuterRectClipped.Min, ImGui::GetCurrentWindow()->OuterRectClipped.Max, false) ||
-             elementEditorIsOpen) == false)
+             ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopupId)) == false)
         {
             ImGui::CloseCurrentPopup();
         }
@@ -260,6 +287,77 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
     if (columnEditDisabled) {
         ImGui::PopItemFlag();
         ImGui::PopStyleVar();
+    }
+}
+
+void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak) {
+    if (ImGui::BeginPopupContextItem(NULL, ImGuiPopupFlags_MouseButtonLeft)) {
+        const Column& column = *m_scheduleCore.getColumn(col);
+
+        // Renaming
+        std::string name = column.name.c_str();
+        name.reserve(COLUMN_NAME_MAX_LENGTH);
+        char* buf = name.data();
+
+        if (ImGui::InputText(
+                std::format("##columnName{}", col).c_str(), buf, name.capacity(), ImGuiInputTextFlags_EnterReturnsTrue))
+        {
+            setColumnName.invoke(col, buf);
+        }
+
+        // Select type (for non-permanent columns)
+        ImGuiComboFlags typeDropdownFlags = ImGuiComboFlags_None;
+        ImGui::Separator();
+        if (column.permanent) {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            typeDropdownFlags |= ImGuiComboFlags_NoArrowButton;
+        }
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Type:");
+        ImGui::SameLine();
+        if (std::optional<SCHEDULE_TYPE> newColumnType =
+                gui_templates::Dropdown("##ColumnType", column.type, schedule_consts::scheduleTypeNames, typeDropdownFlags))
+        {
+            setColumnType.invoke(col, newColumnType.value());
+        }
+        if (column.permanent) {
+            ImGui::PopItemFlag();
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::MenuItem("Remove", NULL, false, !column.permanent)) {
+            removeColumn.invoke(col);
+            needToBreak = true;
+        }
+
+        if (ImGui::MenuItem("Duplicate", NULL, false, !column.permanent)) {
+            duplicateColumn.invoke(col);
+            needToBreak = true;
+        }
+
+        ImGui::Separator();
+
+        // Reset values
+        if (ImGui::MenuItem("Reset default values", NULL, false)) {
+            resetColumn.invoke(col, true);
+        }
+
+        // Reset setting dropdown
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text("Reset:");
+        ImGui::SameLine();
+        if (std::optional<ColumnResetOption> newColumnResetOption =
+                gui_templates::Dropdown("##ColumnResetSetting", column.resetOption, schedule_consts::columnResetOptionStrings))
+        {
+            setColumnResetOption.invoke(col, newColumnResetOption.value());
+        }
+
+        ImGui::Separator();
+
+        if (ImGui::Button("Close"))
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
     }
 }
 

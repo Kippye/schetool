@@ -31,7 +31,7 @@ CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     // column add / remove
     addDefaultColumn.addEvent(m_itemWindowSubGui->addDefaultColumn);
     removeColumn.addEvent(m_itemWindowSubGui->removeColumn);
-    // Event<size_t> duplicateColumn;
+    duplicateColumn.addEvent(m_itemWindowSubGui->duplicateColumn);
     // column modification
     setColumnType.addEvent(m_itemWindowSubGui->setColumnType);
     setColumnName.addEvent(m_itemWindowSubGui->setColumnName);

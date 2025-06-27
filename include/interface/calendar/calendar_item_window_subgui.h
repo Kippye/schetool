@@ -13,11 +13,13 @@ class CalendarItemWindowSubGui : public Gui {
         const ScheduleCore& m_scheduleCore;
         TimeWrapper m_scheduleDateOverride;
         std::optional<size_t> m_currentItemRow = std::nullopt;
+
         bool m_editingItemNameJustStarted = false;
         bool m_editingItemName = false;
 
         bool isEditablePropertyClicked(bool isEditingDisabled) const;
         void drawItemProperty(GuiPassReferences guiPass, ScheduleCoordinates coords);
+        void drawPropertyContext(size_t col, bool& needToBreak);
         template <typename T>
         T getElementValue(ScheduleCoordinates coords, bool useDefaultValue) const {
             return useDefaultValue == true ? Element<T>::getDefaultValue()
@@ -39,7 +41,7 @@ class CalendarItemWindowSubGui : public Gui {
         // column add / remove
         Event<size_t, SCHEDULE_TYPE> addDefaultColumn;
         Event<size_t> removeColumn;
-        // Event<size_t> duplicateColumn;
+        Event<size_t> duplicateColumn;
         // column modification
         Event<size_t, SCHEDULE_TYPE> setColumnType;
         Event<size_t, std::string> setColumnName;

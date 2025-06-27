@@ -25,19 +25,17 @@ class ScheduleGui : public Gui {
             m_scheduleDateOverride = newDateOverride;
         };
 
-        void drawColumnHeaderContextContent(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
-        void openRowContextPopup(size_t row);
-        void openCellContextPopup(size_t column, size_t row);
-        void closeRowContextPopup();
-        void closeCellContextPopup();
-        void drawRowContextContent();
-        void drawCellContextContent();
-
         void drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
         // Draws the contents of the table cell at the given column and row.
         // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
         bool drawTableCellContents(
             size_t column, size_t row, const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
+        void drawColumnHeaderContext(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
+        void openRowContextPopup(size_t row);
+        void drawRowContext();
+        void openCellContextPopup(size_t column, size_t row);
+        void drawCellContext();
+
         template <typename T>
         T getElementValue(size_t column, size_t row, bool useDefaultValue) const {
             return useDefaultValue == true ? Element<T>::getDefaultValue()
