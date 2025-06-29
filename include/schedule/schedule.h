@@ -281,7 +281,10 @@ class Schedule {
         std::function<void(size_t, ColumnResetOption)> setColumnResetOptionListener =
             [&](size_t col, ColumnResetOption option) { setColumnResetOption(col, option); };
         std::function<void(size_t, size_t)> setColumnOrderListener = [&](size_t oldOrder, size_t newOrder) {
-            setColumnDisplayOrder(oldOrder, newOrder);
+            setColumnDisplayOrder(oldOrder, newOrder, false);
+        };
+        std::function<void(size_t, size_t)> createColumnReorderEditListener = [&](size_t oldOrder, size_t newOrder) {
+            m_editHistory.addEdit<ColumnReorderEdit>(oldOrder, newOrder);
         };
         // whole column modification
         std::function<void(size_t, bool)> resetColumnListener = [&](size_t col, bool addToHistory) {

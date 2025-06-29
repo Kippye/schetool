@@ -50,6 +50,7 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->setColumnName.addListener(setColumnNameListener);
         m_scheduleGui->setColumnResetOption.addListener(setColumnResetOptionListener);
         m_scheduleGui->setColumnOrder.addListener(setColumnOrderListener);
+        m_scheduleGui->createColumnReorderEdit.addListener(createColumnReorderEditListener);
         m_scheduleGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
 
         m_scheduleGui->addRow.addListener(addRowListener);

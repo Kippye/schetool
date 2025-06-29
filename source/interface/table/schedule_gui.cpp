@@ -117,6 +117,28 @@ void ScheduleGui::applyTableColumnOrder() {
     if (!m_scheduleTable) {
         return;
     }
+
+    bool addReorderEdit = false;
+    std::pair<size_t, size_t> reorderEditIndices;
+    /// Update drag state
+    // Column reordering just started
+    if (m_scheduleTable->ReorderColumn != -1 && m_columnDragColumn.has_value() == false) {
+        m_columnDragColumn = m_scheduleTable->ReorderColumn;
+        m_columnDragBeginOrder = m_scheduleTable->Columns[m_scheduleTable->ReorderColumn].DisplayOrder;
+    }
+    // Column reordering just ended
+    if (m_scheduleTable->ReorderColumn == -1 && m_columnDragColumn.has_value() && m_columnDragBeginOrder.has_value()) {
+        size_t beginningOrder = m_columnDragBeginOrder.value();
+        size_t finalOrder = m_scheduleTable->Columns[m_columnDragColumn.value()].DisplayOrder;
+        // No point in adding an edit for moving the column to the same spot (it would happen otherwise)
+        if (beginningOrder != finalOrder) {
+            addReorderEdit = true;
+            reorderEditIndices = {beginningOrder, finalOrder};
+        }
+        m_columnDragColumn.reset();
+        m_columnDragBeginOrder.reset();
+    }
+
     // Translate imgui column reorder into schedule column reorder.
     if (m_scheduleTable->ReorderColumn != -1 && m_scheduleTable->ReorderColumnDir != 0) {
         // We need to handle reordering across hidden columns.
@@ -131,8 +153,6 @@ void ScheduleGui::applyTableColumnOrder() {
     }
 
     // Make the imgui column display order match schedule's column order
-    int reorderCOlumn = m_scheduleTable->ReorderColumn;
-
     for (int order = 0; order < m_scheduleTable->ColumnsCount; order++) {
         if (m_scheduleCore.getInternalIndexFor(order).has_value() == false) {
             std::cout << std::format("ScheduleGui::drawScheduleTable(): No internal index for display order {}", order)
@@ -144,6 +164,12 @@ void ScheduleGui::applyTableColumnOrder() {
             m_scheduleTable->Columns[column].DisplayOrder = order;
             m_scheduleTable->DisplayOrderToIndex[order] = (ImGuiTableColumnIdx)column;
         }
+    }
+
+    // Add a reorder edit from the index at the very beginning to the index at the very end
+    // So that multiple 1-by-1 movements can be undone / redone in one command
+    if (addReorderEdit) {
+        createColumnReorderEdit.invoke(reorderEditIndices.first, reorderEditIndices.second);
     }
 }
 

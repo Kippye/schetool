@@ -18,6 +18,8 @@ class ScheduleGui : public Gui {
         unsigned int m_filterGroupListColumn = 0;
         std::optional<size_t> m_rowContextRow = std::nullopt;
         std::optional<ScheduleCoordinates> m_cellContextCoords = std::nullopt;
+        std::optional<size_t> m_columnDragColumn = std::nullopt;
+        std::optional<size_t> m_columnDragBeginOrder = std::nullopt;
         std::optional<size_t> m_draggedRow = std::nullopt;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
 
@@ -66,6 +68,7 @@ class ScheduleGui : public Gui {
         Event<size_t, std::string> setColumnName;
         Event<size_t, ColumnResetOption> setColumnResetOption;
         Event<size_t, size_t> setColumnOrder;
+        Event<size_t, size_t> createColumnReorderEdit;
         // entire column modification
         Event<size_t, bool> resetColumn;
         // row modification
