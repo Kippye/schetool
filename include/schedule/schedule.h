@@ -83,7 +83,7 @@ class Schedule {
                                                                                                      size_t filterIndex,
                                                                                                      FilterRuleContainer
                                                                                                          filterRule) {
-            SCHEDULE_TYPE columnType = getColumn(col)->type;
+            SCHEDULE_TYPE columnType = getColumnConst(col).type;
             switch (columnType) {
                 case SCH_BOOL:
                     addColumnFilterRule<bool>(col, groupIndex, filterIndex, filterRule.getAsType<bool>());
@@ -128,7 +128,7 @@ class Schedule {
                 size_t ruleIndex,
                 FilterRuleContainer previousRule,
                 FilterRuleContainer rule) {
-                SCHEDULE_TYPE columnType = getColumn(col)->type;
+                SCHEDULE_TYPE columnType = getColumnConst(col).type;
                 switch (columnType) {
                     case SCH_BOOL:
                         replaceColumnFilterRule<bool>(
@@ -205,7 +205,7 @@ class Schedule {
                                                                                            size_t groupIndex,
                                                                                            size_t filterIndex,
                                                                                            size_t ruleIndex) {
-            SCHEDULE_TYPE columnType = getColumn(col)->type;
+            SCHEDULE_TYPE columnType = getColumnConst(col).type;
             switch (columnType) {
                 case SCH_BOOL:
                     removeColumnFilterRule<bool>(col, groupIndex, filterIndex, ruleIndex);
@@ -280,6 +280,9 @@ class Schedule {
         };
         std::function<void(size_t, ColumnResetOption)> setColumnResetOptionListener =
             [&](size_t col, ColumnResetOption option) { setColumnResetOption(col, option); };
+        std::function<void(size_t, size_t)> setColumnOrderListener = [&](size_t oldOrder, size_t newOrder) {
+            setColumnDisplayOrder(oldOrder, newOrder);
+        };
         // whole column modification
         std::function<void(size_t, bool)> resetColumnListener = [&](size_t col, bool addToHistory) {
             resetColumn(col, addToHistory);
@@ -311,9 +314,7 @@ class Schedule {
         // Replaces the vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
         void replaceSchedule(std::vector<Column>& columns);
         // Get a constant reference to every Column in the Schedule
-        const std::vector<Column>& getAllColumns();
-        // Generally do not use this. It's meant for reading from file only.
-        std::vector<Column>& getAllColumnsMutable();
+        std::vector<Column> getAllColumns();
         void sortColumns();
 
         // COLUMNS
@@ -323,13 +324,14 @@ class Schedule {
         void removeColumn(size_t column, bool addToHistory = true);
         void duplicateColumn(size_t index, bool addToHistory = true);
         // Get a constant pointer to the Column at the index.
-        const Column* getColumn(size_t column);
+        const Column& getColumnConst(size_t column);
         // Get the index of the first column with the given flags
         size_t getFlaggedColumnIndex(ScheduleColumnFlags flags) const;
         void setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory = true);
         void setColumnName(size_t column, const std::string& name, bool addToHistory = true);
         void setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory = true);
         void setColumnResetOption(size_t column, ColumnResetOption option, bool addToHistory = true);
+        void setColumnDisplayOrder(size_t oldOrder, size_t newOrder, bool addToHistory = true);
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column,
@@ -359,8 +361,7 @@ class Schedule {
             if (m_core.addColumnFilterRule(column, groupIndex, filterIndex, filterRule)) {
                 if (addToHistory) {
                     size_t filterRuleIndex =
-                        m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount() -
-                        1;
+                        getColumnConst(column).getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount() - 1;
                     m_editHistory.addEdit<FilterRuleAddOrRemoveEdit<T>>(
                         false, column, groupIndex, filterIndex, filterRuleIndex, filterRule);
                 }
@@ -384,8 +385,8 @@ class Schedule {
         template <typename T>
         void removeColumnFilterRule(
             size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, bool addToHistory = true) {
-            FilterRule<T> filterRule = m_core.getColumn(column)
-                                           ->getFilterGroupConst(groupIndex)
+            FilterRule<T> filterRule = getColumnConst(column)
+                                           .getFilterGroupConst(groupIndex)
                                            .getFilterConst(filterIndex)
                                            .getRuleConst(ruleIndex)
                                            .getAsType<T>();

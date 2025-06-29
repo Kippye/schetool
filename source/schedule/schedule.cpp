@@ -49,6 +49,7 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->setColumnSort.addListener(setColumnSortListener);
         m_scheduleGui->setColumnName.addListener(setColumnNameListener);
         m_scheduleGui->setColumnResetOption.addListener(setColumnResetOptionListener);
+        m_scheduleGui->setColumnOrder.addListener(setColumnOrderListener);
         m_scheduleGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
 
         m_scheduleGui->addRow.addListener(addRowListener);
@@ -186,12 +187,8 @@ void Schedule::replaceSchedule(std::vector<Column>& columns) {
     m_core.replaceSchedule(columns);
 }
 
-const std::vector<Column>& Schedule::getAllColumns() {
+std::vector<Column> Schedule::getAllColumns() {
     return m_core.getAllColumns();
-}
-
-std::vector<Column>& Schedule::getAllColumnsMutable() {
-    return m_core.getAllColumnsMutable();
 }
 
 // Sorts every column's rows based on "sorter" columns
@@ -220,7 +217,7 @@ void Schedule::addDefaultColumn(size_t columnIndex, SCHEDULE_TYPE colType, bool 
 
     if (addToHistory) {
         if (getColumnCount() > columnCountBefore && columnIndex < m_core.getColumnCount()) {
-            m_editHistory.addEdit<ColumnEdit>(false, columnIndex, *m_core.getColumn(columnIndex));
+            m_editHistory.addEdit<ColumnEdit>(false, columnIndex, m_core.getColumnConst(columnIndex));
         }
     }
 
@@ -228,11 +225,11 @@ void Schedule::addDefaultColumn(size_t columnIndex, SCHEDULE_TYPE colType, bool 
 }
 
 void Schedule::removeColumn(size_t columnIndex, bool addToHistory) {
-    if (m_core.getColumn(columnIndex)->permanent == true) {
+    if (m_core.getColumnConst(columnIndex).permanent) {
         return;
     }
 
-    Column columnCopy = *m_core.getColumn(columnIndex);
+    Column columnCopy = m_core.getColumnConst(columnIndex);
 
     // oh cheese.
     if (m_core.removeColumn(columnIndex)) {
@@ -250,14 +247,14 @@ void Schedule::duplicateColumn(size_t columnIndex, bool addToHistory) {
     if (duplicateColumnIndex.has_value()) {
         if (addToHistory) {
             m_editHistory.addEdit<ColumnEdit>(
-                false, duplicateColumnIndex.value(), *m_core.getColumn(duplicateColumnIndex.value()));
+                false, duplicateColumnIndex.value(), m_core.getColumnConst(duplicateColumnIndex.value()));
         }
         m_scheduleEvents.columnAdded.invoke(duplicateColumnIndex.value());
     }
 }
 
-const Column* Schedule::getColumn(size_t column) {
-    return m_core.getColumn(column);
+const Column& Schedule::getColumnConst(size_t column) {
+    return m_core.getColumnConst(column);
 }
 
 size_t Schedule::getFlaggedColumnIndex(ScheduleColumnFlags flags) const {
@@ -266,45 +263,53 @@ size_t Schedule::getFlaggedColumnIndex(ScheduleColumnFlags flags) const {
 
 void Schedule::setColumnType(size_t columnIndex, SCHEDULE_TYPE type, bool addToHistory) {
     // for adding to edit history
-    Column previousData = Column(*m_core.getColumn(columnIndex));
+    Column previousData = Column(m_core.getColumnConst(columnIndex));
 
     if (m_core.setColumnType(columnIndex, type)) {
         if (addToHistory) {
             m_editHistory.addEdit<ColumnPropertyEdit>(
-                columnIndex, COLUMN_PROPERTY_TYPE, previousData, *m_core.getColumn(columnIndex));
+                columnIndex, COLUMN_PROPERTY_TYPE, previousData, m_core.getColumnConst(columnIndex));
         }
     }
 }
 
 void Schedule::setColumnName(size_t columnIndex, const std::string& name, bool addToHistory) {
-    Column previousData = Column(*m_core.getColumn(columnIndex));
+    Column previousData = Column(m_core.getColumnConst(columnIndex));
 
     if (m_core.setColumnName(columnIndex, name)) {
         if (addToHistory) {
             m_editHistory.addEdit<ColumnPropertyEdit>(
-                columnIndex, COLUMN_PROPERTY_NAME, previousData, *m_core.getColumn(columnIndex));
+                columnIndex, COLUMN_PROPERTY_NAME, previousData, m_core.getColumnConst(columnIndex));
         }
     }
 }
 
 void Schedule::setColumnSort(size_t columnIndex, COLUMN_SORT sortDirection, bool addToHistory) {
-    Column previousData = Column(*m_core.getColumn(columnIndex));
+    Column previousData = Column(m_core.getColumnConst(columnIndex));
 
     if (m_core.setColumnSort(columnIndex, sortDirection)) {
         if (addToHistory) {
             m_editHistory.addEdit<ColumnPropertyEdit>(
-                columnIndex, COLUMN_PROPERTY_SORT, previousData, *m_core.getColumn(columnIndex));
+                columnIndex, COLUMN_PROPERTY_SORT, previousData, m_core.getColumnConst(columnIndex));
         }
     }
 }
 
 void Schedule::setColumnResetOption(size_t columnIndex, ColumnResetOption option, bool addToHistory) {
-    Column previousData = Column(*m_core.getColumn(columnIndex));
+    Column previousData = Column(m_core.getColumnConst(columnIndex));
 
     if (m_core.setColumnResetOption(columnIndex, option)) {
         if (addToHistory) {
             m_editHistory.addEdit<ColumnPropertyEdit>(
-                columnIndex, COLUMN_PROPERTY_RESET_OPTION, previousData, *m_core.getColumn(columnIndex));
+                columnIndex, COLUMN_PROPERTY_RESET_OPTION, previousData, m_core.getColumnConst(columnIndex));
+        }
+    }
+}
+
+void Schedule::setColumnDisplayOrder(size_t oldOrder, size_t newOrder, bool addToHistory) {
+    if (m_core.setColumnDisplayOrder(oldOrder, newOrder)) {
+        if (addToHistory) {
+            m_editHistory.addEdit<ColumnReorderEdit>(oldOrder, newOrder);
         }
     }
 }
@@ -316,12 +321,12 @@ const SelectOptions& Schedule::getColumnSelectOptions(size_t column) {
 void Schedule::modifyColumnSelectOptions(size_t columnIndex,
                                          const SelectOptionsModification& selectOptionsModification,
                                          bool addToHistory) {
-    Column previousData = Column(*m_core.getColumn(columnIndex));
+    Column previousData = Column(m_core.getColumnConst(columnIndex));
 
     if (m_core.modifyColumnSelectOptions(columnIndex, selectOptionsModification)) {
         if (addToHistory) {
             m_editHistory.addEdit<ColumnPropertyEdit>(
-                columnIndex, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, *m_core.getColumn(columnIndex));
+                columnIndex, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, m_core.getColumnConst(columnIndex));
         }
     }
 }
@@ -329,14 +334,14 @@ void Schedule::modifyColumnSelectOptions(size_t columnIndex,
 void Schedule::addColumnFilterGroup(size_t column, FilterGroup filterGroup, bool addToHistory) {
     if (m_core.addColumnFilterGroup(column, filterGroup)) {
         if (addToHistory) {
-            size_t groupIndex = m_core.getColumn(column)->getFilterGroupCount() - 1;
+            size_t groupIndex = m_core.getColumnConst(column).getFilterGroupCount() - 1;
             m_editHistory.addEdit<FilterGroupAddOrRemoveEdit>(false, column, groupIndex, filterGroup);
         }
     }
 }
 
 void Schedule::removeColumnFilterGroup(size_t column, size_t groupIndex, bool addToHistory) {
-    FilterGroup filterGroup = m_core.getColumn(column)->getFilterGroupConst(groupIndex);
+    FilterGroup filterGroup = m_core.getColumnConst(column).getFilterGroupConst(groupIndex);
 
     if (m_core.removeColumnFilterGroup(column, groupIndex)) {
         if (addToHistory) {
@@ -346,7 +351,7 @@ void Schedule::removeColumnFilterGroup(size_t column, size_t groupIndex, bool ad
 }
 
 void Schedule::setColumnFilterGroupName(size_t columnIndex, size_t groupIndex, const std::string& name, bool addToHistory) {
-    const auto& filterGroup = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex);
+    const auto& filterGroup = m_core.getColumnConst(columnIndex).getFilterGroupConst(groupIndex);
     LogicalOperatorEnum logicalOperator = filterGroup.getOperatorType();
     std::string prevName = filterGroup.getName();
     bool enabled = filterGroup.getIsEnabled();
@@ -364,7 +369,7 @@ void Schedule::setColumnFilterGroupOperator(size_t columnIndex,
                                             size_t groupIndex,
                                             LogicalOperatorEnum logicalOperator,
                                             bool addToHistory) {
-    const auto& filterGroup = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex);
+    const auto& filterGroup = m_core.getColumnConst(columnIndex).getFilterGroupConst(groupIndex);
     LogicalOperatorEnum prevOperator = filterGroup.getOperatorType();
     std::string name = filterGroup.getName();
     bool enabled = filterGroup.getIsEnabled();
@@ -378,7 +383,7 @@ void Schedule::setColumnFilterGroupOperator(size_t columnIndex,
 }
 
 void Schedule::setColumnFilterGroupEnabled(size_t columnIndex, size_t groupIndex, bool enabled, bool addToHistory) {
-    const auto& filterGroup = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex);
+    const auto& filterGroup = m_core.getColumnConst(columnIndex).getFilterGroupConst(groupIndex);
     LogicalOperatorEnum logicalOperator = filterGroup.getOperatorType();
     std::string name = filterGroup.getName();
     bool prevEnabled = filterGroup.getIsEnabled();
@@ -395,7 +400,7 @@ void Schedule::setColumnFilterGroupEnabled(size_t columnIndex, size_t groupIndex
 void Schedule::addColumnFilter(size_t columnIndex, size_t groupIndex, Filter filter, bool addToHistory) {
     if (m_core.addColumnFilter(columnIndex, groupIndex, filter)) {
         if (addToHistory) {
-            size_t filterIndex = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex).getFilterCount() - 1;
+            size_t filterIndex = m_core.getColumnConst(columnIndex).getFilterGroupConst(groupIndex).getFilterCount() - 1;
             m_editHistory.addEdit<FilterAddOrRemoveEdit>(false, columnIndex, groupIndex, filterIndex, filter);
         }
     }
@@ -404,7 +409,7 @@ void Schedule::addColumnFilter(size_t columnIndex, size_t groupIndex, Filter fil
 void Schedule::setColumnFilterOperator(
     size_t columnIndex, size_t groupIndex, size_t filterIndex, LogicalOperatorEnum logicalOperator, bool addToHistory) {
     LogicalOperatorEnum prevOperator =
-        m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getOperatorType();
+        m_core.getColumnConst(columnIndex).getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getOperatorType();
 
     if (m_core.setColumnFilterOperator(columnIndex, groupIndex, filterIndex, logicalOperator)) {
         if (addToHistory) {
@@ -414,7 +419,7 @@ void Schedule::setColumnFilterOperator(
 }
 
 void Schedule::removeColumnFilter(size_t columnIndex, size_t groupIndex, size_t filterIndex, bool addToHistory) {
-    Filter filter = m_core.getColumn(columnIndex)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex);
+    Filter filter = m_core.getColumnConst(columnIndex).getFilterGroupConst(groupIndex).getFilterConst(filterIndex);
 
     if (m_core.removeColumnFilter(columnIndex, groupIndex, filterIndex)) {
         if (addToHistory) {
@@ -424,11 +429,7 @@ void Schedule::removeColumnFilter(size_t columnIndex, size_t groupIndex, size_t 
 }
 
 void Schedule::resetColumn(size_t columnIndex, bool addToHistory) {
-    if (m_core.getColumn(columnIndex) == nullptr) {
-        return;
-    }
-
-    Column columnData = *m_core.getColumn(columnIndex);
+    Column columnData = m_core.getColumnConst(columnIndex);
 
     m_core.resetColumn(columnIndex, columnData.type);
 

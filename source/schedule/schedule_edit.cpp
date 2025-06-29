@@ -240,6 +240,24 @@ void ColumnResetEdit::apply(ScheduleCore& scheduleCore) {
     m_isReverted = false;
 }
 
+// ColumnReorderEdit
+ColumnReorderEdit::ColumnReorderEdit(size_t previousOrder, size_t newOrder) : ScheduleEdit(ScheduleEditType::ColumnReorder) {
+    m_previousOrder = previousOrder;
+    m_newOrder = newOrder;
+}
+
+void ColumnReorderEdit::revert(ScheduleCore& scheduleCore) {
+    scheduleCore.setColumnDisplayOrder(m_newOrder, m_previousOrder);
+
+    m_isReverted = true;
+}
+
+void ColumnReorderEdit::apply(ScheduleCore& scheduleCore) {
+    scheduleCore.setColumnDisplayOrder(m_previousOrder, m_newOrder);
+
+    m_isReverted = false;
+}
+
 // FilterEditBase
 FilterEditBase::FilterEditBase(
     ScheduleEditType editType, size_t column, size_t filterGroupIndex, size_t filterIndex, size_t filterRuleIndex)

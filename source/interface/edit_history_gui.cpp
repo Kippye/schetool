@@ -67,6 +67,15 @@ void EditHistoryGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
                             i);
                     break;
                 }
+                case (ScheduleEditType::ColumnReorder): {
+                    auto columnReorderEdit = std::dynamic_pointer_cast<ColumnReorderEdit>(editHistory[i]);
+                    sprintf(buf,
+                            "Move Column display index %zu -> %zu##%zu",
+                            columnReorderEdit->getPreviousOrder(),
+                            columnReorderEdit->getNewOrder(),
+                            i);
+                    break;
+                }
                 case (ScheduleEditType::FilterGroupAddOrRemove): {
                     auto filterGroupEdit = std::dynamic_pointer_cast<FilterGroupAddOrRemoveEdit>(editHistory[i]);
                     sprintf(buf,

@@ -188,10 +188,10 @@ bool ScheduleIO::readSchedule(const char* name) {
         return false;
     }
 
-    m_schedule.getEditHistoryMutable().clearEditHistory();
-    if (std::optional<FileInfo> readFileInfo =
-            m_converter.readSchedule(schedulePath.string().c_str(), m_schedule.getAllColumnsMutable()))
-    {
+    // Empty schedule to fill with the read data
+    std::vector<Column> readSchedule = {};
+    if (std::optional<FileInfo> readFileInfo = m_converter.readSchedule(schedulePath.string().c_str(), readSchedule)) {
+        m_schedule.replaceSchedule(readSchedule);
         if (!isAutosave(schedulePath.string())) {
             ImGui::LoadIniSettingsFromDisk(makeIniPathFromScheduleName(name).string().c_str());
         }

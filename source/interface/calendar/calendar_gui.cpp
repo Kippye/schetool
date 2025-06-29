@@ -1,7 +1,6 @@
 #include "calendar/calendar_gui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
 #include "view_tab_bar_gui.h"
-#include "table/schedule_gui.h"
 #include "gui_templates.h"
 #include "util.h"
 #include "filters/filter_rule.h"
@@ -163,7 +162,8 @@ void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
     int dayOfTheWeekLast = lastOfTheMonth.getWeekdayUTC(WeekStart::Monday, Base::Zero);
 
     const float minSquareHeight = ImGui::GetContentRegionAvail().y / 6.0f;
-    ImGuiTableFlags tableFlags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame;
+    ImGuiTableFlags tableFlags =
+        ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_NoSavedSettings;
     ImGuiTableRowFlags rowFlags = ImGuiTableRowFlags_None;
 
     if (ImGui::BeginTable("CalendarTable", 7, tableFlags, ImGui::GetContentRegionAvail())) {
@@ -268,21 +268,7 @@ void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIn
 void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateContainer& calendarDayDate) {
     ImGuiStyle& style = ImGui::GetStyle();
     const size_t dateColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Date);
-    auto dateColumn = m_scheduleCore.getColumn(dateColumnIndex);
-
-    std::vector<size_t> orderedColumnIndices = std::vector<size_t>(m_scheduleCore.getColumnCount());
-    // Display item properties according to the schedule table's column order, if the table exists.
-    if (auto scheduleTable = ScheduleGui::getScheduleTable()) {
-        size_t columnIndex = 0;
-        for (const auto& column : scheduleTable->Columns) {
-            orderedColumnIndices.at(column.DisplayOrder) = columnIndex;
-            columnIndex++;
-        }
-    } else {  // No scheduleTable for whatever reason. Just display columns in the order they are in ScheduleCore.
-        for (size_t i = 0; i < orderedColumnIndices.size(); i++) {
-            orderedColumnIndices[i] = i;
-        }
-    }
+    const Column& dateColumn = m_scheduleCore.getColumnConst(dateColumnIndex);
 
     FilterRule<DateContainer> isThisDate = FilterRule<DateContainer>(calendarDayDate);
     std::vector<size_t> sortedRowIndices = m_scheduleCore.getSortedRowIndices();
@@ -348,13 +334,12 @@ void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateConta
                 ImGui::PopStyleColor();
             }
 
-            for (size_t unorderedCol = 0; unorderedCol < m_scheduleCore.getColumnCount(); unorderedCol++) {
-                size_t col = orderedColumnIndices.at(unorderedCol);
+            for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
                 // The date doesn't need to be shown and the name has already been shown
                 if (col == dateColumnIndex || col == nameColumnIndex) {
                     continue;
                 }
-                ScheduleColumnFlags columnFlags = m_scheduleCore.getColumn(col)->flags;
+                ScheduleColumnFlags columnFlags = m_scheduleCore.getColumnConst(col).flags;
                 // Duration and End columns are ignored
                 if ((columnFlags & ScheduleColumnFlags_Duration) || (columnFlags & ScheduleColumnFlags_End)) {
                     continue;
@@ -388,21 +373,21 @@ void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateConta
 
 void CalendarGui::drawItemProperty(ScheduleCoordinates coords) {
     bool columnEditDisabled = false;
-    const Column* column = m_scheduleCore.getColumn(coords.column());
+    const Column& column = m_scheduleCore.getColumnConst(coords.column());
     // If viewing a different date and the column has a reset option then show it disabled
-    if (m_scheduleDateOverride.getIsEmpty() == false && column->resetOption != ColumnResetOption::Never) {
+    if (m_scheduleDateOverride.getIsEmpty() == false && column.resetOption != ColumnResetOption::Never) {
         columnEditDisabled = true;
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
     }
-    switch (column->type) {
+    switch (column.type) {
         case (SCH_BOOL): {
             bool value = getElementValue<bool>(coords, columnEditDisabled);
             if (element_display_templates::ElementDisplay(value, coords, true)) {
                 setElementValueBool.invoke(coords.column(), coords.row(), value);
             }
             ImGui::SameLine();
-            ImGui::Text("%s", column->name.c_str());
+            ImGui::Text("%s", column.name.c_str());
             break;
         }
         case (SCH_NUMBER): {

@@ -60,7 +60,7 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
                                                GuiPassReferences guiPass,
                                                bool openEditor) {
     auto selection = value.getSelection();
-    const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
+    const std::vector<SelectOption>& options = scheduleCore.getColumnConst(coords.column()).selectOptions.getOptions();
 
     if (selection.has_value()) {
         if (gui_templates::SelectOptionButton(options[selection.value()],
@@ -105,7 +105,7 @@ void element_display_templates::ElementDisplay(SingleSelectContainer& value,
                                                const ScheduleCore& scheduleCore,
                                                ScheduleCoordinates coords) {
     auto selection = value.getSelection();
-    const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
+    const std::vector<SelectOption>& options = scheduleCore.getColumnConst(coords.column()).selectOptions.getOptions();
 
     if (selection.has_value()) {
         gui_templates::SelectOptionButton(options[selection.value()], std::format("##{}", coords.getString()).c_str());
@@ -124,7 +124,7 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
                                                ImRect avoidRect) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto selection = value.getSelection();
-    const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
+    const std::vector<SelectOption>& options = scheduleCore.getColumnConst(coords.column()).selectOptions.getOptions();
 
     std::vector<int> selectionIndices = {};
 
@@ -210,7 +210,7 @@ void element_display_templates::ElementDisplay(SelectContainer& value,
                                                float availableWidth) {
     ImGuiStyle& style = ImGui::GetStyle();
     auto selection = value.getSelection();
-    const std::vector<SelectOption>& options = scheduleCore.getColumn(coords.column())->selectOptions.getOptions();
+    const std::vector<SelectOption>& options = scheduleCore.getColumnConst(coords.column()).selectOptions.getOptions();
 
     std::vector<int> selectionIndices = {};
 

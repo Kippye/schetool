@@ -12,7 +12,7 @@
 
 class ScheduleGui : public Gui {
     private:
-        static const ImGuiTable* scheduleTable;
+        ImGuiTable* m_scheduleTable;
         const ScheduleCore& m_scheduleCore;
         bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_filterGroupListColumn = 0;
@@ -25,6 +25,7 @@ class ScheduleGui : public Gui {
             m_scheduleDateOverride = newDateOverride;
         };
 
+        void applyTableColumnOrder();
         void drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
         // Draws the contents of the table cell at the given column and row.
         // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
@@ -64,6 +65,7 @@ class ScheduleGui : public Gui {
         Event<size_t, COLUMN_SORT> setColumnSort;
         Event<size_t, std::string> setColumnName;
         Event<size_t, ColumnResetOption> setColumnResetOption;
+        Event<size_t, size_t> setColumnOrder;
         // entire column modification
         Event<size_t, bool> resetColumn;
         // row modification
@@ -76,6 +78,4 @@ class ScheduleGui : public Gui {
         bool isEditableElementClicked(bool isEditingDisabled) const;
 
         void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
-
-        static const ImGuiTable* getScheduleTable();
 };

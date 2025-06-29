@@ -99,8 +99,7 @@ int ScheduleDataConverter::writeSchedule(const char* path, const std::vector<Col
 }
 
 std::optional<FileInfo> ScheduleDataConverter::readSchedule(const char* path, std::vector<Column>& schedule) {
-    std::vector<Column> scheduleCopy = schedule;
-    // clear the provided copy just in case
+    // Clear the provided schedule just in case
     schedule.clear();
 
     FileReadStream stream(path);

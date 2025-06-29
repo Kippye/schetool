@@ -707,7 +707,8 @@ class ScheduleDataConverter {
         bool isValidScheduleFile(const char* path) const;
         // Write the Columns of a Schedule to a file at the given path.
         int writeSchedule(const char* path, const std::vector<Column>&);
-        // Read a Schedule from path and return the Columns containing the correct Elements. NOTE: The function creates a copy of the provided vector, but modifies the argument directly. If the function fails at any point, it will be reset to the copy created at the start.
-        // Returns a partial FileInfo if successful.
+        // Read a Schedule from path and fill the provided vector with its data.
+        // NOTE: The function clears and modifies the argument schedule directly. Consider its contents lost.
+        // Returns a partial FileInfo containing the file path and schedule edit time, if successful.
         std::optional<FileInfo> readSchedule(const char* path, std::vector<Column>&);
 };

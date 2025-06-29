@@ -14,7 +14,7 @@ void TimeHandler::init(IO_Handler& ioHandler, Schedule& schedule, NotificationHa
 }
 
 std::pair<size_t, size_t> TimeHandler::countTodayAndCompletedItems() const {
-    auto& scheduleColumns = m_schedule->getAllColumns();
+    std::vector<Column> scheduleColumns = m_schedule->getAllColumns();
     size_t todayItemCount = 0;
     size_t todayCompletedItemCount = 0;
 
@@ -102,9 +102,8 @@ void TimeHandler::applyResetsSinceEditTime(TimeWrapper lastEditTime) {
 }
 
 void TimeHandler::showItemStartNotifications(const TimeWrapper& currentTime, const TimeWrapper& previousTime) {
-    auto& scheduleColumns = m_schedule->getAllColumns();
+    std::vector<Column> scheduleColumns = m_schedule->getAllColumns();
     size_t startColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Start);
-    const Column* startColumn = m_schedule->getColumn(startColumnIndex);
 
     auto [todayItemCount, todayCompletedItemCount] = countTodayAndCompletedItems();
 
@@ -157,8 +156,6 @@ void TimeHandler::completePreviousItem(const ClockTimeWrapper& startTime) {
     auto scheduleColumns = m_schedule->getAllColumns();
     size_t startColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Start);
     size_t finishedColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Finished);
-    const Column* startColumn = m_schedule->getColumn(startColumnIndex);
-    const Column* finishedColumn = m_schedule->getColumn(finishedColumnIndex);
 
     ClockTimeWrapper closestPreviousItemTime = startTime;
     size_t previousItemRow = 0;
@@ -169,7 +166,7 @@ void TimeHandler::completePreviousItem(const ClockTimeWrapper& startTime) {
         for (size_t i = 0; i < m_schedule->getColumnCount(); i++) {
             if (i != finishedColumnIndex) {
                 // Check if the row's Element passes every FilterGroup in this Column
-                isItemCurrentlyVisible = m_schedule->getColumn(i)->checkElementPassesFilters(
+                isItemCurrentlyVisible = m_schedule->getColumnConst(i).checkElementPassesFilters(
                     row
                     // NOTE: Do i use override time here?
                     // Usually the override time applies when viewing a different date

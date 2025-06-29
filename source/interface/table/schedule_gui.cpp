@@ -16,8 +16,6 @@
 #include "gui_constants.h"
 #include "schedule_coordinates.h"
 
-const ImGuiTable* ScheduleGui::scheduleTable = nullptr;
-
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
     : m_scheduleCore(scheduleCore), Gui(ID) {
     addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
@@ -114,22 +112,60 @@ void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
     ImGui::End();
 }
 
+// Must be run before BeginTable()!
+void ScheduleGui::applyTableColumnOrder() {
+    if (!m_scheduleTable) {
+        return;
+    }
+    // Translate imgui column reorder into schedule column reorder.
+    if (m_scheduleTable->ReorderColumn != -1 && m_scheduleTable->ReorderColumnDir != 0) {
+        // We need to handle reordering across hidden columns.
+        const int reorderDir = m_scheduleTable->ReorderColumnDir;
+        ImGuiTableColumn* srcColumn = &m_scheduleTable->Columns[m_scheduleTable->ReorderColumn];
+        ImGuiTableColumn* dstColumn =
+            &m_scheduleTable->Columns[(reorderDir == -1) ? srcColumn->PrevEnabledColumn : srcColumn->NextEnabledColumn];
+        // So we need to move the column's display order from srcColumn->DisplayOrder to dstColumn->DisplayOrder
+        setColumnOrder.invoke(srcColumn->DisplayOrder, dstColumn->DisplayOrder);
+        // Reset reorder dir to 0 cus we already handling this shit 8)
+        m_scheduleTable->ReorderColumnDir = 0;
+    }
+
+    // Make the imgui column display order match schedule's column order
+    int reorderCOlumn = m_scheduleTable->ReorderColumn;
+
+    for (int order = 0; order < m_scheduleTable->ColumnsCount; order++) {
+        if (m_scheduleCore.getInternalIndexFor(order).has_value() == false) {
+            std::cout << std::format("ScheduleGui::drawScheduleTable(): No internal index for display order {}", order)
+                      << std::endl;
+            continue;
+        }
+        int column = m_scheduleCore.getInternalIndexFor(order).value();
+        if (column < m_scheduleTable->ColumnsCount) {
+            m_scheduleTable->Columns[column].DisplayOrder = order;
+            m_scheduleTable->DisplayOrderToIndex[order] = (ImGuiTableColumnIdx)column;
+        }
+    }
+}
+
 void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
-        ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX;
+        ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoSavedOrder;
+    // Correctly order the table columns
+    applyTableColumnOrder();
+
     if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags, ImGui::GetContentRegionAvail())) {
         ImGuiTable* currentTable = ImGui::GetCurrentTable();
-        scheduleTable = currentTable;
+        m_scheduleTable = currentTable;
         currentTable->DisableDefaultContextMenu = true;
         for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
-            ImGui::TableSetupColumn(m_scheduleCore.getColumn(column)->name.c_str());
+            ImGui::TableSetupColumn(m_scheduleCore.getColumnConst(column).name.c_str());
         }
 
         // ROW 0: Filters
         ImGui::TableNextRow();
         for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
-            ImGui::TableSetColumnIndex(column);
+            ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(column).value());
 
             const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
             float addFilterButtonSize =
@@ -153,8 +189,8 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
 
             ImGui::SameLine();
 
-            const Column* currentColumn = m_scheduleCore.getColumn(column);
-            const auto& columnFilterGroups = currentColumn->getFilterGroupsConst();
+            const Column& currentColumn = m_scheduleCore.getColumnConst(column);
+            const auto& columnFilterGroups = currentColumn.getFilterGroupsConst();
 
             // DATA TO PASS TO FILTER EDITOR
             bool openFilterEditor = false;
@@ -164,7 +200,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             // LAMBDA: Draws buttons for every FilterGroup in the column. Sets data to pass to filterEditor if a button is clicked.
             auto drawFilterGroupButtons = [&](bool sameLine, float buttonWidth) {
                 for (size_t i = 0; i < columnFilterGroups.size(); i++) {
-                    const auto& filterGroup = currentColumn->getFilterGroupConst(i);
+                    const auto& filterGroup = currentColumn.getFilterGroupConst(i);
                     if (filterGroup.getIsEnabled() == false) {
                         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::inactiveAlpha);
                     }
@@ -180,7 +216,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                         ImGui::PopStyleVar();
                     }
 
-                    if (sameLine && i < currentColumn->getFilterGroupCount() - 1) {
+                    if (sameLine && i < currentColumn.getFilterGroupCount() - 1) {
                         ImGui::SameLine();
                     }
                 }
@@ -216,43 +252,44 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
         // ROW 1: Custom column header row
         ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
         for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
-            ImGui::TableSetColumnIndex(column);
-            bool isColumnHeaderHovered =
-                (ImGui::TableGetHoveredColumn() == column && ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
+            ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(column).value());
+            bool isColumnHeaderHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
+                                          ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
             ImGui::PushID(column);
             float headerCursorY = ImGui::GetCursorPosY();
             size_t pushedStyleVars = 0;
             // HIDE the sort button if the column header is not hovered and the column does not have a sort direction applied
-            if (isColumnHeaderHovered == false && m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE) {
+            if (isColumnHeaderHovered == false && m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_NONE) {
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
                 pushedStyleVars++;
             }
             // sort button!
             if (ImGui::ArrowButton(
                     std::format("##sortColumn{}", column).c_str(),
-                    m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE
+                    m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_NONE
                         ? ImGuiDir_Right
-                        : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+                        : (m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
             {
                 setColumnSort.invoke(
                     column,
-                    m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_NONE
+                    m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_NONE
                         ? COLUMN_SORT_DESCENDING
-                        : (m_scheduleCore.getColumn(column)->sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING
-                                                                                            : COLUMN_SORT_NONE));
+                        : (m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING
+                                                                                                : COLUMN_SORT_NONE));
             }
             ImGui::PopStyleVar(pushedStyleVars);
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-            ImGui::TableHeader(ImGui::TableGetColumnName(column));
+            ImGui::TableHeader(ImGui::TableGetColumnName(ImGui::TableGetColumnIndex()));
             ImGuiID tableHeaderID = ImGui::GetItemID();
             // Show a close button on the right when hovered
             // permanent columns can't be removed so there's no need for a remove button
-            if (isColumnHeaderHovered && m_scheduleCore.getColumn(column)->permanent == false) {
+            if (isColumnHeaderHovered && m_scheduleCore.getColumnConst(column).permanent == false) {
                 // This is how the arrow button's size is calculated
                 float headerButtonSize = ImGui::CalcTextSize("W").y;
                 // SameLine() can't be used after a TableHeader so the position has to be calculated manually.
                 ImGui::SetCursorScreenPos(
-                    ImVec2(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column).Max.x - headerButtonSize - 8.0f,
+                    ImVec2(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnIndex()).Max.x -
+                               headerButtonSize - 8.0f,
                            ImGui::GetCursorScreenPos().y));
                 ImGui::SetCursorPosY(headerCursorY);
                 size_t pushedColorCount = 0;
@@ -284,10 +321,10 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                 && (ImGui::IsAnyItemHovered() == false ||
                     ImGui::GetHoveredID() == tableHeaderID))  // AND hovering the table header
             {
-                ImGui::TableOpenContextMenu(column);
+                ImGui::TableOpenContextMenu(ImGui::TableGetColumnIndex());
             }
             bool popupOpenBefore = ImGui::GetCurrentTable()->IsContextPopupOpen;
-            if (ImGui::GetCurrentTable()->ContextPopupColumn == column &&
+            if (ImGui::GetCurrentTable()->ContextPopupColumn == ImGui::TableGetColumnIndex() &&
                 ImGui::TableBeginContextMenuPopup(ImGui::GetCurrentTable()))
             {
                 drawColumnHeaderContext(column, currentTable, tableFlags);
@@ -322,7 +359,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             ImGui::TableNextRow();
             for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++)
             {
-                ImGui::TableSetColumnIndex(column);
+                ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(column).value());
                 if (drawTableCellContents(column, row, windowSize, input, guiTextures) == false) {
                     // Failed to draw the entire row. Probably shouldn't draw the others, either.
                     ImGui::EndTable();
@@ -355,7 +392,8 @@ bool ScheduleGui::drawTableCellContents(
     ImGuiStyle& style = ImGui::GetStyle();
     bool rowMenuButtonHovered = false;
     // Row button is displayed in the first column
-    if (ImGui::GetCurrentTable()->Columns[column].DisplayOrder == 0) {
+    // Column and imgui display order should match
+    if (column == 0) {
         size_t pushedStyleVars = 0;
         // HIDE the row button unless the row is hovered
         if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex()) {
@@ -392,14 +430,14 @@ bool ScheduleGui::drawTableCellContents(
     bool columnEditDisabled = false;
     // If viewing a different date and the column has a reset option then show it disabled
     if (m_scheduleDateOverride.getIsEmpty() == false &&
-        m_scheduleCore.getColumn(column)->resetOption != ColumnResetOption::Never)
+        m_scheduleCore.getColumnConst(column).resetOption != ColumnResetOption::Never)
     {
         columnEditDisabled = true;
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
     }
 
-    SCHEDULE_TYPE columnType = m_scheduleCore.getColumn(column)->type;
+    SCHEDULE_TYPE columnType = m_scheduleCore.getColumnConst(column).type;
     ImGui::SetNextItemWidth(-FLT_MIN);
 
     bool isTableCellHighlighted = false;
@@ -574,7 +612,7 @@ bool ScheduleGui::drawTableCellContents(
 }
 
 void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table, ImGuiTableFlags tableFlags) {
-    const Column& column = *m_scheduleCore.getColumn(columnIndex);
+    const Column& column = m_scheduleCore.getColumnConst(columnIndex);
 
     // Renaming
     std::string name = column.name.c_str();
@@ -732,7 +770,3 @@ void ScheduleGui::drawCellContext() {
         ImGui::EndPopup();
     }
 }
-
-const ImGuiTable* ScheduleGui::getScheduleTable() {
-    return scheduleTable;
-}  // Static

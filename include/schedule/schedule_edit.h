@@ -12,6 +12,7 @@ enum class ScheduleEditType {
     ColumnAddOrRemove,
     ColumnPropertyChange,
     ColumnReset,
+    ColumnReorder,
     FilterGroupAddOrRemove,
     FilterGroupChange,
     FilterAddOrRemove,
@@ -182,6 +183,26 @@ class ColumnResetEdit : public ScheduleEdit {
 
         const Column& getColumnData() const {
             return m_columnData;
+        }
+};
+
+class ColumnReorderEdit : public ScheduleEdit {
+    private:
+        size_t m_previousOrder;
+        size_t m_newOrder;
+
+    public:
+        ColumnReorderEdit(size_t previousOrder, size_t newOrder);
+
+        void revert(ScheduleCore& scheduleCore) override;
+
+        void apply(ScheduleCore& scheduleCore) override;
+
+        size_t getPreviousOrder() const {
+            return m_previousOrder;
+        }
+        size_t getNewOrder() const {
+            return m_newOrder;
         }
 };
 

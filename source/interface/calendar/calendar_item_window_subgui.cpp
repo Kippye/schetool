@@ -36,25 +36,11 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
             return;
         }
         size_t row = m_currentItemRow.value();
-        std::vector<size_t> orderedColumnIndices = std::vector<size_t>(m_scheduleCore.getColumnCount());
-        // Display item properties according to the schedule table's column order, if the table exists.
-        if (auto scheduleTable = ScheduleGui::getScheduleTable()) {
-            size_t columnIndex = 0;
-            for (const auto& column : scheduleTable->Columns) {
-                orderedColumnIndices.at(column.DisplayOrder) = columnIndex;
-                columnIndex++;
-            }
-        } else  // No scheduleTable for whatever reason. Just display columns in the order they are in ScheduleCore.
-        {
-            for (size_t i = 0; i < orderedColumnIndices.size(); i++) {
-                orderedColumnIndices[i] = i;
-            }
-        }
         // Draw the name bigger than other properties
         const size_t nameColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Name);
         ImFont* nameFontData = InterfaceStyleHandler::getFontData((FontSize)((int)InterfaceStyleHandler::getFontSize() + 1));
         bool nameColumnEditDisabled = m_scheduleDateOverride.getIsEmpty() == false &&
-            m_scheduleCore.getColumn(nameColumnIndex)->resetOption != ColumnResetOption::Never;
+            m_scheduleCore.getColumnConst(nameColumnIndex).resetOption != ColumnResetOption::Never;
         std::string value = getElementValue<std::string>({nameColumnIndex, row}, nameColumnEditDisabled);
         ImGui::PushFont(nameFontData);
         float height = ImGui::CalcTextSize(value.c_str()).y + style.FramePadding.y * 2.0f;
@@ -79,7 +65,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
         }
         // ImGui::PopStyleColor();
         ImGui::PopFont();
-        ImGuiTableFlags propertyTableFlags = ImGuiTableFlags_NoBordersInBody;
+        ImGuiTableFlags propertyTableFlags = ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_NoSavedSettings;
         if (ImGui::BeginTable("PropertyColumnsTable", 2, propertyTableFlags)) {
             // Show [PROPERTY_NAME_VISIBLE_CHARS] letters of the property name before it cuts off off
             ImGui::TableSetupColumn(
@@ -87,8 +73,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
             ImGui::TableSetupColumn("PropertyValue", ImGuiTableColumnFlags_WidthStretch);
 
             ImGui::TableNextRow();
-            for (size_t unorderedCol = 0; unorderedCol < m_scheduleCore.getColumnCount(); unorderedCol++) {
-                size_t col = orderedColumnIndices.at(unorderedCol);
+            for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
                 // The name has already been shown
                 if (col == nameColumnIndex) {
                     continue;
@@ -127,9 +112,9 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 }
                 ImGui::SameLine();
                 ImGui::AlignTextToFramePadding();
-                ImGui::Text("%s", m_scheduleCore.getColumn(col)->name.c_str());
+                ImGui::Text("%s", m_scheduleCore.getColumnConst(col).name.c_str());
                 if (ImGui::BeginItemTooltip()) {
-                    ImGui::Text("%s", m_scheduleCore.getColumn(col)->name.c_str());
+                    ImGui::Text("%s", m_scheduleCore.getColumnConst(col).name.c_str());
                     ImGui::EndTooltip();
                 }
                 ImGui::TableNextColumn();
@@ -159,14 +144,14 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
     size_t row = coords.row();
 
     bool columnEditDisabled = false;
-    const Column* propertyColumn = m_scheduleCore.getColumn(column);
+    const Column& propertyColumn = m_scheduleCore.getColumnConst(column);
     // If viewing a different date and the column has a reset option then show it disabled
-    if (m_scheduleDateOverride.getIsEmpty() == false && propertyColumn->resetOption != ColumnResetOption::Never) {
+    if (m_scheduleDateOverride.getIsEmpty() == false && propertyColumn.resetOption != ColumnResetOption::Never) {
         columnEditDisabled = true;
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
     }
-    switch (propertyColumn->type) {
+    switch (propertyColumn.type) {
         case (SCH_BOOL): {
             bool newValue = getElementValue<bool>(coords, columnEditDisabled);
             if (element_display_templates::ElementDisplay(newValue, coords, true)) {
@@ -292,7 +277,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
 
 void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak) {
     if (ImGui::BeginPopupContextItem(NULL, ImGuiPopupFlags_MouseButtonLeft)) {
-        const Column& column = *m_scheduleCore.getColumn(col);
+        const Column& column = m_scheduleCore.getColumnConst(col);
 
         // Renaming
         std::string name = column.name.c_str();
