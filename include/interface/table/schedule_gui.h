@@ -12,7 +12,7 @@
 
 class ScheduleGui : public Gui {
     private:
-        ImGuiTable* m_scheduleTable;
+        ImGuiTable* m_scheduleTable = nullptr;
         const ScheduleCore& m_scheduleCore;
         bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_filterGroupListColumn = 0;

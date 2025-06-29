@@ -167,7 +167,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
         for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
             ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(column).value());
 
-            const ImVec2 label_size = ImGui::CalcTextSize("W", NULL, true);
+            const ImVec2 label_size = ImGui::CalcTextSize("+");
             float addFilterButtonSize =
                 ImGui::CalcItemSize(
                     ImVec2(0.0f, 0.0f), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f)
@@ -255,7 +255,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(column).value());
             bool isColumnHeaderHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
                                           ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
-            ImGui::PushID(column);
+            ImGui::PushID(ImGui::TableGetColumnIndex());
             float headerCursorY = ImGui::GetCursorPosY();
             size_t pushedStyleVars = 0;
             // HIDE the sort button if the column header is not hovered and the column does not have a sort direction applied
@@ -279,7 +279,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             }
             ImGui::PopStyleVar(pushedStyleVars);
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-            ImGui::TableHeader(ImGui::TableGetColumnName(ImGui::TableGetColumnIndex()));
+            ImGui::TableHeader(m_scheduleCore.getColumnConst(column).name.c_str());
             ImGuiID tableHeaderID = ImGui::GetItemID();
             // Show a close button on the right when hovered
             // permanent columns can't be removed so there's no need for a remove button
