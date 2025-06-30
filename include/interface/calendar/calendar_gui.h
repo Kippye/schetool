@@ -126,5 +126,21 @@ class CalendarGui : public Gui {
         // entire column modification
         EventPipe<size_t, bool> resetColumn;
 
+        // FILTER EVENT PIPES
+        // FilterGroup
+        EventPipe<size_t, FilterGroup> addColumnFilterGroup;
+        EventPipe<size_t, size_t, std::string> setColumnFilterGroupName;
+        EventPipe<size_t, size_t, LogicalOperatorEnum> setColumnFilterGroupOperator;
+        EventPipe<size_t, size_t, bool> setColumnFilterGroupEnabled;
+        EventPipe<size_t, size_t> removeColumnFilterGroup;
+        // Filter
+        EventPipe<size_t, size_t, Filter> addColumnFilter;
+        EventPipe<size_t, size_t, size_t, LogicalOperatorEnum> setColumnFilterOperator;
+        EventPipe<size_t, size_t, size_t> removeColumnFilter;
+        // FilterRule
+        EventPipe<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
+        EventPipe<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
+        EventPipe<size_t, size_t, size_t, size_t> removeColumnFilterRule;
+
         void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
 };

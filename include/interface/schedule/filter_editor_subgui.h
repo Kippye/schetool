@@ -2,6 +2,7 @@
 
 #include <map>
 #include "gui.h"
+#include "event_pipe.h"
 #include "filters/filter_rule.h"
 #include "select_container.h"
 #include "time_container.h"
@@ -562,6 +563,10 @@ class FilterEditorSubGui : public Gui {
         Event<size_t, size_t, size_t> removeColumnFilter;
 
         Event<size_t, size_t, size_t, size_t> removeColumnFilterRule;
+
+        // Event pipes
+        EventPipe<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
+        EventPipe<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
 
         void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
         void drawRuleEditor();

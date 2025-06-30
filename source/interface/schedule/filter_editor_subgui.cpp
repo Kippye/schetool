@@ -673,6 +673,9 @@ FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore& sched
     scheduleEvents.columnAdded.addListener(columnAddedListener);
     scheduleEvents.columnRemoved.addListener(columnRemovedListener);
     addSubGui(new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, scheduleEvents, m_filterGroupState));
+    auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui");
+    addColumnFilterRule.addEvent(filterRuleEditor->addColumnFilterRule);
+    editColumnFilterRule.addEvent(filterRuleEditor->editColumnFilterRule);
 }
 
 void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {

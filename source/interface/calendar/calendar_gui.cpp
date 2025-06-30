@@ -1,10 +1,11 @@
 #include "calendar/calendar_gui.h"
+#include "calendar/calendar_item_window_subgui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
+#include "schedule/filter_editor_subgui.h"
 #include "view_tab_bar_gui.h"
 #include "gui_templates.h"
 #include "util.h"
 #include "filters/filter_rule.h"
-#include "calendar/calendar_item_window_subgui.h"
 #include <algorithm>
 #include <format>
 
@@ -17,6 +18,7 @@ CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     scheduleEvents.editRedone.addListener(editRedoneListener);
     addSubGui(new CalendarItemWindowSubGui("CalendarItemWindowSubGui", scheduleCore));
     m_itemWindowSubGui = getSubGui<CalendarItemWindowSubGui>("CalendarItemWindowSubGui");
+    addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 
     // Add events from CalendarItemWindowSubGui to pipe through
     setElementValueBool.addEvent(m_itemWindowSubGui->setElementValueBool);
@@ -38,6 +40,21 @@ CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     modifyColumnSelectOptions.addEvent(m_itemWindowSubGui->modifyColumnSelectOptions);
     // entire column modification
     resetColumn.addEvent(m_itemWindowSubGui->resetColumn);
+    // Link up filter event pipes
+    auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui");
+    addColumnFilterGroup.addEvent(filterEditor->addColumnFilterGroup);
+    setColumnFilterGroupName.addEvent(filterEditor->setColumnFilterGroupName);
+    setColumnFilterGroupOperator.addEvent(filterEditor->setColumnFilterGroupOperator);
+    setColumnFilterGroupEnabled.addEvent(filterEditor->setColumnFilterGroupEnabled);
+    removeColumnFilterGroup.addEvent(filterEditor->removeColumnFilterGroup);
+
+    addColumnFilter.addEvent(filterEditor->addColumnFilter);
+    setColumnFilterOperator.addEvent(filterEditor->setColumnFilterOperator);
+    removeColumnFilter.addEvent(filterEditor->removeColumnFilter);
+
+    addColumnFilterRule.addEvent(filterEditor->addColumnFilterRule);
+    editColumnFilterRule.addEvent(filterEditor->editColumnFilterRule);
+    removeColumnFilterRule.addEvent(filterEditor->removeColumnFilterRule);
 }
 
 void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
@@ -88,12 +105,138 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
         if (ImGui::Button(yearText.c_str())) {
             // TODO: Edit it somehow
         }
-        // MONTH SELECTION & INCREMENTING
         ImGui::SameLine();
-        // Calculate offset from the right edge: Arrow + [ ] + Button + [] + Arrow + WindowSpacing
+        // FILTER GROUPS
         const float todayButtonWidth = ImGui::CalcTextSize("Today").x * 1.5f;
         const float offsetFromRight =
             ImGui::GetFrameHeight() + todayButtonWidth + ImGui::GetFrameHeight() + style.ItemSpacing.x * 2.0f;
+        if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui")) {
+            // Available space for all filter buttons
+            const float availableSpace = ImGui::GetWindowWidth() - (ImGui::GetCursorScreenPos().x + offsetFromRight);
+            const float filterListButtonWidth = gui_size_calculations::getTextButtonWidth("+ 99 more");
+            const ImVec2 plusLabelSize = ImGui::CalcTextSize("+");
+            const float filterAddButtonSize =
+                ImGui::CalcItemSize(
+                    ImVec2(), plusLabelSize.x + style.FramePadding.x * 2.0f, plusLabelSize.y + style.FramePadding.y * 2.0f)
+                    .y;
+            // We will draw n filter buttons, the add button and sometimes a button between the 2
+            // This means there will be (n + 3) * ItemSpacing.x as well
+            const float filterGroupButtonsSpace =
+                std::max(0.0f, availableSpace - filterListButtonWidth - filterAddButtonSize - 3 * style.ItemSpacing.x);
+            const short buttonsToDisplay = std::min(6, (int)std::floor(filterGroupButtonsSpace / gui_sizes::emptyLabelSize.x));
+            const float filterButtonWidth =
+                (filterGroupButtonsSpace - buttonsToDisplay * style.ItemSpacing.x) / buttonsToDisplay;
+            size_t drawnButtonCount = 0;
+            size_t totalFilterGroupCount = 0;
+            // DATA TO PASS TO FILTER EDITOR
+            bool openFilterEditor = false;
+            size_t filterEditorColumn = m_scheduleCore.getColumnCount();
+            size_t filterEditorGroupIndex = 0;
+            ImRect itemAvoidRect;
+
+            // LAMBDA: Draws buttons for every FilterGroup in the column. Sets data to pass to filterEditor if a button is clicked.
+            auto drawFilterGroupButton = [&](size_t col, size_t filterGroupIndex, float buttonWidth, bool sameLine = true) {
+                const Column& currentColumn = m_scheduleCore.getColumnConst(col);
+                const auto& filterGroup = currentColumn.getFilterGroupConst(filterGroupIndex);
+                if (filterGroup.getIsEnabled() == false) {
+                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::inactiveAlpha);
+                }
+                // FilterGroup button with the column name and the FilterGroup name
+                std::string buttonText = std::format("{} ({})", filterGroup.getName(), currentColumn.name);
+                if (ImGui::Button(std::format("{}##{};{}", buttonText, col, filterGroupIndex).c_str(), ImVec2(buttonWidth, 0)))
+                {
+                    openFilterEditor = true;
+                    filterEditorColumn = col;
+                    filterEditorGroupIndex = filterGroupIndex;
+                    itemAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+                }
+                if (filterGroup.getIsEnabled() == false) {
+                    ImGui::PopStyleVar();
+                }
+                if (ImGui::BeginItemTooltip()) {
+                    ImGui::Text("%s", buttonText.c_str());
+                    ImGui::EndTooltip();
+                }
+
+                if (sameLine &&
+                    !(col == m_scheduleCore.getColumnCount() - 1 &&
+                      filterGroupIndex == currentColumn.getFilterGroupCount() - 1))
+                {
+                    ImGui::SameLine();
+                }
+                drawnButtonCount++;
+            };
+
+            for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
+                const auto& columnFilterGroups = m_scheduleCore.getColumnConst(col).getFilterGroupsConst();
+
+                for (size_t i = 0; i < columnFilterGroups.size(); i++) {
+                    // Draw up to 8 buttons
+                    if (drawnButtonCount < buttonsToDisplay) {
+                        drawFilterGroupButton(col, i, filterButtonWidth);
+                    }
+                    // Count all filter groups for later
+                    totalFilterGroupCount++;
+                }
+            }
+            // There are too many filter groups to draw in a row. Show the excess as a counter button
+            // The button opens a list popup when pressed
+            if (totalFilterGroupCount > drawnButtonCount) {
+                if (ImGui::Button(
+                        std::format("+ {} more##OpenFilterGroupListButton", totalFilterGroupCount - drawnButtonCount).c_str(),
+                        ImVec2(filterListButtonWidth, 0.0f)))
+                {
+                    ImGui::OpenPopup("FilterGroupListPopup");
+                }
+                if (ImGui::BeginPopup("FilterGroupListPopup")) {
+                    // We need to skip every filter group that already has a button
+                    size_t skippedCount = 0;
+                    const float listButtonWidth = ImGui::CalcTextSize("M").x * filter_consts::FILTER_GROUP_NAME_MAX_LENGTH;
+                    for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
+                        const Column& column = m_scheduleCore.getColumnConst(col);
+                        for (size_t i = 0; i < column.getFilterGroupCount(); i++) {
+                            if (skippedCount >= drawnButtonCount) {
+                                drawFilterGroupButton(col, i, listButtonWidth, false);
+                            }
+                            skippedCount++;
+                        }
+                    }
+                    ImGui::EndPopup();
+                }
+                ImGui::SameLine();
+            }
+            filterEditor->draw(windowSize, input, guiTextures);
+            // Open filter editor if needed.
+            // NOTE: All the data here is set in drawFilterGroupButton() lambda!
+            if (openFilterEditor) {
+                filterEditor->openGroupEdit(filterEditorColumn, filterEditorGroupIndex, itemAvoidRect);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("+##addFilterGroup", ImVec2(filterAddButtonSize, filterAddButtonSize))) {
+                // Display the FilterGroup editor to add a filter group
+            }
+            bool createGroupOpenFilterEditor = false;
+            if (ImGui::BeginPopupContextItem("AddFilterGroupColumnSelection", ImGuiPopupFlags_MouseButtonLeft)) {
+                ImGui::Text("%s", "Select property");
+                for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
+                    const Column& column = m_scheduleCore.getColumnConst(col);
+                    if (ImGui::Button(
+                            std::format("{} ({})##{}", column.name, schedule_consts::scheduleTypeNames.at(column.type), col)
+                                .c_str()))
+                    {
+                        createGroupOpenFilterEditor = true;
+                        filterEditorColumn = col;
+                    }
+                }
+                ImGui::EndPopup();
+            }
+            if (createGroupOpenFilterEditor) {
+                filterEditor->createGroupAndEdit(filterEditorColumn, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+            }
+        }
+        // MONTH SELECTION & INCREMENTING
+        ImGui::SameLine();
+        // Move cursor using previously calculated offset from the right edge: Arrow + [ ] + Button + [] + Arrow + WindowSpacing
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() - offsetFromRight);
         if (ImGui::ArrowButton("##PreviousMonth", ImGuiDir_Left)) {
             m_viewedMonth.addMonths(-1);

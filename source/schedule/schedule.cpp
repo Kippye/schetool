@@ -15,21 +15,17 @@ void Schedule::init(Input& input, Interface& interface) {
 
     if (m_scheduleGui) {
         m_scheduleGui->setVisible(m_currentView == ScheduleView::Table);
-        if (auto filterEditorSubGui = m_scheduleGui->getSubGui<FilterEditorSubGui>("FilterEditorSubGui")) {
-            filterEditorSubGui->addColumnFilterGroup.addListener(addFilterGroupListener);
-            filterEditorSubGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
-            filterEditorSubGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
-            filterEditorSubGui->setColumnFilterGroupOperator.addListener(setFilterGroupOperatorListener);
-            filterEditorSubGui->setColumnFilterGroupEnabled.addListener(setFilterGroupEnabledListener);
-            filterEditorSubGui->addColumnFilter.addListener(addFilterListener);
-            filterEditorSubGui->setColumnFilterOperator.addListener(setFilterOperatorListener);
-            filterEditorSubGui->removeColumnFilter.addListener(removeFilterListener);
-            filterEditorSubGui->removeColumnFilterRule.addListener(removeFilterRuleListener);
-            if (auto filterRuleEditorSubGui = filterEditorSubGui->getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui")) {
-                filterRuleEditorSubGui->addColumnFilterRule.addListener(addFilterRuleListener);
-                filterRuleEditorSubGui->editColumnFilterRule.addListener(editFilterRuleListener);
-            }
-        }
+        m_scheduleGui->addColumnFilterGroup.addListener(addFilterGroupListener);
+        m_scheduleGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
+        m_scheduleGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
+        m_scheduleGui->setColumnFilterGroupOperator.addListener(setFilterGroupOperatorListener);
+        m_scheduleGui->setColumnFilterGroupEnabled.addListener(setFilterGroupEnabledListener);
+        m_scheduleGui->addColumnFilter.addListener(addFilterListener);
+        m_scheduleGui->setColumnFilterOperator.addListener(setFilterOperatorListener);
+        m_scheduleGui->removeColumnFilter.addListener(removeFilterListener);
+        m_scheduleGui->removeColumnFilterRule.addListener(removeFilterRuleListener);
+        m_scheduleGui->addColumnFilterRule.addListener(addFilterRuleListener);
+        m_scheduleGui->editColumnFilterRule.addListener(editFilterRuleListener);
 
         m_scheduleGui->setElementValueBool.addListener(setElementValueListenerBool);
         m_scheduleGui->setElementValueNumber.addListener(setElementValueListenerNumber);
@@ -62,6 +58,18 @@ void Schedule::init(Input& input, Interface& interface) {
 
     if (m_calendarGui) {
         m_calendarGui->setVisible(m_currentView == ScheduleView::Calendar);
+
+        m_calendarGui->addColumnFilterGroup.addListener(addFilterGroupListener);
+        m_calendarGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
+        m_calendarGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
+        m_calendarGui->setColumnFilterGroupOperator.addListener(setFilterGroupOperatorListener);
+        m_calendarGui->setColumnFilterGroupEnabled.addListener(setFilterGroupEnabledListener);
+        m_calendarGui->addColumnFilter.addListener(addFilterListener);
+        m_calendarGui->setColumnFilterOperator.addListener(setFilterOperatorListener);
+        m_calendarGui->removeColumnFilter.addListener(removeFilterListener);
+        m_calendarGui->removeColumnFilterRule.addListener(removeFilterRuleListener);
+        m_calendarGui->addColumnFilterRule.addListener(addFilterRuleListener);
+        m_calendarGui->editColumnFilterRule.addListener(editFilterRuleListener);
 
         m_calendarGui->setElementValueBool.addListener(setElementValueListenerBool);
         m_calendarGui->setElementValueNumber.addListener(setElementValueListenerNumber);

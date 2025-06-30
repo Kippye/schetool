@@ -23,6 +23,22 @@ ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 
     scheduleEvents.viewedDateChanged.addListener(viewedDateChangedListener);
+
+    auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui");
+    // Link up event pipes
+    addColumnFilterGroup.addEvent(filterEditor->addColumnFilterGroup);
+    setColumnFilterGroupName.addEvent(filterEditor->setColumnFilterGroupName);
+    setColumnFilterGroupOperator.addEvent(filterEditor->setColumnFilterGroupOperator);
+    setColumnFilterGroupEnabled.addEvent(filterEditor->setColumnFilterGroupEnabled);
+    removeColumnFilterGroup.addEvent(filterEditor->removeColumnFilterGroup);
+
+    addColumnFilter.addEvent(filterEditor->addColumnFilter);
+    setColumnFilterOperator.addEvent(filterEditor->setColumnFilterOperator);
+    removeColumnFilter.addEvent(filterEditor->removeColumnFilter);
+
+    addColumnFilterRule.addEvent(filterEditor->addColumnFilterRule);
+    editColumnFilterRule.addEvent(filterEditor->editColumnFilterRule);
+    removeColumnFilterRule.addEvent(filterEditor->removeColumnFilterRule);
 }
 
 // Checks if the current table cell was clicked to edit.
