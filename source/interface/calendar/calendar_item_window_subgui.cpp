@@ -73,6 +73,10 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
             ImGui::TableSetupColumn("PropertyValue", ImGuiTableColumnFlags_WidthStretch);
 
             ImGui::TableNextRow();
+
+            const float labelSize = ImGui::CalcTextSize("X").y;
+            const float contextButtonSize = labelSize - (int)labelSize % 8;  //+ style.FramePadding.y * 2.0f;
+
             for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
                 // The name has already been shown
                 if (col == nameColumnIndex) {
@@ -80,13 +84,16 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 }
                 ImGui::TableNextColumn();
 
+                // Property context menu button
                 GuiTextureInfo contextButtonTexture;
                 guiTextures.exists("icon_row_menu", contextButtonTexture);
-                const float labelSize = ImGui::CalcTextSize("X").y;
-                const float contextButtonSize = labelSize - (int)labelSize % 8;  //+ style.FramePadding.y * 2.0f;
                 const bool turnIntoRemove = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
                 if (turnIntoRemove) {
                     guiTextures.exists("icon_remove", contextButtonTexture);
+                }
+                // Hide it unless the property row is hovered
+                if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex()) {
+                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
                 }
                 if (gui_templates::ImageButtonStyleColored(
                         std::format("##propertyContextButton{}", col).c_str(),
@@ -101,6 +108,9 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                         removeColumn.invoke(col);
                         break;
                     }
+                }
+                if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex()) {
+                    ImGui::PopStyleVar();
                 }
                 bool needToBreak = false;
                 if (!turnIntoRemove) {
@@ -120,7 +130,34 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 ImGui::TableNextColumn();
                 drawItemProperty({windowSize, input, guiTextures}, {col, row});
             }
+            const float tableWidth = ImGui::GetCurrentTable()->OuterRect.GetWidth();
             ImGui::EndTable();
+            // Add property / column button
+            ImGui::Button("+", ImVec2(tableWidth, contextButtonSize + style.FramePadding.y * 2.0f));
+            if (ImGui::BeginPopupContextItem("SelectAddedPropertyTypeContext", ImGuiPopupFlags_MouseButtonLeft)) {
+                ImGui::Text("Add property");
+                float propertyTypeButtonSize = 1.0f;
+                for (int colType = 0; colType < SCH_LAST; colType++) {
+                    float currentTextSize = gui_size_calculations::getTextButtonWidth(
+                        schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType));
+                    propertyTypeButtonSize =
+                        std::max(propertyTypeButtonSize, currentTextSize + ImGui::GetStyle().FramePadding.x * 2.0f);
+                }
+                for (int colType = 0; colType < SCH_LAST; colType++) {
+                    if (ImGui::Button(std::format("{}##AddedPropertyTypeButton{}",
+                                                  schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType),
+                                                  colType)
+                                          .c_str(),
+                                      ImVec2(propertyTypeButtonSize, 0.0f)))
+                    {
+                        addDefaultColumn.invoke(m_scheduleCore.getColumnCount(), (SCHEDULE_TYPE)colType);
+                        if (!input.buttonStates.ctrlDown) {
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                }
+                ImGui::EndPopup();
+            }
         }
 
         // Clicking out of the modal closes it, unless closing a popup covering the modal
