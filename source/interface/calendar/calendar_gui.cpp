@@ -389,6 +389,11 @@ void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIn
             ImVec2(0.0f, 0.0f), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f)
             .y;
     ImGui::SameLine(0.0f, ImGui::GetColumnWidth(ImGui::TableGetColumnIndex()) - calendayDayTextWidth - addItemButtonSize);
+    bool isTableCellHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
+                               ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
+    if (!isTableCellHovered) {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+    }
     // Adds a row and then sets its Date column value to this calendar day's date
     if (ImGui::Button(std::format("+##addCalendarItem{};{}", month, dayNumber).c_str(),
                       ImVec2(addItemButtonSize, addItemButtonSize)))
@@ -402,6 +407,9 @@ void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIn
             // Also open the item window subgui for this item so it can be quickly edited
             m_openItemWindowAtRow = rowsBefore;
         }
+    }
+    if (!isTableCellHovered) {
+        ImGui::PopStyleVar();
     }
     drawCalendarDayItems(guiTextures, DateContainer(calendarDayTime));
     ImGui::PopStyleVar(pushedVarCount);
