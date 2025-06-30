@@ -122,7 +122,7 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
             // We will draw n filter buttons, the add button and sometimes a button between the 2
             // This means there will be (n + 3) * ItemSpacing.x as well
             const float filterGroupButtonsSpace =
-                std::max(0.0f, availableSpace - filterListButtonWidth - filterAddButtonSize - 3 * style.ItemSpacing.x);
+                std::max(0.0f, availableSpace - filterListButtonWidth - filterAddButtonSize - 2 * style.ItemSpacing.x);
             const short buttonsToDisplay = std::min(6, (int)std::floor(filterGroupButtonsSpace / gui_sizes::emptyLabelSize.x));
             const float filterButtonWidth =
                 (filterGroupButtonsSpace - buttonsToDisplay * style.ItemSpacing.x) / buttonsToDisplay;
