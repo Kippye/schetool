@@ -10,8 +10,8 @@
 #include "window.h"
 #include "input.h"
 #include "file_info.h"
+#include "schedule_preferences.h"
 #include "start_page_gui.h"
-#include "table/schedule_gui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
 #include "autosave_popup_gui.h"
 #include "interface.h"
@@ -68,7 +68,6 @@ class ScheduleIO {
         std::shared_ptr<StartPageGui> m_startPageGui = NULL;
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = NULL;
-        std::shared_ptr<ScheduleGui> m_scheduleGui = NULL;
         FileInfo m_currentFileInfo = FileInfo();
         std::filesystem::path m_saveDir = std::filesystem::path();
         const char* m_autosaveSuffix = "_auto";

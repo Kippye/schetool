@@ -16,8 +16,6 @@ ScheduleIO::ScheduleIO(Schedule& schedule, Interface& programInterface, std::fil
     m_startPageGui->createNewScheduleEventPipe.addListener(createNewListener);
     m_startPageGui->openScheduleFileEvent.addListener(openListener);
 
-    m_scheduleGui = programInterface.getGuiByID<ScheduleGui>("ScheduleGui");
-
     m_mainMenuBarGui = programInterface.getGuiByID<MainMenuBarGui>("MainMenuBarGui");
     m_mainMenuBarGui->renameScheduleEventPipe.addListener(renameListener);
     m_mainMenuBarGui->createNewScheduleEventPipe.addListener(createNewListener);
@@ -166,7 +164,8 @@ bool ScheduleIO::writeSchedule(const char* name) {
 
     fs::path schedulePath = makeSchedulePathFromName(name);
 
-    if (m_converter.writeSchedule(schedulePath.string().c_str(), m_schedule.getAllColumns()) == 0) {
+    if (m_converter.writeSchedule(schedulePath.string().c_str(), m_schedule.getAllColumns(), m_schedule.getPreferences()) == 0)
+    {
         createIniForFile(name);
         std::cout << std::format("ScheduleIO::writeSchedule(): Wrote Schedule to file: '{}'", schedulePath.string())
                   << std::endl;
@@ -188,10 +187,14 @@ bool ScheduleIO::readSchedule(const char* name) {
         return false;
     }
 
-    // Empty schedule to fill with the read data
+    // Empty schedule & file preferences to fill with the read data
     std::vector<Column> readSchedule = {};
-    if (std::optional<FileInfo> readFileInfo = m_converter.readSchedule(schedulePath.string().c_str(), readSchedule)) {
+    SchedulePreferences readSchedulePreferences;
+    if (std::optional<FileInfo> readFileInfo =
+            m_converter.readSchedule(schedulePath.string().c_str(), readSchedule, readSchedulePreferences))
+    {
         m_schedule.replaceSchedule(readSchedule);
+        m_schedule.updatePreferences(readSchedulePreferences);
         if (!isAutosave(schedulePath.string())) {
             ImGui::LoadIniSettingsFromDisk(makeIniPathFromScheduleName(name).string().c_str());
         }
@@ -201,7 +204,6 @@ bool ScheduleIO::readSchedule(const char* name) {
         m_currentFileInfo.fill(std::string(name), getFileEditTimeWrapped(schedulePath), readFileInfo->getScheduleEditTime());
         sendFileInfoUpdates();
         m_startPageGui->setVisible(false);
-        m_scheduleGui->setVisible(true);
         m_schedule.getEditHistoryMutable().setEditedSinceWrite(false);
         fileReadEvent.invoke(m_currentFileInfo);
         return true;
@@ -223,7 +225,8 @@ bool ScheduleIO::createNewSchedule(const char* name) {
         sendFileInfoUpdates();
         passFileNamesToGui();
         m_startPageGui->setVisible(false);
-        m_scheduleGui->setVisible(true);
+        // Update with default preferences for a new file
+        m_schedule.updatePreferences(SchedulePreferences());
         fileCreatedEvent.invoke(m_currentFileInfo);
         return true;
     }
@@ -260,7 +263,7 @@ bool ScheduleIO::deleteSchedule(const char* name) {
         // deleted the file that was open
         if (m_currentFileInfo.getName() == name) {
             unloadCurrentFile();
-            m_scheduleGui->setVisible(false);
+            m_schedule.hideAllViews();
             m_startPageGui->setVisible(true);
         }
         return true;
@@ -343,7 +346,7 @@ FileInfo ScheduleIO::getCurrentFileInfo() const {
 void ScheduleIO::openMostRecentFile() {
     // LAMBDA
     auto goToStartPage = [&]() {
-        m_scheduleGui->setVisible(false);
+        m_schedule.hideAllViews();
         m_startPageGui->setVisible(true);
     };
     // There are pre-existing Schedules. Open the most recently edited one.

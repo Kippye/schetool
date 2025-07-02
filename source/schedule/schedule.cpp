@@ -14,7 +14,6 @@ void Schedule::init(Input& input, Interface& interface) {
     m_scheduleGui = interface.addGui<ScheduleGui>("ScheduleGui", m_core, m_scheduleEvents);
 
     if (m_scheduleGui) {
-        m_scheduleGui->setVisible(m_currentView == ScheduleView::Table);
         m_scheduleGui->addColumnFilterGroup.addListener(addFilterGroupListener);
         m_scheduleGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
         m_scheduleGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
@@ -53,12 +52,11 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->removeRow.addListener(removeRowListener);
         m_scheduleGui->duplicateRow.addListener(duplicateRowListener);
     }
+    m_viewGuis.insert({ScheduleView::Table, m_scheduleGui});
 
     m_calendarGui = interface.addGui<CalendarGui>("CalendarGui", m_core, m_scheduleEvents);
 
     if (m_calendarGui) {
-        m_calendarGui->setVisible(m_currentView == ScheduleView::Calendar);
-
         m_calendarGui->addColumnFilterGroup.addListener(addFilterGroupListener);
         m_calendarGui->removeColumnFilterGroup.addListener(removeFilterGroupListener);
         m_calendarGui->setColumnFilterGroupName.addListener(setFilterGroupNameListener);
@@ -94,6 +92,7 @@ void Schedule::init(Input& input, Interface& interface) {
         m_calendarGui->removeRow.addListener(removeRowListener);
         m_calendarGui->duplicateRow.addListener(duplicateRowListener);
     }
+    m_viewGuis.insert({ScheduleView::Calendar, m_calendarGui});
 
     if (auto mainMenuBarGui = interface.getGuiByID<MainMenuBarGui>("MainMenuBarGui")) {
         mainMenuBarGui->undoEvent.addListener(undoListener);
@@ -122,6 +121,34 @@ void Schedule::setName(const std::string& name) {
         m_scheduleName = name.substr(0, schedule_consts::SCHEDULE_NAME_MAX_LENGTH);
     } else {
         m_scheduleName = name;
+    }
+}
+
+void Schedule::updatePreferences(const SchedulePreferences& preferences) {
+    // Hide all other views
+    for (auto [_, viewGui] : m_viewGuis) {
+        viewGui->setVisible(false);
+    }
+    // Show current view
+    if (m_viewGuis.contains(preferences.getView())) {
+        m_viewGuis.at(preferences.getView())->setVisible(true);
+    } else {
+        std::cout << std::format("Schedule::updatePreferences(): No gui for view value {} in viewGuis map",
+                                 (unsigned short)preferences.getView())
+                  << std::endl;
+    }
+    m_preferences = preferences;
+    // Update view tab bar gui. Does not invoke the event (to avoid an infinite loop)
+    m_viewTabBarGui->setSelectedView(m_preferences.getView());
+}
+
+SchedulePreferences Schedule::getPreferences() const {
+    return m_preferences;
+}
+
+void Schedule::hideAllViews() {
+    for (auto [_, viewGui] : m_viewGuis) {
+        viewGui->setVisible(false);
     }
 }
 

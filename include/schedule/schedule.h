@@ -13,6 +13,7 @@
 #include "interface.h"
 #include "schedule_column.h"
 #include "schedule_core.h"
+#include "schedule_preferences.h"
 #include "schedule_constants.h"
 #include "view_tab_bar_gui.h"
 #include "table/schedule_gui.h"
@@ -28,24 +29,19 @@ class Schedule {
         std::shared_ptr<CalendarGui> m_calendarGui;
         std::string m_scheduleName;
 
-        ScheduleView m_currentView = ScheduleView::Table;
+        SchedulePreferences m_preferences = SchedulePreferences();
+
+        std::map<ScheduleView, std::shared_ptr<Gui>> m_viewGuis = {};
 
         // input listeners AND gui listeners
         std::function<void()> undoListener = [&]() { undo(); };
         std::function<void()> redoListener = [&]() { redo(); };
 
         std::function<void(ScheduleView)> viewSwitchListener = [&](ScheduleView view) {
-            switch (view) {
-                case ScheduleView::Table:
-                    m_calendarGui->setVisible(false);
-                    m_scheduleGui->setVisible(true);
-                    break;
-                case ScheduleView::Calendar:
-                    m_scheduleGui->setVisible(false);
-                    m_calendarGui->setVisible(true);
-                    break;
-            }
-            m_currentView = view;
+            // Kinda HACK but eh
+            SchedulePreferences newPreferences = m_preferences;
+            newPreferences.setView(view);
+            updatePreferences(newPreferences);
         };
 
         // modifyColumnSelectOptions (ElementEditorSubGui)
@@ -302,6 +298,10 @@ class Schedule {
 
         // Set the schedule's name to the provided name. NOTE: Does not affect filename. Only called by IO_Manager and MainMenuBarGui through IO_Manager.
         void setName(const std::string& name);
+        void updatePreferences(const SchedulePreferences& preferences);
+        SchedulePreferences getPreferences() const;
+        // TEMP just a function to hide all views of the schedule. i don't like this.
+        void hideAllViews();
         std::string getName();
         const ScheduleEditHistory& getEditHistory();
         ScheduleEditHistory& getEditHistoryMutable();

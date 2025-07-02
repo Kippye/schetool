@@ -1,8 +1,6 @@
 #include "view_tab_bar_gui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
 #include "gui_templates.h"
-// TEMP
-#include <iostream>
 
 float ViewTabBarGui::height = 0.0f;
 
@@ -31,22 +29,40 @@ void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures
         ImGui::PushStyleVar(ImGuiStyleVar_TabBarBorderSize, 0.0f);
         ImGui::SetCursorPosY(ImGui::GetWindowHeight() - tabSize.y);
         if (ImGui::BeginTabBar("ViewTabBar", ImGuiTabBarFlags_DrawSelectedOverline)) {
-            if (ImGui::BeginTabItem("Table")) {
-                ScheduleView newSelectedView = ScheduleView::Table;
-                if (m_selectedView != newSelectedView) {
-                    viewSwitched.invoke(newSelectedView);
-                }
-                m_selectedView = newSelectedView;
+            if (ImGui::BeginTabItem(
+                    "Table",
+                    NULL,
+                    m_forceTabSelectedIndex.has_value() && m_forceTabSelectedIndex.value() == ScheduleView::Table
+                        ? ImGuiTabItemFlags_SetSelected
+                        : 0))
+            {
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Calendar")) {
-                ScheduleView newSelectedView = ScheduleView::Calendar;
-                if (m_selectedView != newSelectedView) {
-                    viewSwitched.invoke(newSelectedView);
+            if (ImGui::IsItemClicked()) {
+                ScheduleView newSelectedTab = ScheduleView::Table;
+                if (m_selectedTab != newSelectedTab) {
+                    viewSwitched.invoke(newSelectedTab);
                 }
-                m_selectedView = newSelectedView;
+                m_selectedTab = newSelectedTab;
+            }
+
+            if (ImGui::BeginTabItem(
+                    "Calendar",
+                    NULL,
+                    m_forceTabSelectedIndex.has_value() && m_forceTabSelectedIndex.value() == ScheduleView::Calendar
+                        ? ImGuiTabItemFlags_SetSelected
+                        : 0))
+            {
                 ImGui::EndTabItem();
             }
+            if (ImGui::IsItemClicked()) {
+                ScheduleView newSelectedTab = ScheduleView::Calendar;
+                if (m_selectedTab != newSelectedTab) {
+                    viewSwitched.invoke(newSelectedTab);
+                }
+                m_selectedTab = newSelectedTab;
+            }
+            m_forceTabSelectedIndex.reset();
             ImGui::EndTabBar();
         }
         ImGui::PopStyleVar();
@@ -118,6 +134,11 @@ void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures
         ImGui::OpenPopup("Schedule Date Selector");
         m_openDateSelectPopup = false;
     }
+}
+
+void ViewTabBarGui::setSelectedView(ScheduleView view) {
+    m_selectedTab = view;
+    m_forceTabSelectedIndex = view;
 }
 
 void ViewTabBarGui::clearDateOverride() {

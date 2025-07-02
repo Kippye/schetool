@@ -5,6 +5,7 @@
 #include "blf/include/blf.hpp"
 #include "blf_base_types.h"
 #include "file_info.h"
+#include "schedule_preferences.h"
 #include "element_base.h"
 #include "time_container.h"
 #include "date_container.h"
@@ -86,6 +87,28 @@ struct BLF_FileInfo : BLF_Base {
                 getName(),
                 blf::arg("editDate", &BLF_FileInfo::editDate, definitions.get<BLF_Date>()),
                 blf::arg("editTime", &BLF_FileInfo::editTime, definitions.get<BLF_ClockTime>())));
+        }
+};
+
+struct BLF_SchedulePreferences : BLF_Base {
+        static constexpr std::string getName() {
+            return "BLF_FilePreferences";
+        }
+
+        unsigned short viewIndex;
+
+        BLF_SchedulePreferences() {
+        }
+        BLF_SchedulePreferences(const SchedulePreferences& preferences) : viewIndex(preferences.getView()) {
+        }
+
+        SchedulePreferences getPreferences() const {
+            return SchedulePreferences((ScheduleView)viewIndex);
+        }
+
+        static void addDefinition(ObjectDefinitions& definitions) {
+            definitions.add(definitions.getObjectTable().define<BLF_SchedulePreferences>(
+                getName(), blf::arg("viewIndex", &BLF_SchedulePreferences::viewIndex)));
         }
 };
 
@@ -706,9 +729,10 @@ class ScheduleDataConverter {
         }
         bool isValidScheduleFile(const char* path) const;
         // Write the Columns of a Schedule to a file at the given path.
-        int writeSchedule(const char* path, const std::vector<Column>&);
+        int writeSchedule(const char* path, const std::vector<Column>&, const SchedulePreferences&);
         // Read a Schedule from path and fill the provided vector with its data.
+        // Fills the provided FilePreferences class with the preferences loaded from the file
         // NOTE: The function clears and modifies the argument schedule directly. Consider its contents lost.
         // Returns a partial FileInfo containing the file path and schedule edit time, if successful.
-        std::optional<FileInfo> readSchedule(const char* path, std::vector<Column>&);
+        std::optional<FileInfo> readSchedule(const char* path, std::vector<Column>&, SchedulePreferences&);
 };

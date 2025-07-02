@@ -12,6 +12,7 @@ void ScheduleDataConverter::setupObjectTable() {
     addObjectDefinition<BLF_Date>();
     addObjectDefinition<BLF_ClockTime>();
     addObjectDefinition<BLF_FileInfo>();
+    addObjectDefinition<BLF_SchedulePreferences>();
     addObjectDefinition<BLF_ElementInfo>();
     addObjectDefinition<BLF_SelectOption>();
     addObjectDefinition<BLF_SelectOptions>();
@@ -44,13 +45,18 @@ bool ScheduleDataConverter::isValidScheduleFile(const char* path) const {
     }
 }
 
-int ScheduleDataConverter::writeSchedule(const char* path, const std::vector<Column>& schedule) {
+int ScheduleDataConverter::writeSchedule(const char* path,
+                                         const std::vector<Column>& schedule,
+                                         const SchedulePreferences& preferences) {
     FileWriteStream stream(path);
 
     DataTable data;
 
     BLF_FileInfo fileInfo = BLF_FileInfo(TimeWrapper::getCurrentTime());
     data.insert(getObjectDefinition<BLF_FileInfo>().serialize(fileInfo));
+
+    BLF_SchedulePreferences schedulePreferences = BLF_SchedulePreferences(preferences);
+    data.insert(getObjectDefinition<BLF_SchedulePreferences>().serialize(schedulePreferences));
 
     for (size_t c = 0; c < schedule.size(); c++) {
         SCHEDULE_TYPE columnType = schedule[c].type;
@@ -98,7 +104,9 @@ int ScheduleDataConverter::writeSchedule(const char* path, const std::vector<Col
     return 0;
 }
 
-std::optional<FileInfo> ScheduleDataConverter::readSchedule(const char* path, std::vector<Column>& schedule) {
+std::optional<FileInfo> ScheduleDataConverter::readSchedule(const char* path,
+                                                            std::vector<Column>& schedule,
+                                                            SchedulePreferences& preferences) {
     // Clear the provided schedule just in case
     schedule.clear();
 
@@ -110,6 +118,8 @@ std::optional<FileInfo> ScheduleDataConverter::readSchedule(const char* path, st
 
     BLF_FileInfo fileInfo = *fileBody.data.groupby(m_definitions.get<BLF_FileInfo>()).begin();
     FileInfo returnFileInfo = FileInfo(path, TimeWrapper(), fileInfo.getEditTime());
+    BLF_SchedulePreferences schedulePreferences = *fileBody.data.groupby(m_definitions.get<BLF_SchedulePreferences>()).begin();
+    preferences = schedulePreferences.getPreferences();
 
     std::map<size_t, SCHEDULE_TYPE> columnTypes = {};
 
