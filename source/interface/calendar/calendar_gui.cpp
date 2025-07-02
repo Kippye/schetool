@@ -288,8 +288,6 @@ void CalendarGui::drawWeekdayHeaders(float width) {
 }
 
 void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
-    ImGuiStyle& style = ImGui::GetStyle();
-
     // MONTH DAYS
     size_t dayIndex = 0;
     unsigned int daysInMonth = mytime::get_month_day_count(m_viewedMonth.getYearUTC(), m_viewedMonth.getMonthUTC());
@@ -378,6 +376,11 @@ void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIn
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
         pushedVarCount++;
     }
+    // Align the first column's text to frame padding.
+    // This is to avoid the first column being vertically misaligned compared to every other column.
+    if (ImGui::TableGetColumnIndex() == 0) {
+        ImGui::AlignTextToFramePadding();
+    }
     TimeWrapper calendarDayTime = TimeWrapper(calendarDayDate);
     std::string dayNumberText = dayNumber == 1 ? calendarDayTime.getDynamicFmtStringUTC("{:%b} 1") : std::to_string(dayNumber);
     ImGui::Text("%s", dayNumberText.c_str());
@@ -425,12 +428,12 @@ void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateConta
     std::vector<size_t> sortedRowIndices = m_scheduleCore.getSortedRowIndices();
     for (size_t unsortedRow = 0; unsortedRow < sortedRowIndices.size(); unsortedRow++) {
         size_t row = sortedRowIndices[unsortedRow];
-        // CHECK FILTERS BEFORE DRAWING ITEM / ROW
-        if (!m_scheduleCore.checkPassesAllFilters(row, m_scheduleDateOverride)) {
-            continue;
-        }
         // This row is NOT on the current calendar day date
         if (!isThisDate.checkPasses(m_scheduleCore.getElementConst(dateColumnIndex, row))) {
+            continue;
+        }
+        // CHECK FILTERS BEFORE DRAWING ITEM / ROW
+        if (!m_scheduleCore.checkPassesAllFilters(row, m_scheduleDateOverride)) {
             continue;
         }
 
