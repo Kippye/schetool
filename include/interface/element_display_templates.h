@@ -16,6 +16,10 @@ struct GuiPassReferences {
 
 namespace element_display_templates {
     namespace {
+        void addEmptyItem() {
+            ImGui::Dummy(ImVec2(0.0f, ImGui::GetFrameHeight()));
+        }
+
         template <typename T>
         bool showElementInput(T& value, ScheduleCoordinates coords) {
             static_assert(false, "No showElementInput specialisation for the provided type!");

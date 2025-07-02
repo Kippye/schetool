@@ -73,7 +73,7 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
             return true;
         }
     } else {
-        ImGui::NewLine();
+        addEmptyItem();
     }
     if (openEditor) {
         if (elementEditor) {
@@ -112,7 +112,7 @@ void element_display_templates::ElementDisplay(SingleSelectContainer& value,
         gui_templates::SelectOptionButton(options[selection.value()], std::format("##{}", coords.getString()).c_str());
         ImGui::PopItemFlag();
     } else {
-        ImGui::NewLine();
+        addEmptyItem();
     }
 }
 
@@ -133,7 +133,7 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
     size_t selectedCount = selection.size();
 
     if (selectedCount == 0) {
-        ImGui::NewLine();
+        addEmptyItem();
         avoidRect = ImRect(ImGui::GetMousePos(), ImGui::GetMousePos());
     } else {
         for (size_t s : selection) {
@@ -229,7 +229,7 @@ void element_display_templates::ElementDisplay(SelectContainer& value,
     const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
 
     if (selectedCount == 0) {
-        ImGui::NewLine();
+        addEmptyItem();
     }
     for (size_t i = 0; i < selectedCount; i++) {
         const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
@@ -267,7 +267,7 @@ bool element_display_templates::ElementDisplay(WeekdayContainer& value,
     size_t selectedCount = selection.size();
 
     if (selectedCount == 0) {
-        ImGui::NewLine();
+        addEmptyItem();
         avoidRect = ImRect(ImGui::GetMousePos(), ImGui::GetMousePos());
     } else {
         for (size_t s : selection) {
@@ -362,7 +362,7 @@ void element_display_templates::ElementDisplay(WeekdayContainer& value, Schedule
     const float pixelsPerCharacter = ImGui::CalcTextSize("W").x;
 
     if (selectedCount == 0) {
-        ImGui::NewLine();
+        addEmptyItem();
     }
     for (size_t i = 0; i < selectedCount; i++) {
         const float nextOptionAddedWidth = (currentRowWidth == 0 ? 0.0f : style.ItemSpacing.x) +
