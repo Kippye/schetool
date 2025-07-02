@@ -108,7 +108,9 @@ void element_display_templates::ElementDisplay(SingleSelectContainer& value,
     const std::vector<SelectOption>& options = scheduleCore.getColumnConst(coords.column()).selectOptions.getOptions();
 
     if (selection.has_value()) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         gui_templates::SelectOptionButton(options[selection.value()], std::format("##{}", coords.getString()).c_str());
+        ImGui::PopItemFlag();
     } else {
         ImGui::NewLine();
     }
@@ -240,7 +242,9 @@ void element_display_templates::ElementDisplay(SelectContainer& value,
         } else {
             currentRowWidth = 0;
         }
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{}", coords.getString()).c_str());
+        ImGui::PopItemFlag();
 
         currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
                                                : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
@@ -371,9 +375,11 @@ void element_display_templates::ElementDisplay(WeekdayContainer& value, Schedule
         } else {
             currentRowWidth = 0;
         }
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         gui_templates::SelectOptionButton(
             SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]},
             std::format("##{}", coords.getString()).c_str());
+        ImGui::PopItemFlag();
 
         currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
                                                : currentRowWidth + style.ItemSpacing.x + ImGui::GetItemRectSize().x;
