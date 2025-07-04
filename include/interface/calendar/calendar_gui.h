@@ -122,6 +122,7 @@ class CalendarGui : public Gui {
         EventPipe<size_t, SCHEDULE_TYPE> setColumnType;
         EventPipe<size_t, std::string> setColumnName;
         EventPipe<size_t, ColumnResetOption> setColumnResetOption;
+        EventPipe<size_t, size_t> setColumnOrder;
         EventPipe<size_t, SelectOptionsModification> modifyColumnSelectOptions;
         // entire column modification
         EventPipe<size_t, bool> resetColumn;

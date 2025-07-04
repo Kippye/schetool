@@ -13,6 +13,10 @@ class CalendarItemWindowSubGui : public Gui {
         const ScheduleCore& m_scheduleCore;
         TimeWrapper m_scheduleDateOverride;
         std::optional<size_t> m_currentItemRow = std::nullopt;
+        // Properties reordering state
+        std::optional<size_t> m_draggedPropertyColumn = std::nullopt;
+        std::optional<size_t> m_draggedPropertySrcOrder = std::nullopt;
+        std::optional<size_t> m_draggedPropertyOrder = std::nullopt;
 
         bool m_editingItemNameJustStarted = false;
         bool m_editingItemName = false;
@@ -46,6 +50,7 @@ class CalendarItemWindowSubGui : public Gui {
         Event<size_t, SCHEDULE_TYPE> setColumnType;
         Event<size_t, std::string> setColumnName;
         Event<size_t, ColumnResetOption> setColumnResetOption;
+        Event<size_t, size_t> setColumnOrder;
         Event<size_t, bool> resetColumn;
         // Event pipes
         EventPipe<size_t, SelectOptionsModification> modifyColumnSelectOptions;

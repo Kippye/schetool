@@ -375,8 +375,6 @@ bool ScheduleCore::setColumnDisplayOrder(size_t oldOrder, size_t newOrder) {
         return false;
     }
 
-    std::cout << std::format("Moved {} to {}", oldOrder, newOrder) << std::endl;
-
     containers::move(m_columnDisplayOrder, oldOrder, newOrder);
     return true;
 }

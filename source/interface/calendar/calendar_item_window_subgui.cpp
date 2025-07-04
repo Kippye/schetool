@@ -77,43 +77,89 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
             const float labelSize = ImGui::CalcTextSize("X").y;
             const float contextButtonSize = labelSize - (int)labelSize % 8;  //+ style.FramePadding.y * 2.0f;
 
-            for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
-                // The name has already been shown
-                if (col == nameColumnIndex) {
-                    continue;
-                }
+            bool dragEnded = false;
+            // Allow duplicate ID-s while reordering properties
+            ImGui::PushItemFlag(ImGuiItemFlags_AllowDuplicateId, true);
+            for (size_t scheduleCol = 0; scheduleCol < m_scheduleCore.getColumnCount(); scheduleCol++) {
+                // The index of the actual column / property to display. HACK y stuff here
+                size_t col = scheduleCol;
                 ImGui::TableNextColumn();
-
-                // Property context menu button
+                // Dragging a property
+                if (m_draggedPropertyColumn.has_value() && m_draggedPropertySrcOrder.has_value() &&
+                    m_draggedPropertyOrder.has_value())
+                {
+                    const size_t draggedPropertyCol = m_draggedPropertyColumn.value();
+                    const size_t draggedPropertySrcOrder = m_draggedPropertySrcOrder.value();
+                    const size_t draggedPropertyOrder = m_draggedPropertyOrder.value();
+                    // Draw dragged property in between if needed
+                    if (ImGui::TableGetRowIndex() == draggedPropertyOrder) {
+                        col = draggedPropertyCol;
+                    } else if (draggedPropertyOrder < draggedPropertySrcOrder) {  // Dragging up / to lower index
+                        if (ImGui::TableGetRowIndex() > draggedPropertyOrder && col <= draggedPropertyCol) {
+                            // Every column after the dragged one's display index and before or same as its column index should be decremented by 1
+                            col--;
+                        }
+                    } else if (draggedPropertyOrder > draggedPropertySrcOrder) {  // Dragging down / to higher index
+                        if (ImGui::TableGetRowIndex() < draggedPropertyOrder && col >= draggedPropertyCol) {
+                            // Every column before the dragged one's display index and before or same as its column index should be decremented by 1
+                            col++;
+                        }
+                    }
+                }
+                /// Property context menu button
                 GuiTextureInfo contextButtonTexture;
                 guiTextures.exists("icon_row_menu", contextButtonTexture);
-                const bool turnIntoRemove = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
-                if (turnIntoRemove) {
+                const bool isRemoveButton = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
+                if (isRemoveButton) {
                     guiTextures.exists("icon_remove", contextButtonTexture);
                 }
-                // Hide it unless the property row is hovered
+                // Hide the button unless the property row is hovered
                 if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex()) {
                     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
                 }
-                if (gui_templates::ImageButtonStyleColored(
-                        std::format("##propertyContextButton{}", col).c_str(),
-                        contextButtonTexture.ImID,
-                        ImVec2(contextButtonSize, contextButtonSize),
-                        ImVec2(),
-                        ImVec2(1, 1),
-                        ImVec4(),
-                        ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
+                if (gui_templates::ImageButtonStyleColored(std::format("##propertyContextButton{}", col).c_str(),
+                                                           contextButtonTexture.ImID,
+                                                           ImVec2(contextButtonSize, contextButtonSize)))
                 {
-                    if (turnIntoRemove) {
+                    if (isRemoveButton) {
                         removeColumn.invoke(col);
                         break;
                     }
                 }
                 if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex()) {
-                    ImGui::PopStyleVar();
+                    ImGui::PopStyleVar();  // ImGuiStyleVar_Alpha = 0.0f
+                }
+                if (!isRemoveButton) {
+                    bool hoveringThisRow = ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex();
+                    bool hoveringAnyRow =
+                        ImGui::TableGetHoveredRow() >= 0 && ImGui::TableGetHoveredRow() < m_scheduleCore.getColumnCount();
+                    int hoveredRowDirection = std::clamp(ImGui::TableGetHoveredRow() - ImGui::TableGetRowIndex(), -1, 1);
+                    // Highlight the active row
+                    if (ImGui::IsItemActive()) {
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1,
+                                               ImGui::GetColorU32(gui_color_calculations::getTableCellHighlightColor(
+                                                   style.Colors[ImGuiCol_WindowBg], style.Colors[ImGuiCol_Text])));
+                    }
+                    // This button is active BUT this row is not hovered BUT some row *is* being hovered + the mouse has moved up or down.
+                    if (ImGui::IsItemActive() && !hoveringThisRow && hoveringAnyRow && ImGui::GetMouseDragDelta(0).y != 0.0f) {
+                        const int currentOrder = ImGui::TableGetRowIndex();
+                        const int delta = ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1;
+                        const int nextOrder = currentOrder + delta;
+                        // Next order is valid (also, the direction to the hovered row is the same as the mouse delta)
+                        if (hoveredRowDirection == delta && nextOrder >= 0 && nextOrder < m_scheduleCore.getColumnCount()) {
+                            if (m_draggedPropertyColumn.has_value() == false) {
+                                m_draggedPropertySrcOrder = currentOrder;
+                                m_draggedPropertyColumn = col;
+                            }
+                            m_draggedPropertyOrder = nextOrder;
+                            ImGui::ResetMouseDragDelta();
+                        }
+                    } else if (ImGui::IsItemDeactivated()) {  // Drag just ended maybe?
+                        dragEnded = true;
+                    }
                 }
                 bool needToBreak = false;
-                if (!turnIntoRemove) {
+                if (!isRemoveButton && ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).y == 0.0f) {
                     drawPropertyContext(col, needToBreak);
                 }
                 // Quit early if the property context menu adds or removes a column
@@ -123,12 +169,27 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 ImGui::SameLine();
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("%s", m_scheduleCore.getColumnConst(col).name.c_str());
-                if (ImGui::BeginItemTooltip()) {
+                if (ImGui::BeginItemTooltip()) {  // Show the property's full name in a tooltip when it is hovered
                     ImGui::Text("%s", m_scheduleCore.getColumnConst(col).name.c_str());
                     ImGui::EndTooltip();
                 }
                 ImGui::TableNextColumn();
+                // Draw the property value column
                 drawItemProperty({windowSize, input, guiTextures}, {col, row});
+            }
+            ImGui::PopItemFlag();
+            // Apply drag & drop + Reset drag & drop state
+            if (dragEnded) {
+                if (m_draggedPropertyColumn.has_value() && m_draggedPropertyOrder.has_value()) {
+                    const size_t srcOrder = m_draggedPropertyColumn.value();
+                    const size_t dstOrder = m_draggedPropertyOrder.value();
+                    if (srcOrder != dstOrder) {
+                        setColumnOrder.invoke(srcOrder, dstOrder);
+                    }
+                }
+                m_draggedPropertyColumn.reset();
+                m_draggedPropertySrcOrder.reset();
+                m_draggedPropertyOrder.reset();
             }
             const float tableWidth = ImGui::GetCurrentTable()->OuterRect.GetWidth();
             ImGui::EndTable();
@@ -313,7 +374,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
 }
 
 void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak) {
-    if (ImGui::BeginPopupContextItem(NULL, ImGuiPopupFlags_MouseButtonLeft)) {
+    if (ImGui::BeginPopupContextItem(NULL, ImGuiPopupFlags_MouseButtonLeft | ImGuiPopupFlags_MouseButtonRight)) {
         const Column& column = m_scheduleCore.getColumnConst(col);
 
         // Renaming

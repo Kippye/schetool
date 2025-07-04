@@ -86,6 +86,11 @@ void Schedule::init(Input& input, Interface& interface) {
         m_calendarGui->setColumnType.addListener(setColumnTypeListener);
         m_calendarGui->setColumnName.addListener(setColumnNameListener);
         m_calendarGui->setColumnResetOption.addListener(setColumnResetOptionListener);
+        // This is kind of a HACK
+        // We merge the ScheduleGui's two events into one by adding both of the listeners to it.
+        // It makes sense and it works, but it sure as hell isn't consistent.
+        m_calendarGui->setColumnOrder.addListener(setColumnOrderListener);
+        m_calendarGui->setColumnOrder.addListener(createColumnReorderEditListener);
         m_calendarGui->modifyColumnSelectOptions.addListener(modifyColumnSelectOptionsListener);
 
         m_calendarGui->addRow.addListener(addRowListener);

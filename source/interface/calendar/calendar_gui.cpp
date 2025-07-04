@@ -37,6 +37,7 @@ CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     setColumnType.addEvent(m_itemWindowSubGui->setColumnType);
     setColumnName.addEvent(m_itemWindowSubGui->setColumnName);
     setColumnResetOption.addEvent(m_itemWindowSubGui->setColumnResetOption);
+    setColumnOrder.addEvent(m_itemWindowSubGui->setColumnOrder);
     modifyColumnSelectOptions.addEvent(m_itemWindowSubGui->modifyColumnSelectOptions);
     // entire column modification
     resetColumn.addEvent(m_itemWindowSubGui->resetColumn);
