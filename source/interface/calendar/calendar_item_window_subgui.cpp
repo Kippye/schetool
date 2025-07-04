@@ -48,7 +48,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
             ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
             ImGui::InputText("##ItemNameDummyInput", &value, ImGuiInputTextFlags_ReadOnly);
             ImGui::PopStyleColor();
-            if (ImGui::IsItemClicked()) {
+            if (ImGui::IsItemClicked() || ImGui::IsItemActivated()) {
                 m_editingItemName = true;
                 m_editingItemNameJustStarted = true;
             }
