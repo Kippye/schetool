@@ -13,6 +13,18 @@
 
 typedef ScheduleCoordinates TableCoordinates;
 
+struct DragDropState {
+        size_t itemRow;
+        TableCoordinates sourceCell;
+        // Contains the table cell coordinates where the dragged item should be dropped.
+        // Should be cleared along when this table cell is reached.
+        std::optional<TableCoordinates> dropCell = std::nullopt;
+
+        DragDropState() = delete;
+        DragDropState(size_t row, TableCoordinates cell) : itemRow(row), sourceCell(cell) {
+        }
+};
+
 class CalendarGui : public Gui {
     private:
         std::shared_ptr<CalendarItemWindowSubGui> m_itemWindowSubGui = nullptr;
@@ -20,7 +32,7 @@ class CalendarGui : public Gui {
         TimeWrapper m_viewedMonth;
         TimeWrapper m_selectedDate;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
-        // DRAG & DROP + STATE
+        // TABLE STATE
         // Contains the best-effort (not perfect) row heights of the table.
         // There are a maximum of 6 rows in a month's calendar.
         // When there are 5, the last one's height is just ignored.
@@ -28,10 +40,13 @@ class CalendarGui : public Gui {
         std::vector<float> m_prevTableRowHeights = std::vector<float>(6);
         std::optional<ImGuiID> m_hoveredItemChildID = std::nullopt;
         std::optional<ImGuiID> m_activeItemChildID = std::nullopt;
-        std::optional<size_t> m_draggedItemRow = std::nullopt;
-        // Contains the table cell coordinates where the dragged item was dropped.
-        // Should be cleared along with m_draggedItemRow when this table cell is reached.
-        std::optional<TableCoordinates> m_draggedItemDropCell = std::nullopt;
+        // DRAG & DROP STATE
+        // State of the current drag & drop
+        // Filled when the drag begins
+        // Clear when it ends or is cancelled in some way
+        std::optional<DragDropState> m_dragDropState = std::nullopt;
+        // The offset from the mouse cursor to the dragged item's top left corner
+        ImVec2 m_draggedItemCursorOffset = ImVec2();
 
         // Only meaningful while draw() - specifically drawCalendarTable() - is running.
         TableCoordinates m_currentTableCoords = TableCoordinates(0, 0);
@@ -108,7 +123,9 @@ class CalendarGui : public Gui {
         void drawCalendarTable(GuiTextures& guiTextures);
         void drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIndex, int month, int dayNumber);
         void drawCalendarDayItems(GuiTextures& guiTextures, const DateContainer& calendarDayDate);
-        void drawCalendarDayItem(size_t itemRow, GuiTextures& guiTextures, const DateContainer& calendarDayDate);
+        // Draw a calendar day item child window.
+        void drawCalendarDayItem(size_t itemRow, const std::string& idSuffix, bool& wasRemoved, GuiTextures& guiTextures);
+        void drawDraggedItemDisplay(size_t itemRow);
         void drawItemProperty(ScheduleCoordinates coords);
         template <typename T>
         T getElementValue(ScheduleCoordinates coords, bool useDefaultValue) const {
