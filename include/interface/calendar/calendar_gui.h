@@ -20,9 +20,22 @@ class CalendarGui : public Gui {
         TimeWrapper m_viewedMonth;
         TimeWrapper m_selectedDate;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
-        std::optional<ImGuiID> m_hoveredItemChildID;
+        // DRAG & DROP + STATE
+        // Contains the best-effort (not perfect) row heights of the table.
+        // There are a maximum of 6 rows in a month's calendar.
+        // When there are 5, the last one's height is just ignored.
+        std::vector<float> m_tableRowHeights = std::vector<float>(6);
+        std::vector<float> m_prevTableRowHeights = std::vector<float>(6);
+        std::optional<ImGuiID> m_hoveredItemChildID = std::nullopt;
+        std::optional<ImGuiID> m_activeItemChildID = std::nullopt;
+        std::optional<size_t> m_draggedItemRow = std::nullopt;
+        // Contains the table cell coordinates where the dragged item was dropped.
+        // Should be cleared along with m_draggedItemRow when this table cell is reached.
+        std::optional<TableCoordinates> m_draggedItemDropCell = std::nullopt;
+
         // Only meaningful while draw() - specifically drawCalendarTable() - is running.
         TableCoordinates m_currentTableCoords = TableCoordinates(0, 0);
+        std::optional<TableCoordinates> m_hoveredCellCoords = std::nullopt;
 
         // If this has a value, the CalendarItemWindowSubGui will be opened and the value passed to it
         std::optional<size_t> m_openItemWindowAtRow = std::nullopt;
@@ -86,10 +99,16 @@ class CalendarGui : public Gui {
             }
         };
 
+        // TEMP
+        void setRowHeight();
+        bool getIsTableCellRectHovered(ImGuiTable* table,
+                                       int col = ImGui::TableGetColumnIndex(),
+                                       int row = ImGui::TableGetRowIndex()) const;
         void drawWeekdayHeaders(float headerWidth);
         void drawCalendarTable(GuiTextures& guiTextures);
         void drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIndex, int month, int dayNumber);
         void drawCalendarDayItems(GuiTextures& guiTextures, const DateContainer& calendarDayDate);
+        void drawCalendarDayItem(size_t itemRow, GuiTextures& guiTextures, const DateContainer& calendarDayDate);
         void drawItemProperty(ScheduleCoordinates coords);
         template <typename T>
         T getElementValue(ScheduleCoordinates coords, bool useDefaultValue) const {
