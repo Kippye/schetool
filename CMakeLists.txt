@@ -4,7 +4,7 @@ include(FetchContent)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ############ PROJECT DEFINITION ############
-project(schetool VERSION 0.9.0)
+project(schetool VERSION 0.9.1)
 set(CPP_VERSION "c++20")
 
 ######### OPTIONS #########
@@ -64,9 +64,14 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/glfw/glfw.git
     GIT_TAG e7ea71be039836da3a98cea55ae5569cb5eb885c # latest as of 23.05.2025; GLFW 3.5
 )
-FetchContent_MakeAvailable(GLFW)
+FetchContent_GetProperties(GLFW)
+IF (NOT glfw_POPULATED)
+  FetchContent_Populate(GLFW)
+  add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR} EXCLUDE_FROM_ALL)
+ENDIF()
+# FetchContent_MakeAvailable(GLFW)
 ######### SUBDIRS / LOCAL LIBRARIES #########
-add_subdirectory("${LIBRARY_DIR}/blf")
+add_subdirectory("${LIBRARY_DIR}/blf" EXCLUDE_FROM_ALL)
 add_subdirectory("${LIBRARY_DIR}/glad")
 IF (WINDOWS_MSVC)
     add_subdirectory("${LIBRARY_DIR}/notificationcompat")
