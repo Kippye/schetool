@@ -25,9 +25,10 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.WindowPadding * 4.0f);
     ImGui::SetNextWindowSize(ImVec2(windowSize.getWidth() * 0.5f, windowSize.getHeight() * 0.8f));
-    // TODO: I would really like this modal to have rounded corners, but it seems quite difficult to accomplish that.
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style.WindowRounding);
+
     if (ImGui::BeginPopupModal("CalendarItemWindowPopup", NULL, windowFlags)) {
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
         // If there is no row for the viewed item, the popup closes itself.
         if (m_currentItemRow.has_value() == false) {
             m_editingItemName = false;
@@ -232,7 +233,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
         ImGui::EndPopup();
     } else {
         m_currentItemRow = std::nullopt;
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
     }
 }
 

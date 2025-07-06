@@ -93,8 +93,7 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
     {
         TimeWrapper formatTime;
         std::string monthName = m_viewedMonth.getDynamicFmtStringUTC("{:%B}");
-        const float monthDropdownWidth = ImGui::CalcTextSize("September").x * 1.5f;
-        ImGui::SetNextItemWidth(monthDropdownWidth);
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize("September").x * 1.5f);
         // Display the viewed month with a dropdown to set it to any month
         if (ImGui::BeginCombo("##CalendarViewedMonth", monthName.c_str(), ImGuiComboFlags_NoArrowButton)) {
             for (size_t i = 1; i <= 12; i++) {
@@ -115,8 +114,26 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
         }
         ImGui::SameLine();
         std::string yearText = m_viewedMonth.getDynamicFmtStringUTC("{:%Y}");
-        if (ImGui::Button(yearText.c_str())) {
-            // TODO: Edit it somehow
+        ImGui::SetNextItemWidth(ImGui::CalcTextSize(yearText.c_str()).x + style.FramePadding.x * 2.0f);
+        if (ImGui::BeginCombo("##CalendarViewedYear", yearText.c_str(), ImGuiComboFlags_NoArrowButton)) {
+            const unsigned int viewedYear = m_viewedMonth.getYearUTC();
+            const unsigned int lowestDisplayedYear = TimeWrapper::limitYearToValidRange((viewedYear - 20) - (viewedYear % 10));
+            const unsigned int maxDisplayedYear = TimeWrapper::limitYearToValidRange((viewedYear + 20) - (viewedYear % 10));
+            for (unsigned int year = lowestDisplayedYear; year <= maxDisplayedYear; year++) {
+                bool isSelected = year == viewedYear;
+
+                formatTime.setYearUTC(year);
+                monthName = formatTime.getDynamicFmtStringUTC("{:%Y}");
+                if (ImGui::Selectable(monthName.c_str(), isSelected)) {
+                    m_viewedMonth.setYearUTC(year);
+                }
+
+                // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
         }
         ImGui::SameLine();
         // FILTER GROUPS
@@ -395,6 +412,7 @@ void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
 void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIndex, int month, int dayNumber) {
     ImGuiStyle& style = ImGui::GetStyle();
     unsigned int pushedVarCount = 0;
+    bool isDisabled = false;
     unsigned int calendarDayYear = m_viewedMonth.getYearUTC();
     // Calendar day is from the previous or next year
     if (m_viewedMonth.getMonthUTC() == 1 && month == 12) {
@@ -417,6 +435,11 @@ void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIn
     if (month != m_viewedMonth.getMonthUTC()) {
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
         pushedVarCount++;
+    }
+    // Disable days from invalid years
+    if (calendarDayDate.getYear() != TimeWrapper::limitYearToValidRange(calendarDayDate.getYear())) {
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        isDisabled = true;
     }
     // Align the first column's text to frame padding.
     // This is to avoid the first column being vertically misaligned compared to every other column.
@@ -453,8 +476,23 @@ void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIn
             m_openItemWindowAtRow = rowsBefore;
         }
     }
+    if (isDisabled) {
+        ImGui::PopItemFlag();
+        ImGui::SetItemTooltip("This year is out of the supported year range.");
+    }
     if (!isTableCellHovered) {
         ImGui::PopStyleVar();
+    }
+
+    // Drop the dragged item here if this is the target cell
+    if (m_dragDropState.has_value() && m_dragDropState->dropCell == m_currentTableCoords) {
+        if (isDisabled == false)  // Can't drop to a disabled cell :()
+        {
+            setElementValueDate.invoke(m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Date),
+                                       m_dragDropState->itemRow,
+                                       DateContainer(calendarDayTime));
+        }
+        m_dragDropState.reset();
     }
 
     drawCalendarDayItems(guiTextures, DateContainer(calendarDayTime));
@@ -464,11 +502,6 @@ void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIn
 
 void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateContainer& calendarDayDate) {
     const size_t dateColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Date);
-    // Drop the dragged item here if this is the target cell
-    if (m_dragDropState.has_value() && m_dragDropState->dropCell == m_currentTableCoords) {
-        setElementValueDate.invoke(dateColumnIndex, m_dragDropState->itemRow, calendarDayDate);
-        m_dragDropState.reset();
-    }
 
     FilterRule<DateContainer> isThisDate = FilterRule<DateContainer>(calendarDayDate);
     std::vector<size_t> sortedRowIndices = m_scheduleCore.getSortedRowIndices();
