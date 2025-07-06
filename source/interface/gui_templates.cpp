@@ -4,20 +4,22 @@
 #include "gui_constants.h"
 #include "util.h"
 
-bool gui_templates::TextEditor(std::string& editorText, ImVec2 inputBoxSize, bool captureKeyboardFocus) {
+bool gui_templates::TextEditor(std::string& editorText,
+                               ImVec2 inputBoxSize,
+                               bool captureKeyboardFocus,
+                               ImGuiInputTextFlags flags) {
     if (captureKeyboardFocus) {
         ImGui::SetKeyboardFocusHere();
     }
 
     bool submitted = false;
 
-    if (ImGui::InputTextMultiline(
-            "##editorTextInput",
-            &editorText,
-            inputBoxSize,
-            ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine | ImGuiInputTextFlags_CallbackAlways,
-            gui_callbacks::inputTextCursorToEnd,
-            &textEditorActivated))
+    if (ImGui::InputTextMultiline("##editorTextInput",
+                                  &editorText,
+                                  inputBoxSize,
+                                  flags | ImGuiInputTextFlags_CallbackAlways,
+                                  gui_callbacks::inputTextCursorToEnd,
+                                  &textEditorActivated))
     {
         submitted = true;
     }
@@ -265,6 +267,61 @@ bool gui_templates::TimeEditor(TimeContainer& editorTime) {
     return madeEdits;
 }
 
+bool gui_templates::TimeEditor(TimeContainer& editorTime, TimeContainer& bufferTime) {
+    bool madeEdits = false;
+    TimeWrapper hourFormatTime = TimeWrapper(ClockTimeWrapper(bufferTime.getHours(), 0));
+    // NOTE: Usually we would get local time for displaying but here we are only using the TimeWrapper as a formatting tool, the same time can be stored and formatted.
+    std::string hourString = hourFormatTime.getDynamicFmtStringUTC("{:%H}");
+    char* hourBuf = hourString.data();
+    ImGui::SetNextItemWidth(24);
+    if (ImGui::InputText("##TimeEditorHours",
+                         hourBuf,
+                         sizeof(hourBuf),
+                         ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll,
+                         gui_callbacks::filterNumbers))
+    {
+        int hourValue = 0;
+
+        std::string hourStr = std::string(hourBuf);
+
+        if (hourStr.empty() == false && hourStr.find_first_not_of("0123456789") == std::string::npos) {
+            hourValue = std::stoi(hourBuf);
+        }
+        bufferTime.setTime(hourValue, bufferTime.getMinutes());
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit()) {
+        editorTime.setTime(bufferTime.getHours(), editorTime.getMinutes());
+        madeEdits = true;
+    }
+    ImGui::SameLine();
+    TimeWrapper minFormatTime = TimeWrapper(ClockTimeWrapper(0, bufferTime.getMinutes()));
+    // NOTE: Read above
+    std::string minString = minFormatTime.getDynamicFmtStringUTC("{:%M}");
+    char* minBuf = minString.data();
+    ImGui::SetNextItemWidth(24);
+    if (ImGui::InputText("##TimeEditorMinutes",
+                         minBuf,
+                         sizeof(minBuf),
+                         ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_AutoSelectAll,
+                         gui_callbacks::filterNumbers))
+    {
+        int minValue = 0;
+
+        std::string minStr = std::string(minBuf);
+
+        if (minStr.empty() == false && minStr.find_first_not_of("0123456789") == std::string::npos) {
+            minValue = std::stoi(minBuf);
+        }
+        bufferTime.setTime(bufferTime.getHours(), minValue);
+    }
+    if (ImGui::IsItemDeactivatedAfterEdit()) {
+        editorTime.setTime(editorTime.getHours(), bufferTime.getMinutes());
+        madeEdits = true;
+    }
+
+    return madeEdits;
+}
+
 void gui_templates::TextWithBackground(const char* fmt, ...) {
     // format to label
     const char *text, *text_end;
@@ -299,7 +356,7 @@ bool gui_templates::ImageButtonStyleColored(const char* idLabel,
                                             ImVec4 bgColor,
                                             ImGuiButtonFlags buttonFlags) {
     return ImGui::ImageButtonEx(
-        ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_Text), buttonFlags);
+        ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_CheckMark), buttonFlags);
 }
 
 bool gui_templates::SelectOptionButton(const SelectOption& selectOption,
@@ -505,7 +562,7 @@ ImVec4 gui_color_calculations::getDisabledColorFromBase(ImVec4 base) {
 }
 
 ImVec4 gui_color_calculations::getTableCellHighlightColor(ImVec4 backgroundColor, ImVec4 fontColor) {
-    ImVec4 sum = ImVec4(
-        backgroundColor.x + fontColor.x, backgroundColor.y + fontColor.y, backgroundColor.z + fontColor.z, backgroundColor.w);
-    return ImVec4(sum.x / 2.0f, sum.y / 2.0f, sum.z / 2.0f, sum.w);
+    ImVec4 highlightColor = ImLerp(backgroundColor, fontColor, 0.1f);
+    highlightColor.w = 1.0f;
+    return highlightColor;
 }

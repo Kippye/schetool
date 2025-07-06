@@ -10,7 +10,7 @@ TextInputModalSubGui::TextInputModalSubGui(
     m_showCloseButton = showCloseButton;
 }
 
-void TextInputModalSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void TextInputModalSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     float nameInputWidth = ImGui::CalcTextSize(std::string(m_textMaxLength + 2, 'a').c_str()).x;
 
     m_visible = true;

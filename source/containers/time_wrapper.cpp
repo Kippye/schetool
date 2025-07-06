@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "util.h"
+#include "general_constants.h"
 
 #ifdef __MINGW32__
 #include "time_wrapper_mingw_impl.h"
@@ -15,8 +16,7 @@ DateWrapper::DateWrapper() {
 }
 
 DateWrapper::DateWrapper(unsigned int year, unsigned int month, unsigned int monthDay) {
-    m_year = std::max(year, 1678u);
-    m_year = std::min(m_year, 2261u);
+    m_year = year;
     m_month = std::max(month, 1u);
     m_month = std::min(m_month, 12u);
     m_monthDay = std::max(monthDay, 1u);
@@ -176,7 +176,11 @@ void TimeWrapper::setMonthDayUTC(unsigned int day, Base basedness) {
 }
 
 void TimeWrapper::addDays(int dayCount) {
-    m_time += days{dayCount};
+    auto newTime = m_time + days{dayCount};
+
+    if (isValidTime(newTime)) {
+        m_time = newTime;
+    }
 }
 
 unsigned int TimeWrapper::getWeekdayUTC(WeekStart weekStart, Base basedness) const {
@@ -205,7 +209,11 @@ void TimeWrapper::setMonthUTC(int month, Base basedness) {
 }
 
 void TimeWrapper::addMonths(int monthCount) {
-    m_time += months{monthCount};
+    auto newTime = m_time + months{monthCount};
+
+    if (isValidTime(newTime)) {
+        m_time = newTime;
+    }
 }
 
 unsigned int TimeWrapper::getYearUTC() const {
@@ -218,7 +226,7 @@ unsigned int TimeWrapper::getYear() const {
 
 void TimeWrapper::setYearUTC(unsigned int year) {
     DateWrapper currentDate = getLocalDate();
-    DateWrapper newDate = DateWrapper(year, currentDate.getMonth(), currentDate.getMonthDay());
+    DateWrapper newDate = DateWrapper(limitYearToValidRange(year), currentDate.getMonth(), currentDate.getMonthDay());
     setTimeUTC(newDate, getLocalClockTime());
 }
 
@@ -264,9 +272,16 @@ TimeWrapper TimeWrapper::getTimeWithOffsetSubtracted(const TimeWrapper& base) {
 }
 
 int TimeWrapper::limitYearToValidRange(int year) {
-    year = std::max(year, 1678);
-    year = std::min(year, 2261);
+    year = std::max(year, YEAR_MIN);
+    year = std::min(year, YEAR_MAX);
     return year;
+}
+
+bool TimeWrapper::isValidTime(utc_tp timePoint) {
+    TimeWrapper wrappedTime = TimeWrapper(timePoint);
+    // Is in the correct year range
+    bool isValid = wrappedTime.getYear() == limitYearToValidRange(wrappedTime.getYear());
+    return isValid;
 }
 
 chrono::minutes TimeWrapper::getTimezoneOffset(const TimeWrapper& time) {

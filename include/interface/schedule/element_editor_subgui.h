@@ -34,11 +34,13 @@ class ElementEditorSubGui : public Gui {
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;
         bool m_madeEdits = false;
+        bool m_madeEditsThisFrame = false;
 
         std::optional<ScheduleCoordinates> m_currentElementCoords = std::nullopt;
         unsigned int m_viewedYear = 0;
         unsigned int m_viewedMonth = 0;
         std::string m_editorText;
+        TimeContainer m_editorBufferTime;
         TimeContainer m_editorTime;
         DateContainer m_editorDate;
         SingleSelectContainer m_editorSingleSelect;
@@ -57,7 +59,7 @@ class ElementEditorSubGui : public Gui {
         // modifyColumnSelectOptions
         Event<size_t, SelectOptionsModification> modifyColumnSelectOptions;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
+        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
         // Update the element editor before editing a new Element.
         // NOTE: Sets m_madeEdits = false
         void open(size_t column, size_t row, SCHEDULE_TYPE type, const ImRect& avoidRect);
@@ -67,6 +69,7 @@ class ElementEditorSubGui : public Gui {
         }
         void setEditorValue(const TimeContainer& value) {
             m_editorTime = value;
+            m_editorBufferTime = value;
         }
         // NOTE: Also sets m_viewedMonth and m_viewedYear to the DateContainer's month and year
         void setEditorValue(const DateContainer& value) {
@@ -106,5 +109,6 @@ class ElementEditorSubGui : public Gui {
         bool getOpenLastFrame() const;
         bool getOpenThisFrame() const;
         bool getMadeEdits() const;
+        bool getMadeEditsThisFrame() const;
         std::optional<ScheduleCoordinates> getCoordinates() const;
 };

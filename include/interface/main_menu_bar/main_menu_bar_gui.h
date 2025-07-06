@@ -4,13 +4,12 @@
 #include "interface_style.h"
 #include "preferences.h"
 #include "gui.h"
-#include "window.h"
 #include "input.h"
 #include "event_pipe.h"
 
 class MainMenuBarGui : public Gui {
     private:
-        float m_height = 0.0f;
+        static float height;
         bool m_openNewNameModal = false;
         bool m_openRenameModal = false;
         bool m_openDeleteConfirmationModal = false;
@@ -39,8 +38,10 @@ class MainMenuBarGui : public Gui {
         EventPipe<std::string> deleteScheduleEventPipe;
         EventPipe<std::string> renameScheduleEventPipe;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
-        float getHeight() const;
+        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        // Static function. Assuming that there is only one MainMenuBarGui instance or they are all the same height.
+        // Get the height of the MainMenuBarGui.
+        static float getHeight();
         void closeModal();
         void passFileNames(const std::vector<std::string>& fileNames);
         void passOpenFileName(const std::optional<std::string>& openFileName);

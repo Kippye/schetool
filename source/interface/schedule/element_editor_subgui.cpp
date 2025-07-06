@@ -9,9 +9,10 @@ ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& sch
     : m_scheduleCore(scheduleCore), Gui(ID) {
 }
 
-void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     // give old current open state to the last frame's state
     m_openLastFrame = m_openThisFrame;
+    m_madeEditsThisFrame = false;
 
     // Something has gone wrong!
     if (m_currentElementCoords.has_value() == false) {
@@ -35,23 +36,21 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
         switch (m_editedType) {
             case (SCH_TEXT): {
                 if (gui_templates::TextEditor(m_editorText, m_textInputBoxSize, m_openLastFrame == false)) {
-                    m_madeEdits = true;
+                    m_madeEditsThisFrame = m_madeEdits = true;
                     ImGui::CloseCurrentPopup();
                 }
                 break;
             }
             case (SCH_TIME): {
-                if (gui_templates::TimeEditor(m_editorTime)) {
-                    m_madeEdits = true;
+                if (gui_templates::TimeEditor(m_editorTime, m_editorBufferTime)) {
+                    m_madeEditsThisFrame = m_madeEdits = true;
                 }
-
                 break;
             }
             case (SCH_DATE): {
                 if (gui_templates::DateEditor(m_editorDate, m_viewedYear, m_viewedMonth)) {
-                    m_madeEdits = true;
+                    m_madeEditsThisFrame = m_madeEdits = true;
                 }
-
                 break;
             }
             case (SCH_SELECT): {
@@ -66,7 +65,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                                           ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                     {
                         m_editorSingleSelect.setSelected(selection.value(), false);
-                        m_madeEdits = true;
+                        m_madeEditsThisFrame = m_madeEdits = true;
                     }
                     ImGui::SameLine();
                 }
@@ -118,7 +117,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 if (m_editorSingleSelect.getSelection().has_value() == false) {
                                     m_editorSingleSelect.setSelected(selectOptions.getOptions().size() - 1, true);
                                 }
-                                m_madeEdits = true;
+                                m_madeEditsThisFrame = m_madeEdits = true;
                                 // NOTE: break here because otherwise the start and end of the function kind of go out of sync
                                 break;
                             }
@@ -181,7 +180,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 selected = prevSelected;
                             } else {
                                 m_editorSingleSelect.setSelected(i, selected);
-                                m_madeEdits = true;
+                                m_madeEditsThisFrame = m_madeEdits = true;
                             }
                         }
                         if (ImGui::IsItemActive()) {
@@ -231,7 +230,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 m_editorSingleSelect.update(
                                     modificationToApply.getUpdateInfo(),
                                     m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
-                                m_madeEdits = true;
+                                m_madeEditsThisFrame = m_madeEdits = true;
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
                                 goto break_select_case;
@@ -312,7 +311,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 m_editorSingleSelect.update(
                                     modificationToApply.getUpdateInfo(),
                                     m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
-                                m_madeEdits = true;
+                                m_madeEditsThisFrame = m_madeEdits = true;
                                 ImGui::ResetMouseDragDelta();
                             }
                         }
@@ -349,7 +348,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                                           ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                     {
                         m_editorSelect.setSelected(selectionIndices[i], false);
-                        m_madeEdits = true;
+                        m_madeEditsThisFrame = m_madeEdits = true;
                     }
                     ImGui::SameLine();
                 }
@@ -397,7 +396,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             if (newModification == modificationToApply && prevModification != newModification) {
                                 m_editorSelect.update(modificationToApply.getUpdateInfo(), selectOptions.getOptionCount());
                                 m_editorSelect.setSelected(selectOptions.getOptions().size() - 1, true);
-                                m_madeEdits = true;
+                                m_madeEditsThisFrame = m_madeEdits = true;
                                 // NOTE: break here because otherwise the start and end of the function kind of go out of sync
                                 break;
                             }
@@ -460,7 +459,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 selected = prevSelected;
                             } else {
                                 m_editorSelect.setSelected(i, selected);
-                                m_madeEdits = true;
+                                m_madeEditsThisFrame = m_madeEdits = true;
                             }
                         }
                         if (ImGui::IsItemActive()) {
@@ -510,7 +509,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 m_editorSelect.update(
                                     modificationToApply.getUpdateInfo(),
                                     m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
-                                m_madeEdits = true;
+                                m_madeEditsThisFrame = m_madeEdits = true;
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
                                 goto break_select_case;
@@ -590,7 +589,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                                 m_editorSelect.update(
                                     modificationToApply.getUpdateInfo(),
                                     m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
-                                m_madeEdits = true;
+                                m_madeEditsThisFrame = m_madeEdits = true;
                                 ImGui::ResetMouseDragDelta();
                             }
                         }
@@ -627,7 +626,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                     {
                         m_editorWeekday.setSelected(selectionIndices[i], false);
-                        m_madeEdits = true;
+                        m_madeEditsThisFrame = m_madeEdits = true;
                     }
                     // no sameline for the last selected option
                     if (i != selectedCount - 1) {
@@ -647,7 +646,7 @@ void ElementEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTex
                             ImGuiSelectableFlags_DontClosePopups))
                     {
                         m_editorWeekday.setSelected(i, selected);
-                        m_madeEdits = true;
+                        m_madeEditsThisFrame = m_madeEdits = true;
                     }
                 }
 
@@ -672,7 +671,7 @@ void ElementEditorSubGui::open(size_t column, size_t row, SCHEDULE_TYPE type, co
     m_editedType = type;
     m_avoidRect = avoidRect;
 
-    m_madeEdits = false;
+    m_madeEditsThisFrame = m_madeEdits = false;
     m_selectEditState.editingOptionName = false;
 
     ImGui::OpenPopup("Editor");
@@ -692,6 +691,10 @@ bool ElementEditorSubGui::getOpenLastFrame() const {
 
 bool ElementEditorSubGui::getMadeEdits() const {
     return m_madeEdits;
+}
+
+bool ElementEditorSubGui::getMadeEditsThisFrame() const {
+    return m_madeEditsThisFrame;
 }
 
 std::optional<ScheduleCoordinates> ElementEditorSubGui::getCoordinates() const {

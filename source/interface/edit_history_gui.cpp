@@ -4,7 +4,7 @@
 #include "schedule_constants.h"
 #include "filter_constants.h"
 
-void EditHistoryGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void EditHistoryGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     if (ImGui::Begin("Edit History", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         auto editHistory = m_scheduleEditHistory->getEditHistory();
 
@@ -64,6 +64,15 @@ void EditHistoryGui::draw(Window& window, Input& input, GuiTextures& guiTextures
                             columnResetEdit->getColumnData().name.c_str(),
                             schedule_consts::scheduleTypeNames.at(columnResetEdit->getColumnData().type),
                             columnResetEdit->getColumn(),
+                            i);
+                    break;
+                }
+                case (ScheduleEditType::ColumnReorder): {
+                    auto columnReorderEdit = std::dynamic_pointer_cast<ColumnReorderEdit>(editHistory[i]);
+                    sprintf(buf,
+                            "Move Column display index %zu -> %zu##%zu",
+                            columnReorderEdit->getPreviousOrder(),
+                            columnReorderEdit->getNewOrder(),
                             i);
                     break;
                 }

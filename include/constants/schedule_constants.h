@@ -1,9 +1,12 @@
 #ifndef SCHEDULE_CONSTANTS
 #define SCHEDULE_CONSTANTS
-#include <map>
-#include <vector>
-#include <string>
 #include "general_constants.h"
+#include <map>
+
+enum ScheduleView : unsigned short {
+    Table = 0,
+    Calendar = 1
+};
 
 enum class ColumnResetOption {
     Never,
@@ -16,6 +19,7 @@ namespace schedule_consts {
     // A "soft limit" for a sensible amount of columns that don't look too terrible.
     // It's not enforced anywhere other than the add column button.
     const size_t COLUMN_MAX_COUNT = 25;
+    const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
     const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
     const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;

@@ -1,39 +1,44 @@
 #pragma once
 #include "gui.h"
-#include "window.h"
 #include "input.h"
-#include "main_menu_bar/main_menu_bar_gui.h"
 #include "select_container.h"
 #include "schedule_events.h"
 #include "schedule_core.h"
 #include "schedule_column.h"
 #include "schedule_coordinates.h"
+#include "event_pipe.h"
 #include <optional>
+#include <functional>
 
 class ScheduleGui : public Gui {
     private:
+        ImGuiTable* m_scheduleTable = nullptr;
         const ScheduleCore& m_scheduleCore;
-        const std::shared_ptr<const MainMenuBarGui> m_mainMenuBarGui = nullptr;
-        bool m_openDateSelectPopup = false;
         bool m_nextMouseReleaseOpenColumnContext = true;
-        unsigned int m_dateSelectorYear = 1, m_dateSelectorMonth = 1;
         unsigned int m_filterGroupListColumn = 0;
         std::optional<size_t> m_rowContextRow = std::nullopt;
         std::optional<ScheduleCoordinates> m_cellContextCoords = std::nullopt;
+        std::optional<size_t> m_columnDragColumn = std::nullopt;
+        std::optional<size_t> m_columnDragBeginOrder = std::nullopt;
         std::optional<size_t> m_draggedRow = std::nullopt;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
-        void drawColumnHeaderContextContent(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
-        void openRowContextPopup(size_t row);
-        void openCellContextPopup(size_t column, size_t row);
-        void closeRowContextPopup();
-        void closeCellContextPopup();
-        void drawRowContextContent();
-        void drawCellContextContent();
 
-        void drawScheduleTable(Window& window, Input& input, GuiTextures& guiTextures);
+        std::function<void(TimeWrapper)> viewedDateChangedListener = [&](TimeWrapper newDateOverride) {
+            m_scheduleDateOverride = newDateOverride;
+        };
+
+        void applyTableColumnOrder();
+        void drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
         // Draws the contents of the table cell at the given column and row.
         // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
-        bool drawTableCellContents(size_t column, size_t row, Window& window, Input& input, GuiTextures& guiTextures);
+        bool drawTableCellContents(
+            size_t column, size_t row, const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
+        void drawColumnHeaderContext(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
+        void openRowContextPopup(size_t row);
+        void drawRowContext();
+        void openCellContextPopup(size_t column, size_t row);
+        void drawCellContext();
+
         template <typename T>
         T getElementValue(size_t column, size_t row, bool useDefaultValue) const {
             return useDefaultValue == true ? Element<T>::getDefaultValue()
@@ -41,10 +46,7 @@ class ScheduleGui : public Gui {
         }
 
     public:
-        ScheduleGui(const char* ID,
-                    const ScheduleCore& scheduleCore,
-                    ScheduleEvents& scheduleEvents,
-                    const std::shared_ptr<const MainMenuBarGui> mainMenuBarGui);
+        ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
         // setElementValue(column, row, value)
@@ -65,15 +67,34 @@ class ScheduleGui : public Gui {
         Event<size_t, COLUMN_SORT> setColumnSort;
         Event<size_t, std::string> setColumnName;
         Event<size_t, ColumnResetOption> setColumnResetOption;
+        Event<size_t, size_t> setColumnOrder;
+        Event<size_t, size_t> createColumnReorderEdit;
         // entire column modification
         Event<size_t, bool> resetColumn;
         // row modification
         Event<size_t> addRow;
         Event<size_t> removeRow;
         Event<size_t> duplicateRow;
+        // Event pipes
+        EventPipe<size_t, SelectOptionsModification> modifyColumnSelectOptions;
+
+        // FILTER EVENT PIPES
+        // FilterGroup
+        EventPipe<size_t, FilterGroup> addColumnFilterGroup;
+        EventPipe<size_t, size_t, std::string> setColumnFilterGroupName;
+        EventPipe<size_t, size_t, LogicalOperatorEnum> setColumnFilterGroupOperator;
+        EventPipe<size_t, size_t, bool> setColumnFilterGroupEnabled;
+        EventPipe<size_t, size_t> removeColumnFilterGroup;
+        // Filter
+        EventPipe<size_t, size_t, Filter> addColumnFilter;
+        EventPipe<size_t, size_t, size_t, LogicalOperatorEnum> setColumnFilterOperator;
+        EventPipe<size_t, size_t, size_t> removeColumnFilter;
+        // FilterRule
+        EventPipe<size_t, size_t, size_t, FilterRuleContainer> addColumnFilterRule;
+        EventPipe<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
+        EventPipe<size_t, size_t, size_t, size_t> removeColumnFilterRule;
 
         bool isEditableElementClicked(bool isEditingDisabled) const;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
-        void clearDateOverride();
+        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
 };

@@ -316,4 +316,5 @@ class TimeWrapper {
         // Example: The timezone is UTC + 3, returns 180min. The timezone is UTC - 2, returns -120min.
         static chrono::minutes getTimezoneOffset(const TimeWrapper& time);
         static int limitYearToValidRange(int year);
+        static bool isValidTime(utc_tp timePoint);
 };

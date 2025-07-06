@@ -20,7 +20,7 @@ void Gui::setVisible(bool visible) {
     m_visible = visible;
 }
 
-void Gui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void Gui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
 }
 
 void Gui::addSubGui(Gui* subGui) {

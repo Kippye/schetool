@@ -73,7 +73,7 @@ class Input {
         const float mouseRepeatDelay = 0.05f;
 
         void init(Window*);
-        void processInput(GLFWwindow* window);
+        void processInput();
         // Get a vector of all InputShortcuts that activate the given INPUT_EVENT
         std::vector<InputShortcut> getEventShortcuts(INPUT_EVENT event) const;
         // Get a vector of shortcut strings for each InputShortcut in the given vector.
@@ -86,8 +86,8 @@ class Input {
 
         void setGuiWantKeyboard(bool to);
 
-        void key_event(GLFWwindow* window, int key, int scancode, int action, int mods);
-        void mouse_button_event(GLFWwindow* window, int button, int action, int mods);
-        void cursor_pos_event(GLFWwindow* window, double xPos, double yPos);
-        void scroll_event(GLFWwindow* window, double xOffset, double yOffset);
+        void key_event(int key, int scancode, int action, int mods);
+        void mouse_button_event(int button, int action, int mods);
+        void cursor_pos_event(double xPos, double yPos);
+        void scroll_event(double xOffset, double yOffset);
 };

@@ -1,18 +1,19 @@
 #include "autosave_popup_gui.h"
 #include "gui_templates.h"
 
-void AutosavePopupGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void AutosavePopupGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     ImVec2 popupSize = ImVec2(256.0f, 0.0f);
     ImGui::SetNextWindowContentSize(popupSize);
     ImGui::SetNextWindowPos(
-        ImVec2(((float)window.SCREEN_WIDTH) / 2.0f, ((float)window.SCREEN_HEIGHT) / 2.0f), 0, ImVec2(0.5f, 0.5f));
+        ImVec2(((float)windowSize.getWidth()) / 2.0f, ((float)windowSize.getHeight()) / 2.0f), 0, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("Autosave found", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
         const ImVec2 labelSize = ImVec2(128.0f, 0.0f);
         const ImVec2 buttonSize = ImVec2(128.0f, 0.0f);
         ImGui::BeginColumns("testColumns", 2, ImGuiOldColumnFlags_NoResize);
         gui_templates::TextWithBackground(labelSize, "Autosave file");
         gui_templates::TextWithBackground(labelSize, "%s", m_autosaveInfo.getName().c_str());
-        gui_templates::TextWithBackground(labelSize, "%s", m_autosaveInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
+        gui_templates::TextWithBackground(
+            labelSize, "%s", m_autosaveInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
         if (ImGui::Button("Apply autosave", buttonSize)) {
             applyAutosaveEvent.invoke();
             ImGui::CloseCurrentPopup();
@@ -44,8 +45,7 @@ void AutosavePopupGui::draw(Window& window, Input& input, GuiTextures& guiTextur
     }
 }
 
-void AutosavePopupGui::open(const FileInfo& baseInfo,
-                            const FileInfo& autosaveInfo) {
+void AutosavePopupGui::open(const FileInfo& baseInfo, const FileInfo& autosaveInfo) {
     m_baseInfo = baseInfo;
     m_autosaveInfo = autosaveInfo;
     m_openNextFrame = true;

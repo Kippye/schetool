@@ -1,6 +1,7 @@
 #include "interface.h"
 #include "start_page_gui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
+#include "view_tab_bar_gui.h"
 #include "edit_history_gui.h"
 #include "autosave_popup_gui.h"
 
@@ -14,6 +15,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     imGui = ImGui::CreateContext();
     imGuiIO = &ImGui::GetIO();
     // TODO: Investigate if there is some better way than to put this line here randomly
+    // Extra: This was added so that numeric inputs can use the locale's decimal point (either , or .)
     ImGui::GetPlatformIO().Platform_LocaleDecimalPoint = *localeconv()->decimal_point;
     // Disable automatically making an "imgui.ini" file in the working directory.
     imGuiIO->IniFilename = NULL;
@@ -21,7 +23,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     // This is just so imgui doesn't take 5 seconds after a change before it tells me that a change needs to be saved.
     imGuiIO->IniSavingRate = 0.1f;
     // set up platform / renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(m_windowManager->window, true);
+    ImGui_ImplGlfw_InitForOpenGL(m_windowManager->getGlfwWindow(), true);
     ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());
     // Load fonts
     m_styleHandler->loadFontSizes("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf");
@@ -32,6 +34,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     // ADD GUIS
     addGui<StartPageGui>("StartPageGui");
     addGui<MainMenuBarGui>("MainMenuBarGui", m_styleHandler);
+    addGui<ViewTabBarGui>("ViewTabBarGui");
     // simple popups
     addGui<AutosavePopupGui>("AutosavePopupGui");
 #if DEBUG
@@ -60,17 +63,21 @@ void Interface::addGui(std::shared_ptr<Gui> gui) {
     m_guis.insert({gui->getID(), gui});
 }
 
-void Interface::draw() {
+void Interface::draw(float deltaTime) {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     m_input->setGuiWantKeyboard(imGuiIO->WantCaptureKeyboard);
 
+    m_styleHandler->transitionStyle(deltaTime);
+
     // Apply font
     ImGui::PushFont(m_styleHandler->getFontData(m_styleHandler->getFontSize()));
     for (auto& [id, gui] : m_guis) {
-        gui->draw(*m_windowManager, *m_input, *m_guiTextures.get());
+        if (gui->getVisible()) {
+            gui->draw(m_windowManager->getSize(), *m_input, *m_guiTextures.get());
+        }
     }
 
     guiHovered = imGuiIO->WantCaptureMouse;

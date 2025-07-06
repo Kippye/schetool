@@ -1,6 +1,6 @@
 #include "main_menu_bar/delete_modal_subgui.h"
 
-void DeleteModalSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void DeleteModalSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     ImGui::SetNextWindowSize(ImVec2(386.0f, 100.0f));
     if (ImGui::BeginPopupModal("Confirm Schedule deletion", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
         ImGuiStyle& style = ImGui::GetStyle();

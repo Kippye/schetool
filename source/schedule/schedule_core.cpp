@@ -4,35 +4,34 @@
 #include <numeric>
 #include "schedule_core.h"
 #include "element_base.h"
+#include "util.h"
 
 ScheduleCore::ScheduleCore() {
 }
 
-// NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
 size_t ScheduleCore::getFlaggedColumnIndex(ScheduleColumnFlags flags) const {
-    for (size_t i = 0; i < m_schedule.size(); i++) {
-        if (m_schedule.at(i).flags & flags) {
+    for (size_t i = 0; i < getColumnCount(); i++) {
+        if (getColumnConst(i).flags & flags) {
             return i;
         }
     }
     return 0;
 }
 
-// Private function, because it returns a mutable column pointer. NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
-Column* ScheduleCore::getColumnWithFlags(ScheduleColumnFlags flags) {
-    return &m_schedule.at(getFlaggedColumnIndex(flags));
+Column& ScheduleCore::getColumnWithFlags(ScheduleColumnFlags flags) {
+    return getColumn(getFlaggedColumnIndex(flags));
 }
 
-Column* ScheduleCore::getMutableColumn(size_t column) {
+Column& ScheduleCore::getColumn(size_t column) {
     if (column > getColumnCount()) {
         throw std::out_of_range(std::format("ScheduleCore::getMutableColumn: column index {} is out of range.", column));
     }
-    return &m_schedule.at(column);
+    return m_schedule.at(m_columnDisplayOrder.at(column));
 }
 
 // Sorts a copy of the column's rows. Then compares each element of the two rows vectors and returns a vector that contains which index of the OLD rows vector corresponds to that position in the NEW SORTED rows
 std::vector<size_t> ScheduleCore::getColumnSortedNewIndices(size_t index) {
-    Column& column = m_schedule.at(index);
+    Column& column = getColumn(index);
     std::vector<ElementBase*> rows = column.rows;
     std::vector<size_t> newIndices(rows.size());
     std::iota(newIndices.begin(), newIndices.end(), 0);
@@ -45,6 +44,7 @@ std::vector<size_t> ScheduleCore::getColumnSortedNewIndices(size_t index) {
 
 void ScheduleCore::clearSchedule() {
     m_schedule.clear();
+    m_columnDisplayOrder.clear();
     sortColumns();
 }
 
@@ -52,21 +52,25 @@ void ScheduleCore::replaceSchedule(std::vector<Column>& columns) {
     clearSchedule();
 
     m_schedule = columns;
+    m_columnDisplayOrder.resize(m_schedule.size());
+    // Don't know the order so just reset it to 0...columnCount
+    std::iota(m_columnDisplayOrder.begin(), m_columnDisplayOrder.end(), 0);
     sortColumns();
 }
 
-const std::vector<Column>& ScheduleCore::getAllColumns() const {
-    return m_schedule;
-}
+std::vector<Column> ScheduleCore::getAllColumns() const {
+    std::vector<Column> displayOrderSchedule = {};
 
-std::vector<Column>& ScheduleCore::getAllColumnsMutable() {
-    return m_schedule;
+    for (size_t internalIndex : m_columnDisplayOrder) {
+        displayOrderSchedule.push_back(m_schedule.at(internalIndex));
+    }
+    return displayOrderSchedule;
 }
 
 // Sorts every column's rows based on "sorter" columns
 void ScheduleCore::sortColumns() {
     for (size_t sorterColumn = 0; sorterColumn < getColumnCount(); sorterColumn++) {
-        if (m_schedule.at(sorterColumn).sort != COLUMN_SORT_NONE) {
+        if (getColumn(sorterColumn).sort != COLUMN_SORT_NONE) {
             m_sortedRowIndices = getColumnSortedNewIndices(sorterColumn);
             break;
         }
@@ -77,6 +81,20 @@ void ScheduleCore::sortColumns() {
             std::iota(m_sortedRowIndices.begin(), m_sortedRowIndices.end(), 0);
         }
     }
+}
+
+bool ScheduleCore::checkPassesAllFilters(size_t row, const std::optional<TimeWrapper>& currentTime) const {
+    for (const Column& column : m_schedule) {
+        // Check if the row's Element passes every FilterGroup in this Column
+        bool passesAllFilters = column.checkElementPassesFilters(
+            row,
+            currentTime  // Pass override date as current (Uses TimeWrapper::getCurrentTime() if it's empty)
+        );
+        if (passesAllFilters == false) {
+            return false;
+        }
+    }
+    return true;
 }
 
 size_t ScheduleCore::getColumnCount() const {
@@ -94,17 +112,21 @@ bool ScheduleCore::existsColumnAtIndex(size_t index) const {
     return true;
 }
 
+std::optional<size_t> ScheduleCore::getInternalIndexFor(size_t displayOrder) const {
+    if (existsColumnAtIndex(displayOrder) == false) {
+        return std::nullopt;
+    }
+
+    return m_columnDisplayOrder.at(displayOrder);
+}
+
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
 void ScheduleCore::addColumn(size_t index, const Column& column) {
     // TODO: make sure that EVERY column has the same amount of rows!!!
     // TODO: give the new column correct creation date & time
 
-    // the last index = just add to the end
-    if (index == getColumnCount()) {
-        m_schedule.push_back(column);
-    } else {
-        m_schedule.insert(m_schedule.begin() + index, column);
-    }
+    m_schedule.push_back(column);
+    m_columnDisplayOrder.insert(m_columnDisplayOrder.begin() + index, m_schedule.size() - 1);
 
     // Sort columns just in case, because the added Column could have a sort other than COLUMN_SORT_NONE
     sortColumns();
@@ -168,24 +190,41 @@ void ScheduleCore::addDefaultColumn(size_t index, SCHEDULE_TYPE columnType) {
             }
         }
     }
-    m_schedule.insert(m_schedule.begin() + index, addedColumn);
+    m_schedule.push_back(addedColumn);
+    m_columnDisplayOrder.insert(m_columnDisplayOrder.begin() + index, m_schedule.size() - 1);
 
     // I think default columns don't cause a need for sorting, since their sort is always COLUMN_SORT_NONE
 }
 
 bool ScheduleCore::removeColumn(size_t column) {
     // a permanent column can't be removed
-    if ((existsColumnAtIndex(column) == false || m_schedule.at(column).permanent == true)) {
+    if ((existsColumnAtIndex(column) == false || getColumn(column).permanent)) {
         return false;
     }
 
-    bool resortRequired = m_schedule.at(column).sort != COLUMN_SORT_NONE;
+    bool resortRequired = getColumn(column).sort != COLUMN_SORT_NONE;
 
-    // the last index = pop from end
-    if (column == getColumnCount() - 1) {
+    // Remove the corresponding column from the schedule
+    size_t internalIndex = m_columnDisplayOrder.at(column);
+    if (existsColumnAtIndex(internalIndex) == false) {
+        std::cout << std::format("ScheduleCore::removeColumn(): Internal index '{}' for display index '{}' is out of range!",
+                                 internalIndex,
+                                 column)
+                  << std::endl;
+        return false;
+    }
+    // The last index = pop from end
+    if (internalIndex == getColumnCount() - 1) {
         m_schedule.pop_back();
     } else {
-        m_schedule.erase(m_schedule.begin() + column);  // invalidates pointers to Columns past this one
+        m_schedule.erase(m_schedule.begin() + internalIndex);  // invalidates pointers to Columns past this one
+    }
+    m_columnDisplayOrder.erase(m_columnDisplayOrder.begin() + column);
+    // Update indices of columns after the removed one
+    for (size_t i = 0; i < m_columnDisplayOrder.size(); i++) {
+        if (m_columnDisplayOrder[i] > internalIndex) {
+            m_columnDisplayOrder[i]--;
+        }
     }
 
     if (resortRequired) {
@@ -196,35 +235,35 @@ bool ScheduleCore::removeColumn(size_t column) {
 }
 
 std::optional<size_t> ScheduleCore::duplicateColumn(size_t column) {
-    if (existsColumnAtIndex(column) == false || getColumn(column)->permanent) {
+    if (existsColumnAtIndex(column) == false || getColumn(column).permanent) {
         return std::nullopt;
     }
 
-    const auto& columnData = *getColumn(column);
+    const Column& columnData = getColumn(column);
     size_t prevColumnCount = getColumnCount();
     addColumn(getColumnCount(), columnData);
-    // The row was actually added (probably unneeded safety check)
+    // The column was actually added (probably unneeded safety check)
     if (getColumnCount() == prevColumnCount + 1) {
         return prevColumnCount;
     }
     return std::nullopt;
 }
 
-const Column* ScheduleCore::getColumn(size_t column) const {
+const Column& ScheduleCore::getColumnConst(size_t column) const {
     if (existsColumnAtIndex(column) == false) {
         throw std::out_of_range(std::format("ScheduleCore::getColumn: column index {} is out of range.", column));
     }
-    return &m_schedule.at(column);
+    return m_schedule.at(m_columnDisplayOrder.at(column));
 }
 
 bool ScheduleCore::setColumnElements(size_t index, const Column& columnData) {
     if (existsColumnAtIndex(index) == false) {
         return false;
     }
-    if (getColumn(index)->type != columnData.type) {
+    if (getColumn(index).type != columnData.type) {
         std::cout << std::format(
                          "ScheduleCore::setColumnElements: The target Column and columnData types must match but are {} and {}",
-                         (size_t)getColumn(index)->type,
+                         (size_t)getColumn(index).type,
                          (size_t)columnData.type)
                   << std::endl;
         return false;
@@ -236,7 +275,7 @@ bool ScheduleCore::setColumnElements(size_t index, const Column& columnData) {
             break;
         }
 
-        switch (getColumn(index)->type) {
+        switch (getColumn(index).type) {
             case (SCH_BOOL): {
                 setElementValue(index, row, ((Element<bool>*)columnData.rows[row])->getValue());
                 break;
@@ -274,7 +313,7 @@ bool ScheduleCore::setColumnElements(size_t index, const Column& columnData) {
                 break;
             }
             default: {
-                std::cout << "ScheduleCore::setColumnElements: Setting an Element of type: " << getColumn(index)->type
+                std::cout << "ScheduleCore::setColumnElements: Setting an Element of type: " << getColumn(index).type
                           << " has not been implemented!" << std::endl;
                 break;
             }
@@ -288,7 +327,7 @@ bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type) {
     if (existsColumnAtIndex(column) == false) {
         return false;
     }
-    if (getColumn(column)->permanent == true) {
+    if (getColumn(column).permanent == true) {
         std::cout
             << std::format(
                    "ScheduleCore::setColumnType tried to set type of a permanent Column at column index {}! Returning false.",
@@ -308,7 +347,7 @@ bool ScheduleCore::setColumnName(size_t column, const std::string& name) {
         return false;
     }
 
-    m_schedule.at(column).name = name;
+    getColumn(column).name = name;
     return true;
 }
 
@@ -317,7 +356,7 @@ bool ScheduleCore::setColumnSort(size_t column, COLUMN_SORT sortDirection) {
         return false;
     }
 
-    m_schedule.at(column).sort = sortDirection;
+    getColumn(column).sort = sortDirection;
     sortColumns();
     return true;
 }
@@ -327,12 +366,21 @@ bool ScheduleCore::setColumnResetOption(size_t column, ColumnResetOption option)
         return false;
     }
 
-    m_schedule.at(column).resetOption = option;
+    getColumn(column).resetOption = option;
+    return true;
+}
+
+bool ScheduleCore::setColumnDisplayOrder(size_t oldOrder, size_t newOrder) {
+    if (existsColumnAtIndex(oldOrder) == false || existsColumnAtIndex(newOrder) == false) {
+        return false;
+    }
+
+    containers::move(m_columnDisplayOrder, oldOrder, newOrder);
     return true;
 }
 
 const SelectOptions& ScheduleCore::getColumnSelectOptions(size_t column) const {
-    return m_schedule.at(column).selectOptions;
+    return getColumnConst(column).selectOptions;
 }
 
 bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsModification& selectOptionsModification) {
@@ -340,8 +388,8 @@ bool ScheduleCore::modifyColumnSelectOptions(size_t column, const SelectOptionsM
         return false;
     }
 
-    if (m_schedule.at(column).modifySelectOptions(selectOptionsModification) == false) {
-        std::cout << "ScheduleCore::modifySelectOptions: Applying the following modification failed:" << std::endl;
+    if (getColumn(column).modifySelectOptions(selectOptionsModification) == false) {
+        std::cout << "ScheduleCore::modifyColumnSelectOptions: Applying the following modification failed:" << std::endl;
         std::cout << selectOptionsModification.getDataString();
         return false;
     }
@@ -355,7 +403,7 @@ bool ScheduleCore::addColumnFilterGroup(size_t column, size_t groupIndex, const 
         return false;
     }
 
-    return getMutableColumn(column)->addFilterGroup(groupIndex, filterGroup);
+    return getColumn(column).addFilterGroup(groupIndex, filterGroup);
 }
 
 bool ScheduleCore::addColumnFilterGroup(size_t column, const FilterGroup& filterGroup) {
@@ -363,7 +411,7 @@ bool ScheduleCore::addColumnFilterGroup(size_t column, const FilterGroup& filter
         return false;
     }
 
-    return addColumnFilterGroup(column, getColumn(column)->getFilterGroupCount(), filterGroup);
+    return addColumnFilterGroup(column, getColumn(column).getFilterGroupCount(), filterGroup);
 }
 
 bool ScheduleCore::removeColumnFilterGroup(size_t column, size_t groupIndex) {
@@ -371,18 +419,18 @@ bool ScheduleCore::removeColumnFilterGroup(size_t column, size_t groupIndex) {
         return false;
     }
 
-    return getMutableColumn(column)->removeFilterGroup(groupIndex);
+    return getColumn(column).removeFilterGroup(groupIndex);
 }
 
 bool ScheduleCore::setColumnFilterGroupName(size_t column, size_t groupIndex, const std::string& name) {
     if (existsColumnAtIndex(column) == false) {
         return false;
     }
-    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) {
+    if (getColumn(column).hasFilterGroupAt(groupIndex) == false) {
         return false;
     }
 
-    getMutableColumn(column)->getFilterGroup(groupIndex).setName(name);
+    getColumn(column).getFilterGroup(groupIndex).setName(name);
     return true;
 }
 
@@ -390,11 +438,11 @@ bool ScheduleCore::setColumnFilterGroupOperator(size_t column, size_t groupIndex
     if (existsColumnAtIndex(column) == false) {
         return false;
     }
-    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) {
+    if (getColumn(column).hasFilterGroupAt(groupIndex) == false) {
         return false;
     }
 
-    getMutableColumn(column)->getFilterGroup(groupIndex).setOperator(logicalOperator);
+    getColumn(column).getFilterGroup(groupIndex).setOperator(logicalOperator);
     return true;
 }
 
@@ -402,11 +450,11 @@ bool ScheduleCore::setColumnFilterGroupEnabled(size_t column, size_t groupIndex,
     if (existsColumnAtIndex(column) == false) {
         return false;
     }
-    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) {
+    if (getColumn(column).hasFilterGroupAt(groupIndex) == false) {
         return false;
     }
 
-    getMutableColumn(column)->getFilterGroup(groupIndex).setEnabled(enabled);
+    getColumn(column).getFilterGroup(groupIndex).setEnabled(enabled);
     return true;
 }
 
@@ -415,18 +463,18 @@ bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, size_t filt
         return false;
     }
 
-    return getMutableColumn(column)->addFilter(groupIndex, filterIndex, filter);
+    return getColumn(column).addFilter(groupIndex, filterIndex, filter);
 }
 
 bool ScheduleCore::addColumnFilter(size_t column, size_t groupIndex, const Filter& filter) {
     if (existsColumnAtIndex(column) == false) {
         return false;
     }
-    if (getColumn(column)->hasFilterGroupAt(groupIndex) == false) {
+    if (getColumn(column).hasFilterGroupAt(groupIndex) == false) {
         return false;
     }
 
-    return addColumnFilter(column, groupIndex, getColumn(column)->getFilterGroupConst(groupIndex).getFilterCount(), filter);
+    return addColumnFilter(column, groupIndex, getColumn(column).getFilterGroupConst(groupIndex).getFilterCount(), filter);
 }
 
 bool ScheduleCore::setColumnFilterOperator(size_t column,
@@ -436,11 +484,11 @@ bool ScheduleCore::setColumnFilterOperator(size_t column,
     if (existsColumnAtIndex(column) == false) {
         return false;
     }
-    if (getColumn(column)->hasFilterAt(groupIndex, filterIndex) == false) {
+    if (getColumn(column).hasFilterAt(groupIndex, filterIndex) == false) {
         return false;
     }
 
-    getMutableColumn(column)->getFilterGroup(groupIndex).getFilter(filterIndex).setOperator(logicalOperator);
+    getColumn(column).getFilterGroup(groupIndex).getFilter(filterIndex).setOperator(logicalOperator);
     return true;
 }
 
@@ -449,7 +497,7 @@ bool ScheduleCore::removeColumnFilter(size_t column, size_t groupIndex, size_t f
         return false;
     }
 
-    return getMutableColumn(column)->removeFilter(groupIndex, filterIndex);
+    return getColumn(column).removeFilter(groupIndex, filterIndex);
 }
 
 bool ScheduleCore::removeColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex) {
@@ -457,11 +505,11 @@ bool ScheduleCore::removeColumnFilterRule(size_t column, size_t groupIndex, size
         return false;
     }
 
-    return getMutableColumn(column)->removeFilterRule(groupIndex, filterIndex, ruleIndex);
+    return getColumn(column).removeFilterRule(groupIndex, filterIndex, ruleIndex);
 }
 
 void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type) {
-    Column& column = *getMutableColumn(index);
+    Column& column = getColumn(index);
 
     size_t rowCount = column.rows.size();
 

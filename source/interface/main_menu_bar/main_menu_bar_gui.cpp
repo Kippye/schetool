@@ -5,6 +5,8 @@
 #include "gui_constants.h"
 #include "util.h"
 
+float MainMenuBarGui::height = 0.0f;
+
 MainMenuBarGui::MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler) : Gui(ID) {
     m_styleHandler = styleHandler;
     // Add subguis
@@ -24,7 +26,7 @@ std::string getInputEventShortcutsString(const Input& input, INPUT_EVENT inputEv
     return containers::combine(Input::getShortcutStrings(input.getEventShortcuts(inputEvent)), "  ");
 }
 
-void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (m_openFileName.has_value() == false) {
@@ -104,7 +106,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
             }
             ImGui::EndMenu();
         }
-        m_height = ImGui::GetWindowHeight();
+        height = ImGui::GetWindowHeight();
     }
     ImGui::EndMainMenuBar();
 
@@ -117,7 +119,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
     }
 
     if (auto newNameModalSubGui = getSubGui<TextInputModalSubGui>("NewNameModalSubGui")) {
-        newNameModalSubGui->draw(window, input, guiTextures);
+        newNameModalSubGui->draw(windowSize, input, guiTextures);
         if (m_openNewNameModal) {
             newNameModalSubGui->open();
             m_openNewNameModal = false;
@@ -125,7 +127,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
     }
 
     if (auto renameModalSubGui = getSubGui<TextInputModalSubGui>("RenameModalSubGui")) {
-        renameModalSubGui->draw(window, input, guiTextures);
+        renameModalSubGui->draw(windowSize, input, guiTextures);
         if (m_openRenameModal) {
             renameModalSubGui->open(m_openFileName.value_or(""));
             m_openRenameModal = false;
@@ -133,7 +135,7 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
     }
 
     if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui")) {
-        deleteModalSubGui->draw(window, input, guiTextures);
+        deleteModalSubGui->draw(windowSize, input, guiTextures);
         if (m_openDeleteConfirmationModal) {
             ImGui::OpenPopup("Confirm Schedule deletion");
             m_openDeleteConfirmationModal = false;
@@ -141,9 +143,9 @@ void MainMenuBarGui::draw(Window& window, Input& input, GuiTextures& guiTextures
     }
 }
 
-float MainMenuBarGui::getHeight() const {
-    return m_height;
-}
+float MainMenuBarGui::getHeight() {
+    return height;
+}  // STATIC
 
 void MainMenuBarGui::newSchedule() {
     m_openNewNameModal = true;

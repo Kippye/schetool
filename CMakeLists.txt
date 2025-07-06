@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
+include(FetchContent)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ############ PROJECT DEFINITION ############
-project(schetool VERSION 0.9.0)
+project(schetool VERSION 0.9.1)
 set(CPP_VERSION "c++20")
 
 ######### OPTIONS #########
@@ -56,8 +58,20 @@ IF (LINUX)
     find_package(GDKPixBuf REQUIRED)
 ENDIF()
 
+######### REMOTE FETCH LIBRARIES #########
+FetchContent_Declare(
+    GLFW
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG e7ea71be039836da3a98cea55ae5569cb5eb885c # latest as of 23.05.2025; GLFW 3.5
+)
+FetchContent_GetProperties(GLFW)
+IF (NOT glfw_POPULATED)
+  FetchContent_Populate(GLFW)
+  add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR} EXCLUDE_FROM_ALL)
+ENDIF()
+# FetchContent_MakeAvailable(GLFW)
 ######### SUBDIRS / LOCAL LIBRARIES #########
-add_subdirectory("${LIBRARY_DIR}/blf")
+add_subdirectory("${LIBRARY_DIR}/blf" EXCLUDE_FROM_ALL)
 add_subdirectory("${LIBRARY_DIR}/glad")
 IF (WINDOWS_MSVC)
     add_subdirectory("${LIBRARY_DIR}/notificationcompat")
@@ -84,7 +98,6 @@ IF (WINDOWS_MSVC)
     ENDIF()
 ENDIF()
 
-find_package(glfw3 REQUIRED)
 add_subdirectory("${LIBRARY_DIR}/imgui") # imgui 1.90.4
 target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
 
@@ -186,40 +199,44 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_wrapper.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/weekday_container.cpp"
-    "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
-    "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/notifications/notification_handler_linux_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/notifications/notification_handler_win_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/notifications/notification_handler.cpp"
-    "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener_linux_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener_win_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/time_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/window.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/autosave_popup_gui.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/edit_history_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/calendar/calendar_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/calendar/calendar_item_window_subgui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar/delete_modal_subgui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar/main_menu_bar_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule/element_editor_subgui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule/filter_editor_subgui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/table/schedule_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/autosave_popup_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/edit_history_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/element_display_templates.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/gui_templates.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/interface.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/interface_style.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar/delete_modal_subgui.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar/main_menu_bar_gui.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule/schedule_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/start_page_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/text_input_modal_subgui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/view_tab_bar_gui.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/io_handler.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/preferences_data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/preferences_io.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/schedule_data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/schedule_io.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/textures.cpp"
-    "${SCHETOOL_SRC}/${SCHEDULE_DIR}/element_base.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filters/filter.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filters/filter_group.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filters/filter_rule_base.cpp"
+    "${SCHETOOL_SRC}/${SCHEDULE_DIR}/element_base.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_column.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_core.cpp"
