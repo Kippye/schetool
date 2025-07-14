@@ -109,7 +109,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 }
                 /// Property context menu button
                 GuiTextureInfo contextButtonTexture;
-                guiTextures.exists("icon_row_menu", contextButtonTexture);
+                guiTextures.exists("icon_menu_kebab", contextButtonTexture);
                 const bool isRemoveButton = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
                 if (isRemoveButton) {
                     guiTextures.exists("icon_remove", contextButtonTexture);

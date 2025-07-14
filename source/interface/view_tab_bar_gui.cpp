@@ -92,22 +92,17 @@ void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures
         ImGui::PopStyleVar();
         ImGui::PopFont();
         // Show a reset button when viewing a different date
-        // Preset button size because it uses a preset size texture variant
-        const float resetButtonSize =
-            24.0f;  //ImGui::CalcItemSize(ImVec2(0, 0), labelSize.x + style.ItemInnerSpacing.x * 2.0f, labelSize.y + style.ItemInnerSpacing.y * 2.0f).y;
+        const float resetButtonSize = 16.0f;
         if (m_viewedDateOverride.getIsEmpty() == false) {
             ImGui::SameLine();
-            ImGui::SetCursorScreenPos(
-                ImVec2(ImGui::GetCursorScreenPos().x,
-                       ImGui::GetItemRectMin().y + ImGui::GetItemRectSize().y / 2.0f - resetButtonSize / 2.0f));
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
-            if (gui_templates::ImageButtonStyleColored("##ResetToTodayButton",
-                                                       guiTextures.getOrLoad("icon_reset_24px").ImID,
-                                                       ImVec2(resetButtonSize, resetButtonSize)))
+            ImGui::SetCursorScreenPos(ImVec2(
+                ImGui::GetCursorScreenPos().x,
+                ImGui::GetItemRectMin().y + ImGui::GetItemRectSize().y / 2.0f - resetButtonSize / 2.0f - style.FramePadding.y));
+            if (gui_templates::ImageButtonStyleColored(
+                    "##ResetToTodayButton", guiTextures.getOrLoad("icon_undo").ImID, ImVec2(resetButtonSize, resetButtonSize)))
             {
                 clearDateOverride();
             }
-            ImGui::PopStyleVar();
         }
     }
     ImGui::PopStyleVar(2);

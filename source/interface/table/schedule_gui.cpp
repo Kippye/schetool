@@ -447,7 +447,7 @@ bool ScheduleGui::drawTableCellContents(
         const bool showAltButton = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
         if (gui_templates::ImageButtonStyleColored(
                 std::format("##RowMenu{}", row).c_str(),
-                (showAltButton ? guiTextures.getOrLoad("icon_remove") : guiTextures.getOrLoad("icon_row_menu")).ImID,
+                (showAltButton ? guiTextures.getOrLoad("icon_remove") : guiTextures.getOrLoad("icon_menu_kebab")).ImID,
                 ImVec2(rowMenuButtonSize, rowMenuButtonSize)))
         {
             if (showAltButton) {
