@@ -43,6 +43,7 @@ void Window::init() {
 
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);  //might be needed for bigger monitors?
+    glfwWindowHintString(GLFW_WAYLAND_APP_ID, "schetool");
 
     m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, m_titleBase.c_str(), NULL, NULL);
     if (m_window == NULL) {
@@ -62,6 +63,7 @@ void Window::init() {
 
     setTitle(m_titleBase);
     glfwMakeContextCurrent(m_window);
+    glfwSwapInterval(0);
     glfwMaximizeWindow(m_window);
     glfwSetWindowSizeLimits(m_window, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(m_window, this);
