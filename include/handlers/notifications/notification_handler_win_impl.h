@@ -41,7 +41,7 @@ class DECLSPEC_UUID("79A832A4-47BC-46CD-998A-73DCD7CAF255") NotificationActivato
                 hr = S_OK;
                 if (SUCCEEDED(hr)) {
                     // Clicked "Mark done"
-                    else if (argString.find(L"complete") != std::string::npos) {
+                    if (argString.find(L"completeCurrent") != std::string::npos) {
                         std::cout << "Complete item activated" << std::endl;
                         hr = S_OK;
                         if (arguments.size() == 2) {
@@ -62,7 +62,7 @@ class DECLSPEC_UUID("79A832A4-47BC-46CD-998A-73DCD7CAF255") NotificationActivato
                         }
                     }
                     // Clicked "Mark previous done"
-                    if (argString.find(L"completePrevious") != std::string::npos) {
+                    else if (argString.find(L"completePrevious") != std::string::npos) {
                         std::cout << "Complete previous item activated" << std::endl;
                         hr = S_OK;
                         if (arguments.size() == 2) {
@@ -133,7 +133,7 @@ class NotificationHandlerWinImpl : public NotificationHandlerImpl {
             "</binding>"
             "</visual>"
             "<actions>"
-            "<action content='Mark done' arguments='complete&amp;{}' activationType='foreground'/>"
+            "<action content='Mark done' arguments='completeCurrent&amp;{}' activationType='foreground'/>"
             "<action content='Mark previous done' arguments='completePrevious&amp;{}' activationType='foreground'/>"
             "</actions>"
             "</toast>";
