@@ -11,9 +11,9 @@ void AutosavePopupGui::draw(const WindowSize& windowSize, Input& input, GuiTextu
         const ImVec2 buttonSize = ImVec2(128.0f, 0.0f);
         ImGui::BeginColumns("testColumns", 2, ImGuiOldColumnFlags_NoResize);
         gui_templates::TextWithBackground(labelSize, "Autosave file");
-        gui_templates::TextWithBackground(labelSize, "%s", m_autosaveInfo.getName().c_str());
+        gui_templates::TextWithBackground(labelSize, "%s##Autosave", m_autosaveInfo.getName().c_str());
         gui_templates::TextWithBackground(
-            labelSize, "%s", m_autosaveInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
+            labelSize, "%s##Autosave", m_autosaveInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
         if (ImGui::Button("Apply autosave", buttonSize)) {
             applyAutosaveEvent.invoke();
             ImGui::CloseCurrentPopup();
@@ -25,8 +25,9 @@ void AutosavePopupGui::draw(const WindowSize& windowSize, Input& input, GuiTextu
         ImGui::NextColumn();
 
         gui_templates::TextWithBackground(labelSize, "Base file");
-        gui_templates::TextWithBackground(labelSize, "%s", m_baseInfo.getName().c_str());
-        gui_templates::TextWithBackground(labelSize, "%s", m_baseInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
+        gui_templates::TextWithBackground(labelSize, "%s##Base", m_baseInfo.getName().c_str());
+        gui_templates::TextWithBackground(
+            labelSize, "%s##Base", m_baseInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
         if (ImGui::Button("Open file", buttonSize)) {
             deleteAutosaveEvent.invoke();
             ImGui::CloseCurrentPopup();
