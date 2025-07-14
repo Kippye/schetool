@@ -37,7 +37,10 @@ class ScheduleCore {
         void sortColumns();
 
         // Checks if the row at the given index passes every FilterGroup in every column.
-        bool checkPassesAllFilters(size_t row, const std::optional<TimeWrapper>& currentTime = std::nullopt) const;
+        // Optionally, pass a vector of indices of columns whose filters should not be applied. Invalid indices in this vector will simply have no effect.
+        bool checkPassesAllFilters(size_t row,
+                                   const std::optional<TimeWrapper>& currentTime = std::nullopt,
+                                   const std::vector<size_t>& ignoredColumnIndices = {}) const;
 
         // COLUMNS
         size_t getColumnCount() const;

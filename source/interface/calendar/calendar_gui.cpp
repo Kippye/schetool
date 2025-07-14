@@ -512,7 +512,7 @@ void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateConta
             continue;
         }
         // CHECK FILTERS BEFORE DRAWING ITEM / ROW
-        if (!m_scheduleCore.checkPassesAllFilters(row, m_scheduleDateOverride)) {
+        if (!m_scheduleCore.checkPassesAllFilters(row, m_scheduleDateOverride, {dateColumnIndex})) {
             continue;
         }
         bool itemRemoved = false;

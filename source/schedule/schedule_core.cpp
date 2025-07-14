@@ -83,8 +83,15 @@ void ScheduleCore::sortColumns() {
     }
 }
 
-bool ScheduleCore::checkPassesAllFilters(size_t row, const std::optional<TimeWrapper>& currentTime) const {
-    for (const Column& column : m_schedule) {
+bool ScheduleCore::checkPassesAllFilters(size_t row,
+                                         const std::optional<TimeWrapper>& currentTime,
+                                         const std::vector<size_t>& ignoredColumnIndices) const {
+    for (size_t col = 0; col < m_schedule.size(); col++) {
+        // Skip if this is a column to ignore
+        if (std::find(ignoredColumnIndices.begin(), ignoredColumnIndices.end(), col) != ignoredColumnIndices.end()) {
+            continue;
+        }
+        const Column& column = m_schedule.at(col);
         // Check if the row's Element passes every FilterGroup in this Column
         bool passesAllFilters = column.checkElementPassesFilters(
             row,
