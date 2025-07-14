@@ -20,10 +20,15 @@ class TimeHandler {
 
         std::function<void(NotificationActivation, NotificationInfo)> notificationActivatedListener =
             [&](NotificationActivation activationType, NotificationInfo notificationInfo) {
-                if (activationType == NotificationActivation::PreviousMarkedDone) {
-                    if (notificationInfo.startTime.has_value()) {
-                        completePreviousItem(notificationInfo.startTime.value());
-                    }
+                switch (activationType) {
+                    case NotificationActivation::MarkedDone:
+                        completeItem(notificationInfo);
+                        break;
+                    case NotificationActivation::PreviousMarkedDone:
+                        completePreviousItem(notificationInfo);
+                        break;
+                    default:
+                        break;
                 }
             };
 
@@ -36,10 +41,14 @@ class TimeHandler {
         void applyResetsSince(const TimeWrapper& previousTime);
         // Show notifications for visible items that began this time tick.
         void showItemStartNotifications(const TimeWrapper& currentTime, const TimeWrapper& previousTime);
+        // Completes ALL items with the same start time AND end time AND name as in the provided NotificationInfo.
+        // If there are no such items or the NotificationInfo is missing some values, does nothing.
+        // Meant for use when a Notification's "Mark done" button is pressed.
+        void completeItem(const NotificationInfo& notificationInfo);
         // Basically, completes the item whose start time is before "startTime", but closest to it.
         // If there are no such items, does nothing.
-        // Mostly (only) meant for use when a Notification's "Mark previous done" button is pressed.
-        void completePreviousItem(const ClockTimeWrapper& startTime);
+        // Meant for use when a Notification's "Mark previous done" button is pressed.
+        void completePreviousItem(const NotificationInfo& notificationInfo);
         void handleFileUnloaded();
 
     public:

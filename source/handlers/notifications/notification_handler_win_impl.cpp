@@ -109,6 +109,7 @@ bool NotificationHandlerWinImpl::showItemNotification(const std::string& name,
                     notificationData.completedItemCount,  // Completed items
                     notificationData.totalItemCount,  // Total items
                     supportiveMessage,  // Supportive message for schedule progress
+                    m_notificationID,
                     m_notificationID);
     std::wstring wxmlText(xmlText.begin(), xmlText.end());
     if (showNotificationWithXmlString(wxmlText)) {

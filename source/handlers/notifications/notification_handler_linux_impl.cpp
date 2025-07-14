@@ -74,11 +74,12 @@ bool NotificationHandlerLinuxImpl::showItemNotification(const std::string& name,
     notify_notification_set_timeout(notif, ITEM_NOTIFICATION_TIMEOUT_SEC * 1000);
     // Callback for clicking on the notification itself
     addNotificationAction(notif, "default", "Clicked on", new NotificationInfo(m_notificationID, name, beginning, end));
+    // Mark done button
+    addNotificationAction(notif, "markDone", "Mark done", new NotificationInfo(m_notificationID, name, beginning, end));
     // Mark previous done button
     addNotificationAction(
         notif, "markPreviousDone", "Mark previous done", new NotificationInfo(m_notificationID, name, beginning, end));
-    // Dismiss button
-    addNotificationAction(notif, "dismiss", "Dismiss", new NotificationInfo(m_notificationID, name, beginning, end));
+
     if (notify_notification_show(notif, NULL)) {
         m_notificationID++;
         return true;

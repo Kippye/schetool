@@ -63,7 +63,7 @@ void Window::init() {
 
     setTitle(m_titleBase);
     glfwMakeContextCurrent(m_window);
-    glfwSwapInterval(0);
+    glfwSwapInterval(0);  // TEMP
     glfwMaximizeWindow(m_window);
     glfwSetWindowSizeLimits(m_window, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(m_window, this);

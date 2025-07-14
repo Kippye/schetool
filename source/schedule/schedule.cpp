@@ -237,6 +237,12 @@ void Schedule::sortColumns() {
     m_core.sortColumns();
 }
 
+bool Schedule::checkPassesAllFilters(size_t row,
+                                     const std::optional<TimeWrapper>& currentTime,
+                                     const std::vector<size_t>& ignoredColumnIndices) const {
+    return m_core.checkPassesAllFilters(row, currentTime, ignoredColumnIndices);
+}
+
 size_t Schedule::getColumnCount() {
     return m_core.getColumnCount();
 }

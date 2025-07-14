@@ -40,7 +40,28 @@ class DECLSPEC_UUID("79A832A4-47BC-46CD-998A-73DCD7CAF255") NotificationActivato
                 // TODO: Check if window is open
                 hr = S_OK;
                 if (SUCCEEDED(hr)) {
-                    // Clicked the button "Mark previous done" or something like that
+                    // Clicked "Mark done"
+                    else if (argString.find(L"complete") != std::string::npos) {
+                        std::cout << "Complete item activated" << std::endl;
+                        hr = S_OK;
+                        if (arguments.size() == 2) {
+                            // Convert to NORMAL string
+                            std::string notificationString;
+                            for (char x : arguments.back())
+                                notificationString += x;
+                            int notificationID;
+                            auto [ptr, ec] = std::from_chars(notificationString.data(),
+                                                             notificationString.data() + notificationString.size(),
+                                                             notificationID);
+                            if (ec != std::errc{}) {
+                                // TODO: something
+                            } else {
+                                std::wcout << "Notification ID: " << notificationID << std::endl;
+                                notificationActivatedEvent.invoke(NotificationActivation::MarkedDone, (size_t)notificationID);
+                            }
+                        }
+                    }
+                    // Clicked "Mark previous done"
                     if (argString.find(L"completePrevious") != std::string::npos) {
                         std::cout << "Complete previous item activated" << std::endl;
                         hr = S_OK;
@@ -61,13 +82,6 @@ class DECLSPEC_UUID("79A832A4-47BC-46CD-998A-73DCD7CAF255") NotificationActivato
                                                                   (size_t)notificationID);
                             }
                         }
-                    }
-                    // Clicked "Dismiss"
-                    else if (argString.find(L"dismiss") != std::string::npos)
-                    {
-                        // do nothing?
-                        hr = S_OK;
-                        std::cout << "Dismissed notification." << std::endl;
                     }
                     // Open the app
                     else
@@ -119,8 +133,8 @@ class NotificationHandlerWinImpl : public NotificationHandlerImpl {
             "</binding>"
             "</visual>"
             "<actions>"
+            "<action content='Mark done' arguments='complete&amp;{}' activationType='foreground'/>"
             "<action content='Mark previous done' arguments='completePrevious&amp;{}' activationType='foreground'/>"
-            "<action activationType='system' arguments='dismiss' content=''/>"
             "</actions>"
             "</toast>";
 

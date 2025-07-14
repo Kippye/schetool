@@ -316,9 +316,15 @@ class Schedule {
         void clearSchedule();
         // Replaces the vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
         void replaceSchedule(std::vector<Column>& columns);
-        // Get a constant reference to every Column in the Schedule
+        // Get a copy of the schedule Column vector
         std::vector<Column> getAllColumns();
         void sortColumns();
+
+        // Checks if the row at the given index passes every FilterGroup in every column.
+        // Optionally, pass a vector of indices of columns whose filters should not be applied. Invalid indices in this vector will simply have no effect.
+        bool checkPassesAllFilters(size_t row,
+                                   const std::optional<TimeWrapper>& currentTime = std::nullopt,
+                                   const std::vector<size_t>& ignoredColumnIndices = {}) const;
 
         // COLUMNS
         size_t getColumnCount();
