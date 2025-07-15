@@ -7,6 +7,9 @@ struct GuiTextureInfo {
         GLuint ID;
         ImTextureID ImID;
         unsigned int width, height;
+
+        GuiTextureInfo();
+        GuiTextureInfo(const Texture& texture);
 };
 
 // Stores and loads textures for interface elements

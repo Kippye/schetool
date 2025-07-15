@@ -11,6 +11,7 @@ class ElementBase {
     public:
         ElementBase();
         ElementBase(SCHEDULE_TYPE type, const TimeWrapper& creationTime = TimeWrapper::getCurrentTime());
+        virtual ~ElementBase() = default;
         SCHEDULE_TYPE getType() const;
         const TimeWrapper& getCreationTime() const;
         const TimeWrapper& getEditTime() const;

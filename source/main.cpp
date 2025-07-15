@@ -104,6 +104,10 @@ void Program::loop() {
         glfwPollEvents();
     }
 
+    terminate();
+}
+
+void Program::terminate() {
     auto time = TimeWrapper(std::chrono::system_clock::now()).getLocalTime();
     auto floorMinutes = std::chrono::floor<std::chrono::minutes>(time);
     auto secs = std::chrono::seconds(std::chrono::floor<std::chrono::seconds>(time - floorMinutes));
@@ -113,6 +117,9 @@ void Program::loop() {
         std::format("{}:{}:{}ms", TimeWrapper::getString(time, TIME_FORMAT_TIME), secs.count(), millis.count());
     std::cout << "Terminating program at " << timeString << "..." << std::endl;
     windowManager.terminate();
+#ifdef SCHETOOL_LINUX
+    // TODO: Free notifyLoop and gContext somehow?
+#endif
 }
 
 #ifndef PERFORM_UNIT_TESTS

@@ -12,18 +12,17 @@ extern "C" {
 
 namespace fs = std::filesystem;
 
-#define DEBUG_TEXTURE_LOADING false
-
 void TextureLoader::init() {
-    m_missingTextureID = createTextureFromData(m_missingTextureData.imageFormat,
-                                               GL_TEXTURE_2D,
-                                               0,
-                                               m_missingTextureData.width,
-                                               m_missingTextureData.height,
-                                               0,
-                                               GL_UNSIGNED_BYTE,
-                                               m_missingTextureData.data,
-                                               m_missingTextureData.size);
+    GLuint missingTextureID = createTextureFromData(m_missingTextureData.imageFormat,
+                                                    GL_TEXTURE_2D,
+                                                    0,
+                                                    m_missingTextureData.width,
+                                                    m_missingTextureData.height,
+                                                    0,
+                                                    GL_UNSIGNED_BYTE,
+                                                    m_missingTextureData.data,
+                                                    m_missingTextureData.size);
+    m_missingTexture = Texture(missingTextureID, m_missingTextureData.width, m_missingTextureData.height);
 }
 
 IMAGE_FORMAT TextureLoader::extensionToFormat(const char* ext) const {
@@ -89,6 +88,7 @@ GLuint TextureLoader::createTextureFromData(IMAGE_FORMAT imageFormat,
     createTexture(imageFormat, target, level, width, height, border, type, pixels);
 
     glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(pixels);
     return ID;
 }
 
@@ -117,26 +117,55 @@ std::filesystem::path TextureLoader::getRelativePathFromTextureFolder(const std:
     return fs::path(std::format("{}{}", textureFolder, relativePath));
 }
 
-GLuint TextureLoader::getMissingTexture() const {
-    return m_missingTextureID;
+Texture TextureLoader::getMissingTexture() const {
+    return m_missingTexture;
 }
 
-GLuint TextureLoader::createEmptyTexture(int width, int height) {
-    unsigned char* data = new unsigned char[width * height];
+std::optional<Texture> TextureLoader::loadTexture(const std::filesystem::path& path, bool flip) {
+    int nrChannels;
+
+    stbi_set_flip_vertically_on_load(flip);
+    int width, height;
+    unsigned char* data = stbi_load(path.string().c_str(), &width, &height, &nrChannels, 4);
+
+    if (!data) {
+        printf("TextureLoader::loadTexture(...): Failed to load texture at path: %s\n", path.string().c_str());
+        return std::nullopt;
+    }
 
     GLuint ID;
-
-    for (int i = 0; i < width * height; i++) {
-        data = 0;
-    }
+    // 1 - amount, array of IDs
     glGenTextures(1, &ID);
     glBindTexture(GL_TEXTURE_2D, ID);
+    // filtering options for this texture
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // GL_LINEAR would be the "normal" mode, GL_NEAREST pixel mode
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    delete[] data;
-    return ID;
+
+// Upload pixels into texture
+#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+#endif
+
+    IMAGE_FORMAT format = extensionToFormat(path.extension().string().c_str());
+
+    std::optional<Texture> texture = std::nullopt;
+
+    if (format == FORMAT_NONE) {
+        printf("TextureLoader::loadTexture(...): The path '%s' has an unsupported image file extension: '%s'\n",
+               path.string().c_str(),
+               path.extension().string().c_str());
+    } else {
+        createTexture(format, GL_TEXTURE_2D, 0, width, height, 0, GL_UNSIGNED_BYTE, data);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        texture = Texture(ID, width, height);
+    }
+
+    stbi_image_free(data);
+
+    return texture;
 }
 
 unsigned char* TextureLoader::loadTextureData(
@@ -178,8 +207,6 @@ unsigned char* TextureLoader::loadTextureData(
             glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
-    // download free memory
-    // stbi_image_free(data);
 
     return data;
 }

@@ -4,6 +4,16 @@
 
 namespace fs = std::filesystem;
 
+GuiTextureInfo::GuiTextureInfo() {
+}
+
+GuiTextureInfo::GuiTextureInfo(const Texture& texture) {
+    ID = texture.getID();
+    ImID = (ImTextureID)(intptr_t)texture.getID();
+    width = static_cast<unsigned int>(texture.getWidth());
+    height = static_cast<unsigned int>(texture.getHeight());
+}
+
 GuiTextures::GuiTextures(TextureLoader& textureLoader) : m_textureLoader(textureLoader) {
     m_guiTextureFolder = m_textureLoader.getRelativePathFromTextureFolder("/gui/");
 }
@@ -25,18 +35,17 @@ bool GuiTextures::exists(const std::string& guiRelativePath, GuiTextureInfo& out
 
     // A texture was found at the path with some extension.
     if (texturePath.has_value()) {
-        int w, h;
-        GLuint ID;
-        m_textureLoader.loadTextureData(texturePath.value(), &w, &h, &ID);
-        GuiTextureInfo texInfo =
-            GuiTextureInfo{ID, (ImTextureID)(intptr_t)ID, static_cast<unsigned int>(w), static_cast<unsigned int>(h)};
-        m_cachedTextures.insert({guiRelativePath, texInfo});
-        outTexture = GuiTextureInfo(texInfo);
-        return true;
+        auto texture = m_textureLoader.loadTexture(texturePath.value());
+        if (texture.has_value()) {
+            GuiTextureInfo texInfo = GuiTextureInfo(texture.value());
+            m_cachedTextures.insert({guiRelativePath, texInfo});
+            outTexture = GuiTextureInfo(texInfo);
+            return true;
+        }
     }
 
     // Output the missing texture if there was no other result.
-    outTexture = {m_textureLoader.getMissingTexture(), (ImTextureID)(intptr_t)m_textureLoader.getMissingTexture(), 16, 16};
+    outTexture = GuiTextureInfo(m_textureLoader.getMissingTexture());
     return false;
 }
 

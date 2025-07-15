@@ -21,6 +21,7 @@ class Gui {
     public:
         Gui();
         Gui(const char* ID);
+        virtual ~Gui() = default;
 
         ImVec2 position;
         ImVec2 size;

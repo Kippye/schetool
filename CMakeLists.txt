@@ -62,7 +62,7 @@ ENDIF()
 FetchContent_Declare(
     GLFW
     GIT_REPOSITORY https://github.com/glfw/glfw.git
-    GIT_TAG e7ea71be039836da3a98cea55ae5569cb5eb885c # latest as of 23.05.2025; GLFW 3.5
+    GIT_TAG e7ea71be039836da3a98cea55ae5569cb5eb885c # latest as of 23.06.2025; GLFW 3.5
 )
 FetchContent_GetProperties(GLFW)
 IF (NOT glfw_POPULATED)
