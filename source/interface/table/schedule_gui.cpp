@@ -257,6 +257,10 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                     if (filterGroup.getIsEnabled() == false) {
                         ImGui::PopStyleVar();
                     }
+                    if (ImGui::BeginItemTooltip()) {
+                        ImGui::Text("%s", filterGroup.getName().c_str());
+                        ImGui::EndTooltip();
+                    }
 
                     if (sameLine && i < currentColumn.getFilterGroupCount() - 1) {
                         ImGui::SameLine();

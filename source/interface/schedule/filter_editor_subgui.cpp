@@ -739,20 +739,14 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
         }
 
         ImGui::SameLine();  // Remove button after name input
-        const float removeGroupButtonSize = ImGui::GetItemRectSize().y;
-        // size_t pushedColorCount = 0;
-        // ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
-        // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
-        // ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-        if (gui_templates::ImageButtonStyleColored(
-                "##RemoveFilterGroup",
-                guiTextures.getOrLoad("icon_remove").ImID,
-                ImVec2(removeGroupButtonSize, removeGroupButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
+        const float removeGroupButtonSize = ImGui::GetItemRectSize().y - ImGui::GetStyle().FramePadding.y * 2.0f;
+        if (gui_templates::ImageButtonStyleColored("##RemoveFilterGroup",
+                                                   guiTextures.getOrLoad("icon_remove").ImID,
+                                                   ImVec2(removeGroupButtonSize, removeGroupButtonSize)))
         {
             removeColumnFilterGroup.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex());
             ImGui::CloseCurrentPopup();
         }
-        // ImGui::PopStyleColor(pushedColorCount);
 
         auto drawFilterRule = [&](size_t filterIndex, size_t ruleIndex) {
             Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
@@ -777,7 +771,7 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
                 }
             }
             ImGui::SameLine();
-            const float removeRuleButtonSize = ImGui::CalcTextSize("W").y;
+            const float removeRuleButtonSize = ImGui::CalcTextSize("X").y;
             // Remove FilterRule button
             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveFilterRule{}", ruleIndex).c_str(),
                                                        guiTextures.getOrLoad("icon_remove").ImID,
@@ -818,7 +812,7 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
                     }
                 }
                 // Add new rule button
-                if (ImGui::Button(std::string("+ Add rule##").append(std::to_string(f)).c_str())) {
+                if (ImGui::Button(std::format("+ Add rule##{}", f).c_str())) {
                     // DONT add a rule. Open the FilterRule editor with create. If the user creates it, THEN it will be added!
                     if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui")) {
                         // TODO: Pass correct avoid rect
@@ -829,14 +823,9 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
                     }
                 }
 
-                ImGui::SameLine(ImGui::GetWindowWidth() - 30);
+                ImGui::SameLine();
                 // Remove filter button
-                const float removeFilterButtonSize = ImGui::GetItemRectSize().y;
-                if (gui_templates::ImageButtonStyleColored(
-                        std::format("##RemoveFilter{}", f).c_str(),
-                        guiTextures.getOrLoad("icon_remove").ImID,
-                        ImVec2(removeFilterButtonSize, removeFilterButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
-                {
+                if (ImGui::Button(std::format("- Remove filter##{}", f).c_str())) {
                     m_filterGroupState.getFilterGroup().removeFilter(f);
                     removeColumnFilter.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), f);
                 }

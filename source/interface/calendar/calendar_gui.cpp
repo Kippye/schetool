@@ -242,10 +242,8 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
                 filterEditor->openGroupEdit(filterEditorColumn, filterEditorGroupIndex, itemAvoidRect);
             }
             ImGui::SameLine();
-            if (ImGui::Button("+##addFilterGroup", ImVec2(filterAddButtonSize, filterAddButtonSize))) {
-                // Display the FilterGroup editor to add a filter group
-            }
             bool createGroupOpenFilterEditor = false;
+            ImGui::Button("+##addFilterGroup", ImVec2(filterAddButtonSize, filterAddButtonSize));
             if (ImGui::BeginPopupContextItem("AddFilterGroupColumnSelection", ImGuiPopupFlags_MouseButtonLeft)) {
                 ImGui::Text("%s", "Select property");
                 for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
