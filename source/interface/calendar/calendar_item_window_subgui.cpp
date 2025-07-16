@@ -1,7 +1,7 @@
 #include "calendar/calendar_item_window_subgui.h"
 #include "schedule/element_editor_subgui.h"
-#include "table/schedule_gui.h"
 #include "interface_style.h"
+#include "schedule_constants.h"
 #include "schedule_column.h"
 #include "imgui_stdlib.h"
 #include <string>
@@ -109,15 +109,24 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 }
                 /// Property context menu button
                 GuiTextureInfo contextButtonTexture;
-                guiTextures.exists("icon_menu_kebab", contextButtonTexture);
                 const bool isRemoveButton = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
-                if (isRemoveButton) {
-                    guiTextures.exists("icon_remove", contextButtonTexture);
-                }
-                // Hide the button unless the property row is hovered
+
+                // Property row not hovered - show the type's icon
                 if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex()) {
-                    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
+                    const SCHEDULE_TYPE columnType = m_scheduleCore.getColumnConst(col).type;
+                    guiTextures.exists(schedule_consts::scheduleTypeIconNames.contains(columnType)
+                                           ? schedule_consts::scheduleTypeIconNames.at(columnType)
+                                           : "MISSING_ICON",
+                                       contextButtonTexture);
+                    ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::colorInvisible);
+                } else {  // Property row is hovered - show kebab or remove button
+                    if (!isRemoveButton) {
+                        guiTextures.exists("icon_menu_kebab", contextButtonTexture);
+                    } else {
+                        guiTextures.exists("icon_remove", contextButtonTexture);
+                    }
                 }
+
                 if (gui_templates::ImageButtonStyleColored(std::format("##propertyContextButton{}", col).c_str(),
                                                            contextButtonTexture.ImID,
                                                            ImVec2(contextButtonSize, contextButtonSize)))
@@ -128,7 +137,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                     }
                 }
                 if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex()) {
-                    ImGui::PopStyleVar();  // ImGuiStyleVar_Alpha = 0.0f
+                    ImGui::PopStyleColor();  // ImGuiCol_Button = invisible
                 }
                 if (!isRemoveButton) {
                     bool hoveringThisRow = ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex();

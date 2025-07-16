@@ -34,6 +34,17 @@ namespace schedule_consts {
         {SCH_TIME, "Time"},
         {SCH_DATE, "Date"},
     };
+    const std::map<SCHEDULE_TYPE, const char*> scheduleTypeIconNames = {
+        {SCH_BOOL, "icon_type_checkbox"},
+        {SCH_NUMBER, "icon_type_number"},
+        {SCH_DECIMAL, "icon_type_decimal"},
+        {SCH_TEXT, "icon_type_text"},
+        {SCH_SELECT, "icon_type_select"},
+        {SCH_MULTISELECT, "icon_type_multiselect"},
+        {SCH_WEEKDAY, "icon_type_weekday"},
+        {SCH_TIME, "icon_type_time"},
+        {SCH_DATE, "icon_type_date"},
+    };
     const std::map<ColumnResetOption, const char*> columnResetOptionStrings = {
         {ColumnResetOption::Never, "Never"},
         {ColumnResetOption::Daily, "Daily"},

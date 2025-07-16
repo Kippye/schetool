@@ -303,31 +303,42 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                                           ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
             ImGui::PushID(ImGui::TableGetColumnIndex());
             float headerCursorY = ImGui::GetCursorPosY();
-            size_t pushedStyleVars = 0;
-            // HIDE the sort button if the column header is not hovered and the column does not have a sort direction applied
+            size_t pushedStyleColors = 0;
+            GuiTextureInfo sortButtonTexture;
+            const SCHEDULE_TYPE columnType = m_scheduleCore.getColumnConst(column).type;
+            const COLUMN_SORT columnSort = m_scheduleCore.getColumnConst(column).sort;
+
+            guiTextures.exists(schedule_consts::scheduleTypeIconNames.contains(columnType)
+                                   ? schedule_consts::scheduleTypeIconNames.at(columnType)
+                                   : "MISSING_ICON",
+                               sortButtonTexture);
+            // Hide the button background if the column header is not hovered and the column does not have a sort direction applied
             if (isColumnHeaderHovered == false && m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_NONE) {
-                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
-                pushedStyleVars++;
+                ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::colorInvisible);
+                pushedStyleColors++;
+            } else {  // If the column header is hovered OR the column has a sort direction, display the correct sort icon
+                guiTextures.exists(columnSort == COLUMN_SORT_NONE
+                                       ? "icon_sort_none"
+                                       : (columnSort == COLUMN_SORT_ASCENDING ? "icon_sort_ascending" : "icon_sort_descending"),
+                                   sortButtonTexture);
             }
-            // sort button!
-            if (ImGui::ArrowButton(
-                    std::format("##sortColumn{}", column).c_str(),
-                    m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_NONE
-                        ? ImGuiDir_Right
-                        : (m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_DESCENDING ? ImGuiDir_Down : ImGuiDir_Up)))
+            // Sort button!
+            const float sortButtonSize = ImGui::GetFrameHeight() - style.FramePadding.y * 2.0f;
+            if (gui_templates::ImageButtonStyleColored(std::format("##sortColumnOrTypeIcon{}", column).c_str(),
+                                                       sortButtonTexture.ImID,
+                                                       ImVec2(sortButtonSize, sortButtonSize)))
             {
-                setColumnSort.invoke(
-                    column,
-                    m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_NONE
-                        ? COLUMN_SORT_DESCENDING
-                        : (m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING
-                                                                                                : COLUMN_SORT_NONE));
+                setColumnSort.invoke(column,
+                                     columnSort == COLUMN_SORT_NONE
+                                         ? COLUMN_SORT_DESCENDING
+                                         : (columnSort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
             }
-            ImGui::PopStyleVar(pushedStyleVars);
+            ImGui::PopStyleColor(pushedStyleColors);
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+            // TODO: Align this header text to the sort button better
             ImGui::TableHeader(m_scheduleCore.getColumnConst(column).name.c_str());
             ImGuiID tableHeaderID = ImGui::GetItemID();
-            // Show a close button on the right when hovered
+            // Show a remove button on the right when hovered
             // permanent columns can't be removed so there's no need for a remove button
             if (isColumnHeaderHovered && m_scheduleCore.getColumnConst(column).permanent == false) {
                 // This is how the arrow button's size is calculated
