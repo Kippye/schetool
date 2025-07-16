@@ -123,10 +123,9 @@ class ScheduleCore {
             return true;
         }
         bool removeColumnFilterRule(size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex);
-        // Sets every Element in the Column index to a default value of the given type.
-        // Do NOT change the column's type before running this.
-        // After resetting, sets the column's type to type and calls sortColumns().
-        void resetColumn(size_t index, SCHEDULE_TYPE type);
+        // Sets every Element in the Column index to a default value of its type.
+        // After resetting, calls sortColumns().
+        void resetColumn(size_t index);
 
         // ROWS
         size_t getRowCount() const;
@@ -195,10 +194,9 @@ class ScheduleCore {
             return (Element<T>*)element;
         }
 
-        // Use this function to completely replace the element at column; row with the ElementBase in value.
-        // NOTE: If the types match, a copy is performed.
-        // If the types do not match, the target element pointer is replaced by the value pointer!
-        // NOTE: Currently, does not add to the edit history
+        // Use this function to completely replace the element at column; row with the given ElementBase*.
+        // The target element pointer is replaced by the provided pointer!
+        // TODO: FIX MEMORY LEAK
         bool setElement(size_t column, size_t row, ElementBase* other, bool resort = true) {
             if (getElement(column, row) == nullptr) {
                 std::cout << std::format("ScheduleCore::setElement failed to set element at {}; {} - element does not exist",
@@ -207,63 +205,18 @@ class ScheduleCore {
                           << std::endl;
                 return false;
             }
+            if (!other) {
+                std::cout
+                    << std::format(
+                           "ScheduleCore::setElement failed to set element at {}; {} - provided element pointer is nullptr",
+                           column,
+                           row)
+                    << std::endl;
+                return false;
+            }
 
-            // IF the provided Element fits the column's type, set the target Element's value directly
-            if (getColumn(column).type == other->getType()) {
-                switch (other->getType()) {
-                    case (SCH_BOOL): {
-                        getElementAsSpecial<bool>(column, row)->setValue(((Element<bool>*)other)->getValue());
-                        break;
-                    }
-                    case (SCH_NUMBER): {
-                        getElementAsSpecial<int>(column, row)->setValue(((Element<int>*)other)->getValue());
-                        break;
-                    }
-                    case (SCH_DECIMAL): {
-                        getElementAsSpecial<double>(column, row)->setValue(((Element<double>*)other)->getValue());
-                        break;
-                    }
-                    case (SCH_TEXT): {
-                        getElementAsSpecial<std::string>(column, row)->setValue(((Element<std::string>*)other)->getValue());
-                        break;
-                    }
-                    case (SCH_SELECT): {
-                        getElementAsSpecial<SingleSelectContainer>(column, row)
-                            ->setValue(((Element<SingleSelectContainer>*)other)->getValue());
-                        break;
-                    }
-                    case (SCH_MULTISELECT): {
-                        getElementAsSpecial<SelectContainer>(column, row)
-                            ->setValue(((Element<SelectContainer>*)other)->getValue());
-                        break;
-                    }
-                    case (SCH_WEEKDAY): {
-                        getElementAsSpecial<WeekdayContainer>(column, row)
-                            ->setValue(((Element<WeekdayContainer>*)other)->getValue());
-                        break;
-                    }
-                    case (SCH_TIME): {
-                        getElementAsSpecial<TimeContainer>(column, row)->setValue(((Element<TimeContainer>*)other)->getValue());
-                        break;
-                    }
-                    case (SCH_DATE): {
-                        getElementAsSpecial<DateContainer>(column, row)->setValue(((Element<DateContainer>*)other)->getValue());
-                        break;
-                    }
-                    default: {
-                        std::cout << std::format("ScheduleCore::setElement has not been implemented for Element type {}",
-                                                 (size_t)other->getType())
-                                  << std::endl;
-                        return false;
-                    }
-                }
-            }
-            // IF the value being assigned is of a different type than the column's (i.e. the column's type was just changed and is being reset), REPLACE the pointer. Otherwise, the program will crash.
-            else
-            {
-                delete getColumn(column).getElement(row);
-                getColumn(column).rows[row] = other;
-            }
+            delete getColumn(column).getElement(row);
+            getColumn(column).rows[row] = other;
 
             if (resort) {
                 sortColumns();
@@ -294,7 +247,7 @@ class ScheduleCore {
 
         // Shortcut for setting the value of the Element at col; row to value. You must provide the correct type for the Element.
         template <typename T>
-        bool setElementValue(size_t col, size_t row, const T& value) {
+        bool setElementValue(size_t col, size_t row, const T& value, bool resort = true) {
             ElementBase* element = getElement(col, row);
 
             if (element == nullptr) {
@@ -326,7 +279,9 @@ class ScheduleCore {
                         getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue());
             }
 
-            sortColumns();
+            if (resort) {
+                sortColumns();
+            }
             return true;
         }
 };

@@ -12,6 +12,13 @@ extern "C" {
 
 namespace fs = std::filesystem;
 
+ImageData::~ImageData() {
+    if (data) {
+        stbi_image_free(data);
+    }
+    data = nullptr;  // Is there any point in doing this?
+}
+
 void TextureLoader::init() {
     GLuint missingTextureID = createTextureFromData(m_missingTextureData.imageFormat,
                                                     GL_TEXTURE_2D,
@@ -88,7 +95,7 @@ GLuint TextureLoader::createTextureFromData(IMAGE_FORMAT imageFormat,
     createTexture(imageFormat, target, level, width, height, border, type, pixels);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-    stbi_image_free(pixels);
+    freeImageMemory(pixels);
     return ID;
 }
 
@@ -121,6 +128,14 @@ Texture TextureLoader::getMissingTexture() const {
     return m_missingTexture;
 }
 
+void TextureLoader::freeImageMemory(unsigned char* pixels) const {
+    if (!pixels) {
+        return;
+    }
+
+    stbi_image_free(pixels);
+}
+
 std::optional<Texture> TextureLoader::loadTexture(const std::filesystem::path& path, bool flip) {
     int nrChannels;
 
@@ -130,6 +145,7 @@ std::optional<Texture> TextureLoader::loadTexture(const std::filesystem::path& p
 
     if (!data) {
         printf("TextureLoader::loadTexture(...): Failed to load texture at path: %s\n", path.string().c_str());
+        freeImageMemory(data);
         return std::nullopt;
     }
 
@@ -163,12 +179,12 @@ std::optional<Texture> TextureLoader::loadTexture(const std::filesystem::path& p
         texture = Texture(ID, width, height);
     }
 
-    stbi_image_free(data);
+    freeImageMemory(data);
 
     return texture;
 }
 
-unsigned char* TextureLoader::loadTextureData(
+ImageData TextureLoader::loadTextureData(
     const std::filesystem::path& path, int* width, int* height, GLuint* ID, bool bind, bool flip) {
     int nrChannels;
 
@@ -177,7 +193,7 @@ unsigned char* TextureLoader::loadTextureData(
 
     if (!data) {
         printf("TextureLoader::loadTextureData(...): Failed to load texture data at path: %s\n", path.string().c_str());
-        return data;
+        return ImageData();
     }
 
     if (bind) {
@@ -208,5 +224,5 @@ unsigned char* TextureLoader::loadTextureData(
         }
     }
 
-    return data;
+    return ImageData{data};
 }

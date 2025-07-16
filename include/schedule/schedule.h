@@ -407,7 +407,7 @@ class Schedule {
                 }
             }
         }
-        // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
+        // Sets every Element in the Column index to a default value of its type.
         void resetColumn(size_t index, bool addToHistory);
 
         // ROWS

@@ -16,6 +16,7 @@ extern "C" {
 class Window {
     private:
         static std::map<std::string, std::string> m_versionGlToGLSL;
+        static std::map<int, std::string> m_glfwPlatformNames;
         const size_t WINDOW_MIN_WIDTH = 220;
         const size_t WINDOW_MIN_HEIGHT = 160;
         size_t m_windowWidth = 800;

@@ -24,25 +24,36 @@ std::map<std::string, std::string> Window::m_versionGlToGLSL = {
     {"4.6", "#version 460 core"},
 };
 
+std::map<int, std::string> Window::m_glfwPlatformNames = {{GLFW_PLATFORM_WIN32, "GLFW_PLATFORM_WIN32"},
+                                                          {GLFW_PLATFORM_COCOA, "GLFW_PLATFORM_COCOA"},
+                                                          {GLFW_PLATFORM_WAYLAND, "GLFW_PLATFORM_WAYLAND"},
+                                                          {GLFW_PLATFORM_X11, "GLFW_PLATFORM_X11"},
+                                                          {GLFW_PLATFORM_NULL, "GLFW_PLATFORM_NULL"}};
+
 void Window::init() {
-    m_titleBase = std::format("{} {}{}",
-                              program_info::PROGRAM_NAME,
-                              program_info::ProgramVersion::getCurrent().getString(),
+    m_titleBase = std::format("{} {}", program_info::PROGRAM_NAME, program_info::ProgramVersion::getCurrent().getString());
 #ifdef DEBUG
-                              " (DEBUG)"
-#else
-                              ""
+    m_titleBase.append(" (DEBUG)");
 #endif
-    );
 
     int major, minor, rev;
     glfwGetVersion(&major, &minor, &rev);
-    std::cout << "GLFW version " << std::format("{}.{}.{}", major, minor, rev) << std::endl;
+    std::cout << std::format("GLFW version {}.{}.{}", major, minor, rev) << std::endl;
+#ifdef SCHETOOL_LINUX
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
     glfwInit();
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    const int glfwPlatform = glfwGetPlatform();
+    std::cout << std::format("GLFW platform: {}",
+                             m_glfwPlatformNames.contains(glfwPlatform) ? m_glfwPlatformNames.at(glfwPlatform)
+                                                                        : std::to_string(glfwPlatform))
+              << std::endl;
+    // #ifdef SCHETOOL_LINUX
+    //                      glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+    // #endif
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
-    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);  //might be needed for bigger monitors?
+    glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
     glfwWindowHintString(GLFW_WAYLAND_APP_ID, "schetool");
 
     m_window = glfwCreateWindow(m_windowWidth, m_windowHeight, m_titleBase.c_str(), NULL, NULL);
@@ -63,7 +74,7 @@ void Window::init() {
 
     setTitle(m_titleBase);
     glfwMakeContextCurrent(m_window);
-    glfwSwapInterval(0);  // TEMP
+    // glfwSwapInterval(0);  // TEMP
     glfwMaximizeWindow(m_window);
     glfwSetWindowSizeLimits(m_window, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetWindowUserPointer(m_window, this);
@@ -151,9 +162,11 @@ WindowSize Window::getSize() const {
 }
 
 void Window::loadIcon(TextureLoader& textureLoader) {
+    // The contained data is freed when this object goes out of scope
     GLFWimage images[1] = {GLFWimage()};
-    images[0].pixels = textureLoader.loadTextureData(
+    ImageData iconData = textureLoader.loadTextureData(
         textureLoader.getRelativePathFromTextureFolder("icon.png"), &images[0].width, &images[0].height, nullptr, false);
+    images[0].pixels = iconData.data;
     if (images[0].pixels) {
         glfwSetWindowIcon(m_window, 1, images);
         const char* desc;

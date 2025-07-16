@@ -330,22 +330,103 @@ bool ScheduleCore::setColumnElements(size_t index, const Column& columnData) {
     return true;
 }
 
-bool ScheduleCore::setColumnType(size_t column, SCHEDULE_TYPE type) {
-    if (existsColumnAtIndex(column) == false) {
+bool ScheduleCore::setColumnType(size_t col, SCHEDULE_TYPE type) {
+    if (existsColumnAtIndex(col) == false) {
         return false;
     }
-    if (getColumn(column).permanent == true) {
+    if (getColumn(col).permanent == true) {
         std::cout
             << std::format(
                    "ScheduleCore::setColumnType tried to set type of a permanent Column at column index {}! Returning false.",
-                   column)
+                   col)
             << std::endl;
         return false;
     }
 
     // TODO: try to convert types..? i guess there's no point in doing that. only really numbers could be turned into text.
-    // reset values to defaults of the (new?) type
-    resetColumn(column, type);
+    // Reset values to defaults of the target type
+    Column& column = getColumn(col);
+    size_t rowCount = column.rows.size();
+
+    switch (type) {
+        case (SCH_BOOL): {
+            for (size_t row = 0; row < rowCount; row++) {
+                setElement(col, row, (ElementBase*)new Element<bool>(type, Element<bool>::getDefaultValue()), false);
+            }
+            break;
+        }
+        case (SCH_NUMBER): {
+            for (size_t row = 0; row < rowCount; row++) {
+                setElement(col, row, (ElementBase*)new Element<int>(type, Element<int>::getDefaultValue()), false);
+            }
+            break;
+        }
+        case (SCH_DECIMAL): {
+            for (size_t row = 0; row < rowCount; row++) {
+                setElement(col, row, (ElementBase*)new Element<double>(type, Element<double>::getDefaultValue()), false);
+            }
+            break;
+        }
+        case (SCH_TEXT): {
+            for (size_t row = 0; row < rowCount; row++) {
+                setElement(
+                    col, row, (ElementBase*)new Element<std::string>(type, Element<std::string>::getDefaultValue()), false);
+            }
+            break;
+        }
+        case (SCH_SELECT): {
+            for (size_t row = 0; row < rowCount; row++) {
+                auto selectElement =
+                    new Element<SingleSelectContainer>(type, Element<SingleSelectContainer>::getDefaultValue());
+                // Update the select to have the correct number of options
+                selectElement->getValueReference().update(
+                    SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
+                    column.selectOptions.getOptionCount());
+                setElement(col, row, (ElementBase*)selectElement, false);
+            }
+            break;
+        }
+        case (SCH_MULTISELECT): {
+            for (size_t row = 0; row < rowCount; row++) {
+                auto selectElement = new Element<SelectContainer>(type, Element<SelectContainer>::getDefaultValue());
+                // Update the select to have the correct number of options
+                selectElement->getValueReference().update(
+                    SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
+                    column.selectOptions.getOptionCount());
+                setElement(col, row, (ElementBase*)selectElement, false);
+            }
+            break;
+        }
+        case (SCH_WEEKDAY): {
+            for (size_t row = 0; row < rowCount; row++) {
+                auto weekdayElement = new Element<WeekdayContainer>(type, Element<WeekdayContainer>::getDefaultValue());
+                setElement(col, row, (ElementBase*)weekdayElement, false);
+            }
+            break;
+        }
+        case (SCH_TIME): {
+            for (size_t row = 0; row < rowCount; row++) {
+                setElement(
+                    col, row, (ElementBase*)new Element<TimeContainer>(type, Element<TimeContainer>::getDefaultValue()), false);
+            }
+            break;
+        }
+        case (SCH_DATE): {
+            for (size_t row = 0; row < rowCount; row++) {
+                setElement(
+                    col, row, (ElementBase*)new Element<DateContainer>(type, Element<DateContainer>::getDefaultValue()), false);
+            }
+            break;
+        }
+        default: {
+            std::cout << "ScheduleCore::setColumnType: Setting a column to type: " << type << " has not been implemented!"
+                      << std::endl;
+            return false;
+        }
+    }
+
+    column.type = type;
+    sortColumns();
     return true;
 }
 
@@ -515,93 +596,73 @@ bool ScheduleCore::removeColumnFilterRule(size_t column, size_t groupIndex, size
     return getColumn(column).removeFilterRule(groupIndex, filterIndex, ruleIndex);
 }
 
-void ScheduleCore::resetColumn(size_t index, SCHEDULE_TYPE type) {
+void ScheduleCore::resetColumn(size_t index) {
     Column& column = getColumn(index);
 
     size_t rowCount = column.rows.size();
 
-    switch (type) {
+    switch (column.type) {
         case (SCH_BOOL): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(index, row, (ElementBase*)new Element<bool>(type, Element<bool>::getDefaultValue()), false);
+                setElementValue(index, row, Element<bool>::getDefaultValue(), false);
             }
             break;
         }
         case (SCH_NUMBER): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(index, row, (ElementBase*)new Element<int>(type, Element<int>::getDefaultValue()), false);
+                setElementValue(index, row, Element<int>::getDefaultValue(), false);
             }
             break;
         }
         case (SCH_DECIMAL): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(index, row, (ElementBase*)new Element<double>(type, Element<double>::getDefaultValue()), false);
+                setElementValue(index, row, Element<double>::getDefaultValue(), false);
             }
             break;
         }
         case (SCH_TEXT): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(
-                    index, row, (ElementBase*)new Element<std::string>(type, Element<std::string>::getDefaultValue()), false);
+                setElementValue(index, row, Element<std::string>::getDefaultValue(), false);
             }
             break;
         }
         case (SCH_SELECT): {
             for (size_t row = 0; row < rowCount; row++) {
-                auto selectElement =
-                    new Element<SingleSelectContainer>(type, Element<SingleSelectContainer>::getDefaultValue());
-                // Update the select to have the correct number of options
-                selectElement->getValueReference().update(
-                    SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
-                    column.selectOptions.getOptionCount());
-                setElement(index, row, (ElementBase*)selectElement, false);
+                setElementValue(index, row, Element<SingleSelectContainer>::getDefaultValue(), false);
             }
             break;
         }
         case (SCH_MULTISELECT): {
             for (size_t row = 0; row < rowCount; row++) {
-                auto selectElement = new Element<SelectContainer>(type, Element<SelectContainer>::getDefaultValue());
-                // Update the select to have the correct number of options
-                selectElement->getValueReference().update(
-                    SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
-                    column.selectOptions.getOptionCount());
-                setElement(index, row, (ElementBase*)selectElement, false);
+                setElementValue(index, row, Element<SelectContainer>::getDefaultValue(), false);
             }
             break;
         }
         case (SCH_WEEKDAY): {
             for (size_t row = 0; row < rowCount; row++) {
-                auto weekdayElement = new Element<WeekdayContainer>(type, Element<WeekdayContainer>::getDefaultValue());
-                setElement(index, row, (ElementBase*)weekdayElement, false);
+                setElementValue(index, row, Element<WeekdayContainer>::getDefaultValue(), false);
             }
             break;
         }
         case (SCH_TIME): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(index,
-                           row,
-                           (ElementBase*)new Element<TimeContainer>(type, Element<TimeContainer>::getDefaultValue()),
-                           false);
+                setElementValue(index, row, Element<TimeContainer>::getDefaultValue(), false);
             }
             break;
         }
         case (SCH_DATE): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(index,
-                           row,
-                           (ElementBase*)new Element<DateContainer>(type, Element<DateContainer>::getDefaultValue()),
-                           false);
+                setElementValue(index, row, Element<DateContainer>::getDefaultValue(), false);
             }
             break;
         }
         default: {
-            std::cout << "ScheduleCore::resetColumn: Resetting a column to type: " << type << " has not been implemented!"
-                      << std::endl;
+            std::cout << "ScheduleCore::resetColumn: Resetting a column of type: " << column.type
+                      << " has not been implemented!" << std::endl;
             return;
         }
     }
 
-    column.type = type;
     sortColumns();
 }
 

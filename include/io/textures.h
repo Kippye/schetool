@@ -15,6 +15,14 @@ enum IMAGE_FORMAT {
     FORMAT_NONE
 };
 
+// A simple container for an image data pointer.
+// NOTE: The memory pointed to by the pointer will be FREED when this object is destroyed.
+struct ImageData {
+        unsigned char* data = nullptr;
+
+        ~ImageData();
+};
+
 class Texture {
     private:
         GLuint m_ID;
@@ -93,16 +101,18 @@ class TextureLoader {
         std::filesystem::path getRelativePathFromTextureFolder(const std::string& relativePath) const;
 
         Texture getMissingTexture() const;
+
+        void freeImageMemory(unsigned char* pixels) const;
         // Load a texture.
         // Returns a Texture containing its information when successfully loaded.
         // Returns std::nullopt if there was a problem loading the texture.
         std::optional<Texture> loadTexture(const std::filesystem::path& path, bool flip = false);
         // Load a texture and get its raw data.
         // It is up to you to delete the pointer.
-        unsigned char* loadTextureData(const std::filesystem::path& path,
-                                       int* width,
-                                       int* height,
-                                       GLuint* ID = nullptr,
-                                       bool bind = true,
-                                       bool flip = false);
+        ImageData loadTextureData(const std::filesystem::path& path,
+                                  int* width,
+                                  int* height,
+                                  GLuint* ID = nullptr,
+                                  bool bind = true,
+                                  bool flip = false);
 };

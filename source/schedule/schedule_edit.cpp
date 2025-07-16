@@ -47,7 +47,13 @@ void RowEdit::revert(ScheduleCore& scheduleCore) {
     // reverting a removal means adding the row back
     if (m_isRemove) {
         scheduleCore.addRow(m_row);
-        scheduleCore.setRow(m_row, m_elementData);
+        // Set row to COPIES of the element data.
+        // This way, switching the row's pointers again won't delete the elements contained in this edit.
+        std::vector<ElementBase*> dataCopy = {};
+        for (ElementBase* element : m_elementData) {
+            dataCopy.push_back(element->getCopy());
+        }
+        scheduleCore.setRow(m_row, dataCopy);
     }
     // reverting an addition means removing the row again
     else
@@ -67,7 +73,13 @@ void RowEdit::apply(ScheduleCore& scheduleCore) {
     else
     {
         scheduleCore.addRow(m_row);
-        scheduleCore.setRow(m_row, m_elementData);
+        // Set row to COPIES of the element data.
+        // This way, switching the row's pointers again won't delete the elements contained in this edit.
+        std::vector<ElementBase*> dataCopy = {};
+        for (ElementBase* element : m_elementData) {
+            dataCopy.push_back(element->getCopy());
+        }
+        scheduleCore.setRow(m_row, dataCopy);
     }
 
     m_isReverted = false;
@@ -235,7 +247,7 @@ void ColumnResetEdit::revert(ScheduleCore& scheduleCore) {
 
 void ColumnResetEdit::apply(ScheduleCore& scheduleCore) {
     // applying a reset means resetting again
-    scheduleCore.resetColumn(m_column, m_columnData.type);
+    scheduleCore.resetColumn(m_column);
 
     m_isReverted = false;
 }

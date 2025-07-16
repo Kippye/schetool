@@ -65,8 +65,8 @@ void TimeHandler::applyResetsSince(const TimeWrapper& previousTime) {
         {ColumnResetOption::Monthly, {}},
     };
 
-    for (size_t i = 0; i < m_schedule->getAllColumns().size(); i++) {
-        const Column& column = m_schedule->getAllColumns().at(i);
+    for (size_t i = 0; i < m_schedule->getColumnCount(); i++) {
+        const Column& column = m_schedule->getColumnConst(i);
 
         if (column.resetOption == ColumnResetOption::Never) {
             continue;

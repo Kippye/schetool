@@ -478,7 +478,7 @@ void Schedule::removeColumnFilter(size_t columnIndex, size_t groupIndex, size_t 
 void Schedule::resetColumn(size_t columnIndex, bool addToHistory) {
     Column columnData = m_core.getColumnConst(columnIndex);
 
-    m_core.resetColumn(columnIndex, columnData.type);
+    m_core.resetColumn(columnIndex);
 
     if (addToHistory) {
         m_editHistory.addEdit<ColumnResetEdit>(columnIndex, columnData);
