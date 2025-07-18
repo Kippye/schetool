@@ -59,7 +59,7 @@ class Element : public ElementBase {
             }
         }
 
-        std::shared_ptr<ElementBase> getCopy() override {
+        std::shared_ptr<ElementBase> getCopy() const override {
             return std::make_shared<Element<T>>(*this);
         }
 

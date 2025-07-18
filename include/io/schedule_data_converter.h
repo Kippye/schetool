@@ -631,26 +631,26 @@ struct BLF_Column : BLF_Base {
         BLF_Column() {
         }
 
-        BLF_Column(const Column* column, size_t index) {
+        BLF_Column(const Column& column, size_t index) {
             this->index = (int)index;
-            this->type = (int)column->type;
-            this->name = column->name;
-            this->permanent = column->permanent;
-            this->flags = column->flags;
-            this->sort = (int)column->sort;
-            this->resetOption = (int)column->resetOption;
+            this->type = (int)column.type;
+            this->name = column.name;
+            this->permanent = column.permanent;
+            this->flags = column.flags;
+            this->sort = (int)column.sort;
+            this->resetOption = (int)column.resetOption;
 
-            selectOptions = BLF_SelectOptions(column->selectOptions);
+            selectOptions = BLF_SelectOptions(column.selectOptions);
 
-            for (size_t row = 0; row < column->getRowCount(); row++) {
-                auto element = column->getElementConst(row);
+            for (size_t row = 0; row < column.getRowCount(); row++) {
+                auto element = column.getElementConst(row);
                 auto elementAccess = element.lock();
                 auto typeElementAccess = std::dynamic_pointer_cast<const Element<T>>(elementAccess);
                 elements.push_back(BLF_Element<T>(*typeElementAccess));
             }
 
-            for (auto filterGroup : column->getFilterGroupsConst()) {
-                filterGroups.emplace_back(column->type, filterGroup);
+            for (auto filterGroup : column.getFilterGroupsConst()) {
+                filterGroups.emplace_back(column.type, filterGroup);
             }
         }
 
@@ -726,7 +726,7 @@ class ScheduleDataConverter {
         // Adds the Column (and its elements, filters, etc to the provided DataTable), assuming that the Columns (and their elements, filters) are of the provided type.
         template <typename T>
         void addColumnToData(blf::file::DataTable& data, const Column& column, size_t columnIndex) {
-            BLF_Column<T> blfColumn = BLF_Column<T>(&column, columnIndex);
+            BLF_Column<T> blfColumn = BLF_Column<T>(column, columnIndex);
             data.insert(getObjectDefinition<BLF_Column<T>>().serialize(blfColumn));
         }
         bool isValidScheduleFile(const char* path) const;

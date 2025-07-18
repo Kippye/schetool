@@ -670,7 +670,7 @@ bool ScheduleGui::drawTableCellContents(
 
 void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table, ImGuiTableFlags tableFlags) {
     // We need to access the column only through this.
-    // Because duplicating or removing a column will invalidate the reference.
+    // Because duplicating a column will invalidate the reference.
     auto getContextColumn = [&]() -> const Column& { return m_scheduleCore.getColumnConst(columnIndex); };
 
     // Renaming
@@ -707,6 +707,8 @@ void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table,
 
     if (ImGui::MenuItem("Remove", NULL, false, !getContextColumn().permanent)) {
         removeColumn.invoke(columnIndex);
+        ImGui::CloseCurrentPopup();
+        return;  // Can't continue
     }
 
     if (ImGui::MenuItem("Duplicate", NULL, false, !getContextColumn().permanent)) {

@@ -4,6 +4,7 @@
 #include <format>
 #include <memory>
 #include <optional>
+#include <iterator>
 #include "schedule_constants.h"
 #include "filters/filter_group.h"
 #include "element_base.h"
@@ -40,9 +41,9 @@ struct Column {
     private:
         void setupFiltersPerType();
         std::map<SCHEDULE_TYPE, std::vector<FilterGroup>> m_filterGroupsPerType = {};
+        std::vector<std::shared_ptr<ElementBase>> m_rows = {};
 
     public:
-        std::vector<std::shared_ptr<ElementBase>> rows = {};
         SCHEDULE_TYPE type;
         std::string name;
         bool permanent = false;
@@ -75,10 +76,10 @@ struct Column {
                 selectOptions = other.selectOptions;
                 resetOption = other.resetOption;
 
-                rows.clear();
+                m_rows.clear();
 
-                for (size_t i = 0; i < other.rows.size(); i++) {
-                    rows.push_back(other.rows[i]->getCopy());
+                for (size_t i = 0; i < other.m_rows.size(); i++) {
+                    m_rows.push_back(other.m_rows[i]->getCopy());
                 }
             }
 
@@ -93,12 +94,12 @@ struct Column {
 
         template <typename T>
         bool addElement(Element<T> element) {
-            return addElement(rows.size(), element);
+            return addElement(m_rows.size(), element);
         }
 
         template <typename T>
         bool addElement(size_t index, Element<T> element) {
-            if (index <= rows.size() == false) {
+            if (index <= m_rows.size() == false) {
                 return false;
             }
             if (element.getType() != type || Element<T>::getType() != type) {
@@ -114,7 +115,7 @@ struct Column {
                                                    selectOptions.getOptionCount());
             }
 
-            rows.insert(rows.begin() + index, std::make_shared<Element<T>>(element));
+            m_rows.insert(m_rows.begin() + index, std::make_shared<Element<T>>(element));
             return true;
         }
 
@@ -126,7 +127,7 @@ struct Column {
                 throw std::out_of_range(
                     std::format("Column::getElementValue(): The column {} has no element at index {}", name.c_str(), index));
             }
-            auto typeElementPtr = std::dynamic_pointer_cast<const Element<T>>(rows[index]);
+            auto typeElementPtr = std::dynamic_pointer_cast<const Element<T>>(m_rows[index]);
             return typeElementPtr->getValue();
         }
 

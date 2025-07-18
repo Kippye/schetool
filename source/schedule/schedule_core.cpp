@@ -267,7 +267,7 @@ bool ScheduleCore::setColumnElements(size_t index, const Column& columnData) {
 
     for (size_t row = 0; row < getRowCount(); row++) {
         // break early if the provided columnData was shorter than the result of getColumnCount()
-        if (row >= columnData.rows.size()) {
+        if (row >= columnData.getRowCount()) {
             break;
         }
 
@@ -335,7 +335,7 @@ bool ScheduleCore::setColumnType(size_t col, SCHEDULE_TYPE type) {
     // TODO: try to convert types..? i guess there's no point in doing that. only really numbers could be turned into text.
     // Reset values to defaults of the target type
     Column& column = getColumn(col);
-    size_t rowCount = column.rows.size();
+    size_t rowCount = column.getRowCount();
 
     switch (type) {
         case (SCH_BOOL): {
@@ -587,7 +587,7 @@ bool ScheduleCore::removeColumnFilterRule(size_t column, size_t groupIndex, size
 void ScheduleCore::resetColumn(size_t index) {
     Column& column = getColumn(index);
 
-    size_t rowCount = column.rows.size();
+    size_t rowCount = column.getRowCount();
 
     switch (column.type) {
         case (SCH_BOOL): {
@@ -656,7 +656,7 @@ void ScheduleCore::resetColumn(size_t index) {
 
 // Return the number of rows in the schedule or 0 if there are no columns (which probably won't happen?)
 size_t ScheduleCore::getRowCount() const {
-    return (m_schedule.size() > 0 ? m_schedule.at(0).rows.size() : 0);
+    return (m_schedule.size() > 0 ? m_schedule.at(0).getRowCount() : 0);
 }
 
 bool ScheduleCore::existsRowAtIndex(size_t index) const {

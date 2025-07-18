@@ -18,5 +18,5 @@ class ElementBase {
         const TimeWrapper& getEditTime() const;
 
         virtual std::string getString() const;
-        virtual std::shared_ptr<ElementBase> getCopy();
+        virtual std::shared_ptr<ElementBase> getCopy() const;
 };

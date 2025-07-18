@@ -129,12 +129,17 @@ ColumnPropertyEdit::ColumnPropertyEdit(size_t column,
             break;
         }
         case (COLUMN_PROPERTY_TYPE): {
-            m_previousColumnData.type = previousData.type;
-            m_columnData.type = newData.type;
+            std::vector<std::shared_ptr<ElementBase>> columnRowsCopy = {};
+
             // copy ROWS for previous data too.. >:(
-            for (size_t i = 0; i < previousData.rows.size(); i++) {
-                m_previousColumnData.rows.push_back(previousData.rows[i]->getCopy());
+            for (size_t i = 0; i < previousData.getRowCount(); i++) {
+                auto element = previousData.getElementConst(i);
+                auto elementAccess = element.lock();
+                columnRowsCopy.push_back(elementAccess->getCopy());
             }
+
+            m_previousColumnData = Column(columnRowsCopy, previousData.type, "");
+            m_columnData.type = newData.type;
             break;
         }
         case (COLUMN_PROPERTY_SELECT_OPTIONS): {

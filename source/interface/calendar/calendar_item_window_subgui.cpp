@@ -386,7 +386,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
 void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak) {
     if (ImGui::BeginPopupContextItem(NULL, ImGuiPopupFlags_MouseButtonLeft | ImGuiPopupFlags_MouseButtonRight)) {
         // We need to access the column only through this.
-        // Because duplicating or removing a column will invalidate the reference.
+        // Because duplicating a column will invalidate the reference.
         auto getContextColumn = [&]() -> const Column& { return m_scheduleCore.getColumnConst(col); };
 
         // Renaming
@@ -424,6 +424,9 @@ void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak
         if (ImGui::MenuItem("Remove", NULL, false, !getContextColumn().permanent)) {
             removeColumn.invoke(col);
             needToBreak = true;
+            ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+            return;  // Can't continue
         }
 
         if (ImGui::MenuItem("Duplicate", NULL, false, !getContextColumn().permanent)) {

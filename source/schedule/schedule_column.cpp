@@ -17,7 +17,7 @@ Column::Column(const std::vector<std::shared_ptr<ElementBase>>& rows,
                const SelectOptions& selectOptions,
                ColumnResetOption resetOption) {
     setupFiltersPerType();
-    this->rows = rows;
+    this->m_rows = rows;
     this->type = type;
     this->name = name;
     this->permanent = permanent;
@@ -37,8 +37,8 @@ Column::Column(const Column& other) {
     selectOptions = other.selectOptions;
     resetOption = other.resetOption;
 
-    for (size_t i = 0; i < other.rows.size(); i++) {
-        rows.push_back(other.rows[i]->getCopy());
+    for (size_t i = 0; i < other.m_rows.size(); i++) {
+        m_rows.push_back(other.m_rows[i]->getCopy());
     }
     const auto& otherFiltersPerType = other.getFilterGroupsPerType();
     for (const FilterGroup& filterGroup : otherFiltersPerType.at(type)) {
@@ -56,11 +56,11 @@ void Column::setupFiltersPerType() {
 }
 
 size_t Column::getRowCount() const {
-    return rows.size();
+    return m_rows.size();
 }
 
 bool Column::hasElement(size_t index) const {
-    return index < rows.size();
+    return index < m_rows.size();
 }
 
 bool Column::removeElement(size_t index) {
@@ -69,9 +69,9 @@ bool Column::removeElement(size_t index) {
     }
 
     if (index == getRowCount() - 1) {
-        rows.pop_back();
+        m_rows.pop_back();
     } else {
-        rows.erase(rows.begin() + index);
+        m_rows.erase(m_rows.begin() + index);
     }
     return true;
 }
@@ -81,7 +81,7 @@ std::weak_ptr<ElementBase> Column::getElement(size_t index) {
         throw std::out_of_range(
             std::format("Column::getElement(): The column {} has no element at index {}", name.c_str(), index));
     }
-    return rows[index];
+    return m_rows[index];
 }
 
 std::weak_ptr<const ElementBase> Column::getElementConst(size_t index) const {
@@ -89,66 +89,66 @@ std::weak_ptr<const ElementBase> Column::getElementConst(size_t index) const {
         throw std::out_of_range(
             std::format("Column::getElementConst(): The column {} has no element at index {}", name.c_str(), index));
     }
-    return rows[index];
+    return m_rows[index];
 }
 
 std::vector<size_t> Column::getSortedIndices() const {
-    std::vector<size_t> newIndices(rows.size());
+    std::vector<size_t> newIndices(m_rows.size());
     std::iota(newIndices.begin(), newIndices.end(), 0);
 
     switch (type) {
         case (SCH_BOOL): {
             ColumnSortComparison sortComparison = ColumnSortComparison<bool>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         case (SCH_NUMBER): {
             ColumnSortComparison sortComparison = ColumnSortComparison<int>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         case (SCH_DECIMAL): {
             ColumnSortComparison sortComparison = ColumnSortComparison<double>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         case (SCH_TEXT): {
             ColumnSortComparison sortComparison = ColumnSortComparison<std::string>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         case (SCH_SELECT): {
             ColumnSortComparison sortComparison = ColumnSortComparison<SingleSelectContainer>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         case (SCH_MULTISELECT): {
             ColumnSortComparison sortComparison = ColumnSortComparison<SelectContainer>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         case (SCH_WEEKDAY): {
             ColumnSortComparison sortComparison = ColumnSortComparison<WeekdayContainer>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         case (SCH_TIME): {
             ColumnSortComparison sortComparison = ColumnSortComparison<TimeContainer>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         case (SCH_DATE): {
             ColumnSortComparison sortComparison = ColumnSortComparison<DateContainer>(sort);
             std::sort(
-                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(m_rows[i], m_rows[j]); });
             break;
         }
         default: {
@@ -165,7 +165,7 @@ bool Column::modifySelectOptions(const SelectOptionsModification& modification) 
         // If this column is a select column, update all the (Single)SelectContainers
         if (type == SCH_SELECT) {
             // Update elements
-            for (auto element : rows) {
+            for (auto element : m_rows) {
                 ((Element<SingleSelectContainer>&)*element)
                     .getValueReference()
                     .update(modification.getUpdateInfo(), selectOptions.getOptionCount());
@@ -183,7 +183,7 @@ bool Column::modifySelectOptions(const SelectOptionsModification& modification) 
         }
         if (type == SCH_MULTISELECT) {
             // Update elements
-            for (auto element : rows) {
+            for (auto element : m_rows) {
                 ((Element<SelectContainer>&)*element)
                     .getValueReference()
                     .update(modification.getUpdateInfo(), selectOptions.getOptionCount());
