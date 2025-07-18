@@ -234,8 +234,7 @@ class ScheduleCore {
         }
 
         // Use this function to completely replace the element at column; row.
-        // The target element pointer is replaced by the provided pointer!
-        // TODO: FIX MEMORY LEAK
+        // The target element's contents will be replaced by the Element stored in the provided pointer.
         bool setElement(size_t column, size_t row, std::shared_ptr<ElementBase> other, bool resort = true) {
             if (getElement(column, row).expired()) {
                 std::cout << std::format("ScheduleCore::setElement(): Failed to set element at {}; {} - element does not exist",

@@ -48,7 +48,6 @@ class FilterRule : public FilterRuleBase {
             auto typeElementAccess = std::dynamic_pointer_cast<const Element<T>>(elementAccess);
             T value = useDefaultValue ? Element<T>::getDefaultValue() : typeElementAccess->getValue();
 
-            // TODO: Check if the provided ElementBase is of the correct type.
             switch (m_comparison) {
                 case Comparison::Is: {
                     if constexpr (has_operator_equal<T>::value)
