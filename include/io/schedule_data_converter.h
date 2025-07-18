@@ -121,9 +121,8 @@ struct BLF_ElementInfo : BLF_Base {
 
         BLF_ElementInfo() {
         }
-        BLF_ElementInfo(const ElementBase* element)
-            : creationDate(element->getCreationTime().getDateUTC()),
-              creationTime(element->getCreationTime().getClockTimeUTC()) {
+        BLF_ElementInfo(const ElementBase& element)
+            : creationDate(element.getCreationTime().getDateUTC()), creationTime(element.getCreationTime().getClockTimeUTC()) {
         }
 
         TimeWrapper getCreationTime() const {
@@ -151,8 +150,8 @@ struct BLF_Element<bool> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<bool>* element) : info(element) {
-            value = element->getValue();
+        BLF_Element(const Element<bool>& element) : info(element) {
+            value = element.getValue();
         }
 
         Element<bool> getElement() const {
@@ -177,8 +176,8 @@ struct BLF_Element<int> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<int>* element) : info(element) {
-            value = element->getValue();
+        BLF_Element(const Element<int>& element) : info(element) {
+            value = element.getValue();
         }
 
         Element<int> getElement() const {
@@ -203,8 +202,8 @@ struct BLF_Element<double> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<double>* element) : info(element) {
-            value = element->getValue();
+        BLF_Element(const Element<double>& element) : info(element) {
+            value = element.getValue();
         }
 
         Element<double> getElement() const {
@@ -229,8 +228,8 @@ struct BLF_Element<std::string> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<std::string>* element) : info(element) {
-            value = element->getValue();
+        BLF_Element(const Element<std::string>& element) : info(element) {
+            value = element.getValue();
         }
 
         Element<std::string> getElement() const {
@@ -255,8 +254,8 @@ struct BLF_Element<SingleSelectContainer> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<SingleSelectContainer>* element) : info(element) {
-            const std::optional<size_t> selection = element->getValue().getSelection();
+        BLF_Element(const Element<SingleSelectContainer>& element) : info(element) {
+            const std::optional<size_t> selection = element.getValue().getSelection();
             if (selection.has_value()) {
                 selectionIndices.push_back(selection.value());
             }
@@ -295,8 +294,8 @@ struct BLF_Element<SelectContainer> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<SelectContainer>* element) : info(element) {
-            const std::set<size_t>& selection = element->getValue().getSelection();
+        BLF_Element(const Element<SelectContainer>& element) : info(element) {
+            const std::set<size_t>& selection = element.getValue().getSelection();
 
             for (size_t s : selection) {
                 selectionIndices.push_back(s);
@@ -338,8 +337,8 @@ struct BLF_Element<WeekdayContainer> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<WeekdayContainer>* element) : info(element) {
-            const std::set<size_t>& selection = element->getValue().getSelection();
+        BLF_Element(const Element<WeekdayContainer>& element) : info(element) {
+            const std::set<size_t>& selection = element.getValue().getSelection();
 
             for (size_t s : selection) {
                 selectionIndices.push_back(s);
@@ -385,9 +384,9 @@ struct BLF_Element<TimeContainer> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<TimeContainer>* element) : info(element) {
-            hours = element->getValue().getHours();
-            minutes = element->getValue().getMinutes();
+        BLF_Element(const Element<TimeContainer>& element) : info(element) {
+            hours = element.getValue().getHours();
+            minutes = element.getValue().getMinutes();
         }
 
         Element<TimeContainer> getElement() const {
@@ -416,9 +415,9 @@ struct BLF_Element<DateContainer> : BLF_Base {
 
         BLF_Element() {
         }
-        BLF_Element(const Element<DateContainer>* element) : info(element) {
-            TimeWrapper dateTime = element->getValue().getTime();
-            empty = element->getValue().getIsEmpty();
+        BLF_Element(const Element<DateContainer>& element) : info(element) {
+            TimeWrapper dateTime = element.getValue().getTime();
+            empty = element.getValue().getIsEmpty();
             year = dateTime.getYearUTC();
             month = dateTime.getMonthUTC();
             mday = dateTime.getMonthDayUTC();
@@ -456,7 +455,7 @@ struct BLF_FilterRule : BLF_Base {
         }
         BLF_FilterRule(SCHEDULE_TYPE type, const FilterRule<T>& filterRule) {
             Element<T> element = Element<T>(type, filterRule.getPassValue(), TimeWrapper());
-            passValueElement = BLF_Element<T>(&element);
+            passValueElement = BLF_Element<T>(element);
 
             comparison = (int)filterRule.getComparison();
             dateCompareToCurrent = filterRule.getDateCompareCurrent();
@@ -643,8 +642,11 @@ struct BLF_Column : BLF_Base {
 
             selectOptions = BLF_SelectOptions(column->selectOptions);
 
-            for (ElementBase* elementBase : column->rows) {
-                elements.push_back(BLF_Element<T>((Element<T>*)elementBase));
+            for (size_t row = 0; row < column->getRowCount(); row++) {
+                auto element = column->getElementConst(row);
+                auto elementAccess = element.lock();
+                auto typeElementAccess = std::dynamic_pointer_cast<const Element<T>>(elementAccess);
+                elements.push_back(BLF_Element<T>(*typeElementAccess));
             }
 
             for (auto filterGroup : column->getFilterGroupsConst()) {
@@ -666,7 +668,7 @@ struct BLF_Column : BLF_Base {
                                 (ColumnResetOption)resetOption);
             // add elements to the column
             for (size_t row = 0; row < elements.size(); row++) {
-                col.addElement(col.rows.size(), new Element<T>(elements[row].getElement()));
+                col.addElement(elements[row].getElement());
             }
 
             // add filter groups to the column

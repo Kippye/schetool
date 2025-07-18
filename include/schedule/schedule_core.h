@@ -5,6 +5,7 @@
 #include <optional>
 #include <format>
 #include <iostream>
+#include <memory>
 #include "schedule_column.h"
 #include "schedule_constants.h"
 #include "element.h"
@@ -18,7 +19,6 @@ class ScheduleCore {
         // Translates between display order index (input) to m_schedule column index (content / output)
         std::vector<size_t> m_columnDisplayOrder = {};
         std::vector<size_t> m_sortedRowIndices = {};
-        ColumnSortComparison m_columnSortComparison;
         // NOTE: If flags is ScheduleElementFlags_None, simply returns the first column it finds
         Column& getColumnWithFlags(ScheduleColumnFlags flags);
         // Takes a "display" column index and returns a reference to the corresponding column in the schedule
@@ -138,68 +138,107 @@ class ScheduleCore {
         // Duplicate the row at the given index, return the index of the created row (in the future, this may either be next to the target row or the last row index).
         // If duplicating the row failed for whatever reason, std::nullopt is returned.
         std::optional<size_t> duplicateRow(size_t index);
-        // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
-        std::vector<ElementBase*> getRow(size_t index);
+        // Get COPIES OF all elements of a row directly to these shared_ptr. NOTE: Do not store these pointers anywhere else.
+        // If the row doesn't exist, an empty vector is returned.
+        std::vector<std::shared_ptr<ElementBase>> getRowCopy(size_t index);
         // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
-        bool setRow(size_t index, std::vector<ElementBase*> elementData);
+        bool setRow(size_t index, std::vector<std::shared_ptr<ElementBase>> elementData);
         std::vector<size_t> getSortedRowIndices() const;
 
         // ELEMENTS.
-        // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
-        template <typename T>
-        T& getValue(ElementBase* element) {
-            return ((Element<T>*)element)->getValueReference();
-        }
-        // Get the value of the element as Element<T> as a CONST ref. NOTE: You MUST provide the correct type.
-        template <typename T>
-        const T& getValueConstRef(const ElementBase* element) const {
-            return ((Element<T>*)element)->getConstValueReference();
-        }
-
-        // Get a pointer to the ElementBase at col; row
-        ElementBase* getElement(size_t col, size_t row) {
+        // Get a weak pointer to the ElementBase at col; row
+        std::weak_ptr<ElementBase> getElement(size_t col, size_t row) {
             Column& column = getColumn(col);
 
             if (column.hasElement(row) == false) {
-                std::cout << std::format("ScheduleCore::getElement could not get element at {}; {}", col, row) << std::endl;
-                return nullptr;
+                throw std::out_of_range(std::format("ScheduleCore::getElement(): Could not get element at {}; {}", col, row));
             }
 
             return column.getElement(row);
         }
-        // Get a constant pointer to the ElementBase at col; row
-        const ElementBase* getElementConst(size_t col, size_t row) const {
+        // Get a constant weak pointer to the ElementBase at col; row
+        std::weak_ptr<const ElementBase> getElementConst(size_t col, size_t row) const {
             const Column& column = getColumnConst(col);
 
             if (column.hasElement(row) == false) {
-                std::cout << std::format("ScheduleCore::getElementConst could not get element at {}; {}", col, row)
-                          << std::endl;
-                return nullptr;
+                throw std::out_of_range(
+                    std::format("ScheduleCore::getElementConst(): Could not get element at {}; {}", col, row));
             }
 
             return column.getElementConst(row);
         }
 
-        // Simple function that gets an ElementBase* at column; row and casts it to Element<T>*. In the future, this might check that the returned type is actually correct.
         template <typename T>
-        Element<T>* getElementAsSpecial(size_t column, size_t row) {
-            ElementBase* element = getElement(column, row);
-
-            if (element == nullptr) {
-                std::cout << std::format("ScheduleCore::getElementAsSpecial could not get element at {}; {}", column, row)
-                          << std::endl;
-                return nullptr;
+        Element<T> getElementAsType(size_t col, size_t row) {
+            const Column& elementColumn = getColumnConst(col);
+            if (Element<T>::getType() != elementColumn.type) {
+                throw std::runtime_error(
+                    std::format("ScheduleCore::getElementAsType(): Incorrect type for element at {}; {}", col, row));
             }
 
-            return (Element<T>*)element;
+            if (elementColumn.hasElement(row) == false) {
+                throw std::runtime_error(
+                    std::format("ScheduleCore::getElementAsType(): Could not get element value at {}; {}", col, row));
+            }
+            auto element = elementColumn.getElementConst(row);
+            if (element.expired()) {
+                throw std::runtime_error(
+                    std::format("ScheduleCore::getElementAsType(): Element at {}; {} has been deleted", col, row));
+            }
+            auto elementAccess = element.lock();
+            auto typeElementAccess = std::dynamic_pointer_cast<Element<T>>(elementAccess);
+            return *typeElementAccess;
         }
 
-        // Use this function to completely replace the element at column; row with the given ElementBase*.
+        // Use this function to completely replace the element at column; row.
+        // The target element will contain this Element.
+        template <typename T>
+        bool setElement(size_t column, size_t row, Element<T> other, bool resort = true) {
+            if (getElement(column, row).expired()) {
+                std::cout << std::format("ScheduleCore::setElement(): Failed to set element at {}; {} - element does not exist",
+                                         column,
+                                         row)
+                          << std::endl;
+                return false;
+            }
+            const SCHEDULE_TYPE columnType = getColumn(column).type;
+            if (other.getType() != columnType) {
+                std::cout
+                    << std::format(
+                           "ScheduleCore::setElement(): Failed to set element at {}; {} - provided element's type is incorrect",
+                           column,
+                           row)
+                    << std::endl;
+                return false;
+            }
+
+            auto element = getElement(column, row);
+
+            if (element.expired()) {
+                std::cout << std::format(
+                                 "ScheduleCore::setElement(): Failed to set element at {}; {} - the element has been deleted",
+                                 column,
+                                 row)
+                          << std::endl;
+                return false;
+            }
+
+            auto elementAccess = element.lock();
+            auto typeElementAccess = std::dynamic_pointer_cast<Element<T>>(elementAccess);
+            *typeElementAccess = other;
+
+            if (resort) {
+                sortColumns();
+            }
+            return true;
+        }
+
+        // Use this function to completely replace the element at column; row.
         // The target element pointer is replaced by the provided pointer!
         // TODO: FIX MEMORY LEAK
-        bool setElement(size_t column, size_t row, ElementBase* other, bool resort = true) {
-            if (getElement(column, row) == nullptr) {
-                std::cout << std::format("ScheduleCore::setElement failed to set element at {}; {} - element does not exist",
+        bool setElement(size_t column, size_t row, std::shared_ptr<ElementBase> other, bool resort = true) {
+            if (getElement(column, row).expired()) {
+                std::cout << std::format("ScheduleCore::setElement(): Failed to set element at {}; {} - element does not exist",
                                          column,
                                          row)
                           << std::endl;
@@ -208,75 +247,147 @@ class ScheduleCore {
             if (!other) {
                 std::cout
                     << std::format(
-                           "ScheduleCore::setElement failed to set element at {}; {} - provided element pointer is nullptr",
+                           "ScheduleCore::setElement(): Failed to set element at {}; {} - provided element pointer is nullptr",
+                           column,
+                           row)
+                    << std::endl;
+                return false;
+            }
+            const SCHEDULE_TYPE columnType = getColumn(column).type;
+
+            if (other->getType() != columnType) {
+                std::cout
+                    << std::format(
+                           "ScheduleCore::setElement(): Failed to set element at {}; {} - provided element's type is incorrect",
                            column,
                            row)
                     << std::endl;
                 return false;
             }
 
-            delete getColumn(column).getElement(row);
-            getColumn(column).rows[row] = other;
-
-            if (resort) {
-                sortColumns();
+            switch (columnType) {
+                case (SCH_BOOL): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<bool>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                case (SCH_NUMBER): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<int>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                case (SCH_DECIMAL): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<double>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                case (SCH_TEXT): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<std::string>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                case (SCH_SELECT): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<SingleSelectContainer>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                case (SCH_MULTISELECT): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<SelectContainer>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                case (SCH_WEEKDAY): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<WeekdayContainer>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                case (SCH_TIME): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<TimeContainer>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                case (SCH_DATE): {
+                    auto typeElement = std::dynamic_pointer_cast<Element<DateContainer>>(other);
+                    return setElement(column, row, *typeElement, resort);
+                }
+                default: {
+                    std::cout << "ScheduleCore::setElement(): Setting an element of type: '" << columnType
+                              << "' has not been implemented!" << std::endl;
+                    return false;
+                }
             }
-            return true;
         }
 
         // Shortcut for getting the value of an Element at col; row
         template <typename T>
-        T& getElementValue(size_t col, size_t row) {
-            const Column& elementColumn = getColumn(col);
-            if (elementColumn.hasElement(row) == false) {
-                throw std::runtime_error(
-                    std::format("ScheduleCore::getElementValue could not get element value at {}; {}", col, row));
-            }
-            return getValue<T>(elementColumn.rows[row]);
+        T getElementValue(size_t col, size_t row) const {
+            return getElementValueConstRef<T>(col, row);
         }
-        // Shortcut for getting the value of an Element at col; row as a CONST reference
+        // Shortcut for getting a const reference to the value of an Element at col; row
         template <typename T>
         const T& getElementValueConstRef(size_t col, size_t row) const {
             const Column& elementColumn = getColumnConst(col);
+            if (Element<T>::getType() != elementColumn.type) {
+                throw std::runtime_error(
+                    std::format("ScheduleCore::getElementValueConstRef(): Incorrect type {} for element of type {} at {}; {}",
+                                (int)Element<T>::getType(),
+                                (int)elementColumn.type,
+                                col,
+                                row));
+            }
+
             if (elementColumn.hasElement(row) == false) {
                 throw std::runtime_error(
-                    std::format("ScheduleCore::getElementValueConstRef could not get element value at {}; {}", col, row));
+                    std::format("ScheduleCore::getElementValueConstRef(): Could not get element value at {}; {}", col, row));
             }
-            return getValueConstRef<T>(elementColumn.rows[row]);
+            auto element = elementColumn.getElementConst(row);
+            if (element.expired()) {
+                throw std::runtime_error(
+                    std::format("ScheduleCore::getElementValueConstRef(): Element at {}; {} has been deleted", col, row));
+            }
+            auto elementAccess = element.lock();
+            auto typeElementAccess = std::dynamic_pointer_cast<const Element<T>>(elementAccess);
+
+            return typeElementAccess->getConstValueReference();
         }
 
         // Shortcut for setting the value of the Element at col; row to value. You must provide the correct type for the Element.
         template <typename T>
-        bool setElementValue(size_t col, size_t row, const T& value, bool resort = true) {
-            ElementBase* element = getElement(col, row);
-
-            if (element == nullptr) {
-                std::cout << std::format(
-                                 "ScheduleCore::setElementValue failed to set element at {}; {} - element does not exist",
-                                 col,
-                                 row)
-                          << std::endl;
+        bool setElementValue(size_t col, size_t row, const T& value, bool resort = true, bool calculateTimes = true) {
+            auto element = getElement(col, row);
+            if (element.expired()) {
                 return false;
             }
+            auto elementAccess = element.lock();
+            if (Element<T>::getType() != elementAccess->getType()) {
+                throw std::runtime_error(
+                    std::format("ScheduleCore::setelementValue(): Incorrect type {} for element of type {} at {}; {}",
+                                (int)Element<T>::getType(),
+                                (int)elementAccess->getType(),
+                                col,
+                                row));
+            }
+            auto typeElementAccess = std::dynamic_pointer_cast<Element<T>>(elementAccess);
 
-            ((Element<T>*)element)->setValue(value);
+            typeElementAccess->setValue(value);
 
-            ScheduleColumnFlags columnFlags = getColumn(col).flags;
-            if (columnFlags & ScheduleColumnFlags_Start) {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)
-                    ->setValue(getElementAsSpecial<TimeContainer>(col, row)->getValue() +
-                               getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)
-                                   ->getValue());
-            } else if (columnFlags & ScheduleColumnFlags_Duration) {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_End), row)
-                    ->setValue(
-                        getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue() +
-                        getElementAsSpecial<TimeContainer>(col, row)->getValue());
-            } else if (columnFlags & ScheduleColumnFlags_End) {
-                getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row)
-                    ->setValue(
-                        getElementAsSpecial<TimeContainer>(col, row)->getValue() -
-                        getElementAsSpecial<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row)->getValue());
+            if (calculateTimes) {
+                ScheduleColumnFlags columnFlags = getColumn(col).flags;
+                if (columnFlags & ScheduleColumnFlags_Start) {
+                    setElementValue(
+                        getFlaggedColumnIndex(ScheduleColumnFlags_End),
+                        row,
+                        getElementValue<TimeContainer>(col, row) +
+                            getElementValue<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Duration), row),
+                        resort,
+                        false);
+                } else if (columnFlags & ScheduleColumnFlags_Duration) {
+                    setElementValue(getFlaggedColumnIndex(ScheduleColumnFlags_End),
+                                    row,
+                                    getElementValue<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row) +
+                                        getElementValue<TimeContainer>(col, row),
+                                    resort,
+                                    false);
+                } else if (columnFlags & ScheduleColumnFlags_End) {
+                    setElementValue(getFlaggedColumnIndex(ScheduleColumnFlags_Duration),
+                                    row,
+                                    getElementValue<TimeContainer>(col, row) -
+                                        getElementValue<TimeContainer>(getFlaggedColumnIndex(ScheduleColumnFlags_Start), row),
+                                    resort,
+                                    false);
+                }
             }
 
             if (resort) {

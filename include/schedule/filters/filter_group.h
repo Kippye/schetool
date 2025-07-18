@@ -18,7 +18,7 @@ class FilterGroup {
                     const std::string& name = "Filter Group",
                     LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::Or,
                     bool enabled = true);
-        bool checkPasses(const ElementBase* element,
+        bool checkPasses(std::weak_ptr<const ElementBase> element,
                          const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(),
                          bool useDefaultValue = false) const;
         bool hasFilterAt(size_t index) const;

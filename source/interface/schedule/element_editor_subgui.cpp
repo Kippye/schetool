@@ -220,7 +220,6 @@ void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTe
                             pushedColorCount++;
                             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f));
                             pushedColorCount++;
-                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
                             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(),
                                                                        guiTextures.getOrLoad("icon_remove").ImID,
                                                                        ImVec2(removeButtonSize, removeButtonSize)))
@@ -232,12 +231,10 @@ void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTe
                                     modificationToApply.getUpdateInfo(),
                                     m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEditsThisFrame = m_madeEdits = true;
-                                ImGui::PopStyleVar();
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
                                 goto break_select_case;
                             }
-                            ImGui::PopStyleVar();
                             ImGui::PopStyleColor(pushedColorCount);
                         }
                     }
@@ -502,7 +499,6 @@ void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTe
                             pushedColorCount++;
                             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f));
                             pushedColorCount++;
-                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
                             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(),
                                                                        guiTextures.getOrLoad("icon_remove").ImID,
                                                                        ImVec2(removeButtonSize, removeButtonSize)))
@@ -514,12 +510,10 @@ void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTe
                                     modificationToApply.getUpdateInfo(),
                                     m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEditsThisFrame = m_madeEdits = true;
-                                ImGui::PopStyleVar();
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
                                 goto break_select_case;
                             }
-                            ImGui::PopStyleVar();
                             ImGui::PopStyleColor(pushedColorCount);
                         }
                     }

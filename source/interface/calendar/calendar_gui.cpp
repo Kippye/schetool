@@ -38,6 +38,7 @@ CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     setElementValueDecimal.addEvent(m_itemWindowSubGui->setElementValueDecimal);
     setElementValueText.addEvent(m_itemWindowSubGui->setElementValueText);
     setElementValueSelect.addEvent(m_itemWindowSubGui->setElementValueSelect);
+    setElementValueMultiselect.addEvent(m_itemWindowSubGui->setElementValueMultiselect);
     setElementValueWeekday.addEvent(m_itemWindowSubGui->setElementValueWeekday);
     setElementValueTime.addEvent(m_itemWindowSubGui->setElementValueTime);
     setElementValueDate.addEvent(m_itemWindowSubGui->setElementValueDate);
@@ -596,10 +597,10 @@ void CalendarGui::drawCalendarDayItem(size_t itemRow, const std::string& idSuffi
             }
             // Display the time as "Start - End", e.g. "11:00 - 13:30"
             if (columnFlags & ScheduleColumnFlags_Start) {
+                TimeContainer startTime = m_scheduleCore.getElementValueConstRef<TimeContainer>(col, itemRow);
                 TimeContainer endTime = m_scheduleCore.getElementValueConstRef<TimeContainer>(
                     m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_End), itemRow);
-                std::string timeText =
-                    std::format("{} - {}", m_scheduleCore.getElementConst(col, itemRow)->getString(), endTime.getString());
+                std::string timeText = std::format("{} - {}", startTime.getString(), endTime.getString());
                 ImGui::Text("%s", timeText.c_str());
             } else {
                 drawItemProperty({col, itemRow});
@@ -673,10 +674,10 @@ void CalendarGui::drawDraggedItemDisplay(size_t itemRow) {
             }
             // Display the time as "Start - End", e.g. "11:00 - 13:30"
             if (columnFlags & ScheduleColumnFlags_Start) {
+                TimeContainer startTime = m_scheduleCore.getElementValueConstRef<TimeContainer>(col, itemRow);
                 TimeContainer endTime = m_scheduleCore.getElementValueConstRef<TimeContainer>(
                     m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_End), itemRow);
-                std::string timeText =
-                    std::format("{} - {}", m_scheduleCore.getElementConst(col, itemRow)->getString(), endTime.getString());
+                std::string timeText = std::format("{} - {}", startTime.getString(), endTime.getString());
                 ImGui::Text("%s", timeText.c_str());
             } else {
                 drawItemProperty({col, itemRow});

@@ -128,26 +128,24 @@ void TimeHandler::showItemStartNotifications(const TimeWrapper& currentTime, con
             continue;
         }
 
-        auto startElementTimeContainer = m_schedule->getElementAsSpecial<TimeContainer>(startColumnIndex, row);
+        TimeContainer startElementTimeContainer = m_schedule->getElementValue<TimeContainer>(startColumnIndex, row);
         // Create a TimeWrapper from the current local date and the item start time (interpreted as UTC date-time but they are actually local)
         // Then subtract the time zone offset to get a correct UTC date-time TimeWrapper
         TimeWrapper itemStartTime = TimeWrapper::getTimeWithOffsetSubtracted(
             TimeWrapper(currentTime.getLocalDate(),
-                        ClockTimeWrapper(startElementTimeContainer->getConstValueReference().getHours(),
-                                         startElementTimeContainer->getConstValueReference().getMinutes())));
+                        ClockTimeWrapper(startElementTimeContainer.getHours(), startElementTimeContainer.getMinutes())));
         // The element's start time was reached just this frame
         if (currentTime >= itemStartTime && previousTime < itemStartTime) {
             size_t nameColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_Name);
             size_t endColumnIndex = m_schedule->getFlaggedColumnIndex(ScheduleColumnFlags_End);
-            auto endElementTimeContainer = m_schedule->getElementAsSpecial<TimeContainer>(endColumnIndex, row);
-            ClockTimeWrapper itemEndTime = ClockTimeWrapper(endElementTimeContainer->getConstValueReference().getHours(),
-                                                            endElementTimeContainer->getConstValueReference().getMinutes());
+            TimeContainer endElementTimeContainer = m_schedule->getElementValue<TimeContainer>(endColumnIndex, row);
+            ClockTimeWrapper itemEndTime =
+                ClockTimeWrapper(endElementTimeContainer.getHours(), endElementTimeContainer.getMinutes());
             // Send a notification about the element starting
-            m_notificationHandler->showItemNotification(
-                m_schedule->getElementAsSpecial<std::string>(nameColumnIndex, row)->getValue(),
-                itemStartTime.getLocalClockTime(),
-                itemEndTime,
-                {todayCompletedItemCount, todayItemCount});
+            m_notificationHandler->showItemNotification(m_schedule->getElementValue<std::string>(nameColumnIndex, row),
+                                                        itemStartTime.getLocalClockTime(),
+                                                        itemEndTime,
+                                                        {todayCompletedItemCount, todayItemCount});
         }
     }
 }

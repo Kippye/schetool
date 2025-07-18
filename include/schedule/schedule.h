@@ -250,7 +250,9 @@ class Schedule {
         };
         std::function<void(size_t, size_t, std::string)> setElementValueListenerText =
             [&](size_t col, size_t row, std::string val) { setElementValue(col, row, val); };
-        std::function<void(size_t, size_t, SelectContainer)> setElementValueListenerSelect =
+        std::function<void(size_t, size_t, SingleSelectContainer)> setElementValueListenerSelect =
+            [&](size_t col, size_t row, SingleSelectContainer val) { setElementValue(col, row, val); };
+        std::function<void(size_t, size_t, SelectContainer)> setElementValueListenerMultiselect =
             [&](size_t col, size_t row, SelectContainer val) { setElementValue(col, row, val); };
         std::function<void(size_t, size_t, WeekdayContainer)> setElementValueListenerWeekday =
             [&](size_t col, size_t row, WeekdayContainer val) { setElementValue(col, row, val); };
@@ -309,6 +311,7 @@ class Schedule {
         void undo();
         void redo();
         // Clear the current Schedule and replace it with default Columns and no rows.
+        // NOTE: For compatibility with tests, this function needs to work even if init() has not been called.
         void createDefaultSchedule();
 
         /// CORE WRAPPERS
@@ -417,60 +420,38 @@ class Schedule {
         void addRow(size_t index, bool addToHistory = true);
         void removeRow(size_t index, bool addToHistory = true);
         void duplicateRow(size_t index, bool addToHistory = true);
-        // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
-        std::vector<ElementBase*> getRow(size_t index);
-        // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
-        void setRow(size_t index, std::vector<ElementBase*> elementData);
         std::vector<size_t> getSortedRowIndices();
 
         // Interface methods
         void applyColumnTimeBasedReset(size_t columnIndex);
 
         // ELEMENTS.
-        // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
-        template <typename T>
-        T getValue(ElementBase* element) {
-            return m_core.getValue<T>(element);
-        }
-
-        // Get a pointer to the ElementBase at column; row
-        ElementBase* getElement(size_t column, size_t row) {
-            return m_core.getElement(column, row);
-        }
-
-        // Simple function that gets an ElementBase* at column; row and casts it to Element<T>*. In the future, this might check that the returned type is actually correct.
-        template <typename T>
-        Element<T>* getElementAsSpecial(size_t column, size_t row) {
-            return m_core.getElementAsSpecial<T>(column, row);
-        }
-
         // Shortcut for getting the value of an Element at column; row
         template <typename T>
         T getElementValue(size_t column, size_t row) {
             return m_core.getElementValue<T>(column, row);
         }
 
-        // Shortcut for getting the value of an Element at column; row by const reference
-        template <typename T>
-        const T& getElementValueConstRef(size_t column, size_t row) {
-            return m_core.getElementValue<T>(column, row);
-        }
-
-        // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
+        // Shortcut for setting the value of the Element at column; row to value.
         template <typename T>
         void setElementValue(size_t column, size_t row, const T& value, bool addToHistory = true) {
-            ElementBase* element = m_core.getElement(column, row);
+            auto element = m_core.getElement(column, row);
 
-            if (element == nullptr) {
-                printf("Schedule::setElementValue failed to set element at %zu; %zu - element does not exist\n", column, row);
+            if (element.expired()) {
+                std::cout << std::format("Schedule::setElementValue failed to set element at {}; {} - element has been deleted",
+                                         column,
+                                         row)
+                          << std::endl;
                 return;
             }
+            auto elementAccess = element.lock();
+            auto typeElementAccess = std::dynamic_pointer_cast<Element<T>>(elementAccess);
 
             // TODO: this might add to edit history even if it fails in the core
             // add the edit to history
             if (addToHistory) {
                 m_editHistory.addEdit<ElementEdit<T>>(
-                    column, row, element->getType(), ((Element<T>*)element)->getValue(), value);
+                    column, row, typeElementAccess->getType(), typeElementAccess->getValue(), value);
             }
 
             m_core.setElementValue<T>(column, row, value);

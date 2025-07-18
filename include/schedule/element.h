@@ -8,6 +8,7 @@
 #include "weekday_container.h"
 #include "time_container.h"
 #include "date_container.h"
+#include "schedule_constants.h"
 
 template <typename T>
 class Element : public ElementBase {
@@ -33,8 +34,13 @@ class Element : public ElementBase {
             return m_value != other.m_value;
         }
 
+        static constexpr SCHEDULE_TYPE getType() {
+            static_assert(false, "Element::getType(): No overload for this type.");
+            return SCH_LAST;
+        }
+
         static const constexpr char* getTypeName() {
-            return "Element";
+            return schedule_consts::scheduleTypeNames.at(getType());
         }
 
         std::string getString() const override {
@@ -53,8 +59,8 @@ class Element : public ElementBase {
             }
         }
 
-        ElementBase* getCopy() override {
-            return new Element<T>(*this);
+        std::shared_ptr<ElementBase> getCopy() override {
+            return std::make_shared<Element<T>>(*this);
         }
 
         T getValue() const {
@@ -120,46 +126,46 @@ inline DateContainer Element<DateContainer>::getDefaultValue() {
 }
 
 template <>
-const constexpr char* Element<bool>::getTypeName() {
-    return "Checkbox";
+constexpr SCHEDULE_TYPE Element<bool>::getType() {
+    return SCH_BOOL;
 }
 
 template <>
-const constexpr char* Element<int>::getTypeName() {
-    return "Number";
+constexpr SCHEDULE_TYPE Element<int>::getType() {
+    return SCH_NUMBER;
 }
 
 template <>
-const constexpr char* Element<double>::getTypeName() {
-    return "Decimal";
+constexpr SCHEDULE_TYPE Element<double>::getType() {
+    return SCH_DECIMAL;
 }
 
 template <>
-const constexpr char* Element<std::string>::getTypeName() {
-    return "Text";
+constexpr SCHEDULE_TYPE Element<std::string>::getType() {
+    return SCH_TEXT;
 }
 
 template <>
-const constexpr char* Element<SingleSelectContainer>::getTypeName() {
-    return "Select";
+constexpr SCHEDULE_TYPE Element<SingleSelectContainer>::getType() {
+    return SCH_SELECT;
 }
 
 template <>
-const constexpr char* Element<SelectContainer>::getTypeName() {
-    return "Multi-select";
+constexpr SCHEDULE_TYPE Element<SelectContainer>::getType() {
+    return SCH_MULTISELECT;
 }
 
 template <>
-const constexpr char* Element<WeekdayContainer>::getTypeName() {
-    return "Weekday";
+constexpr SCHEDULE_TYPE Element<WeekdayContainer>::getType() {
+    return SCH_WEEKDAY;
 }
 
 template <>
-const constexpr char* Element<TimeContainer>::getTypeName() {
-    return "Time";
+constexpr SCHEDULE_TYPE Element<TimeContainer>::getType() {
+    return SCH_TIME;
 }
 
 template <>
-const constexpr char* Element<DateContainer>::getTypeName() {
-    return "Date";
+constexpr SCHEDULE_TYPE Element<DateContainer>::getType() {
+    return SCH_DATE;
 }

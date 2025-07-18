@@ -114,8 +114,6 @@ class CalendarGui : public Gui {
             }
         };
 
-        // TEMP
-        void setRowHeight();
         bool getIsTableCellRectHovered(ImGuiTable* table,
                                        int col = ImGui::TableGetColumnIndex(),
                                        int row = ImGui::TableGetRowIndex()) const;
@@ -146,7 +144,8 @@ class CalendarGui : public Gui {
         EventPipe<size_t, size_t, int> setElementValueNumber;
         EventPipe<size_t, size_t, double> setElementValueDecimal;
         EventPipe<size_t, size_t, std::string> setElementValueText;
-        EventPipe<size_t, size_t, SelectContainer> setElementValueSelect;
+        EventPipe<size_t, size_t, SingleSelectContainer> setElementValueSelect;
+        EventPipe<size_t, size_t, SelectContainer> setElementValueMultiselect;
         EventPipe<size_t, size_t, WeekdayContainer> setElementValueWeekday;
         EventPipe<size_t, size_t, TimeContainer> setElementValueTime;
         EventPipe<size_t, size_t, DateContainer> setElementValueDate;

@@ -29,17 +29,9 @@ Column& ScheduleCore::getColumn(size_t column) {
     return m_schedule.at(m_columnDisplayOrder.at(column));
 }
 
-// Sorts a copy of the column's rows. Then compares each element of the two rows vectors and returns a vector that contains which index of the OLD rows vector corresponds to that position in the NEW SORTED rows
+// Get the sorted indices of the column's rows. The vector contains which index of the rows vector corresponds to that position in the SORTED rows
 std::vector<size_t> ScheduleCore::getColumnSortedNewIndices(size_t index) {
-    Column& column = getColumn(index);
-    std::vector<ElementBase*> rows = column.rows;
-    std::vector<size_t> newIndices(rows.size());
-    std::iota(newIndices.begin(), newIndices.end(), 0);
-
-    m_columnSortComparison.setup(column.type, column.sort);
-    std::sort(
-        newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return m_columnSortComparison(rows[i], rows[j]); });
-    return newIndices;
+    return getColumnConst(index).getSortedIndices();
 }
 
 void ScheduleCore::clearSchedule() {
@@ -52,6 +44,7 @@ void ScheduleCore::replaceSchedule(std::vector<Column>& columns) {
     clearSchedule();
 
     m_schedule = columns;
+
     m_columnDisplayOrder.resize(m_schedule.size());
     // Don't know the order so just reset it to 0...columnCount
     std::iota(m_columnDisplayOrder.begin(), m_columnDisplayOrder.end(), 0);
@@ -132,7 +125,7 @@ void ScheduleCore::addColumn(size_t index, const Column& column) {
     // TODO: make sure that EVERY column has the same amount of rows!!!
     // TODO: give the new column correct creation date & time
 
-    m_schedule.push_back(column);
+    m_schedule.emplace_back(column);
     m_columnDisplayOrder.insert(m_columnDisplayOrder.begin() + index, m_schedule.size() - 1);
 
     // Sort columns just in case, because the added Column could have a sort other than COLUMN_SORT_NONE
@@ -140,54 +133,50 @@ void ScheduleCore::addColumn(size_t index, const Column& column) {
 }
 
 void ScheduleCore::addDefaultColumn(size_t index, SCHEDULE_TYPE columnType) {
-    Column addedColumn =
-        Column(std::vector<ElementBase*>{}, columnType, schedule_consts::scheduleTypeNames.at(columnType), false);
+    Column addedColumn = Column({}, columnType, schedule_consts::scheduleTypeNames.at(columnType), false);
 
     for (size_t i = 0; i < getRowCount(); i++) {
         switch (columnType) {
             case (SCH_BOOL): {
-                addedColumn.rows.push_back((ElementBase*)new Element<bool>(
-                    columnType, Element<bool>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(Element(columnType, Element<bool>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             case (SCH_NUMBER): {
-                addedColumn.rows.push_back(
-                    (ElementBase*)new Element<int>(columnType, Element<int>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(Element(columnType, Element<int>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             case (SCH_DECIMAL): {
-                addedColumn.rows.push_back((ElementBase*)new Element<double>(
-                    columnType, Element<double>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(Element(columnType, Element<double>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             case (SCH_TEXT): {
-                addedColumn.rows.push_back((ElementBase*)new Element<std::string>(
-                    columnType, Element<std::string>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(
+                    Element(columnType, Element<std::string>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             case (SCH_SELECT): {
-                addedColumn.rows.push_back((ElementBase*)new Element<SingleSelectContainer>(
-                    columnType, Element<SingleSelectContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(
+                    Element(columnType, Element<SingleSelectContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             case (SCH_MULTISELECT): {
-                addedColumn.rows.push_back((ElementBase*)new Element<SelectContainer>(
-                    columnType, Element<SelectContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(
+                    Element(columnType, Element<SelectContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             case (SCH_WEEKDAY): {
-                addedColumn.rows.push_back((ElementBase*)new Element<WeekdayContainer>(
-                    columnType, Element<WeekdayContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(
+                    Element(columnType, Element<WeekdayContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             case (SCH_TIME): {
-                addedColumn.rows.push_back((ElementBase*)new Element<TimeContainer>(
-                    columnType, Element<TimeContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(
+                    Element(columnType, Element<TimeContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             case (SCH_DATE): {
-                addedColumn.rows.push_back((ElementBase*)new Element<DateContainer>(
-                    columnType, Element<DateContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
+                addedColumn.addElement(
+                    Element(columnType, Element<DateContainer>::getDefaultValue(), TimeWrapper::getCurrentTime()));
                 break;
             }
             default: {
@@ -284,39 +273,39 @@ bool ScheduleCore::setColumnElements(size_t index, const Column& columnData) {
 
         switch (getColumn(index).type) {
             case (SCH_BOOL): {
-                setElementValue(index, row, ((Element<bool>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<bool>(row));
                 break;
             }
             case (SCH_NUMBER): {
-                setElementValue(index, row, ((Element<int>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<int>(row));
                 break;
             }
             case (SCH_DECIMAL): {
-                setElementValue(index, row, ((Element<double>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<double>(row));
                 break;
             }
             case (SCH_TEXT): {
-                setElementValue(index, row, ((Element<std::string>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<std::string>(row));
                 break;
             }
             case (SCH_SELECT): {
-                setElementValue(index, row, ((Element<SingleSelectContainer>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<SingleSelectContainer>(row));
                 break;
             }
             case (SCH_MULTISELECT): {
-                setElementValue(index, row, ((Element<SelectContainer>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<SelectContainer>(row));
                 break;
             }
             case (SCH_WEEKDAY): {
-                setElementValue(index, row, ((Element<WeekdayContainer>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<WeekdayContainer>(row));
                 break;
             }
             case (SCH_TIME): {
-                setElementValue(index, row, ((Element<TimeContainer>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<TimeContainer>(row));
                 break;
             }
             case (SCH_DATE): {
-                setElementValue(index, row, ((Element<DateContainer>*)columnData.rows[row])->getValue());
+                setElementValue(index, row, columnData.getElementValue<DateContainer>(row));
                 break;
             }
             default: {
@@ -351,70 +340,69 @@ bool ScheduleCore::setColumnType(size_t col, SCHEDULE_TYPE type) {
     switch (type) {
         case (SCH_BOOL): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, (ElementBase*)new Element<bool>(type, Element<bool>::getDefaultValue()), false);
+                setElement(col, row, Element<bool>(type, Element<bool>::getDefaultValue()), false);
             }
             break;
         }
         case (SCH_NUMBER): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, (ElementBase*)new Element<int>(type, Element<int>::getDefaultValue()), false);
+                setElement(col, row, Element<int>(type, Element<int>::getDefaultValue()), false);
             }
             break;
         }
         case (SCH_DECIMAL): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, (ElementBase*)new Element<double>(type, Element<double>::getDefaultValue()), false);
+                setElement(col, row, Element<double>(type, Element<double>::getDefaultValue()), false);
             }
             break;
         }
         case (SCH_TEXT): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(
-                    col, row, (ElementBase*)new Element<std::string>(type, Element<std::string>::getDefaultValue()), false);
+                setElement(col, row, Element<std::string>(type, Element<std::string>::getDefaultValue()), false);
             }
             break;
         }
         case (SCH_SELECT): {
             for (size_t row = 0; row < rowCount; row++) {
-                auto selectElement =
-                    new Element<SingleSelectContainer>(type, Element<SingleSelectContainer>::getDefaultValue());
+                Element<SingleSelectContainer> selectElement =
+                    Element<SingleSelectContainer>(type, Element<SingleSelectContainer>::getDefaultValue());
                 // Update the select to have the correct number of options
-                selectElement->getValueReference().update(
+                selectElement.getValueReference().update(
                     SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
                     column.selectOptions.getOptionCount());
-                setElement(col, row, (ElementBase*)selectElement, false);
+                setElement(col, row, selectElement, false);
             }
             break;
         }
         case (SCH_MULTISELECT): {
             for (size_t row = 0; row < rowCount; row++) {
-                auto selectElement = new Element<SelectContainer>(type, Element<SelectContainer>::getDefaultValue());
+                Element<SelectContainer> selectElement =
+                    Element<SelectContainer>(type, Element<SelectContainer>::getDefaultValue());
                 // Update the select to have the correct number of options
-                selectElement->getValueReference().update(
+                selectElement.getValueReference().update(
                     SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
                     column.selectOptions.getOptionCount());
-                setElement(col, row, (ElementBase*)selectElement, false);
+                setElement(col, row, selectElement, false);
             }
             break;
         }
         case (SCH_WEEKDAY): {
             for (size_t row = 0; row < rowCount; row++) {
-                auto weekdayElement = new Element<WeekdayContainer>(type, Element<WeekdayContainer>::getDefaultValue());
-                setElement(col, row, (ElementBase*)weekdayElement, false);
+                Element<WeekdayContainer> weekdayElement =
+                    Element<WeekdayContainer>(type, Element<WeekdayContainer>::getDefaultValue());
+                setElement(col, row, weekdayElement, false);
             }
             break;
         }
         case (SCH_TIME): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(
-                    col, row, (ElementBase*)new Element<TimeContainer>(type, Element<TimeContainer>::getDefaultValue()), false);
+                setElement(col, row, Element<TimeContainer>(type, Element<TimeContainer>::getDefaultValue()), false);
             }
             break;
         }
         case (SCH_DATE): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(
-                    col, row, (ElementBase*)new Element<DateContainer>(type, Element<DateContainer>::getDefaultValue()), false);
+                setElement(col, row, Element<DateContainer>(type, Element<DateContainer>::getDefaultValue()), false);
             }
             break;
         }
@@ -685,49 +673,44 @@ void ScheduleCore::addRow() {
 }
 
 void ScheduleCore::addRow(size_t index) {
-    std::vector<ElementBase*> elementCopies = {};
-
     for (size_t i = 0; i < getColumnCount(); i++) {
         Column& column = m_schedule[i];
 
         switch (column.type) {
             case (SCH_BOOL): {
-                column.addElement(index, new Element<bool>(column.type, Element<bool>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<bool>::getDefaultValue()));
                 break;
             }
             case (SCH_NUMBER): {
-                column.addElement(index, new Element<int>(column.type, Element<int>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<int>::getDefaultValue()));
                 break;
             }
             case (SCH_DECIMAL): {
-                column.addElement(index, new Element<double>(column.type, Element<double>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<double>::getDefaultValue()));
                 break;
             }
             case (SCH_TEXT): {
-                column.addElement(index, new Element<std::string>(column.type, Element<std::string>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<std::string>::getDefaultValue()));
                 break;
             }
             case (SCH_SELECT): {
-                column.addElement(
-                    index, new Element<SingleSelectContainer>(column.type, Element<SingleSelectContainer>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<SingleSelectContainer>::getDefaultValue()));
                 break;
             }
             case (SCH_MULTISELECT): {
-                column.addElement(index,
-                                  new Element<SelectContainer>(column.type, Element<SelectContainer>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<SelectContainer>::getDefaultValue()));
                 break;
             }
             case (SCH_WEEKDAY): {
-                column.addElement(index,
-                                  new Element<WeekdayContainer>(column.type, Element<WeekdayContainer>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<WeekdayContainer>::getDefaultValue()));
                 break;
             }
             case (SCH_TIME): {
-                column.addElement(index, new Element<TimeContainer>(column.type, Element<TimeContainer>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<TimeContainer>::getDefaultValue()));
                 break;
             }
             case (SCH_DATE): {
-                column.addElement(index, new Element<DateContainer>(column.type, Element<DateContainer>::getDefaultValue()));
+                column.addElement(index, Element(column.type, Element<DateContainer>::getDefaultValue()));
                 break;
             }
             default: {
@@ -745,13 +728,8 @@ bool ScheduleCore::removeRow(size_t row) {
         return false;
     }
 
-    for (size_t i = 0; i < m_schedule.size(); i++) {
-        delete m_schedule[i].rows[row];
-        if (row == m_schedule[i].rows.size() - 1) {
-            m_schedule[i].rows.pop_back();
-        } else {
-            m_schedule[i].rows.erase(m_schedule[i].rows.begin() + row);
-        }
+    for (size_t i = 0; i < getColumnCount(); i++) {
+        getColumn(i).removeElement(row);
     }
 
     sortColumns();
@@ -763,7 +741,8 @@ std::optional<size_t> ScheduleCore::duplicateRow(size_t row) {
         return std::nullopt;
     }
 
-    auto duplicatedRowData = getRow(row);
+    // Copy of the source row data
+    std::vector<std::shared_ptr<ElementBase>> duplicatedRowData = getRowCopy(row);
     size_t prevRowCount = getRowCount();
     addRow();
     // The row was actually added (probably unneeded safety check)
@@ -774,21 +753,23 @@ std::optional<size_t> ScheduleCore::duplicateRow(size_t row) {
     return std::nullopt;
 }
 
-std::vector<ElementBase*> ScheduleCore::getRow(size_t index) {
-    std::vector<ElementBase*> elementData = {};
+std::vector<std::shared_ptr<ElementBase>> ScheduleCore::getRowCopy(size_t index) {
+    std::vector<std::shared_ptr<ElementBase>> rowCopyData = {};
 
     if (existsRowAtIndex(index) == false) {
-        return elementData;
+        return rowCopyData;
     }
 
     for (size_t col = 0; col < getColumnCount(); col++) {
-        elementData.push_back(getElement(col, index));
+        auto element = getElement(col, index);
+        auto elementAccess = element.lock();
+        rowCopyData.push_back(elementAccess->getCopy());
     }
 
-    return elementData;
+    return rowCopyData;
 }
 
-bool ScheduleCore::setRow(size_t index, std::vector<ElementBase*> elementData) {
+bool ScheduleCore::setRow(size_t index, std::vector<std::shared_ptr<ElementBase>> elementData) {
     if (existsRowAtIndex(index) == false) {
         return false;
     }

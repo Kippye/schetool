@@ -38,7 +38,8 @@ class CalendarItemWindowSubGui : public Gui {
         Event<size_t, size_t, int> setElementValueNumber;
         Event<size_t, size_t, double> setElementValueDecimal;
         Event<size_t, size_t, std::string> setElementValueText;
-        Event<size_t, size_t, SelectContainer> setElementValueSelect;
+        Event<size_t, size_t, SingleSelectContainer> setElementValueSelect;
+        Event<size_t, size_t, SelectContainer> setElementValueMultiselect;
         Event<size_t, size_t, WeekdayContainer> setElementValueWeekday;
         Event<size_t, size_t, TimeContainer> setElementValueTime;
         Event<size_t, size_t, DateContainer> setElementValueDate;

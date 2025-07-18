@@ -603,7 +603,7 @@ bool ScheduleGui::drawTableCellContents(
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
                     ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column))))
             {
-                setElementValueSelect.invoke(column, row, value);
+                setElementValueMultiselect.invoke(column, row, value);
             }
             break;
         }
@@ -669,10 +669,12 @@ bool ScheduleGui::drawTableCellContents(
 }
 
 void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table, ImGuiTableFlags tableFlags) {
-    const Column& column = m_scheduleCore.getColumnConst(columnIndex);
+    // We need to access the column only through this.
+    // Because duplicating or removing a column will invalidate the reference.
+    auto getContextColumn = [&]() -> const Column& { return m_scheduleCore.getColumnConst(columnIndex); };
 
     // Renaming
-    std::string name = column.name.c_str();
+    std::string name = getContextColumn().name.c_str();
     name.reserve(COLUMN_NAME_MAX_LENGTH);
     char* buf = name.data();
 
@@ -685,29 +687,29 @@ void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table,
     // Select type (for non-permanent columns)
     ImGuiComboFlags typeDropdownFlags = ImGuiComboFlags_None;
     ImGui::Separator();
-    if (column.permanent) {
+    if (getContextColumn().permanent) {
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         typeDropdownFlags |= ImGuiComboFlags_NoArrowButton;
     }
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Type:");
     ImGui::SameLine();
-    if (std::optional<SCHEDULE_TYPE> newColumnType =
-            gui_templates::Dropdown("##ColumnType", column.type, schedule_consts::scheduleTypeNames, typeDropdownFlags))
+    if (std::optional<SCHEDULE_TYPE> newColumnType = gui_templates::Dropdown(
+            "##ColumnType", getContextColumn().type, schedule_consts::scheduleTypeNames, typeDropdownFlags))
     {
         setColumnType.invoke(columnIndex, newColumnType.value());
     }
-    if (column.permanent) {
+    if (getContextColumn().permanent) {
         ImGui::PopItemFlag();
     }
 
     ImGui::Separator();
 
-    if (ImGui::MenuItem("Remove", NULL, false, !column.permanent)) {
+    if (ImGui::MenuItem("Remove", NULL, false, !getContextColumn().permanent)) {
         removeColumn.invoke(columnIndex);
     }
 
-    if (ImGui::MenuItem("Duplicate", NULL, false, !column.permanent)) {
+    if (ImGui::MenuItem("Duplicate", NULL, false, !getContextColumn().permanent)) {
         duplicateColumn.invoke(columnIndex);
     }
 
@@ -722,8 +724,8 @@ void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table,
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Reset column:");
     ImGui::SameLine();
-    if (std::optional<ColumnResetOption> newColumnResetOption =
-            gui_templates::Dropdown("##ColumnResetSetting", column.resetOption, schedule_consts::columnResetOptionStrings))
+    if (std::optional<ColumnResetOption> newColumnResetOption = gui_templates::Dropdown(
+            "##ColumnResetSetting", getContextColumn().resetOption, schedule_consts::columnResetOptionStrings))
     {
         setColumnResetOption.invoke(columnIndex, newColumnResetOption.value());
     }
@@ -756,7 +758,7 @@ void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table,
     if (tableFlags & ImGuiTableFlags_Hideable) {
         ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, false);
         for (int otherColumnIndex = 0; otherColumnIndex < table->ColumnsCount; otherColumnIndex++) {
-            if (column.permanent) {
+            if (getContextColumn().permanent) {
                 continue;
             }
             ImGuiTableColumn* otherColumn = &table->Columns[otherColumnIndex];

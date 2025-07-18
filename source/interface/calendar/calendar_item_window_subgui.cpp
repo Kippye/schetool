@@ -330,7 +330,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
                     isEditablePropertyClicked(
                         columnEditDisabled)))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
             {
-                setElementValueSelect.invoke(column, row, value);
+                setElementValueMultiselect.invoke(column, row, value);
             }
             break;
         }
@@ -385,10 +385,12 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
 
 void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak) {
     if (ImGui::BeginPopupContextItem(NULL, ImGuiPopupFlags_MouseButtonLeft | ImGuiPopupFlags_MouseButtonRight)) {
-        const Column& column = m_scheduleCore.getColumnConst(col);
+        // We need to access the column only through this.
+        // Because duplicating or removing a column will invalidate the reference.
+        auto getContextColumn = [&]() -> const Column& { return m_scheduleCore.getColumnConst(col); };
 
         // Renaming
-        std::string name = column.name.c_str();
+        std::string name = getContextColumn().name.c_str();
         name.reserve(COLUMN_NAME_MAX_LENGTH);
         char* buf = name.data();
 
@@ -401,30 +403,30 @@ void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak
         // Select type (for non-permanent columns)
         ImGuiComboFlags typeDropdownFlags = ImGuiComboFlags_None;
         ImGui::Separator();
-        if (column.permanent) {
+        if (getContextColumn().permanent) {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             typeDropdownFlags |= ImGuiComboFlags_NoArrowButton;
         }
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Type:");
         ImGui::SameLine();
-        if (std::optional<SCHEDULE_TYPE> newColumnType =
-                gui_templates::Dropdown("##ColumnType", column.type, schedule_consts::scheduleTypeNames, typeDropdownFlags))
+        if (std::optional<SCHEDULE_TYPE> newColumnType = gui_templates::Dropdown(
+                "##ColumnType", getContextColumn().type, schedule_consts::scheduleTypeNames, typeDropdownFlags))
         {
             setColumnType.invoke(col, newColumnType.value());
         }
-        if (column.permanent) {
+        if (getContextColumn().permanent) {
             ImGui::PopItemFlag();
         }
 
         ImGui::Separator();
 
-        if (ImGui::MenuItem("Remove", NULL, false, !column.permanent)) {
+        if (ImGui::MenuItem("Remove", NULL, false, !getContextColumn().permanent)) {
             removeColumn.invoke(col);
             needToBreak = true;
         }
 
-        if (ImGui::MenuItem("Duplicate", NULL, false, !column.permanent)) {
+        if (ImGui::MenuItem("Duplicate", NULL, false, !getContextColumn().permanent)) {
             duplicateColumn.invoke(col);
             needToBreak = true;
         }
@@ -440,8 +442,8 @@ void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Reset:");
         ImGui::SameLine();
-        if (std::optional<ColumnResetOption> newColumnResetOption =
-                gui_templates::Dropdown("##ColumnResetSetting", column.resetOption, schedule_consts::columnResetOptionStrings))
+        if (std::optional<ColumnResetOption> newColumnResetOption = gui_templates::Dropdown(
+                "##ColumnResetSetting", getContextColumn().resetOption, schedule_consts::columnResetOptionStrings))
         {
             setColumnResetOption.invoke(col, newColumnResetOption.value());
         }

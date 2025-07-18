@@ -31,6 +31,7 @@ void Schedule::init(Input& input, Interface& interface) {
         m_scheduleGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
         m_scheduleGui->setElementValueText.addListener(setElementValueListenerText);
         m_scheduleGui->setElementValueSelect.addListener(setElementValueListenerSelect);
+        m_scheduleGui->setElementValueMultiselect.addListener(setElementValueListenerMultiselect);
         m_scheduleGui->setElementValueWeekday.addListener(setElementValueListenerWeekday);
         m_scheduleGui->setElementValueTime.addListener(setElementValueListenerTime);
         m_scheduleGui->setElementValueDate.addListener(setElementValueListenerDate);
@@ -74,6 +75,7 @@ void Schedule::init(Input& input, Interface& interface) {
         m_calendarGui->setElementValueDecimal.addListener(setElementValueListenerDecimal);
         m_calendarGui->setElementValueText.addListener(setElementValueListenerText);
         m_calendarGui->setElementValueSelect.addListener(setElementValueListenerSelect);
+        m_calendarGui->setElementValueMultiselect.addListener(setElementValueListenerMultiselect);
         m_calendarGui->setElementValueWeekday.addListener(setElementValueListenerWeekday);
         m_calendarGui->setElementValueTime.addListener(setElementValueListenerTime);
         m_calendarGui->setElementValueDate.addListener(setElementValueListenerDate);
@@ -191,10 +193,9 @@ void Schedule::createDefaultSchedule() {
     clearSchedule();
     m_editHistory.clearEditHistory();
 
+    m_core.addColumn(getColumnCount(), Column({}, SCH_TEXT, std::string("Name"), true, ScheduleColumnFlags_Name));
     m_core.addColumn(getColumnCount(),
-                     Column(std::vector<ElementBase*>{}, SCH_TEXT, std::string("Name"), true, ScheduleColumnFlags_Name));
-    m_core.addColumn(getColumnCount(),
-                     Column(std::vector<ElementBase*>{},
+                     Column({},
                             SCH_BOOL,
                             std::string("Finished"),
                             true,
@@ -206,15 +207,10 @@ void Schedule::createDefaultSchedule() {
     Filter isUnfinishedFilter = Filter();
     isUnfinishedFilter.addRule(FilterRule<bool>(false));
     m_core.addColumnFilterGroup(getColumnCount() - 1, FilterGroup({isUnfinishedFilter}, "Hide finished rows"));
-    m_core.addColumn(getColumnCount(),
-                     Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("Start"), true, ScheduleColumnFlags_Start));
-    m_core.addColumn(
-        getColumnCount(),
-        Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("Duration"), true, ScheduleColumnFlags_Duration));
-    m_core.addColumn(getColumnCount(),
-                     Column(std::vector<ElementBase*>{}, SCH_TIME, std::string("End"), true, ScheduleColumnFlags_End));
-    m_core.addColumn(getColumnCount(),
-                     Column(std::vector<ElementBase*>{}, SCH_DATE, std::string("Date"), true, ScheduleColumnFlags_Date));
+    m_core.addColumn(getColumnCount(), Column({}, SCH_TIME, std::string("Start"), true, ScheduleColumnFlags_Start));
+    m_core.addColumn(getColumnCount(), Column({}, SCH_TIME, std::string("Duration"), true, ScheduleColumnFlags_Duration));
+    m_core.addColumn(getColumnCount(), Column({}, SCH_TIME, std::string("End"), true, ScheduleColumnFlags_End));
+    m_core.addColumn(getColumnCount(), Column({}, SCH_DATE, std::string("Date"), true, ScheduleColumnFlags_Date));
     m_core.sortColumns();
 }
 
@@ -498,31 +494,21 @@ void Schedule::addRow(size_t rowIndex, bool addToHistory) {
     m_core.addRow(rowIndex);
 
     if (addToHistory) {
-        m_editHistory.addEdit<RowEdit>(false, rowIndex, m_core.getRow(rowIndex));
+        m_editHistory.addEdit<RowEdit>(false, rowIndex, m_core.getRowCopy(rowIndex));
     }
 
     m_scheduleEvents.rowAdded.invoke(rowIndex);
 }
 
 void Schedule::removeRow(size_t rowIndex, bool addToHistory) {
-    std::vector<ElementBase*> originalRow = m_core.getRow(rowIndex);
-    // temporary vector of copies
-    std::vector<ElementBase*> originalRowCopies = {};
-
-    for (size_t i = 0; i < originalRow.size(); i++) {
-        originalRowCopies.push_back(originalRow[i]->getCopy());
-    }
+    std::vector<std::shared_ptr<ElementBase>> originalRowCopy = m_core.getRowCopy(rowIndex);
 
     if (m_core.removeRow(rowIndex)) {
         if (addToHistory) {
             // add a remove RowEdit to the edit history with copies of the removed Elements
-            m_editHistory.addEdit<RowEdit>(true, rowIndex, originalRowCopies);
+            m_editHistory.addEdit<RowEdit>(true, rowIndex, originalRowCopy);
         }
         m_scheduleEvents.rowRemoved.invoke(rowIndex);
-    }
-
-    for (size_t i = 0; i < originalRowCopies.size(); i++) {
-        delete originalRowCopies[i];
     }
 }
 
@@ -531,18 +517,10 @@ void Schedule::duplicateRow(size_t rowIndex, bool addToHistory) {
 
     if (duplicateRowIndex.has_value()) {
         if (addToHistory) {
-            m_editHistory.addEdit<RowEdit>(false, duplicateRowIndex.value(), m_core.getRow(duplicateRowIndex.value()));
+            m_editHistory.addEdit<RowEdit>(false, duplicateRowIndex.value(), m_core.getRowCopy(duplicateRowIndex.value()));
         }
         m_scheduleEvents.rowAdded.invoke(rowIndex);
     }
-}
-
-std::vector<ElementBase*> Schedule::getRow(size_t index) {
-    return m_core.getRow(index);
-}
-
-void Schedule::setRow(size_t index, std::vector<ElementBase*> elementData) {
-    m_core.setRow(index, elementData);
 }
 
 std::vector<size_t> Schedule::getSortedRowIndices() {

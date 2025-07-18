@@ -24,22 +24,12 @@ ElementEditBase::ElementEditBase(size_t column, size_t row, SCHEDULE_TYPE elemen
 }
 
 // RowEdit
-RowEdit::RowEdit(bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataToCopy)
+RowEdit::RowEdit(bool isRemove, size_t row, const std::vector<std::shared_ptr<ElementBase>>& elementDataToCopy)
     : ScheduleEdit(ScheduleEditType::RowAddOrRemove) {
     m_isRemove = isRemove;
     m_row = row;
-    for (ElementBase* element : elementDataToCopy) {
+    for (std::shared_ptr<ElementBase> element : elementDataToCopy) {
         m_elementData.push_back(element->getCopy());
-    }
-}
-
-RowEdit::~RowEdit() {
-    if (m_elementData.size() == 0) {
-        return;
-    }
-
-    for (size_t i = m_elementData.size() - 1; i > 0; i--) {
-        delete m_elementData[i];
     }
 }
 
@@ -49,8 +39,8 @@ void RowEdit::revert(ScheduleCore& scheduleCore) {
         scheduleCore.addRow(m_row);
         // Set row to COPIES of the element data.
         // This way, switching the row's pointers again won't delete the elements contained in this edit.
-        std::vector<ElementBase*> dataCopy = {};
-        for (ElementBase* element : m_elementData) {
+        std::vector<std::shared_ptr<ElementBase>> dataCopy = {};
+        for (std::shared_ptr<ElementBase> element : m_elementData) {
             dataCopy.push_back(element->getCopy());
         }
         scheduleCore.setRow(m_row, dataCopy);
@@ -75,8 +65,8 @@ void RowEdit::apply(ScheduleCore& scheduleCore) {
         scheduleCore.addRow(m_row);
         // Set row to COPIES of the element data.
         // This way, switching the row's pointers again won't delete the elements contained in this edit.
-        std::vector<ElementBase*> dataCopy = {};
-        for (ElementBase* element : m_elementData) {
+        std::vector<std::shared_ptr<ElementBase>> dataCopy = {};
+        for (std::shared_ptr<ElementBase> element : m_elementData) {
             dataCopy.push_back(element->getCopy());
         }
         scheduleCore.setRow(m_row, dataCopy);

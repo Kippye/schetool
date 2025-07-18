@@ -1,6 +1,7 @@
 #pragma once
 #include "time_wrapper.h"
 #include "general_constants.h"
+#include <memory>
 
 class ElementBase {
     protected:
@@ -17,5 +18,5 @@ class ElementBase {
         const TimeWrapper& getEditTime() const;
 
         virtual std::string getString() const;
-        virtual ElementBase* getCopy();
+        virtual std::shared_ptr<ElementBase> getCopy();
 };

@@ -1,5 +1,6 @@
 #include "schedule_column.h"
 #include <iostream>
+#include <numeric>
 
 Column::Column() {
     setupFiltersPerType();
@@ -7,7 +8,7 @@ Column::Column() {
     name = "Text";
 }
 
-Column::Column(const std::vector<ElementBase*>& rows,
+Column::Column(const std::vector<std::shared_ptr<ElementBase>>& rows,
                SCHEDULE_TYPE type,
                const std::string& name,
                bool permanent,
@@ -47,13 +48,6 @@ Column::Column(const Column& other) {
     // std::cout << "Copied column with " << rows.size() << " elements from " << other.name << "@" << &other << " to " << name << "@" << this << std::endl;
 }
 
-Column::~Column() {
-    // std::cout << "Destroying Column " << name << "@" << this << std::endl;
-    for (size_t i = 0; i < rows.size(); i++) {
-        delete rows[i];
-    }
-}
-
 // private function. Sets up the m_filterGroupsPerType map to contain an empty vector for each SCHEDULE_TYPE
 void Column::setupFiltersPerType() {
     for (int i = 0; i < SCH_LAST; i++) {
@@ -61,49 +55,109 @@ void Column::setupFiltersPerType() {
     }
 }
 
+size_t Column::getRowCount() const {
+    return rows.size();
+}
+
 bool Column::hasElement(size_t index) const {
     return index < rows.size();
 }
 
-bool Column::addElement(size_t index, ElementBase* element) {
-    if (index <= rows.size() == false) {
-        return false;
-    }
-    if (element->getType() != type) {
+bool Column::removeElement(size_t index) {
+    if (hasElement(index) == false) {
         return false;
     }
 
-    // Update added selects to have the correct number of options
-    if (element->getType() == SCH_SELECT) {
-        ((Element<SingleSelectContainer>*)element)
-            ->getValueReference()
-            .update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
-                    selectOptions.getOptionCount());
-    } else if (element->getType() == SCH_MULTISELECT) {
-        ((Element<SelectContainer>*)element)
-            ->getValueReference()
-            .update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
-                    selectOptions.getOptionCount());
+    if (index == getRowCount() - 1) {
+        rows.pop_back();
+    } else {
+        rows.erase(rows.begin() + index);
     }
-
-    rows.insert(rows.begin() + index, element);
     return true;
 }
 
-ElementBase* Column::getElement(size_t index) {
+std::weak_ptr<ElementBase> Column::getElement(size_t index) {
     if (hasElement(index) == false) {
-        printf("The column %s has no element at index %zu", name.c_str(), index);
-        return nullptr;
+        throw std::out_of_range(
+            std::format("Column::getElement(): The column {} has no element at index {}", name.c_str(), index));
     }
     return rows[index];
 }
 
-const ElementBase* Column::getElementConst(size_t index) const {
+std::weak_ptr<const ElementBase> Column::getElementConst(size_t index) const {
     if (hasElement(index) == false) {
-        printf("The column %s has no element at index %zu", name.c_str(), index);
-        return nullptr;
+        throw std::out_of_range(
+            std::format("Column::getElementConst(): The column {} has no element at index {}", name.c_str(), index));
     }
     return rows[index];
+}
+
+std::vector<size_t> Column::getSortedIndices() const {
+    std::vector<size_t> newIndices(rows.size());
+    std::iota(newIndices.begin(), newIndices.end(), 0);
+
+    switch (type) {
+        case (SCH_BOOL): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<bool>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        case (SCH_NUMBER): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<int>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        case (SCH_DECIMAL): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<double>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        case (SCH_TEXT): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<std::string>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        case (SCH_SELECT): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<SingleSelectContainer>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        case (SCH_MULTISELECT): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<SelectContainer>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        case (SCH_WEEKDAY): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<WeekdayContainer>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        case (SCH_TIME): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<TimeContainer>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        case (SCH_DATE): {
+            ColumnSortComparison sortComparison = ColumnSortComparison<DateContainer>(sort);
+            std::sort(
+                newIndices.begin(), newIndices.end(), [&](size_t i, size_t j) { return sortComparison(rows[i], rows[j]); });
+            break;
+        }
+        default: {
+            std::cout << std::format("Column::getSortedIndices(): Sorting has not been implemented for the type: {}", (int)type)
+                      << std::endl;
+            break;
+        }
+    }
+    return newIndices;
 }
 
 bool Column::modifySelectOptions(const SelectOptionsModification& modification) {
@@ -111,9 +165,9 @@ bool Column::modifySelectOptions(const SelectOptionsModification& modification) 
         // If this column is a select column, update all the (Single)SelectContainers
         if (type == SCH_SELECT) {
             // Update elements
-            for (ElementBase* element : rows) {
-                ((Element<SingleSelectContainer>*)element)
-                    ->getValueReference()
+            for (auto element : rows) {
+                ((Element<SingleSelectContainer>&)*element)
+                    .getValueReference()
                     .update(modification.getUpdateInfo(), selectOptions.getOptionCount());
             }
             // Update filters
@@ -129,9 +183,9 @@ bool Column::modifySelectOptions(const SelectOptionsModification& modification) 
         }
         if (type == SCH_MULTISELECT) {
             // Update elements
-            for (ElementBase* element : rows) {
-                ((Element<SelectContainer>*)element)
-                    ->getValueReference()
+            for (auto element : rows) {
+                ((Element<SelectContainer>&)*element)
+                    .getValueReference()
                     .update(modification.getUpdateInfo(), selectOptions.getOptionCount());
             }
             // Update filters
@@ -230,7 +284,7 @@ bool Column::checkElementPassesFilters(size_t index, const std::optional<TimeWra
     }
 
     bool passes = true;
-    const ElementBase* element = getElementConst(index);
+    std::weak_ptr<const ElementBase> element = getElementConst(index);
 
     for (const auto& filterGroup : m_filterGroupsPerType.at(type)) {
         passes = passes &&

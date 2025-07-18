@@ -93,12 +93,10 @@ class RowEdit : public ScheduleEdit {
     private:
         bool m_isRemove = false;
         size_t m_row;
-        std::vector<ElementBase*> m_elementData = {};
+        std::vector<std::shared_ptr<ElementBase>> m_elementData = {};
 
     public:
-        RowEdit(bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataToCopy);
-
-        ~RowEdit() override;
+        RowEdit(bool isRemove, size_t row, const std::vector<std::shared_ptr<ElementBase>>& elementDataToCopy);
 
         void revert(ScheduleCore& scheduleCore) override;
 
