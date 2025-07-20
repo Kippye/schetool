@@ -798,10 +798,18 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
                     drawFilterRule(f, r);
                     // display operator between each rule except the last
                     if (r < filter.getRules().size() - 1) {
+                        std::string leftOptionLabel = std::format(
+                            "{}##FilterOperator{};{}", filter_consts::logicalOperatorStrings.at(LogicalOperatorEnum::Or), f, r);
+                        std::string rightOptionLabel =
+                            std::format("{}##FilterOperator{};{}",
+                                        filter_consts::logicalOperatorStrings.at(LogicalOperatorEnum::And),
+                                        f,
+                                        r);
                         if (std::optional<LogicalOperatorEnum> newOperator =
-                                gui_templates::Dropdown(std::format("##FilterOperator{};{}", f, r).c_str(),
-                                                        filter.getOperatorType(),
-                                                        filter_consts::logicalOperatorStrings))
+                                gui_templates::OptionSwitch(leftOptionLabel.c_str(),
+                                                            rightOptionLabel.c_str(),
+                                                            {LogicalOperatorEnum::Or, LogicalOperatorEnum::And},
+                                                            filter.getOperatorType()))
                         {
                             filter.setOperator(newOperator.value());
                             setColumnFilterOperator.invoke(m_filterGroupState.getColumnIndex(),
@@ -833,10 +841,15 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
             ImGui::EndChild();
             // display operator between each Filter except the last
             if (f < m_filterGroupState.getFilterGroup().getFilters().size() - 1) {
+                std::string leftOptionLabel = std::format(
+                    "{}##FilterGroupOperator{}", filter_consts::logicalOperatorStrings.at(LogicalOperatorEnum::Or), f);
+                std::string rightOptionLabel = std::format(
+                    "{}##FilterGroupOperator{}", filter_consts::logicalOperatorStrings.at(LogicalOperatorEnum::And), f);
                 if (std::optional<LogicalOperatorEnum> newOperator =
-                        gui_templates::Dropdown(std::format("##FilterGroupOperator{}", f).c_str(),
-                                                m_filterGroupState.getFilterGroup().getOperatorType(),
-                                                filter_consts::logicalOperatorStrings))
+                        gui_templates::OptionSwitch(leftOptionLabel.c_str(),
+                                                    rightOptionLabel.c_str(),
+                                                    {LogicalOperatorEnum::Or, LogicalOperatorEnum::And},
+                                                    m_filterGroupState.getFilterGroup().getOperatorType()))
                 {
                     m_filterGroupState.getFilterGroup().setOperator(newOperator.value());
                     setColumnFilterGroupOperator.invoke(

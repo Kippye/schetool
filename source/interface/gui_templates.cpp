@@ -416,6 +416,45 @@ bool gui_templates::SelectOptionSelectable(
     return selectablePressed;
 }
 
+std::optional<OptionSwitchSelection> gui_templates::OptionSwitch(const char* labelLeft,
+                                                                 const char* labelRight,
+                                                                 OptionSwitchSelection currentSelection) {
+    std::optional<OptionSwitchSelection> newSelection = std::nullopt;
+    size_t pushedStyleColors = 0;
+    size_t pushedStyleVars = 0;
+
+    if (currentSelection == LeftOption) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
+        pushedStyleColors++;
+    } else {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
+        pushedStyleVars++;
+    }
+    if (ImGui::Button(labelLeft)) {
+        newSelection.emplace(!currentSelection);
+    }
+    ImGui::PopStyleColor(pushedStyleColors);
+    ImGui::PopStyleVar(pushedStyleVars);
+    pushedStyleColors = 0;
+    pushedStyleVars = 0;
+    ImGui::SameLine(0.0f, 0.0f);
+    if (currentSelection == RightOption) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyle().Colors[ImGuiCol_ButtonActive]);
+        pushedStyleColors++;
+    } else {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.65f);
+        pushedStyleVars++;
+    }
+    if (ImGui::Button(labelRight)) {
+        newSelection.emplace(!currentSelection);
+    }
+    ImGui::PopStyleColor(pushedStyleColors);
+    ImGui::PopStyleVar(pushedStyleVars);
+    pushedStyleColors = 0;
+    pushedStyleVars = 0;
+    return newSelection;
+}
+
 int gui_callbacks::filterNumbers(ImGuiInputTextCallbackData* data) {
     if (data->EventChar > 47 && data->EventChar < 58)
         return 0;

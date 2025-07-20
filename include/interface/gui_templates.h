@@ -8,6 +8,9 @@
 #include "time_container.h"
 #include "date_container.h"
 
+typedef bool OptionSwitchSelection;
+constexpr OptionSwitchSelection LeftOption = 0;
+constexpr OptionSwitchSelection RightOption = 1;
 typedef int DateEditorFlags;
 enum DateEditorFlags_ {
     DateEditorFlags_None = 0,
@@ -80,6 +83,36 @@ namespace gui_templates {
                                 bool* selected,
                                 ImVec2 size = ImVec2(0, 0),
                                 ImGuiSelectableFlags flags = ImGuiButtonFlags_None);
+
+    // Displays two segmented buttons representing 2 different options of a switch.
+    // A label must be provided for each button.
+    // Clicking anywhere in the item switches the selected state to the other value.
+    // Returns an std::optional<OptionSwitchSelection> on the frame that a new option is selected, containing the new selection (LeftOption or RightOption).
+    // Returns std::nullopt otherwise.
+    std::optional<OptionSwitchSelection> OptionSwitch(const char* labelLeft,
+                                                      const char* labelRight,
+                                                      OptionSwitchSelection currentSelection);
+
+    // Displays two segmented buttons representing 2 different options of a switch.
+    // This is a special function that supports using a type (preferrably an enum) and switching between 2 options of said type.
+    // A label must be provided for each button.
+    // Clicking anywhere in the item switches the selected state to the other value.
+    // Returns an std::optional<OptionSwitchSelection> on the frame that a new option is selected, containing the new selection (LeftOption or RightOption).
+    // Returns std::nullopt otherwise.
+    template <typename OptionType>
+    std::optional<OptionType> OptionSwitch(const char* labelLeft,
+                                           const char* labelRight,
+                                           std::pair<OptionType, OptionType> optionValues,
+                                           OptionType currentSelection) {
+        std::optional<OptionSwitchSelection> selectedOption =
+            OptionSwitch(labelLeft, labelRight, currentSelection == optionValues.first ? LeftOption : RightOption);
+
+        if (selectedOption.has_value()) {
+            return selectedOption.value() == LeftOption ? optionValues.first : optionValues.second;
+        }
+        return std::nullopt;
+    }
+
     // Displays a Combo dropdown menu. The optionStrings parameter is a map of objects of a type to strings representing their display names. The currentSelection parameter must be an object of that type which is contained in the optionStrings map.
     // Returns an std::optional of the option type on the frame a new option is selected, containing the new selection.
     // Returns std::nullopt otherwise.
