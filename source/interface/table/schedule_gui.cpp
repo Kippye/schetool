@@ -204,6 +204,8 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             ImGui::TableSetupColumn(m_scheduleCore.getColumnConst(column).name.c_str());
         }
 
+        ImGui::TableSetupScrollFreeze(0, 2);
+
         // ROW 0: Filters
         ImGui::TableNextRow();
         for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
