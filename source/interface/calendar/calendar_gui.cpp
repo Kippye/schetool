@@ -563,7 +563,11 @@ void CalendarGui::drawCalendarDayItem(size_t itemRow, const std::string& idSuffi
     }
     // NOTE: While in the child scope, you CANNOT use ImGui::TableGetColumn/Row, as they will be "0"
     // Use m_currentTableCoords instead!
-    if (ImGui::BeginChild(childLabelString.c_str(), ImVec2(), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders)) {
+    if (ImGui::BeginChild(childLabelString.c_str(),
+                          ImVec2(),
+                          ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders,
+                          ImGuiWindowFlags_NoScrollWithMouse))
+    {
         const ImGuiID childID = ImGui::GetCurrentWindow()->ChildId;
         const size_t nameColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Name);
         drawItemProperty({nameColumnIndex, itemRow});
