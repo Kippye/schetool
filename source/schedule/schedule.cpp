@@ -519,7 +519,7 @@ void Schedule::duplicateRow(size_t rowIndex, bool addToHistory) {
         if (addToHistory) {
             m_editHistory.addEdit<RowEdit>(false, duplicateRowIndex.value(), m_core.getRowCopy(duplicateRowIndex.value()));
         }
-        m_scheduleEvents.rowAdded.invoke(rowIndex);
+        m_scheduleEvents.rowAdded.invoke(duplicateRowIndex.value());
     }
 }
 
