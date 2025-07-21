@@ -302,6 +302,8 @@ class Schedule {
         void setName(const std::string& name);
         void updatePreferences(const SchedulePreferences& preferences);
         SchedulePreferences getPreferences() const;
+        // Wrapper for ViewTabBarGui::clearDateOverride()
+        void clearDateOverride();
         // TEMP just a function to hide all views of the schedule. i don't like this.
         void hideAllViews();
         std::string getName();

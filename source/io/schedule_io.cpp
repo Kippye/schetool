@@ -58,6 +58,7 @@ void ScheduleIO::sendFileInfoUpdates() {
 
 void ScheduleIO::unloadCurrentFile() {
     m_schedule.clearSchedule();
+    m_schedule.clearDateOverride();
     m_schedule.getEditHistoryMutable().clearEditHistory();
     m_currentFileInfo.clear();
     sendFileInfoUpdates();

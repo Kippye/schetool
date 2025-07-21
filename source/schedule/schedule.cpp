@@ -145,17 +145,31 @@ void Schedule::updatePreferences(const SchedulePreferences& preferences) {
                   << std::endl;
     }
     m_preferences = preferences;
-    // Update view tab bar gui. Does not invoke the event (to avoid an infinite loop)
-    m_viewTabBarGui->setSelectedView(m_preferences.getView());
+    // Make the view tab bar gui visible
+    if (m_viewTabBarGui) {
+        m_viewTabBarGui->setVisible(true);
+        // Update view tab bar gui. Does not invoke the event (to avoid an infinite loop)
+        m_viewTabBarGui->setSelectedView(m_preferences.getView());
+    }
 }
 
 SchedulePreferences Schedule::getPreferences() const {
     return m_preferences;
 }
 
+void Schedule::clearDateOverride() {
+    if (m_viewTabBarGui) {
+        m_viewTabBarGui->clearDateOverride();
+    }
+}
+
 void Schedule::hideAllViews() {
     for (auto [_, viewGui] : m_viewGuis) {
         viewGui->setVisible(false);
+    }
+    // Also hide the view tab bar gui
+    if (m_viewTabBarGui) {
+        m_viewTabBarGui->setVisible(false);
     }
 }
 
