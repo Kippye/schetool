@@ -178,6 +178,7 @@ target_include_directories(${PROGRAM_NAME}
     PUBLIC "include/${SCHEDULE_DIR}"
     PUBLIC "include/${UTIL_DIR}"
     PUBLIC "libs"
+    PUBLIC "libs/json"
     PUBLIC "libs/stb")
 
 ###### PLATFORM-SPECIFIC ######
@@ -232,6 +233,8 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${IO_DIR}/preferences_io.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/schedule_data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/schedule_io.cpp"
+    "${SCHETOOL_SRC}/${IO_DIR}/style_data_converter.cpp"
+    "${SCHETOOL_SRC}/${IO_DIR}/style_io.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/textures.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filters/filter.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filters/filter_group.cpp"

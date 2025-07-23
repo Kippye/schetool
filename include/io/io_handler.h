@@ -2,6 +2,7 @@
 
 #include "schedule_io.h"
 #include "preferences_io.h"
+#include "style_io.h"
 #include "file_info.h"
 #include "schedule.h"
 #include "window.h"
@@ -21,6 +22,7 @@ class IO_Handler {
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::shared_ptr<ScheduleIO> m_scheduleIO = nullptr;
         std::shared_ptr<PreferencesIO> m_preferencesIO = nullptr;
+        std::shared_ptr<StyleIO> m_styleIO = nullptr;
         double m_timeSinceAutosave = 0.0;
 
         std::function<void(FileInfo)> openFileInfoChangeListener = [&](FileInfo fileInfo) {
@@ -65,6 +67,8 @@ class IO_Handler {
         std::filesystem::path getBestScheduleSavePath() const;
         // Appends the configs save subdirectory to the best available data dir path.
         std::filesystem::path getBestConfigSavePath() const;
+        // Appends the styles subdirectory to the styles path.
+        std::filesystem::path getStylesPath() const;
 
     public:
         // Initialise the IO handler and the specific IO classes.
@@ -72,4 +76,5 @@ class IO_Handler {
         void addToAutosaveTimer(double delta);
         std::shared_ptr<ScheduleIO> getScheduleIO();
         std::shared_ptr<PreferencesIO> getPreferencesIO();
+        std::shared_ptr<StyleIO> getStyleIO();
 };

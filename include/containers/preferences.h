@@ -6,7 +6,7 @@
 // Contains values for every user preference used in the program.
 class Preferences {
     private:
-        GuiStyle m_style;
+        GuiStyleDefinition m_style;
         FontSize m_fontSize;
         bool m_notificationsEnabled;
 
@@ -14,7 +14,7 @@ class Preferences {
         Preferences() = delete;
         // Create a specific set of preferences.
         // To get a default set, use the static getDefault() function instead.
-        Preferences(GuiStyle style, FontSize fontSize, bool notificationsEnabled) {
+        Preferences(const GuiStyleDefinition& style, FontSize fontSize, bool notificationsEnabled) {
             m_style = style;
             m_fontSize = fontSize;
             m_notificationsEnabled = notificationsEnabled;
@@ -25,7 +25,7 @@ class Preferences {
             return Preferences(InterfaceStyleHandler::getDefaultStyle(), InterfaceStyleHandler::getDefaultFontSize(), true);
         }
 
-        GuiStyle getStyle() const {
+        GuiStyleDefinition getStyle() const {
             return m_style;
         }
         FontSize getFontSize() const {
@@ -35,7 +35,7 @@ class Preferences {
             return m_notificationsEnabled;
         }
 
-        void setStyle(GuiStyle style) {
+        void setStyle(const GuiStyleDefinition& style) {
             m_style = style;
         }
         void setFontSize(FontSize fontSize) {

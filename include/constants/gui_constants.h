@@ -25,8 +25,42 @@ enum SelectColor_ {
     SelectColor_Last = 1 << 9,
 };
 
-// Full definition in interface_style.cpp
-enum class GuiStyle;
+const std::map<std::string, ImGuiStyleVar> styleVarNameToEnum = {
+    {"Alpha", ImGuiStyleVar_Alpha},
+    {"DisabledAlpha", ImGuiStyleVar_DisabledAlpha},
+    {"WindowPadding", ImGuiStyleVar_WindowPadding},
+    {"WindowRounding", ImGuiStyleVar_WindowRounding},
+    {"WindowBorderSize", ImGuiStyleVar_WindowBorderSize},
+    {"WindowMinSize", ImGuiStyleVar_WindowMinSize},
+    {"WindowTitleAlign", ImGuiStyleVar_WindowTitleAlign},
+    {"ChildRounding", ImGuiStyleVar_ChildRounding},
+    {"ChildBorderSize", ImGuiStyleVar_ChildBorderSize},
+    {"PopupRounding", ImGuiStyleVar_PopupRounding},
+    {"PopupBorderSize", ImGuiStyleVar_PopupBorderSize},
+    {"FramePadding", ImGuiStyleVar_FramePadding},
+    {"FrameRounding", ImGuiStyleVar_FrameRounding},
+    {"FrameBorderSize", ImGuiStyleVar_FrameBorderSize},
+    {"ItemSpacing", ImGuiStyleVar_ItemSpacing},
+    {"ItemInnerSpacing", ImGuiStyleVar_ItemInnerSpacing},
+    {"IndentSpacing", ImGuiStyleVar_IndentSpacing},
+    {"CellPadding", ImGuiStyleVar_CellPadding},
+    {"ScrollbarSize", ImGuiStyleVar_ScrollbarSize},
+    {"ScrollbarRounding", ImGuiStyleVar_ScrollbarRounding},
+    {"GrabMinSize", ImGuiStyleVar_GrabMinSize},
+    {"GrabRounding", ImGuiStyleVar_GrabRounding},
+    {"ImageBorderSize", ImGuiStyleVar_ImageBorderSize},
+    {"TabRounding", ImGuiStyleVar_TabRounding},
+    {"TabBorderSize", ImGuiStyleVar_TabBorderSize},
+    {"TabBarBorderSize", ImGuiStyleVar_TabBarBorderSize},
+    {"TabBarOverlineSize", ImGuiStyleVar_TabBarOverlineSize},
+    {"TableAngledHeadersAngle", ImGuiStyleVar_TableAngledHeadersAngle},
+    {"TableAngledHeadersTextAlign", ImGuiStyleVar_TableAngledHeadersTextAlign},
+    {"ButtonTextAlign", ImGuiStyleVar_ButtonTextAlign},
+    {"SelectableTextAlign", ImGuiStyleVar_SelectableTextAlign},
+    {"SeparatorTextBorderSize", ImGuiStyleVar_SeparatorTextBorderSize},
+    {"SeparatorTextAlign", ImGuiStyleVar_SeparatorTextAlign},
+    {"SeparatorTextPadding", ImGuiStyleVar_SeparatorTextPadding},
+};
 
 namespace gui_colors {
     // Select option colors in HSL (w is not really used but could be alpha).

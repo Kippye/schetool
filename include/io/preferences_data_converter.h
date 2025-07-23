@@ -9,26 +9,28 @@ struct BLF_Preferences : BLF_Base {
             return "BLF_Preferences";
         }
 
-        int style;
+        std::string styleName;
         int fontSize;
         bool notificationsEnabled;
 
-        BLF_Preferences() : style(0), fontSize(0), notificationsEnabled(false) {
+        BLF_Preferences() : styleName(""), fontSize(0), notificationsEnabled(false) {
         }
         BLF_Preferences(const Preferences& preferences)
-            : style((int)preferences.getStyle()),
+            : styleName(preferences.getStyle().name),
               fontSize((int)preferences.getFontSize()),
               notificationsEnabled(preferences.getNotificationsEnabled()) {
         }
 
         Preferences getPreferences() const {
-            return Preferences((GuiStyle)style, (FontSize)fontSize, notificationsEnabled);
+            return Preferences(InterfaceStyleHandler::getStyle(styleName).value_or(InterfaceStyleHandler::getDefaultStyle()),
+                               (FontSize)fontSize,
+                               notificationsEnabled);
         }
 
         static void addDefinition(ObjectDefinitions& definitions) {
             definitions.add(definitions.getObjectTable().define<BLF_Preferences>(
                 getName(),
-                blf::arg("style", &BLF_Preferences::style),
+                blf::arg("style", &BLF_Preferences::styleName),
                 blf::arg("fontSize", &BLF_Preferences::fontSize),
                 blf::arg("notificationsEnabled", &BLF_Preferences::notificationsEnabled)));
         }

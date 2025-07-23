@@ -26,10 +26,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     ImGui_ImplGlfw_InitForOpenGL(m_windowManager->getGlfwWindow(), true);
     ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());
     // Load fonts
-    m_styleHandler->loadFontSizes("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf");
-
-    // Apply the default style
-    setStyle(m_styleHandler->getDefaultStyle());
+    m_styleHandler.loadFontSizes("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf");
 
     // ADD GUIS
     addGui<StartPageGui>("StartPageGui");
@@ -45,18 +42,15 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
 void Interface::initEventListeners(std::shared_ptr<PreferencesIO> preferencesIO) {
     if (preferencesIO) {
         preferencesIO->preferencesChangedEvent.addListener([&](Preferences preferences) {
-            setStyle(preferences.getStyle());
-            m_styleHandler->setFontSize(preferences.getFontSize());
+            m_styleHandler.applyStyle(preferences.getStyle());
+            m_styleHandler.setFontSize(preferences.getFontSize());
         });
     }
 }
 
-void Interface::setStyle(GuiStyle style) {
-    m_styleHandler->applyStyle(style);
-}
-
-GuiStyle Interface::getCurrentStyle() const {
-    return m_styleHandler->getCurrentStyle();
+void Interface::applyDefaultStyle() {
+    // Apply the default style
+    m_styleHandler.applyStyle(InterfaceStyleHandler::getDefaultStyle());
 }
 
 void Interface::addGui(std::shared_ptr<Gui> gui) {
@@ -70,10 +64,10 @@ void Interface::draw(float deltaTime) {
 
     m_input->setGuiWantKeyboard(imGuiIO->WantCaptureKeyboard);
 
-    m_styleHandler->transitionStyle(deltaTime);
+    m_styleHandler.transitionStyle(deltaTime);
 
     // Apply font
-    ImGui::PushFont(m_styleHandler->getFontData(m_styleHandler->getFontSize()));
+    ImGui::PushFont(m_styleHandler.getFontData(m_styleHandler.getFontSize()));
     for (auto& [id, gui] : m_guis) {
         if (gui->getVisible()) {
             gui->draw(m_windowManager->getSize(), *m_input, *m_guiTextures.get());

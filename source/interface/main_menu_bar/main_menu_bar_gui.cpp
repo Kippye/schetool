@@ -7,8 +7,8 @@
 
 float MainMenuBarGui::height = 0.0f;
 
-MainMenuBarGui::MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler) : Gui(ID) {
-    m_styleHandler = styleHandler;
+MainMenuBarGui::MainMenuBarGui(const char* ID, const InterfaceStyleHandler& styleHandler)
+    : Gui(ID), m_styleHandler(styleHandler) {
     // Add subguis
     addSubGui(new DeleteModalSubGui("DeleteModalSubGui"));
     addSubGui(new TextInputModalSubGui("NewNameModalSubGui", "Enter name", "Create schedule"));
@@ -88,18 +88,24 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
             ImGui::Text("Interface theme");
             ImGui::SameLine();
             const float styleSelectDropdownX = ImGui::GetCursorPosX();
-            if (std::optional<GuiStyle> newStyle = gui_templates::Dropdown(
-                    "##StyleSelectDropdown", m_styleHandler->getCurrentStyle(), InterfaceStyleHandler::styleNames))
-            {
-                m_preferences.setStyle(newStyle.value());
-                preferencesChangedEvent.invoke(m_preferences);
+            if (!m_styleHandler.getCurrentStyle().name.empty()) {
+                if (std::optional<GuiStyleDefinition> newStyle =
+                        gui_templates::Dropdown("##StyleSelectDropdown",
+                                                m_styleHandler.getCurrentStyle(),
+                                                InterfaceStyleHandler::getStyleDefinitionToName()))
+                {
+                    m_preferences.setStyle(newStyle.value());
+                    preferencesChangedEvent.invoke(m_preferences);
+                }
+            } else {
+                ImGui::NewLine();
             }
             ImGui::AlignTextToFramePadding();
             ImGui::Text("Font scale");
             ImGui::SameLine();
             ImGui::SetCursorPosX(styleSelectDropdownX);
-            if (std::optional<FontSize> newFontSize = gui_templates::Dropdown(
-                    "##FontSizeSelectDropdown", m_styleHandler->getFontSize(), gui_fonts::fontSizeNames))
+            if (std::optional<FontSize> newFontSize =
+                    gui_templates::Dropdown("##FontSizeSelectDropdown", m_styleHandler.getFontSize(), gui_fonts::fontSizeNames))
             {
                 m_preferences.setFontSize(newFontSize.value());
                 preferencesChangedEvent.invoke(m_preferences);

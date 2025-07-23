@@ -22,7 +22,7 @@ class Interface {
     private:
         Window* m_windowManager;
         Input* m_input;
-        std::shared_ptr<InterfaceStyleHandler> m_styleHandler = std::make_shared<InterfaceStyleHandler>();
+        InterfaceStyleHandler m_styleHandler;
         std::unique_ptr<GuiTextures> m_guiTextures;
         std::map<std::string, std::shared_ptr<Gui>> m_guis = {};
 
@@ -36,10 +36,7 @@ class Interface {
 
         void init(Window*, Input*, TextureLoader&);
         void initEventListeners(std::shared_ptr<PreferencesIO> preferencesIO);
-        // Passthrough function to InterFaceStyleHandler to set and apply the current style.
-        void setStyle(GuiStyle style);
-        // Get the currently applied style
-        GuiStyle getCurrentStyle() const;
+        void applyDefaultStyle();
         template <typename T, typename... Args>
         std::shared_ptr<T> addGui(Args&&... args) {
             std::shared_ptr<T> gui = std::make_shared<T>(std::forward<Args>(args)...);

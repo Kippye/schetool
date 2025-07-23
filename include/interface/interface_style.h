@@ -1,18 +1,11 @@
 #pragma once
 
 #include <map>
+#include <set>
+#include <stack>
 #include <optional>
-#include <functional>
 #include "gui_constants.h"
-
-// Container for a style definition.
-// Each style has a name (used only for display in the style selector or elsewhere) and a base style.
-// When applying a style, the base style will be applied first and then the deriving style's modifications added on top.
-// The apply function applies the style when called.
-struct GuiStyleDefinition {
-        std::optional<GuiStyle> baseStyle;
-        std::function<void()> applyFunction;
-};
+#include "gui_style_definition.h"
 
 struct GuiStyleTransition {
         float progress = 0.0f;
@@ -20,24 +13,40 @@ struct GuiStyleTransition {
         ImVec4 newColors[ImGuiCol_COUNT];
 };
 
+inline const std::string DEFAULT_STYLE_NAME_LIGHT = "default_light";
+inline const std::string DEFAULT_STYLE_NAME_DARK = "default_dark";
+
 class InterfaceStyleHandler {
     private:
         static std::map<FontSize, ImFont*> loadedFonts;
+        static std::map<std::string, GuiStyleDefinition> styleDefinitions;
         static FontSize currentFontSize;
         const float TRANSITION_TIME_SECS = 2.2f;
-        GuiStyle m_currentStyle;
+        GuiStyleDefinition m_currentStyle;
         bool m_transitioningBetweenStyles = false;
         GuiStyleTransition m_transitionInfo;
 
+        // Pass in an empty stack and an empty set.
+        // The result will be stored in the stack (from lowest base style to the provided style).
+        void getStylesToApplyRecursive(const GuiStyleDefinition& style,
+                                       std::stack<GuiStyleDefinition>& styleStack,
+                                       std::set<std::string>& styleNameHistory) const;
         void beginStyleTransition();
 
     public:
-        static const std::map<GuiStyle, const char*> styleNames;
-        static const std::map<GuiStyle, GuiStyleDefinition> styleDefinitions;
+        // Pass style definitions
+        static void setStyleDefinitions(const std::map<std::string, GuiStyleDefinition>& styles);
+        // Get a map of style definition -> style name
+        static std::map<GuiStyleDefinition, const char*> getStyleDefinitionToName();
+        // Applies the style with the given name
+        void applyStyle(const GuiStyleDefinition& style);
+        // Returns the style definition of a default style or an empty style definition.
+        static GuiStyleDefinition getDefaultStyle();
+        GuiStyleDefinition getCurrentStyle() const;
+        // Get a style by its name if a definition exists for it
+        static std::optional<GuiStyleDefinition> getStyle(const std::string& styleName);
+
         void loadFontSizes(const char* fontPath);
-        void applyStyle(GuiStyle style);
-        static GuiStyle getDefaultStyle();
-        GuiStyle getCurrentStyle() const;
         // Changes the internal state of the current FontSize.
         // To actually apply the font size, push a font before drawing gui elements.
         void setFontSize(FontSize fontSize);

@@ -39,6 +39,12 @@ Program::Program() {
     if (scheduleIO) {
         scheduleIO->openMostRecentFile();
     }
+    auto styleIO = ioHandler.getStyleIO();
+    if (styleIO) {
+        InterfaceStyleHandler::setStyleDefinitions(styleIO->readAllStyles());
+        programInterface.applyDefaultStyle();
+    }
+    // ^ Must be before v because v applies the preferred style and it would otherwise be replaced by the default
     auto preferencesIO = ioHandler.getPreferencesIO();
     if (preferencesIO) {
         preferencesIO->readPreferences();

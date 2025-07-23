@@ -13,7 +13,7 @@ class MainMenuBarGui : public Gui {
         bool m_openNewNameModal = false;
         bool m_openRenameModal = false;
         bool m_openDeleteConfirmationModal = false;
-        std::shared_ptr<const InterfaceStyleHandler> m_styleHandler = nullptr;
+        const InterfaceStyleHandler& m_styleHandler;
         std::optional<std::string> m_openFileName = std::nullopt;
         std::vector<std::string> m_fileNames = {};
         Preferences m_preferences = Preferences::getDefault();
@@ -23,7 +23,7 @@ class MainMenuBarGui : public Gui {
         void displayScheduleList(GuiTextures& guiTextures);
 
     public:
-        MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler);
+        MainMenuBarGui(const char* ID, const InterfaceStyleHandler& styleHandler);
 
         Event<std::string> openScheduleFileEvent;
         Event<> saveEvent;
