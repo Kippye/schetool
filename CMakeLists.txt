@@ -245,8 +245,11 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_core.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit_history.cpp"
-    "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
 )
+
+IF (NOT (CMAKE_GENERATOR STREQUAL "Unix Makefiles" AND ${CMAKE_BUILD_TYPE} STREQUAL Release))
+    target_sources(${PROGRAM_NAME} PRIVATE "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp")
+ENDIF()
 
 ######### LINKS #########
 target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags 
