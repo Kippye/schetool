@@ -44,7 +44,7 @@ class ScheduleCore {
 
         // COLUMNS
         size_t getColumnCount() const;
-        bool existsColumnAtIndex(size_t index) const;
+        bool existsColumnAtIndex(size_t index, bool warn = false) const;
         std::optional<size_t> getInternalIndexFor(size_t displayOrder) const;
 
         void addColumn(size_t index, const Column& column);

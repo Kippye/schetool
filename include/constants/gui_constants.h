@@ -111,7 +111,9 @@ namespace gui_sizes {
 
 namespace gui_style_vars {
     const float labelButtonRounding = 4.0f;
-}
+    // Window padding to use for the padding from the actual program window
+    const ImVec2 windowEdgePadding = ImVec2(16.0f, 16.0f);
+}  // namespace gui_style_vars
 
 enum class FontSize {
     // Font size of 8px

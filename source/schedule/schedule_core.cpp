@@ -102,11 +102,13 @@ size_t ScheduleCore::getColumnCount() const {
 }
 
 // Check if the index is less than size. If not, a general "index out of range" error is printed
-bool ScheduleCore::existsColumnAtIndex(size_t index) const {
+bool ScheduleCore::existsColumnAtIndex(size_t index, bool warn) const {
     if (index < getColumnCount() == false) {
-        std::cout << std::format(
-                         "ScheduleCore::existsColumnAtIndex({}): Index not less than size ({})", index, getColumnCount())
-                  << std::endl;
+        if (warn) {
+            std::cout << std::format(
+                             "ScheduleCore::existsColumnAtIndex({}): Index not less than size ({})", index, getColumnCount())
+                      << std::endl;
+        }
         return false;
     }
     return true;

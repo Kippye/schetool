@@ -1,6 +1,3 @@
-
-#include <array>
-#include <iterator>
 #include <string>
 #include <cstdio>
 #include <algorithm>
@@ -69,61 +66,24 @@ void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
     ImGui::PopStyleVar();
 
-    const float SCHEDULE_TOP_MARGIN = offsetFromTop;
-    const float ADD_ROW_BUTTON_HEIGHT = 32.0f;
-    const float ADD_COLUMN_BUTTON_WIDTH = 32.0f;
-    const float CHILD_WINDOW_WIDTH = (float)(windowSize.getWidth() - ADD_COLUMN_BUTTON_WIDTH - 8);
-    const float CHILD_WINDOW_HEIGHT = (float)(windowSize.getHeight() - SCHEDULE_TOP_MARGIN - ADD_ROW_BUTTON_HEIGHT - 16.0f);
-
-    ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_TOP_MARGIN));
-    ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
     // Avoid imgui 0 column abort by not beginning the table at all if there are no columns in the schedule
     if (m_scheduleCore.getColumnCount() > 0) {
+        const float SCHEDULE_TOP_MARGIN = offsetFromTop;
+        const float CHILD_WINDOW_WIDTH = (float)windowSize.getWidth();
+        const float CHILD_WINDOW_HEIGHT = (float)(windowSize.getHeight() - SCHEDULE_TOP_MARGIN);
+
+        ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_TOP_MARGIN));
+        ImGui::PushStyleColor(ImGuiCol_Border, gui_colors::colorInvisible);
+        ImGui::PushStyleColor(ImGuiCol_BorderShadow, gui_colors::colorInvisible);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, gui_style_vars::windowEdgePadding);
+        ImGui::BeginChild("SchedulePanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(2);
+
         // DRAW the SCHEDULE TABLE
         drawScheduleTable(windowSize, input, guiTextures);
-    }
-    ImGui::EndChild();
-    ImGui::SameLine();
-    bool addColumnButtonDisabled = m_scheduleCore.getColumnCount() >= schedule_consts::COLUMN_MAX_COUNT;
-    if (addColumnButtonDisabled) {
-        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, gui_colors::disabledAlpha);
-    }
-    ImGui::Button("+", ImVec2(ADD_COLUMN_BUTTON_WIDTH, (float)(CHILD_WINDOW_HEIGHT)));
-    if (ImGui::BeginPopupContextItem("SelectAddedColumnTypeContext", ImGuiPopupFlags_MouseButtonLeft)) {
-        ImGui::Text("Add column");
-        float columnTypeButtonSize = 1.0f;
-        for (int colType = 0; colType < SCH_LAST; colType++) {
-            float currentTextSize =
-                gui_size_calculations::getTextButtonWidth(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType));
-            columnTypeButtonSize = std::max(columnTypeButtonSize, currentTextSize + ImGui::GetStyle().FramePadding.x * 2.0f);
-        }
-        for (int colType = 0; colType < SCH_LAST; colType++) {
-            if (ImGui::Button(
-                    std::format(
-                        "{}##AddedColumnTypeButton{}", schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType), colType)
-                        .c_str(),
-                    ImVec2(columnTypeButtonSize, 0.0f)))
-            {
-                addDefaultColumn.invoke(m_scheduleCore.getColumnCount(), (SCHEDULE_TYPE)colType);
-                if (!input.buttonStates.ctrlDown) {
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-        }
-        ImGui::EndPopup();
-    }
-    if (addColumnButtonDisabled) {
-        ImGui::PopItemFlag();
-        ImGui::PopStyleVar();
-        if (ImGui::BeginItemTooltip()) {
-            ImGui::Text("Adding too many columns is not good for you!");
-            ImGui::EndTooltip();
-        }
-    }
-    if (ImGui::Button("Add row", ImVec2((float)(windowSize.getWidth() - ADD_COLUMN_BUTTON_WIDTH - 26), ADD_ROW_BUTTON_HEIGHT)))
-    {
-        addRow.invoke(m_scheduleCore.getRowCount());
+
+        ImGui::EndChild();
     }
     ImGui::End();
 }
@@ -170,6 +130,10 @@ void ScheduleGui::applyTableColumnOrder() {
 
     // Make the imgui column display order match schedule's column order
     for (int order = 0; order < m_scheduleTable->ColumnsCount; order++) {
+        if (m_scheduleCore.existsColumnAtIndex(order, false) == false) {
+            // No schedule column at the index - it's probably the "add column" column.
+            continue;
+        }
         if (m_scheduleCore.getInternalIndexFor(order).has_value() == false) {
             std::cout << std::format("ScheduleGui::drawScheduleTable(): No internal index for display order {}", order)
                       << std::endl;
@@ -192,17 +156,20 @@ void ScheduleGui::applyTableColumnOrder() {
 void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
-        ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoSavedOrder;
+        ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoSavedOrder |
+        ImGuiTableFlags_HighlightHoveredColumn;
     // Correctly order the table columns
     applyTableColumnOrder();
 
-    if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount(), tableFlags, ImGui::GetContentRegionAvail())) {
+    if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount() + 1, tableFlags, ImGui::GetContentRegionAvail())) {
         ImGuiTable* currentTable = ImGui::GetCurrentTable();
         m_scheduleTable = currentTable;
         currentTable->DisableDefaultContextMenu = true;
         for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
             ImGui::TableSetupColumn(m_scheduleCore.getColumnConst(column).name.c_str());
         }
+        ImGuiTableColumnFlags addColumnFlags = ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder;
+        ImGui::TableSetupColumn("+ Add column", addColumnFlags);
 
         ImGui::TableSetupScrollFreeze(0, 2);
 
@@ -295,7 +262,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                     filterEditor->openGroupEdit(column, editorGroupIndex, itemAvoidRect);
                 }
             }
-        }
+        }  // Filters row
 
         // ROW 1: Custom column header row
         ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
@@ -394,7 +361,36 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                 m_nextMouseReleaseOpenColumnContext = false;
             }
             ImGui::PopID();
+        }  // Custom header row
+        // "Add column" header
+        {
+            ImGui::TableSetColumnIndex(ImGui::TableGetColumnCount() - 1);
+            bool isColumnHeaderHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
+                                          ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
+            ImGui::TableHeader("+ Add column");
+            if (isColumnHeaderHovered  // Hovering the column header
+                && m_nextMouseReleaseOpenColumnContext  // The current mouse release can open the popup
+                && ((ImGui::GetMouseDragDelta(0).x == 0 &&
+                     ImGui::IsMouseReleased(ImGuiMouseButton_Left))  // Clicked LMB without dragging
+                    || (ImGui::GetMouseDragDelta(1).x == 0 &&
+                        ImGui::IsMouseReleased(ImGuiMouseButton_Right)))  // OR clicked RMB without dragging
+            )
+            {
+                ImGui::TableOpenContextMenu(ImGui::TableGetColumnIndex());
+            }
+            bool popupOpenBefore = ImGui::GetCurrentTable()->IsContextPopupOpen;
+            if (ImGui::GetCurrentTable()->ContextPopupColumn == ImGui::TableGetColumnIndex() &&
+                ImGui::TableBeginContextMenuPopup(ImGui::GetCurrentTable()))
+            {
+                drawAddColumnHeaderContext(input);
+                ImGui::EndPopup();
+            }
+            // The column context menu was closed this frame (probably through a mouse click)
+            if (popupOpenBefore == true && ImGui::GetCurrentTable()->IsContextPopupOpen == false) {
+                m_nextMouseReleaseOpenColumnContext = false;
+            }
         }
+
         // The first mouse release after closing the column context popup does nothing but allows the next release to open it again
         if (m_nextMouseReleaseOpenColumnContext == false &&
             (ImGui::IsMouseReleased(ImGuiMouseButton_Left) || ImGui::IsMouseReleased(ImGuiMouseButton_Right)))
@@ -442,7 +438,21 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
         do_not_draw_row:
             bool b = false;  // stupid thing because fsr the label can't be at the end of the loop
         }
+        // "Add row" row
+        ImGui::TableNextRow();
+        // for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
+        ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(0).value());
+        ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
+        if (ImGui::Selectable("+ Add row", false, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0.0f, ImGui::GetFrameHeight()))) {
+            addRow.invoke(m_scheduleCore.getRowCount());
+        }
+        ImGui::PopStyleVar();
         ImGui::EndTable();
+        ImGuiTableColumn& lastColumn =
+            m_scheduleTable->Columns[m_scheduleTable->DisplayOrderToIndex[m_scheduleTable->RightMostEnabledColumn]];
+        ImVec2 topLeft = ImVec2(m_scheduleTable->InnerRect.GetTL());
+        ImVec2 bottomRight = ImVec2(lastColumn.ClipRect.GetBR().x, m_scheduleTable->RowPosY2);
+        m_tableContentRect = ImRect(topLeft, bottomRight);
     }
 }
 
@@ -782,6 +792,29 @@ void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table,
 
     if (ImGui::Button("Close"))
         ImGui::CloseCurrentPopup();
+}
+
+void ScheduleGui::drawAddColumnHeaderContext(const Input& input) {
+    ImGui::Text("Add column");
+    float columnTypeButtonSize = 1.0f;
+    for (int colType = 0; colType < SCH_LAST; colType++) {
+        float currentTextSize =
+            gui_size_calculations::getTextButtonWidth(schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType));
+        columnTypeButtonSize = std::max(columnTypeButtonSize, currentTextSize + ImGui::GetStyle().FramePadding.x * 2.0f);
+    }
+    for (int colType = 0; colType < SCH_LAST; colType++) {
+        if (ImGui::Button(
+                std::format(
+                    "{}##AddedColumnTypeButton{}", schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType), colType)
+                    .c_str(),
+                ImVec2(columnTypeButtonSize, 0.0f)))
+        {
+            addDefaultColumn.invoke(m_scheduleCore.getColumnCount(), (SCHEDULE_TYPE)colType);
+            if (!input.buttonStates.ctrlDown) {
+                ImGui::CloseCurrentPopup();
+            }
+        }
+    }
 }
 
 void ScheduleGui::openRowContextPopup(size_t row) {

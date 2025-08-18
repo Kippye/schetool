@@ -20,7 +20,7 @@ void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures
     ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), dateButtonSize.y));
     ImGui::SetNextWindowPos(ImVec2(0.0f, MainMenuBarGui::getHeight()));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(style.WindowPadding.x, 0.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(gui_style_vars::windowEdgePadding.x, 0.0f));
     if (ImGui::Begin(m_ID.c_str(),
                      NULL,
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |

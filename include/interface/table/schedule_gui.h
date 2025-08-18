@@ -12,7 +12,10 @@
 
 class ScheduleGui : public Gui {
     private:
+        // Table state info
         ImGuiTable* m_scheduleTable = nullptr;
+        ImRect m_tableContentRect = ImRect();
+
         const ScheduleCore& m_scheduleCore;
         bool m_nextMouseReleaseOpenColumnContext = true;
         unsigned int m_filterGroupListColumn = 0;
@@ -28,12 +31,14 @@ class ScheduleGui : public Gui {
         };
 
         void applyTableColumnOrder();
+        // Draw the schedule table and set its content rect in m_tableContentRect (excluding empty table area)
         void drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
         // Draws the contents of the table cell at the given column and row.
         // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
         bool drawTableCellContents(
             size_t column, size_t row, const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
         void drawColumnHeaderContext(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
+        void drawAddColumnHeaderContext(const Input& input);
         void openRowContextPopup(size_t row);
         void drawRowContext();
         void openCellContextPopup(size_t column, size_t row);

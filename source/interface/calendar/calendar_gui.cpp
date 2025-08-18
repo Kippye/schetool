@@ -92,6 +92,19 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
                      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                          ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus))
     {
+        ImGui::PopStyleVar();  // WindowRounding = 0.0f
+        const float SCHEDULE_TOP_MARGIN = offsetFromTop;
+        const float CHILD_WINDOW_WIDTH = (float)windowSize.getWidth();
+        const float CHILD_WINDOW_HEIGHT = (float)(windowSize.getHeight() - SCHEDULE_TOP_MARGIN);
+
+        ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_TOP_MARGIN));
+        ImGui::PushStyleColor(ImGuiCol_Border, gui_colors::colorInvisible);
+        ImGui::PushStyleColor(ImGuiCol_BorderShadow, gui_colors::colorInvisible);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, gui_style_vars::windowEdgePadding);
+        ImGui::BeginChild("CalendarPanel", ImVec2(CHILD_WINDOW_WIDTH, CHILD_WINDOW_HEIGHT), true);
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(2);
+
         TimeWrapper formatTime;
         std::string monthName = m_viewedMonth.getDynamicFmtStringUTC("{:%B}");
         ImGui::SetNextItemWidth(ImGui::CalcTextSize("September").x * 1.5f);
@@ -283,8 +296,10 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
         drawWeekdayHeaders(ImGui::GetContentRegionAvail().x / 7.0f);
 
         drawCalendarTable(guiTextures);
+        ImGui::EndChild();
+    } else {
+        ImGui::PopStyleVar();  // WindowRounding = 0.0f
     }
-    ImGui::PopStyleVar();  // WindowRounding = 0.0f
     ImGui::End();
 
     if (m_itemWindowSubGui) {
