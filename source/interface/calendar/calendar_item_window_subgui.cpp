@@ -384,7 +384,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
 }
 
 void CalendarItemWindowSubGui::drawPropertyContext(size_t col, bool& needToBreak) {
-    if (ImGui::BeginPopupContextItem(NULL, ImGuiPopupFlags_MouseButtonLeft | ImGuiPopupFlags_MouseButtonRight)) {
+    if (ImGui::BeginPopupContextItem(NULL, ImGuiPopupFlags_MouseButtonLeft)) {
         // We need to access the column only through this.
         // Because duplicating a column will invalidate the reference.
         auto getContextColumn = [&]() -> const Column& { return m_scheduleCore.getColumnConst(col); };
