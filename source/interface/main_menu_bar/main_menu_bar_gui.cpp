@@ -74,13 +74,21 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Preferences")) {
+            ImGui::SeparatorText("Notifications");
             ImGui::AlignTextToFramePadding();
-            ImGui::Text("Notifications");
+            ImGui::Text("Popup");
             ImGui::SameLine();
-            // ImGui::SetCursorPosX(styleSelectDropdownX);
             bool notificationsEnabled = m_preferences.getNotificationsEnabled();
             if (ImGui::Checkbox("##NotificationsEnabledCheckbox", &notificationsEnabled)) {
                 m_preferences.setNotificationsEnabled(notificationsEnabled);
+                preferencesChangedEvent.invoke(m_preferences);
+            }
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Sound");
+            ImGui::SameLine();
+            bool notificationSoundEnabled = m_preferences.getNotificationSoundEnabled();
+            if (ImGui::Checkbox("##NotificationSoundEnabledCheckbox", &notificationSoundEnabled)) {
+                m_preferences.setNotificationSoundEnabled(notificationSoundEnabled);
                 preferencesChangedEvent.invoke(m_preferences);
             }
             ImGui::SeparatorText("Interface");

@@ -9,20 +9,26 @@ class Preferences {
         GuiStyleDefinition m_style;
         FontSize m_fontSize;
         bool m_notificationsEnabled;
+        bool m_notificationSoundEnabled;
 
     public:
         Preferences() = delete;
         // Create a specific set of preferences.
         // To get a default set, use the static getDefault() function instead.
-        Preferences(const GuiStyleDefinition& style, FontSize fontSize, bool notificationsEnabled) {
+        Preferences(const GuiStyleDefinition& style,
+                    FontSize fontSize,
+                    bool notificationsEnabled,
+                    bool notificationSoundEnabled) {
             m_style = style;
             m_fontSize = fontSize;
             m_notificationsEnabled = notificationsEnabled;
+            m_notificationSoundEnabled = notificationSoundEnabled;
         }
 
         // Get a Preferences instance containing default values for every preference.
         static Preferences getDefault() {
-            return Preferences(InterfaceStyleHandler::getDefaultStyle(), InterfaceStyleHandler::getDefaultFontSize(), true);
+            return Preferences(
+                InterfaceStyleHandler::getDefaultStyle(), InterfaceStyleHandler::getDefaultFontSize(), true, true);
         }
 
         GuiStyleDefinition getStyle() const {
@@ -34,6 +40,9 @@ class Preferences {
         bool getNotificationsEnabled() const {
             return m_notificationsEnabled;
         }
+        bool getNotificationSoundEnabled() const {
+            return m_notificationSoundEnabled;
+        }
 
         void setStyle(const GuiStyleDefinition& style) {
             m_style = style;
@@ -43,5 +52,8 @@ class Preferences {
         }
         void setNotificationsEnabled(bool enabled) {
             m_notificationsEnabled = enabled;
+        }
+        void setNotificationSoundEnabled(bool enabled) {
+            m_notificationSoundEnabled = enabled;
         }
 };

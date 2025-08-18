@@ -12,19 +12,22 @@ struct BLF_Preferences : BLF_Base {
         std::string styleName;
         int fontSize;
         bool notificationsEnabled;
+        bool notificationSoundEnabled;
 
-        BLF_Preferences() : styleName(""), fontSize(0), notificationsEnabled(false) {
+        BLF_Preferences() : styleName(""), fontSize(0), notificationsEnabled(false), notificationSoundEnabled(false) {
         }
         BLF_Preferences(const Preferences& preferences)
             : styleName(preferences.getStyle().name),
               fontSize((int)preferences.getFontSize()),
-              notificationsEnabled(preferences.getNotificationsEnabled()) {
+              notificationsEnabled(preferences.getNotificationsEnabled()),
+              notificationSoundEnabled(preferences.getNotificationSoundEnabled()) {
         }
 
         Preferences getPreferences() const {
             return Preferences(InterfaceStyleHandler::getStyle(styleName).value_or(InterfaceStyleHandler::getDefaultStyle()),
                                (FontSize)fontSize,
-                               notificationsEnabled);
+                               notificationsEnabled,
+                               notificationSoundEnabled);
         }
 
         static void addDefinition(ObjectDefinitions& definitions) {
@@ -32,7 +35,8 @@ struct BLF_Preferences : BLF_Base {
                 getName(),
                 blf::arg("style", &BLF_Preferences::styleName),
                 blf::arg("fontSize", &BLF_Preferences::fontSize),
-                blf::arg("notificationsEnabled", &BLF_Preferences::notificationsEnabled)));
+                blf::arg("notificationsEnabled", &BLF_Preferences::notificationsEnabled),
+                blf::arg("notificationSoundEnabled", &BLF_Preferences::notificationSoundEnabled)));
         }
 };
 

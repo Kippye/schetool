@@ -178,6 +178,7 @@ target_include_directories(${PROGRAM_NAME}
     PUBLIC "include/${SCHEDULE_DIR}"
     PUBLIC "include/${UTIL_DIR}"
     PUBLIC "libs"
+    PUBLIC "libs/miniaudio"
     PUBLIC "libs/json"
     PUBLIC "libs/stb")
 
@@ -206,6 +207,7 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener_linux_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener_win_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/audio.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
