@@ -22,6 +22,9 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     // Note that there is no actual saving rate.
     // This is just so imgui doesn't take 5 seconds after a change before it tells me that a change needs to be saved.
     imGuiIO->IniSavingRate = 0.1f;
+    // Disable the (largely useless for this program) window nav with CTRL + TAB
+    imGui->ConfigNavWindowingKeyNext = 0;
+    imGui->ConfigNavWindowingKeyPrev = 0;
     // set up platform / renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(m_windowManager->getGlfwWindow(), true);
     ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());

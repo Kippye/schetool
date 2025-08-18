@@ -3,7 +3,7 @@
 void Input::init(Window* windowManager) {
     m_windowManager = windowManager;
 
-    for (size_t i = 0; i <= INPUT_EVENT_SC_REDO; i++) {
+    for (size_t i = 0; i < _INPUT_EVENT_LAST; i++) {
         m_listeners.insert({(INPUT_EVENT)i, std::vector<std::function<void()>>{}});
         m_eventStates.insert({(INPUT_EVENT)i, false});
         m_eventLastFrameStates.insert({(INPUT_EVENT)i, false});

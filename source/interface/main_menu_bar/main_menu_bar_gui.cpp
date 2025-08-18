@@ -181,25 +181,28 @@ void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
             ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
                 ? 1.0f
                 : 0.0f);
-        float removeButtonSize = ImGui::GetItemRectSize().y;
+        // float removeButtonSize = ImGui::GetItemRectSize().y;
+        float removeButtonSize = ImGui::CalcTextSize("W").y;
+        float padding = (ImGui::GetItemRectSize().y - removeButtonSize) / 2.0f;
+
         ImGui::SameLine();
         ImGui::SetCursorScreenPos(ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetItemRectMin().y));
-        size_t pushedColorCount = 0;
-        if (gui_templates::ImageButtonStyleColored(
-                std::format("##DeleteScheduleFile{}", i).c_str(),
-                guiTextures.getOrLoad("icon_remove").ImID,
-                ImVec2(removeButtonSize, removeButtonSize) - ImGui::GetStyle().FramePadding * 2.0f,
-                ImVec2(),
-                ImVec2(1, 1),
-                ImVec4(),
-                ImGuiButtonFlags_AlignTextBaseLine))
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(padding, padding));
+        if (gui_templates::ImageButtonStyleColored(std::format("##DeleteScheduleFile{}", i).c_str(),
+                                                   guiTextures.getOrLoad("icon_remove").ImID,
+                                                   ImVec2(removeButtonSize, removeButtonSize),
+                                                   ImVec2(),
+                                                   ImVec2(1, 1),
+                                                   ImVec4(),
+                                                   ImGuiButtonFlags_AlignTextBaseLine))
         {
             if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui")) {
                 deleteModalSubGui->setAffectedScheduleName(m_fileNames[i]);
             }
             m_openDeleteConfirmationModal = true;
         }
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
     }
     ImGui::EndMenu();
 }

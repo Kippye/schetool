@@ -8,6 +8,26 @@ ViewTabBarGui::ViewTabBarGui(const char* ID) : Gui(ID) {
 }
 
 void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+    // View switch shortcuts
+    {
+        ScheduleView newView = m_selectedTab;
+        if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_VIEW_NEXT)) {
+            newView = (ScheduleView)(m_selectedTab + 1);
+        }
+        if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_VIEW_PREV)) {
+            // Remove 1 from current view enum or (if the current view == 0) the last view enum
+            newView = (ScheduleView)((m_selectedTab == (ScheduleView)0 ? ScheduleView::Last : m_selectedTab) - 1);
+        }
+        // Wrap view to valid range
+        if (newView >= ScheduleView::Last) {
+            newView = (ScheduleView)0;
+        }
+        if (m_selectedTab != newView) {
+            viewSwitched.invoke(newView);
+        }
+        m_selectedTab = newView;
+    }
+
     ImGuiStyle style = ImGui::GetStyle();
     ImFont* dateSelectorFontData = InterfaceStyleHandler::getFontData(
         InterfaceStyleHandler::getFontSize() == FontSize::Large ? FontSize::Large

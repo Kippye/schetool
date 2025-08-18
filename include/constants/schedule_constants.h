@@ -5,7 +5,8 @@
 
 enum ScheduleView : unsigned short {
     Table = 0,
-    Calendar = 1
+    Calendar = 1,
+    Last = 2
 };
 
 enum class ColumnResetOption {

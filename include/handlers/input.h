@@ -12,6 +12,10 @@ enum INPUT_EVENT {
     INPUT_EVENT_SC_OPEN,
     INPUT_EVENT_SC_UNDO,
     INPUT_EVENT_SC_REDO,
+    INPUT_EVENT_SC_VIEW_NEXT,
+    INPUT_EVENT_SC_VIEW_PREV,
+
+    _INPUT_EVENT_LAST
 };
 
 struct InputShortcut {
@@ -61,6 +65,8 @@ class Input {
             InputShortcut{INPUT_EVENT_SC_UNDO, GLFW_KEY_Z, true},  // CTRL + Z
             InputShortcut{INPUT_EVENT_SC_REDO, GLFW_KEY_Z, true, false, true},  // CTRL + SHIFT + Z
             InputShortcut{INPUT_EVENT_SC_REDO, GLFW_KEY_Y, true},  // CTRL + Y
+            InputShortcut{INPUT_EVENT_SC_VIEW_NEXT, GLFW_KEY_TAB, true},  // CTRL + TAB
+            InputShortcut{INPUT_EVENT_SC_VIEW_PREV, GLFW_KEY_TAB, true, false, true},  // CTRL + SHIFT + TAB
         };
         std::map<INPUT_EVENT, std::vector<std::function<void()>>> m_listeners = {};
         std::map<INPUT_EVENT, bool> m_eventStates = {};
