@@ -760,12 +760,6 @@ void ScheduleGui::drawColumnHeaderContext(size_t columnIndex, ImGuiTable* table,
             ImGui::TableSetColumnWidthAutoAll(table);
     }
 
-    // Ordering
-    if (tableFlags & ImGuiTableFlags_Reorderable) {
-        if (ImGui::MenuItem("Reset order", NULL, false, !table->IsDefaultDisplayOrder))
-            table->IsResetDisplayOrderRequest = true;
-    }
-
     ImGui::Separator();
 
     // Hiding / Visibility

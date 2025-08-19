@@ -58,6 +58,14 @@ void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTe
                 const std::vector<SelectOption>& options =
                     m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptions();
 
+                // Selection index out of range is a no-no!
+                if (selection.has_value()) {
+                    if (selection.value() >= options.size()) {
+                        m_editorSingleSelect.replaceSelection(std::nullopt);
+                        selection.reset();
+                    }
+                }
+
                 if (selection.has_value()) {
                     if (gui_templates::SelectOptionButton(options[selection.value()],
                                                           "##EditorSelectedOption",
@@ -328,20 +336,24 @@ void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTe
             }
             case (SCH_MULTISELECT): {
                 auto selection = m_editorSelect.getSelection();
-                size_t selectedCount = selection.size();
                 const std::vector<SelectOption>& options =
                     m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptions();
 
                 std::vector<size_t> selectionIndices = {};
 
                 for (size_t s : selection) {
+                    // Remove out-of-range selection indices
+                    if (s >= options.size()) {
+                        m_editorSelect.setSelected(s, false);
+                        continue;
+                    }
                     selectionIndices.push_back(s);
                 }
 
                 // sort indices so that the same options are always displayed in the same order
                 std::sort(std::begin(selectionIndices), std::end(selectionIndices));
 
-                for (size_t i = 0; i < selectedCount; i++) {
+                for (size_t i = 0; i < selectionIndices.size(); i++) {
                     if (gui_templates::SelectOptionButton(options[selectionIndices[i]],
                                                           "##EditorSelectedOption",
                                                           ImVec2(0, 0),

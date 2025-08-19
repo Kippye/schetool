@@ -8,7 +8,8 @@ const std::set<size_t> SelectContainer::getSelection() const {
 
 void SelectContainer::setSelected(size_t index, bool select) {
     if (index > m_optionCount - 1) {
-        throw std::out_of_range(std::format("SelectContainer::setSelected({}, {}): Tried to change selection of an option that does not exist", index, select));
+        throw std::out_of_range(std::format(
+            "SelectContainer::setSelected({}, {}): Tried to change selection of an option that does not exist", index, select));
     }
 
     auto indexInSelection = m_selection.find(index);
@@ -103,6 +104,8 @@ void SelectContainer::update(const SelectOptionUpdateInfo& lastChange, size_t op
         }
         case (OPTION_MODIFICATION_REPLACE): {
             // TODO HOW??
+            // Remove selection indices that are now out of range
+            std::erase_if(m_selection, [this](size_t i) { return i >= m_optionCount; });
             break;
         }
         case (OPTION_MODIFICATION_CLEAR): {

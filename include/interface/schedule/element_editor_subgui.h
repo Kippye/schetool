@@ -50,7 +50,7 @@ class ElementEditorSubGui : public Gui {
         SelectEditState m_selectEditState;
 
         ImRect m_avoidRect;
-        ImVec2 m_textInputBoxSize = ImVec2(0, 0);
+        ImVec2 m_textInputBoxSize = ImVec2();
 
     public:
         ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore);
