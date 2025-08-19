@@ -581,7 +581,7 @@ bool ScheduleGui::drawTableCellContents(
                     guiPass,
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
                     ImGui::GetColumnWidth(column),
-                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column))))
+                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnIndex()))))
             {
                 setElementValueText.invoke(column, row, value);
             }
@@ -613,7 +613,7 @@ bool ScheduleGui::drawTableCellContents(
                     guiPass,
                     ImGui::GetColumnWidth(column),
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
-                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column))))
+                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnIndex()))))
             {
                 setElementValueMultiselect.invoke(column, row, value);
             }
@@ -629,7 +629,7 @@ bool ScheduleGui::drawTableCellContents(
                     guiPass,
                     ImGui::GetColumnWidth(column),
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
-                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), column))))
+                    ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnIndex()))))
             {
                 setElementValueWeekday.invoke(column, row, value);
             }
