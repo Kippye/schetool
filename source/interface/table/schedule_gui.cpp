@@ -368,26 +368,18 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             bool isColumnHeaderHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
                                           ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
             ImGui::TableHeader("+ Add column");
+            if (ImGui::BeginPopup("AddColumnTypePopup")) {
+                drawAddColumnHeaderContext(input);
+                ImGui::EndPopup();
+            }
             if (isColumnHeaderHovered  // Hovering the column header
-                && m_nextMouseReleaseOpenColumnContext  // The current mouse release can open the popup
                 && ((ImGui::GetMouseDragDelta(0).x == 0 &&
                      ImGui::IsMouseReleased(ImGuiMouseButton_Left))  // Clicked LMB without dragging
                     || (ImGui::GetMouseDragDelta(1).x == 0 &&
                         ImGui::IsMouseReleased(ImGuiMouseButton_Right)))  // OR clicked RMB without dragging
             )
             {
-                ImGui::TableOpenContextMenu(ImGui::TableGetColumnIndex());
-            }
-            bool popupOpenBefore = ImGui::GetCurrentTable()->IsContextPopupOpen;
-            if (ImGui::GetCurrentTable()->ContextPopupColumn == ImGui::TableGetColumnIndex() &&
-                ImGui::TableBeginContextMenuPopup(ImGui::GetCurrentTable()))
-            {
-                drawAddColumnHeaderContext(input);
-                ImGui::EndPopup();
-            }
-            // The column context menu was closed this frame (probably through a mouse click)
-            if (popupOpenBefore == true && ImGui::GetCurrentTable()->IsContextPopupOpen == false) {
-                m_nextMouseReleaseOpenColumnContext = false;
+                ImGui::OpenPopup("AddColumnTypePopup");
             }
         }
 
@@ -797,17 +789,18 @@ void ScheduleGui::drawAddColumnHeaderContext(const Input& input) {
         columnTypeButtonSize = std::max(columnTypeButtonSize, currentTextSize + ImGui::GetStyle().FramePadding.x * 2.0f);
     }
     for (int colType = 0; colType < SCH_LAST; colType++) {
-        if (ImGui::Button(
+        ImGui::PushItemFlag(ImGuiItemFlags_AutoClosePopups, !input.buttonStates.ctrlDown);
+        if (ImGui::Selectable(
                 std::format(
                     "{}##AddedColumnTypeButton{}", schedule_consts::scheduleTypeNames.at((SCHEDULE_TYPE)colType), colType)
                     .c_str(),
+                false,
+                0,
                 ImVec2(columnTypeButtonSize, 0.0f)))
         {
             addDefaultColumn.invoke(m_scheduleCore.getColumnCount(), (SCHEDULE_TYPE)colType);
-            if (!input.buttonStates.ctrlDown) {
-                ImGui::CloseCurrentPopup();
-            }
         }
+        ImGui::PopItemFlag();
     }
 }
 
