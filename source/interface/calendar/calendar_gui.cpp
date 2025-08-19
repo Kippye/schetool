@@ -28,7 +28,7 @@ CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     scheduleEvents.rowRemoved.addListener(rowRemovedListener);
     scheduleEvents.editUndone.addListener(editUndoneListener);
     scheduleEvents.editRedone.addListener(editRedoneListener);
-    addSubGui(new CalendarItemWindowSubGui("CalendarItemWindowSubGui", scheduleCore));
+    addSubGui(new CalendarItemWindowSubGui("CalendarItemWindowSubGui", scheduleCore, scheduleEvents));
     m_itemWindowSubGui = getSubGui<CalendarItemWindowSubGui>("CalendarItemWindowSubGui");
     addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 

@@ -6,9 +6,11 @@
 #include "imgui_stdlib.h"
 #include <string>
 
-CalendarItemWindowSubGui::CalendarItemWindowSubGui(const char* ID, const ScheduleCore& scheduleCore)
+CalendarItemWindowSubGui::CalendarItemWindowSubGui(const char* ID,
+                                                   const ScheduleCore& scheduleCore,
+                                                   ScheduleEvents& scheduleEvents)
     : Gui(ID), m_scheduleCore(scheduleCore) {
-    addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
+    addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore, scheduleEvents));
     modifyColumnSelectOptions.addEvent(getSubGui<ElementEditorSubGui>("ElementEditorSubGui")->modifyColumnSelectOptions);
 }
 

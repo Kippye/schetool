@@ -5,8 +5,10 @@
 #include "schedule_constants.h"
 #include "gui_constants.h"
 
-ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore)
+ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
     : m_scheduleCore(scheduleCore), Gui(ID) {
+    scheduleEvents.editRedone.addListener(columnReorderedListener);
+    scheduleEvents.editUndone.addListener(columnReorderedListener);
 }
 
 void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
@@ -687,6 +689,13 @@ void ElementEditorSubGui::open(size_t column, size_t row, SCHEDULE_TYPE type, co
     m_selectEditState.editingOptionName = false;
 
     ImGui::OpenPopup("Editor");
+}
+
+void ElementEditorSubGui::closeAndReset() {
+    m_currentElementCoords.reset();
+    m_madeEditsThisFrame = m_madeEdits = false;
+    m_selectEditState.editingOptionName = false;
+    m_openThisFrame = false;
 }
 
 void ElementEditorSubGui::setTextInputBoxSize(ImVec2 size) {

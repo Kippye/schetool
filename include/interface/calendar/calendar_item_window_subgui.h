@@ -3,6 +3,7 @@
 #include "gui.h"
 #include "schedule_core.h"
 #include "schedule_coordinates.h"
+#include "schedule_events.h"
 #include "element_display_templates.h"
 #include "event_pipe.h"
 #include <optional>
@@ -31,7 +32,7 @@ class CalendarItemWindowSubGui : public Gui {
         }
 
     public:
-        CalendarItemWindowSubGui(const char* ID, const ScheduleCore& scheduleCore);
+        CalendarItemWindowSubGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
         Event<size_t, size_t, bool> setElementValueBool;

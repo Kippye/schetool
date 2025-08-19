@@ -9,7 +9,9 @@
 #include "element_base.h"
 #include "schedule_core.h"
 #include "schedule_coordinates.h"
+#include "schedule_events.h"
 #include <optional>
+#include <functional>
 
 struct SelectEditState {
         // Used to automatically focus the input textbox one frame after it was made visible. Set to false after doing so!
@@ -52,8 +54,32 @@ class ElementEditorSubGui : public Gui {
         ImRect m_avoidRect;
         ImVec2 m_textInputBoxSize = ImVec2();
 
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> columnReorderedListener =
+            [this](std::shared_ptr<const ScheduleEdit> edit) {
+                if (m_currentElementCoords.has_value() == false) {
+                    return;
+                }
+                if (edit->getType() != ScheduleEditType::ColumnReorder) {
+                    return;
+                }
+
+                auto columnReorderEdit = std::dynamic_pointer_cast<const ColumnReorderEdit>(edit);
+
+                // Reverting = new order -> old order
+                // actually...
+                size_t lowerOrder = std::min(columnReorderEdit->getPreviousOrder(), columnReorderEdit->getNewOrder());
+                size_t higherOrder = std::max(columnReorderEdit->getPreviousOrder(), columnReorderEdit->getNewOrder());
+
+                // If the column between (or equal to) the two indices is being edited, close the editor
+                if (lowerOrder <= m_currentElementCoords->column() && m_currentElementCoords->column() <= higherOrder) {
+                    closeAndReset();
+                }
+            };
+
+        void closeAndReset();
+
     public:
-        ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore);
+        ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
         // modifyColumnSelectOptions

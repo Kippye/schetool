@@ -3,8 +3,6 @@
 #include "schedule.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
 #include "view_tab_bar_gui.h"
-#include "schedule/element_editor_subgui.h"
-#include "schedule/filter_editor_subgui.h"
 #include "edit_history_gui.h"
 
 Schedule::Schedule() : m_core(), m_editHistory(m_core), m_scheduleGui(nullptr) {

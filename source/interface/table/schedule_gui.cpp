@@ -15,7 +15,7 @@
 
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
     : m_scheduleCore(scheduleCore), Gui(ID) {
-    addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore));
+    addSubGui(new ElementEditorSubGui("ElementEditorSubGui", m_scheduleCore, scheduleEvents));
     modifyColumnSelectOptions.addEvent(getSubGui<ElementEditorSubGui>("ElementEditorSubGui")->modifyColumnSelectOptions);
     addSubGui(new FilterEditorSubGui("FilterEditorSubGui", m_scheduleCore, scheduleEvents));
 
