@@ -718,10 +718,12 @@ class ScheduleDataConverter {
             return m_definitions.get<T>();
         }
 
+        void setupObjectTable();
+
     public:
+        ScheduleDataConverter();
         // Get the file extension used by the ScheduleDataConverter.
         const std::string& getExtension() const;
-        void setupObjectTable();
 
         // Adds the Column (and its elements, filters, etc to the provided DataTable), assuming that the Columns (and their elements, filters) are of the provided type.
         template <typename T>

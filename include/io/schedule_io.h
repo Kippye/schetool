@@ -7,10 +7,7 @@
 #include "event.h"
 #include "schedule_data_converter.h"
 #include "schedule.h"
-#include "window.h"
-#include "input.h"
 #include "file_info.h"
-#include "schedule_preferences.h"
 #include "start_page_gui.h"
 #include "main_menu_bar/main_menu_bar_gui.h"
 #include "autosave_popup_gui.h"
@@ -65,46 +62,67 @@ class ScheduleIO {
         };
         Schedule& m_schedule;
         ScheduleDataConverter m_converter;
-        std::shared_ptr<StartPageGui> m_startPageGui = NULL;
-        std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
-        std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = NULL;
+        std::shared_ptr<StartPageGui> m_startPageGui = nullptr;
+        std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = nullptr;
+        std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = nullptr;
         FileInfo m_currentFileInfo = FileInfo();
         std::filesystem::path m_saveDir = std::filesystem::path();
         const char* m_autosaveSuffix = "_auto";
 
-        std::function<void()> saveListener = std::function<void()>([&]() {
+        std::function<void()> saveListener = [&]() {
             if (m_currentFileInfo.empty()) {
                 return;
             }
             writeSchedule(m_currentFileInfo.getName().c_str());
-        });
+        };
         // gui listeners
         // ScheduleNameModalSubGui
-        std::function<void(std::string)> renameListener = std::function<void(std::string)>([&](std::string name) {
+        std::function<void(std::string)> renameListener = [&](std::string name) {
             if (renameCurrentFile(name)) {
                 m_mainMenuBarGui->closeModal();
             }
-        });
-        std::function<void(std::string)> createNewListener = std::function<void(std::string)>([&](std::string name) {
+        };
+        std::function<void(std::string)> createNewListener = [&](std::string name) {
             closeCurrentFile();
             if (createNewSchedule(name.c_str())) {
                 m_mainMenuBarGui->closeModal();
             }
-        });
+        };
         // DeleteModalSubGui
-        std::function<void(std::string)> deleteListener = std::function<void(std::string)>([&](std::string name) {
+        std::function<void(std::string)> deleteListener = [&](std::string name) {
             deleteSchedule(name.c_str());
             // Modal hides itself
-        });
+        };
         // MainMenuBarGui
-        std::function<void(std::string)> openListener = std::function<void(std::string)>([&](std::string name) {
+        std::function<void(std::string)> openListener = [&](std::string name) {
             closeCurrentFile();
             readSchedule(name.c_str());
-        });
+        };
+        std::function<void(std::string)> saveAndCloseListener = [&](std::string) {
+            closeCurrentFile();
+            goToStartPage();
+        };
+        std::function<void(std::string)> closeWithoutSaveListener = [&](std::string) {
+            if (m_currentFileInfo.empty()) {
+                return;
+            }
+            deleteAutosaveFor(m_currentFileInfo.getName().c_str());
+            unloadCurrentFile();
+            goToStartPage();
+        };
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> editListener = [&](std::shared_ptr<const ScheduleEdit>) {
+            fileHasEditsStateChanged();
+        };
+        // TO MainMenuBarGui
+        std::function<void()> fileHasEditsStateChanged = [&]() {
+            if (m_mainMenuBarGui) {
+                m_mainMenuBarGui->passFileHasEdits(m_schedule.getEditHistory().getEditedSinceWrite());
+            }
+        };
         // AutosavePopupGui
         // NOTE: all of these assume that the most recently edited file is still an autosave
         // TODO: handle the (rare?) case where it isn't
-        std::function<void()> applyAutosaveListener = std::function<void()>([&]() {
+        std::function<void()> applyAutosaveListener = [&]() {
             std::string lastEditedFileName = getLastEditedScheduleStemName();
             // 99% of the time, the autosave will be the most recent
             if (isAutosave(lastEditedFileName)) {
@@ -118,23 +136,14 @@ class ScheduleIO {
             else
             {
             }
-        });
-        std::function<void()> deleteAutosaveListener = std::function<void()>([&]() {
+        };
+        std::function<void()> deleteAutosaveListener = [&]() {
             std::string lastEditedFileName = getLastEditedScheduleStemName();
             std::string baseFileName = getFileBaseName(lastEditedFileName.c_str());
-            // 99% of the time, the autosave will be the most recent
-            if (isAutosave(lastEditedFileName)) {
-                deleteSchedule(lastEditedFileName.c_str());
-            }
-            // Somehow, the most recently edited file was an autosave but now isn't?
-            // The base file will be opened anyway
-            else
-            {
-                // Get the autosave name from the base file name and try to delete it.
-                deleteSchedule(getFileAutosaveName(lastEditedFileName.c_str()).c_str());
-            }
+
+            deleteAutosaveFor(baseFileName.c_str());
             readSchedule(baseFileName.c_str());
-        });
+        };
 
         // Returns true if the path has the schedule file extension.
         bool isScheduleFilePath(const std::filesystem::path& path) const;
@@ -145,10 +154,14 @@ class ScheduleIO {
         // Apply the autosave of the given file to it.
         // NOTE: The requested name is the name of the *base file*.
         bool applyAutosaveToFile(const char* name);
+        // Delete the autosave for the file with the provided name.
+        // Return true if the autosave was deleted; false if no file was found or it wasn't deleted.
+        bool deleteAutosaveFor(const char* baseName);
         // Pass the file name of a schedule file to create an imgui .ini file for it.
         void createIniForFile(const char* name);
         void sendFileInfoUpdates();
         void passFileNamesToGui();
+        void goToStartPage();
         // Cleans everything about the currently open file (clears the schedule, edit history, etc)
         void unloadCurrentFile();
         const filter_func& getScheduleFileFilter(ScheduleFileFilter filter) const;

@@ -23,11 +23,13 @@ void Gui::setVisible(bool visible) {
 void Gui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
 }
 
-void Gui::addSubGui(Gui* subGui) {
+std::string Gui::addSubGui(Gui* subGui) {
     std::shared_ptr<Gui> subGuiPtr = std::shared_ptr<Gui>(subGui);
     if (subGuiPtr) {
         subGuis.insert({subGuiPtr->getID(), subGuiPtr});
+        return subGuiPtr->getID();
     } else {
         printf("Gui::addSubGui(%s, %p): Failed to add subGui - invalid pointer\n", "ID", (void*)subGui);
+        return "";
     }
 }

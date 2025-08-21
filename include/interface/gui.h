@@ -6,7 +6,6 @@
 #include "imgui/include/imgui.h"
 #include "imgui/include/imgui_internal.h"
 #include "imgui/include/imgui_impl_glfw.h"
-#include "imgui/include/imgui_impl_glfw.h"
 #include "imgui/include/imgui_impl_opengl3.h"
 #include "event.h"
 #include "window_size.h"
@@ -32,7 +31,8 @@ class Gui {
         bool getVisible() const;
         void setVisible(bool visible);
         virtual void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
-        void addSubGui(Gui* subGui);
+        // Add a subgui and return its ID so it can be easily retrieved with getSubGui
+        std::string addSubGui(Gui* subGui);
         template <typename T>
         std::shared_ptr<T> getSubGui(const std::string& ID) {
             static_assert(std::is_base_of_v<Gui, T>, "Gui::getSubGui<T>: Provided type must derive from Gui!");

@@ -3,6 +3,10 @@
 using namespace blf;
 using namespace blf::file;
 
+PreferencesDataConverter::PreferencesDataConverter() {
+    setupObjectTable();
+}
+
 const std::string& PreferencesDataConverter::getExtension() const {
     return m_extension;
 }

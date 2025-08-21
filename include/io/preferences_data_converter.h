@@ -54,10 +54,12 @@ class PreferencesDataConverter {
             return m_definitions.get<T>();
         }
 
+        void setupObjectTable();
+
     public:
+        PreferencesDataConverter();
         // Get the file extension used by the ScheduleDataConverter.
         const std::string& getExtension() const;
-        void setupObjectTable();
 
         bool isValidPreferencesFile(const char* path) const;
         // Write the current Preferences to a file at the given path.

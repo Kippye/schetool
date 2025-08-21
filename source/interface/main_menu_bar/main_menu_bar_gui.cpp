@@ -1,6 +1,4 @@
 #include "main_menu_bar/main_menu_bar_gui.h"
-#include "main_menu_bar/delete_modal_subgui.h"
-#include "text_input_modal_subgui.h"
 #include "gui_templates.h"
 #include "gui_constants.h"
 #include "util.h"
@@ -10,14 +8,21 @@ float MainMenuBarGui::height = 0.0f;
 MainMenuBarGui::MainMenuBarGui(const char* ID, const InterfaceStyleHandler& styleHandler)
     : Gui(ID), m_styleHandler(styleHandler) {
     // Add subguis
-    addSubGui(new DeleteModalSubGui("DeleteModalSubGui"));
-    addSubGui(new TextInputModalSubGui("NewNameModalSubGui", "Enter name", "Create schedule"));
-    addSubGui(new TextInputModalSubGui("RenameModalSubGui", "Enter new name"));
+    m_deleteModalSubGui = getSubGui<ConfirmationModalSubGui>(
+        addSubGui(new ConfirmationModalSubGui("DeleteModalSubGui", "Delete schedule", "Delete {}?")));
+    m_closeWithEditsModalSubGui = getSubGui<ConfirmationModalSubGui>(addSubGui(
+        new ConfirmationModalSubGui("CloseWithEditsModalSubGui", "Close file", "Save changes before closing?", "Yes", "No")));
+    m_newNameModalSubGui = getSubGui<TextInputModalSubGui>(
+        addSubGui(new TextInputModalSubGui("NewNameModalSubGui", "Enter name", "Create schedule")));
+    m_renameModalSubGui =
+        getSubGui<TextInputModalSubGui>(addSubGui(new TextInputModalSubGui("RenameModalSubGui", "Enter new name")));
 
     // Link event pipes
-    createNewScheduleEventPipe.addEvent(getSubGui<TextInputModalSubGui>("NewNameModalSubGui")->acceptButtonPressedEvent);
-    deleteScheduleEventPipe.addEvent(getSubGui<DeleteModalSubGui>("DeleteModalSubGui")->deleteScheduleEvent);
-    renameScheduleEventPipe.addEvent(getSubGui<TextInputModalSubGui>("RenameModalSubGui")->acceptButtonPressedEvent);
+    createNewScheduleEventPipe.addEvent(m_newNameModalSubGui->acceptButtonPressedEvent);
+    deleteScheduleEventPipe.addEvent(m_deleteModalSubGui->appliedEvent);
+    saveAndCloseEventPipe.addEvent(m_closeWithEditsModalSubGui->appliedEvent);
+    closeWithoutSaveEventPipe.addEvent(m_closeWithEditsModalSubGui->cancelledEvent);
+    renameScheduleEventPipe.addEvent(m_renameModalSubGui->acceptButtonPressedEvent);
 }
 
 // Helper function that gets the input shortcuts for an INPUT_EVENT and turns them into a string in the format:
@@ -27,37 +32,56 @@ std::string getInputEventShortcutsString(const Input& input, INPUT_EVENT inputEv
 }
 
 void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+    m_newNameModalSubGui->draw(windowSize, input, guiTextures);
+    m_renameModalSubGui->draw(windowSize, input, guiTextures);
+    m_deleteModalSubGui->draw(windowSize, input, guiTextures);
+    m_closeWithEditsModalSubGui->draw(windowSize, input, guiTextures);
+
+    bool openNewNameModal = false;
+    bool openRenameModal = false;
+    bool openCloseWithEditsModal = false;
+
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (m_openFileName.has_value() == false) {
+            bool disableFileSpecificItems = !m_openFileName.has_value();
+            if (disableFileSpecificItems) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             auto renameShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_RENAME);
             if (ImGui::MenuItem("Rename",
                                 renameShortcuts.size() > 0 ? renameShortcuts.front().getShortcutString().c_str() : NULL))
             {
-                renameSchedule();
+                openRenameModal = true;
             }
-            if (m_openFileName.has_value() == false) {
+            if (disableFileSpecificItems) {
                 ImGui::PopItemFlag();
             }
             auto newFileShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_NEW);
             if (ImGui::MenuItem("New",
                                 newFileShortcuts.size() > 0 ? newFileShortcuts.front().getShortcutString().c_str() : NULL))
             {
-                newSchedule();
+                openNewNameModal = true;
             }
             if (ImGui::BeginMenu("Open", m_fileNames.empty() == false)) {
                 displayScheduleList(guiTextures);
             }
-            if (m_openFileName.has_value() == false) {
+            auto saveShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_SAVE);
+            if (disableFileSpecificItems) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-            auto saveShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_SAVE);
             if (ImGui::MenuItem("Save", saveShortcuts.size() > 0 ? saveShortcuts.front().getShortcutString().c_str() : NULL)) {
                 saveEvent.invoke();
             }
-            if (m_openFileName.has_value() == false) {
+            auto closeShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_CLOSE);
+            if (ImGui::MenuItem("Close", closeShortcuts.size() > 0 ? closeShortcuts.front().getShortcutString().c_str() : NULL))
+            {
+                if (m_fileHasEdits == false) {
+                    saveAndCloseEventPipe.invoke("");
+                } else {
+                    openCloseWithEditsModal = true;
+                }
+            }
+            if (disableFileSpecificItems) {
                 ImGui::PopItemFlag();
             }
             ImGui::EndMenu();
@@ -124,50 +148,35 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
     }
     ImGui::EndMainMenuBar();
 
-    // check shortcuts (dunno if this is the best place for this? TODO )
+    // Check shortcuts (dunno if this is the best place for this? TODO )
     if (m_openFileName.has_value() && input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
-        renameSchedule();
+        openRenameModal = true;
     }
     if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) {
-        newSchedule();
+        openNewNameModal = true;
     }
-
-    if (auto newNameModalSubGui = getSubGui<TextInputModalSubGui>("NewNameModalSubGui")) {
-        newNameModalSubGui->draw(windowSize, input, guiTextures);
-        if (m_openNewNameModal) {
-            newNameModalSubGui->open();
-            m_openNewNameModal = false;
+    if (m_openFileName.has_value() && input.getEventInvokedLastFrame(INPUT_EVENT_SC_CLOSE)) {
+        if (m_fileHasEdits == false) {
+            saveAndCloseEventPipe.invoke("");
+        } else {
+            openCloseWithEditsModal = true;
         }
     }
 
-    if (auto renameModalSubGui = getSubGui<TextInputModalSubGui>("RenameModalSubGui")) {
-        renameModalSubGui->draw(windowSize, input, guiTextures);
-        if (m_openRenameModal) {
-            renameModalSubGui->open(m_openFileName.value_or(""));
-            m_openRenameModal = false;
-        }
+    if (openNewNameModal) {
+        m_newNameModalSubGui->open();
     }
-
-    if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui")) {
-        deleteModalSubGui->draw(windowSize, input, guiTextures);
-        if (m_openDeleteConfirmationModal) {
-            ImGui::OpenPopup("Confirm Schedule deletion");
-            m_openDeleteConfirmationModal = false;
-        }
+    if (openRenameModal) {
+        m_renameModalSubGui->open(m_openFileName.value_or(""));
+    }
+    if (openCloseWithEditsModal) {
+        m_closeWithEditsModalSubGui->open();
     }
 }
 
 float MainMenuBarGui::getHeight() {
     return height;
 }  // STATIC
-
-void MainMenuBarGui::newSchedule() {
-    m_openNewNameModal = true;
-}
-
-void MainMenuBarGui::renameSchedule() {
-    m_openRenameModal = true;
-}
 
 void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
     for (size_t i = 0; i < m_fileNames.size(); i++) {
@@ -181,7 +190,6 @@ void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
             ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)
                 ? 1.0f
                 : 0.0f);
-        // float removeButtonSize = ImGui::GetItemRectSize().y;
         float removeButtonSize = ImGui::CalcTextSize("W").y;
         float padding = (ImGui::GetItemRectSize().y - removeButtonSize) / 2.0f;
 
@@ -197,10 +205,7 @@ void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
                                                    ImVec4(),
                                                    ImGuiButtonFlags_AlignTextBaseLine))
         {
-            if (auto deleteModalSubGui = getSubGui<DeleteModalSubGui>("DeleteModalSubGui")) {
-                deleteModalSubGui->setAffectedScheduleName(m_fileNames[i]);
-            }
-            m_openDeleteConfirmationModal = true;
+            m_deleteModalSubGui->open(m_fileNames[i]);
         }
         ImGui::PopStyleVar(2);
     }
@@ -217,6 +222,10 @@ void MainMenuBarGui::passFileNames(const std::vector<std::string>& fileNames) {
 
 void MainMenuBarGui::passOpenFileName(const std::optional<std::string>& openFileName) {
     m_openFileName = openFileName;
+}
+
+void MainMenuBarGui::passFileHasEdits(bool hasEdits) {
+    m_fileHasEdits = hasEdits;
 }
 
 void MainMenuBarGui::passPreferences(const Preferences& preferences) {

@@ -86,8 +86,9 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
     fs::path savesDir = getBestScheduleSavePath();
     fs::path configDir = getBestConfigSavePath();
     fs::path stylesDir = getStylesPath();
-    std::cout << std::format("Schedules save path is: '{}'", savesDir.string()) << std::endl;
-    std::cout << std::format("Config save path is: '{}'", configDir.string()) << std::endl;
+    std::cout << std::format("Schedules path is: '{}'", savesDir.string()) << std::endl;
+    std::cout << std::format("Config path is: '{}'", configDir.string()) << std::endl;
+    std::cout << std::format("Styles path is: '{}'", stylesDir.string()) << std::endl;
 
     // TODO: I don't like this pointer dereferencing
     m_scheduleIO = std::make_shared<ScheduleIO>(*schedule, programInterface, savesDir);

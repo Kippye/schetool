@@ -3,6 +3,10 @@
 using namespace blf;
 using namespace blf::file;
 
+ScheduleDataConverter::ScheduleDataConverter() {
+    setupObjectTable();
+}
+
 const std::string& ScheduleDataConverter::getExtension() const {
     return m_extension;
 }

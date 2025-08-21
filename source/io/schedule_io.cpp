@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <optional>
 #include <chrono>
-#include <limits>
 #include <format>
 #include <stdexcept>
 #include "schedule_io.h"
@@ -10,8 +9,6 @@ namespace fs = std::filesystem;
 
 ScheduleIO::ScheduleIO(Schedule& schedule, Interface& programInterface, std::filesystem::path saveDir)
     : m_schedule(schedule), m_saveDir(saveDir), m_converter() {
-    m_converter.setupObjectTable();
-
     m_startPageGui = programInterface.getGuiByID<StartPageGui>("StartPageGui");
     m_startPageGui->createNewScheduleEventPipe.addListener(createNewListener);
     m_startPageGui->openScheduleFileEvent.addListener(openListener);
@@ -23,10 +20,16 @@ ScheduleIO::ScheduleIO(Schedule& schedule, Interface& programInterface, std::fil
 
     m_mainMenuBarGui->openScheduleFileEvent.addListener(openListener);
     m_mainMenuBarGui->saveEvent.addListener(saveListener);
+    m_mainMenuBarGui->saveAndCloseEventPipe.addListener(saveAndCloseListener);
+    m_mainMenuBarGui->closeWithoutSaveEventPipe.addListener(closeWithoutSaveListener);
 
     m_autosavePopupGui = programInterface.getGuiByID<AutosavePopupGui>("AutosavePopupGui");
     m_autosavePopupGui->applyAutosaveEvent.addListener(applyAutosaveListener);
     m_autosavePopupGui->deleteAutosaveEvent.addListener(deleteAutosaveListener);
+
+    m_schedule.getEditHistoryMutable().editAddedEvent.addListener(editListener);
+    m_schedule.getScheduleEvents().editRedone.addListener(editListener);
+    m_schedule.getScheduleEvents().editUndone.addListener(editListener);
 
     passFileNamesToGui();
 }
@@ -54,6 +57,11 @@ void ScheduleIO::passFileNamesToGui() {
 
 void ScheduleIO::sendFileInfoUpdates() {
     openFileInfoChangeEvent.invoke(m_currentFileInfo);
+}
+
+void ScheduleIO::goToStartPage() {
+    m_schedule.hideAllViews();
+    m_startPageGui->setVisible(true);
 }
 
 void ScheduleIO::unloadCurrentFile() {
@@ -173,6 +181,7 @@ bool ScheduleIO::writeSchedule(const char* name) {
     }
     // TODO: make some event that the Schedule can listen to?
     m_schedule.getEditHistoryMutable().setEditedSinceWrite(false);
+    fileHasEditsStateChanged();
     passFileNamesToGui();
     return true;
 }
@@ -206,6 +215,7 @@ bool ScheduleIO::readSchedule(const char* name) {
         sendFileInfoUpdates();
         m_startPageGui->setVisible(false);
         m_schedule.getEditHistoryMutable().setEditedSinceWrite(false);
+        fileHasEditsStateChanged();
         fileReadEvent.invoke(m_currentFileInfo);
         return true;
     } else {
@@ -264,9 +274,24 @@ bool ScheduleIO::deleteSchedule(const char* name) {
         // deleted the file that was open
         if (m_currentFileInfo.getName() == name) {
             unloadCurrentFile();
-            m_schedule.hideAllViews();
-            m_startPageGui->setVisible(true);
+            goToStartPage();
         }
+        return true;
+    }
+
+    return false;
+}
+
+bool ScheduleIO::deleteAutosaveFor(const char* baseName) {
+    fs::path pathToAutosaveFile = fs::path(makeSchedulePathFromName(getFileAutosaveName(baseName).c_str()));
+
+    // A Schedule file with this path does not exist. stop.
+    if (fs::exists(pathToAutosaveFile) == false) {
+        return false;
+    }
+
+    if (fs::remove(pathToAutosaveFile)) {
+        passFileNamesToGui();
         return true;
     }
 
