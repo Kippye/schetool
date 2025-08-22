@@ -4,8 +4,13 @@
 
 #include "event_pipe.h"
 
-#if defined(NDEBUG) && (defined(_WIN32) || defined(_WIN64))
+#if defined(_WIN32) || defined(_WIN64)
+#ifdef NDEBUG
 #define WIN_RELEASE
+#endif
+#ifdef _DEBUG
+#define WIN_DEBUG
+#endif
 #endif
 
 Program::Program() {
