@@ -34,7 +34,9 @@ bool gui_templates::InputInt(const char* label, int* value, bool drawBackground,
     if (drawBackground == false) {
         ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
     }
-    if (ImGui::InputInt(label, value, 0, 0, flags | ImGuiInputTextFlags_CharsDecimal) && ImGui::IsItemDeactivatedAfterEdit()) {
+    if (ImGui::InputInt(label, value, 0, 0, flags | ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_ParseEmptyRefVal) &&
+        ImGui::IsItemDeactivatedAfterEdit())
+    {
         returnValue = true;
     }
     if (drawBackground == false) {
@@ -49,7 +51,8 @@ bool gui_templates::InputDouble(
     if (drawBackground == false) {
         ImGui::PushStyleColor(ImGuiCol_FrameBg, gui_colors::colorInvisible);
     }
-    if (ImGui::InputDouble(label, value, 0.0, 0.0, format, flags | ImGuiInputTextFlags_CharsDecimal) &&
+    if (ImGui::InputDouble(
+            label, value, 0.0, 0.0, format, flags | ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_ParseEmptyRefVal) &&
         ImGui::IsItemDeactivatedAfterEdit())
     {
         returnValue = true;
