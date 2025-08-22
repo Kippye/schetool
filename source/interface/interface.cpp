@@ -83,7 +83,7 @@ void Interface::draw(float deltaTime) {
     guiHovered = imGuiIO->WantCaptureMouse;
     guiFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow);
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(_DEBUG)
     ImGui::ShowDemoWindow();
 #endif
     ImGui::PopFont();
