@@ -1,6 +1,7 @@
 #include "schedule_column.h"
 #include <iostream>
 #include <numeric>
+#include <algorithm>
 
 Column::Column() {
     setupFiltersPerType();
