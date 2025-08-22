@@ -250,8 +250,11 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit_history.cpp"
 )
 
-IF (NOT (CMAKE_GENERATOR STREQUAL "Unix Makefiles" AND ${CMAKE_BUILD_TYPE} STREQUAL Release))
-    target_sources(${PROGRAM_NAME} PRIVATE "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp")
+# Include imgui_demo.cpp on non-Release builds if the build type is known
+IF (CMAKE_BUILD_TYPE)
+    IF (NOT ${CMAKE_BUILD_TYPE} STREQUAL Release)
+        target_sources(${PROGRAM_NAME} PRIVATE "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp")
+    ENDIF()
 ENDIF()
 
 ######### LINKS #########
