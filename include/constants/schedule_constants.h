@@ -16,6 +16,13 @@ enum class ColumnResetOption {
     Monthly
 };
 
+enum class ScheduleItemState {
+    Unfinished,
+    Finished,
+    Current,
+    Normal
+};
+
 namespace schedule_consts {
     const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 

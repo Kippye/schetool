@@ -9,12 +9,12 @@ StartPageGui::StartPageGui(const char* ID) : Gui(ID) {
         getSubGui<TextInputModalSubGui>("StartPageNewNameModalSubGui")->acceptButtonPressedEvent);
 }
 
-void StartPageGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void StartPageGui::draw(GuiDrawArgs& args) {
     if (m_visible == false) {
         return;
     }
 
-    ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight()));
+    ImGui::SetNextWindowSize(ImVec2((float)args.windowSize.getWidth(), (float)args.windowSize.getHeight()));
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 
     ImGui::Begin(m_ID.c_str(),
@@ -36,7 +36,7 @@ void StartPageGui::draw(const WindowSize& windowSize, Input& input, GuiTextures&
     ImGui::End();
 
     if (auto nameModalSubGui = getSubGui<TextInputModalSubGui>("StartPageNewNameModalSubGui")) {
-        nameModalSubGui->draw(windowSize, input, guiTextures);
+        nameModalSubGui->draw(args);
 
         if (m_openScheduleNameModal) {
             nameModalSubGui->open();

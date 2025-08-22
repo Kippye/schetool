@@ -3,7 +3,7 @@
 bool element_display_templates::ElementDisplay(std::string& value,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                               GuiPassReferences guiPass,
+                                               GuiDrawArgs& guiDrawArgs,
                                                bool openEditor,
                                                float editorWidth,
                                                ImRect avoidRect) {
@@ -36,7 +36,7 @@ bool element_display_templates::ElementDisplay(std::string& value,
     if (elementEditor) {
         std::optional<ScheduleCoordinates> editorCoords = elementEditor->getCoordinates();
         if (editorCoords.has_value() && editorCoords.value() == coords) {
-            elementEditor->draw(guiPass.windowSize, guiPass.input, guiPass.guiTextures);
+            elementEditor->draw(guiDrawArgs);
             // was editing this Element, made edits and just closed the editor. apply the edits
             if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
                 elementEditor->getMadeEdits())
@@ -57,7 +57,7 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
                                                const ScheduleCore& scheduleCore,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                               GuiPassReferences guiPass,
+                                               GuiDrawArgs& guiDrawArgs,
                                                bool openEditor) {
     auto selection = value.getSelection();
     const std::vector<SelectOption>& options = scheduleCore.getColumnConst(coords.column()).selectOptions.getOptions();
@@ -88,7 +88,7 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
     if (elementEditor) {
         std::optional<ScheduleCoordinates> editorCoords = elementEditor->getCoordinates();
         if (editorCoords.has_value() && editorCoords.value() == coords) {
-            elementEditor->draw(guiPass.windowSize, guiPass.input, guiPass.guiTextures);
+            elementEditor->draw(guiDrawArgs);
             // Was editing this Element, made edits and just closed the editor. Apply the edits
             if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
                 elementEditor->getMadeEdits())
@@ -120,7 +120,7 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
                                                const ScheduleCore& scheduleCore,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                               GuiPassReferences guiPass,
+                                               GuiDrawArgs& guiDrawArgs,
                                                float availableWidth,
                                                bool openEditor,
                                                ImRect avoidRect) {
@@ -193,7 +193,7 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
     if (elementEditor) {
         std::optional<ScheduleCoordinates> editorCoords = elementEditor->getCoordinates();
         if (editorCoords.has_value() && editorCoords.value() == coords) {
-            elementEditor->draw(guiPass.windowSize, guiPass.input, guiPass.guiTextures);
+            elementEditor->draw(guiDrawArgs);
             // Was editing this Element, made edits and just closed the editor. Apply the edits
             if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
                 elementEditor->getMadeEdits())
@@ -254,7 +254,7 @@ void element_display_templates::ElementDisplay(SelectContainer& value,
 bool element_display_templates::ElementDisplay(WeekdayContainer& value,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                               GuiPassReferences guiPass,
+                                               GuiDrawArgs& guiDrawArgs,
                                                float availableWidth,
                                                bool openEditor,
                                                ImRect avoidRect) {
@@ -329,7 +329,7 @@ bool element_display_templates::ElementDisplay(WeekdayContainer& value,
     if (elementEditor) {
         std::optional<ScheduleCoordinates> editorCoords = elementEditor->getCoordinates();
         if (editorCoords.has_value() && editorCoords.value() == coords) {
-            elementEditor->draw(guiPass.windowSize, guiPass.input, guiPass.guiTextures);
+            elementEditor->draw(guiDrawArgs);
             // Was editing this Element, made edits and just closed the editor. Apply the edits
             if (elementEditor->getOpenLastFrame() && elementEditor->getOpenThisFrame() == false &&
                 elementEditor->getMadeEdits())
@@ -389,7 +389,7 @@ void element_display_templates::ElementDisplay(WeekdayContainer& value, Schedule
 bool element_display_templates::ElementDisplay(TimeContainer& value,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                               GuiPassReferences guiPass,
+                                               GuiDrawArgs& guiDrawArgs,
                                                bool openEditor) {
     ImGui::Text("%s", value.getString().c_str());
     if (openEditor) {
@@ -402,7 +402,7 @@ bool element_display_templates::ElementDisplay(TimeContainer& value,
     if (elementEditor) {
         std::optional<ScheduleCoordinates> editorCoords = elementEditor->getCoordinates();
         if (editorCoords.has_value() && editorCoords.value() == coords) {
-            elementEditor->draw(guiPass.windowSize, guiPass.input, guiPass.guiTextures);
+            elementEditor->draw(guiDrawArgs);
             // was editing this Element, made edits and just closed the editor. apply the edits
             if (elementEditor->getOpenThisFrame() && elementEditor->getMadeEditsThisFrame()) {
                 value = elementEditor->getEditorValue(value);
@@ -420,7 +420,7 @@ void element_display_templates::ElementDisplay(TimeContainer& value) {
 bool element_display_templates::ElementDisplay(DateContainer& value,
                                                ScheduleCoordinates coords,
                                                std::shared_ptr<ElementEditorSubGui> elementEditor,
-                                               GuiPassReferences guiPass,
+                                               GuiDrawArgs& guiDrawArgs,
                                                bool openEditor) {
     ImGui::Text("%s", value.getString().c_str());  // Display the date of the current Date element
     if (openEditor) {
@@ -433,7 +433,7 @@ bool element_display_templates::ElementDisplay(DateContainer& value,
     if (elementEditor) {
         std::optional<ScheduleCoordinates> editorCoords = elementEditor->getCoordinates();
         if (editorCoords.has_value() && editorCoords.value() == coords) {
-            elementEditor->draw(guiPass.windowSize, guiPass.input, guiPass.guiTextures);
+            elementEditor->draw(guiDrawArgs);
             // was editing this Element, made edits and just closed the editor. apply the edits
             if (elementEditor->getOpenThisFrame() && elementEditor->getMadeEditsThisFrame()) {
                 value = elementEditor->getEditorValue(value);

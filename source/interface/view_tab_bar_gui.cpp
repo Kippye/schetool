@@ -7,14 +7,14 @@ float ViewTabBarGui::height = 0.0f;
 ViewTabBarGui::ViewTabBarGui(const char* ID) : Gui(ID) {
 }
 
-void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void ViewTabBarGui::draw(GuiDrawArgs& args) {
     // View switch shortcuts
     {
         ScheduleView newView = m_selectedTab;
-        if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_VIEW_NEXT)) {
+        if (args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_VIEW_NEXT)) {
             newView = (ScheduleView)(m_selectedTab + 1);
         }
-        if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_VIEW_PREV)) {
+        if (args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_VIEW_PREV)) {
             // Remove 1 from current view enum or (if the current view == 0) the last view enum
             newView = (ScheduleView)((m_selectedTab == (ScheduleView)0 ? ScheduleView::Last : m_selectedTab) - 1);
         }
@@ -37,7 +37,7 @@ void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures
     ImVec2 dateButtonSize = ImGui::CalcTextSize("TEST") + style.FramePadding * 2.0f;
     ImGui::PopFont();
     ImVec2 tabSize = ImGui::TabItemCalcSize("TAB", false);
-    ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), dateButtonSize.y));
+    ImGui::SetNextWindowSize(ImVec2((float)args.windowSize.getWidth(), dateButtonSize.y));
     ImGui::SetNextWindowPos(ImVec2(0.0f, MainMenuBarGui::getHeight()));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(gui_style_vars::windowEdgePadding.x, 0.0f));
@@ -118,8 +118,9 @@ void ViewTabBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures
             ImGui::SetCursorScreenPos(ImVec2(
                 ImGui::GetCursorScreenPos().x,
                 ImGui::GetItemRectMin().y + ImGui::GetItemRectSize().y / 2.0f - resetButtonSize / 2.0f - style.FramePadding.y));
-            if (gui_templates::ImageButtonStyleColored(
-                    "##ResetToTodayButton", guiTextures.getOrLoad("icon_undo").ImID, ImVec2(resetButtonSize, resetButtonSize)))
+            if (gui_templates::ImageButtonStyleColored("##ResetToTodayButton",
+                                                       args.guiTextures.getOrLoad("icon_undo").ImID,
+                                                       ImVec2(resetButtonSize, resetButtonSize)))
             {
                 clearDateOverride();
             }

@@ -4,6 +4,8 @@
 #include "schedule_constants.h"
 #include "schedule_column.h"
 #include "imgui_stdlib.h"
+#include "gui_templates.h"
+#include "element_display_templates.h"
 #include <string>
 
 CalendarItemWindowSubGui::CalendarItemWindowSubGui(const char* ID,
@@ -20,13 +22,13 @@ bool CalendarItemWindowSubGui::isEditablePropertyClicked(bool isEditingDisabled)
         ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex();
 }
 
-void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void CalendarItemWindowSubGui::draw(GuiDrawArgs& args) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.WindowPadding * 4.0f);
-    ImGui::SetNextWindowSize(ImVec2(windowSize.getWidth() * 0.5f, windowSize.getHeight() * 0.8f));
+    ImGui::SetNextWindowSize(ImVec2(args.windowSize.getWidth() * 0.5f, args.windowSize.getHeight() * 0.8f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style.WindowRounding);
 
     if (ImGui::BeginPopupModal("CalendarItemWindowPopup", NULL, windowFlags)) {
@@ -111,21 +113,21 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 }
                 /// Property context menu button
                 GuiTextureInfo contextButtonTexture;
-                const bool isRemoveButton = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
+                const bool isRemoveButton = (args.input.buttonStates.ctrlDown || args.input.buttonStates.shiftDown);
 
                 // Property row not hovered - show the type's icon
                 if (ImGui::TableGetHoveredRow() != ImGui::TableGetRowIndex()) {
                     const SCHEDULE_TYPE columnType = m_scheduleCore.getColumnConst(col).type;
-                    guiTextures.exists(schedule_consts::scheduleTypeIconNames.contains(columnType)
-                                           ? schedule_consts::scheduleTypeIconNames.at(columnType)
-                                           : "MISSING_ICON",
-                                       contextButtonTexture);
+                    args.guiTextures.exists(schedule_consts::scheduleTypeIconNames.contains(columnType)
+                                                ? schedule_consts::scheduleTypeIconNames.at(columnType)
+                                                : "MISSING_ICON",
+                                            contextButtonTexture);
                     ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::colorInvisible);
                 } else {  // Property row is hovered - show kebab or remove button
                     if (!isRemoveButton) {
-                        guiTextures.exists("icon_menu_kebab", contextButtonTexture);
+                        args.guiTextures.exists("icon_menu_kebab", contextButtonTexture);
                     } else {
-                        guiTextures.exists("icon_remove", contextButtonTexture);
+                        args.guiTextures.exists("icon_remove", contextButtonTexture);
                     }
                 }
 
@@ -187,7 +189,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                 }
                 ImGui::TableNextColumn();
                 // Draw the property value column
-                drawItemProperty({windowSize, input, guiTextures}, {col, row});
+                drawItemProperty(args, {col, row});
             }
             ImGui::PopItemFlag();
             // Apply drag & drop + Reset drag & drop state
@@ -224,7 +226,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
                                       ImVec2(propertyTypeButtonSize, 0.0f)))
                     {
                         addDefaultColumn.invoke(m_scheduleCore.getColumnCount(), (SCHEDULE_TYPE)colType);
-                        if (!input.buttonStates.ctrlDown) {
+                        if (!args.input.buttonStates.ctrlDown) {
                             ImGui::CloseCurrentPopup();
                         }
                     }
@@ -248,7 +250,7 @@ void CalendarItemWindowSubGui::draw(const WindowSize& windowSize, Input& input, 
     }
 }
 
-void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, ScheduleCoordinates coords) {
+void CalendarItemWindowSubGui::drawItemProperty(GuiDrawArgs& drawArgs, ScheduleCoordinates coords) {
     ImGuiStyle& style = ImGui::GetStyle();
     size_t column = coords.column();
     size_t row = coords.row();
@@ -297,7 +299,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
                     value,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     isEditablePropertyClicked(columnEditDisabled),
                     ImGui::GetColumnWidth(coords.column())))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
             {
@@ -312,7 +314,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
                                                           m_scheduleCore,
                                                           coords,
                                                           getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                                                          guiPass,
+                                                          drawArgs,
                                                           isEditablePropertyClicked(columnEditDisabled)))
             {
                 setElementValueSelect.invoke(column, row, value);
@@ -327,7 +329,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
                     m_scheduleCore,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     ImGui::GetColumnWidth(column),
                     isEditablePropertyClicked(
                         columnEditDisabled)))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
@@ -343,7 +345,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
                     value,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     ImGui::GetColumnWidth(column),
                     isEditablePropertyClicked(
                         columnEditDisabled)))  //ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), 1))))
@@ -358,7 +360,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
             if (element_display_templates::ElementDisplay(value,
                                                           coords,
                                                           getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                                                          guiPass,
+                                                          drawArgs,
                                                           isEditablePropertyClicked(columnEditDisabled)))
             {
                 setElementValueTime.invoke(column, row, value);
@@ -371,7 +373,7 @@ void CalendarItemWindowSubGui::drawItemProperty(GuiPassReferences guiPass, Sched
             if (element_display_templates::ElementDisplay(value,
                                                           coords,
                                                           getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                                                          guiPass,
+                                                          drawArgs,
                                                           isEditablePropertyClicked(columnEditDisabled)))
             {
                 setElementValueDate.invoke(column, row, value);

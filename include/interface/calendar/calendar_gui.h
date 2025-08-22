@@ -7,7 +7,6 @@
 #include "schedule_core.h"
 #include "schedule_events.h"
 #include "schedule_coordinates.h"
-#include "element_display_templates.h"
 #include "calendar_item_window_subgui.h"
 #include <optional>
 
@@ -118,11 +117,11 @@ class CalendarGui : public Gui {
                                        int col = ImGui::TableGetColumnIndex(),
                                        int row = ImGui::TableGetRowIndex()) const;
         void drawWeekdayHeaders(float headerWidth);
-        void drawCalendarTable(GuiTextures& guiTextures);
-        void drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIndex, int month, int dayNumber);
-        void drawCalendarDayItems(GuiTextures& guiTextures, const DateContainer& calendarDayDate);
+        void drawCalendarTable(GuiDrawArgs& drawArgs);
+        void drawCalendarDayContent(GuiDrawArgs& drawArgs, size_t& dayIndex, int month, int dayNumber);
+        void drawCalendarDayItems(GuiDrawArgs& drawArgs, const DateContainer& calendarDayDate);
         // Draw a calendar day item child window.
-        void drawCalendarDayItem(size_t itemRow, const std::string& idSuffix, bool& wasRemoved, GuiTextures& guiTextures);
+        void drawCalendarDayItem(GuiDrawArgs& drawArgs, size_t itemRow, const std::string& idSuffix, bool& wasRemoved);
         void drawDraggedItemDisplay(size_t itemRow);
         void drawItemProperty(ScheduleCoordinates coords);
         template <typename T>
@@ -178,5 +177,5 @@ class CalendarGui : public Gui {
         EventPipe<size_t, size_t, size_t, size_t, FilterRuleContainer, FilterRuleContainer> editColumnFilterRule;
         EventPipe<size_t, size_t, size_t, size_t> removeColumnFilterRule;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
 };

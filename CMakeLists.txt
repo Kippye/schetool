@@ -193,6 +193,7 @@ ENDIF()
 target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/main.cpp"
     "${SCHETOOL_SRC}/${CONSTANTS_DIR}/filter_constants.cpp"
+    "${SCHETOOL_SRC}/${CONSTANTS_DIR}/gui_constants.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/date_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/file_info.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/select_container.cpp"

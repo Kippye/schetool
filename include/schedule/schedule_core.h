@@ -130,6 +130,13 @@ class ScheduleCore {
         // ROWS
         size_t getRowCount() const;
         bool existsRowAtIndex(size_t index) const;
+        /* Get the state of the item on this row of the schedule.
+        - In the past and Finished == false -> Unfinished
+        - In the past and Finished == true -> Finished
+        - Started before current time & ends after current time & Finished == false -> Current
+        - Any other case or invalid row index -> Normal
+        */
+        ScheduleItemState getRowItemState(size_t index) const;
 
         // Add a row at the end of the schedule
         void addRow();

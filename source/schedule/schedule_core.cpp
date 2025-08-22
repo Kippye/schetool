@@ -670,6 +670,47 @@ bool ScheduleCore::existsRowAtIndex(size_t index) const {
     return true;
 }
 
+ScheduleItemState ScheduleCore::getRowItemState(size_t index) const {
+    if (existsRowAtIndex(index) == false) {
+        return ScheduleItemState::Normal;
+    }
+
+    DateContainer currentDate = DateContainer(TimeWrapper::getCurrentTime());
+    size_t dateColumnIndex = getFlaggedColumnIndex(ScheduleColumnFlags_Date);
+    size_t finishedColumnIndex = getFlaggedColumnIndex(ScheduleColumnFlags_Finished);
+    DateContainer dateValue = getElementValue<DateContainer>(dateColumnIndex, index);
+    bool isFinished = getElementValue<bool>(finishedColumnIndex, index);
+
+    if (dateValue.getIsEmpty() == false && dateValue != currentDate) {
+        // An item on a date in the past can be Finished or Unfinished
+        if (dateValue < currentDate) {
+            return isFinished ? ScheduleItemState::Finished : ScheduleItemState::Unfinished;
+        }
+        // An item on a date in the future can only be Normal
+        if (dateValue > currentDate) {
+            return ScheduleItemState::Normal;
+        }
+    }
+
+    // Same date as current or empty - now compare the clocktime
+    TimeContainer currentTime = TimeContainer(TimeWrapper::getCurrentTime().getLocalClockTime());
+    size_t endColumnIndex = getFlaggedColumnIndex(ScheduleColumnFlags_End);
+    TimeContainer endTime = getElementValue<TimeContainer>(endColumnIndex, index);
+
+    if (endTime < currentTime) {
+        return isFinished ? ScheduleItemState::Finished : ScheduleItemState::Unfinished;
+    }
+
+    size_t startColumnIndex = getFlaggedColumnIndex(ScheduleColumnFlags_Start);
+    TimeContainer startTime = getElementValue<TimeContainer>(startColumnIndex, index);
+
+    if (startTime <= currentTime && currentTime <= endTime) {
+        return isFinished ? ScheduleItemState::Finished : ScheduleItemState::Current;
+    }
+
+    return ScheduleItemState::Normal;
+}
+
 void ScheduleCore::addRow() {
     addRow(getRowCount());
 }

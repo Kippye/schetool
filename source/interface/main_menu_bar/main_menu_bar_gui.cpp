@@ -31,11 +31,11 @@ std::string getInputEventShortcutsString(const Input& input, INPUT_EVENT inputEv
     return containers::combine(Input::getShortcutStrings(input.getEventShortcuts(inputEvent)), "  ");
 }
 
-void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
-    m_newNameModalSubGui->draw(windowSize, input, guiTextures);
-    m_renameModalSubGui->draw(windowSize, input, guiTextures);
-    m_deleteModalSubGui->draw(windowSize, input, guiTextures);
-    m_closeWithEditsModalSubGui->draw(windowSize, input, guiTextures);
+void MainMenuBarGui::draw(GuiDrawArgs& args) {
+    m_newNameModalSubGui->draw(args);
+    m_renameModalSubGui->draw(args);
+    m_deleteModalSubGui->draw(args);
+    m_closeWithEditsModalSubGui->draw(args);
 
     bool openNewNameModal = false;
     bool openRenameModal = false;
@@ -47,7 +47,7 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
             if (disableFileSpecificItems) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
-            auto renameShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_RENAME);
+            auto renameShortcuts = args.input.getEventShortcuts(INPUT_EVENT_SC_RENAME);
             if (ImGui::MenuItem("Rename",
                                 renameShortcuts.size() > 0 ? renameShortcuts.front().getShortcutString().c_str() : NULL))
             {
@@ -56,23 +56,23 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
             if (disableFileSpecificItems) {
                 ImGui::PopItemFlag();
             }
-            auto newFileShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_NEW);
+            auto newFileShortcuts = args.input.getEventShortcuts(INPUT_EVENT_SC_NEW);
             if (ImGui::MenuItem("New",
                                 newFileShortcuts.size() > 0 ? newFileShortcuts.front().getShortcutString().c_str() : NULL))
             {
                 openNewNameModal = true;
             }
             if (ImGui::BeginMenu("Open", m_fileNames.empty() == false)) {
-                displayScheduleList(guiTextures);
+                displayScheduleList(args.guiTextures);
             }
-            auto saveShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_SAVE);
+            auto saveShortcuts = args.input.getEventShortcuts(INPUT_EVENT_SC_SAVE);
             if (disableFileSpecificItems) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
             if (ImGui::MenuItem("Save", saveShortcuts.size() > 0 ? saveShortcuts.front().getShortcutString().c_str() : NULL)) {
                 saveEvent.invoke();
             }
-            auto closeShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_CLOSE);
+            auto closeShortcuts = args.input.getEventShortcuts(INPUT_EVENT_SC_CLOSE);
             if (ImGui::MenuItem("Close", closeShortcuts.size() > 0 ? closeShortcuts.front().getShortcutString().c_str() : NULL))
             {
                 if (m_fileHasEdits == false) {
@@ -87,11 +87,11 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit")) {
-            auto undoShortcuts = input.getEventShortcuts(INPUT_EVENT_SC_UNDO);
+            auto undoShortcuts = args.input.getEventShortcuts(INPUT_EVENT_SC_UNDO);
             if (ImGui::MenuItem("Undo", undoShortcuts.size() > 0 ? undoShortcuts.front().getShortcutString().c_str() : NULL)) {
                 undoEvent.invoke();
             }
-            std::string redoShortcutsString = getInputEventShortcutsString(input, INPUT_EVENT_SC_REDO);
+            std::string redoShortcutsString = getInputEventShortcutsString(args.input, INPUT_EVENT_SC_REDO);
             if (ImGui::MenuItem("Redo", redoShortcutsString.c_str())) {
                 redoEvent.invoke();
             }
@@ -142,6 +142,16 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
                 m_preferences.setFontSize(newFontSize.value());
                 preferencesChangedEvent.invoke(m_preferences);
             }
+            ImGui::AlignTextToFramePadding();
+            ImGui::Text("Row highlighting");
+            ImGui::SetItemTooltip(
+                "Change row background color depending on the state (e.g. finished or current) of the item at that row.");
+            ImGui::SameLine();
+            bool rowHighlightingEnabled = m_preferences.getRowHighlightingEnabled();
+            if (ImGui::Checkbox("##RowHighlightingEnabledCheckbox", &rowHighlightingEnabled)) {
+                m_preferences.setRowHighlightingEnabled(rowHighlightingEnabled);
+                preferencesChangedEvent.invoke(m_preferences);
+            }
             ImGui::EndMenu();
         }
         height = ImGui::GetWindowHeight();
@@ -149,13 +159,13 @@ void MainMenuBarGui::draw(const WindowSize& windowSize, Input& input, GuiTexture
     ImGui::EndMainMenuBar();
 
     // Check shortcuts (dunno if this is the best place for this? TODO )
-    if (m_openFileName.has_value() && input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
+    if (m_openFileName.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
         openRenameModal = true;
     }
-    if (input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) {
+    if (args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) {
         openNewNameModal = true;
     }
-    if (m_openFileName.has_value() && input.getEventInvokedLastFrame(INPUT_EVENT_SC_CLOSE)) {
+    if (m_openFileName.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_CLOSE)) {
         if (m_fileHasEdits == false) {
             saveAndCloseEventPipe.invoke("");
         } else {

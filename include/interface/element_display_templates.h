@@ -8,12 +8,6 @@
 #include "schedule/element_editor_subgui.h"
 #include "element.h"
 
-struct GuiPassReferences {
-        const WindowSize& windowSize;
-        Input& input;
-        GuiTextures& guiTextures;
-};
-
 namespace element_display_templates {
     namespace {
         void addEmptyItem() {
@@ -66,7 +60,7 @@ namespace element_display_templates {
     bool ElementDisplay(std::string& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
-                        GuiPassReferences guiPass,
+                        GuiDrawArgs& guiDrawArgs,
                         bool openEditor,
                         float editorWidth,
                         ImRect avoidRect = ImRect());
@@ -76,7 +70,7 @@ namespace element_display_templates {
                         const ScheduleCore& scheduleCore,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
-                        GuiPassReferences guiPass,
+                        GuiDrawArgs& guiDrawArgs,
                         bool openEditor);
     void ElementDisplay(SingleSelectContainer& value, const ScheduleCore& scheduleCore, ScheduleCoordinates coords);
     // Multiselect. If no avoidRect is passed, the ElementDisplay will calculate a rect from the top-left of the displayed options to the bottom-right and pass that as the avoid rect.
@@ -84,7 +78,7 @@ namespace element_display_templates {
                         const ScheduleCore& scheduleCore,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
-                        GuiPassReferences guiPass,
+                        GuiDrawArgs& guiDrawArgs,
                         float availableWidth,
                         bool openEditor,
                         ImRect avoidRect = ImRect());
@@ -96,7 +90,7 @@ namespace element_display_templates {
     bool ElementDisplay(WeekdayContainer& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
-                        GuiPassReferences guiPass,
+                        GuiDrawArgs& guiDrawArgs,
                         float availableWidth,
                         bool openEditor,
                         ImRect avoidRect = ImRect());
@@ -105,14 +99,14 @@ namespace element_display_templates {
     bool ElementDisplay(TimeContainer& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
-                        GuiPassReferences guiPass,
+                        GuiDrawArgs& guiDrawArgs,
                         bool openEditor);
     void ElementDisplay(TimeContainer& value);
     // Date
     bool ElementDisplay(DateContainer& value,
                         ScheduleCoordinates coords,
                         std::shared_ptr<ElementEditorSubGui> elementEditor,
-                        GuiPassReferences guiPass,
+                        GuiDrawArgs& guiDrawArgs,
                         bool openEditor);
     void ElementDisplay(DateContainer& value);
 }  // namespace element_display_templates

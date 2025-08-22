@@ -9,34 +9,43 @@ struct BLF_Preferences : BLF_Base {
             return "BLF_Preferences";
         }
 
-        std::string styleName;
-        int fontSize;
         bool notificationsEnabled;
         bool notificationSoundEnabled;
+        std::string styleName;
+        int fontSize;
+        bool rowHighlightingEnabled;
 
-        BLF_Preferences() : styleName(""), fontSize(0), notificationsEnabled(false), notificationSoundEnabled(false) {
+        BLF_Preferences()
+            : notificationsEnabled(false),
+              notificationSoundEnabled(false),
+              styleName(""),
+              fontSize(0),
+              rowHighlightingEnabled(false) {
         }
         BLF_Preferences(const Preferences& preferences)
-            : styleName(preferences.getStyle().name),
+            : notificationsEnabled(preferences.getNotificationsEnabled()),
+              notificationSoundEnabled(preferences.getNotificationSoundEnabled()),
+              styleName(preferences.getStyle().name),
               fontSize((int)preferences.getFontSize()),
-              notificationsEnabled(preferences.getNotificationsEnabled()),
-              notificationSoundEnabled(preferences.getNotificationSoundEnabled()) {
+              rowHighlightingEnabled(preferences.getRowHighlightingEnabled()) {
         }
 
         Preferences getPreferences() const {
-            return Preferences(InterfaceStyleHandler::getStyle(styleName).value_or(InterfaceStyleHandler::getDefaultStyle()),
+            return Preferences(notificationsEnabled,
+                               notificationSoundEnabled,
+                               InterfaceStyleHandler::getStyle(styleName).value_or(InterfaceStyleHandler::getDefaultStyle()),
                                (FontSize)fontSize,
-                               notificationsEnabled,
-                               notificationSoundEnabled);
+                               rowHighlightingEnabled);
         }
 
         static void addDefinition(ObjectDefinitions& definitions) {
             definitions.add(definitions.getObjectTable().define<BLF_Preferences>(
                 getName(),
+                blf::arg("notificationsEnabled", &BLF_Preferences::notificationsEnabled),
+                blf::arg("notificationSoundEnabled", &BLF_Preferences::notificationSoundEnabled),
                 blf::arg("style", &BLF_Preferences::styleName),
                 blf::arg("fontSize", &BLF_Preferences::fontSize),
-                blf::arg("notificationsEnabled", &BLF_Preferences::notificationsEnabled),
-                blf::arg("notificationSoundEnabled", &BLF_Preferences::notificationSoundEnabled)));
+                blf::arg("rowHighlightingEnabled", &BLF_Preferences::rowHighlightingEnabled)));
         }
 };
 

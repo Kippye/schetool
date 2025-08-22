@@ -51,12 +51,14 @@ bool ScheduleGui::isEditableElementClicked(bool isEditingDisabled) const {
         ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() && ImGui::GetCurrentTable()->HoveredColumnBorder == -1;
 }
 
-void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void ScheduleGui::draw(GuiDrawArgs& args) {
+    const float WINDOW_WIDTH = (float)args.windowSize.getWidth();
+    const float WINDOW_HEIGHT = (float)args.windowSize.getHeight();
+
     const float offsetFromTop = MainMenuBarGui::getHeight() + ViewTabBarGui::getHeight();
     ImGuiStyle style = ImGui::GetStyle();
-    ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight() - offsetFromTop));
-    ImGui::SetNextWindowContentSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight() - offsetFromTop) -
-                                    style.WindowPadding * 2.0f);
+    ImGui::SetNextWindowSize(ImVec2(WINDOW_WIDTH, WINDOW_HEIGHT - offsetFromTop));
+    ImGui::SetNextWindowContentSize(ImVec2(WINDOW_WIDTH, WINDOW_HEIGHT - offsetFromTop) - style.WindowPadding * 2.0f);
     ImGui::SetNextWindowPos(ImVec2(0.0f, offsetFromTop));
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
@@ -69,8 +71,8 @@ void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
     // Avoid imgui 0 column abort by not beginning the table at all if there are no columns in the schedule
     if (m_scheduleCore.getColumnCount() > 0) {
         const float SCHEDULE_TOP_MARGIN = offsetFromTop;
-        const float CHILD_WINDOW_WIDTH = (float)windowSize.getWidth();
-        const float CHILD_WINDOW_HEIGHT = (float)(windowSize.getHeight() - SCHEDULE_TOP_MARGIN);
+        const float CHILD_WINDOW_WIDTH = WINDOW_WIDTH;
+        const float CHILD_WINDOW_HEIGHT = (float)(args.windowSize.getHeight() - SCHEDULE_TOP_MARGIN);
 
         ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_TOP_MARGIN));
         ImGui::PushStyleColor(ImGuiCol_Border, gui_colors::colorInvisible);
@@ -81,7 +83,7 @@ void ScheduleGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
         ImGui::PopStyleColor(2);
 
         // DRAW the SCHEDULE TABLE
-        drawScheduleTable(windowSize, input, guiTextures);
+        drawScheduleTable(args);
 
         ImGui::EndChild();
     }
@@ -153,7 +155,7 @@ void ScheduleGui::applyTableColumnOrder() {
     }
 }
 
-void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
         ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoSavedOrder |
@@ -194,7 +196,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
 
             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui")) {
                 if (filterEditor->getColumn() == column) {
-                    filterEditor->draw(windowSize, input, guiTextures);
+                    filterEditor->draw(drawArgs);
                 }
             }
 
@@ -277,19 +279,20 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             const SCHEDULE_TYPE columnType = m_scheduleCore.getColumnConst(column).type;
             const COLUMN_SORT columnSort = m_scheduleCore.getColumnConst(column).sort;
 
-            guiTextures.exists(schedule_consts::scheduleTypeIconNames.contains(columnType)
-                                   ? schedule_consts::scheduleTypeIconNames.at(columnType)
-                                   : "MISSING_ICON",
-                               sortButtonTexture);
+            drawArgs.guiTextures.exists(schedule_consts::scheduleTypeIconNames.contains(columnType)
+                                            ? schedule_consts::scheduleTypeIconNames.at(columnType)
+                                            : "MISSING_ICON",
+                                        sortButtonTexture);
             // Hide the button background if the column header is not hovered and the column does not have a sort direction applied
             if (isColumnHeaderHovered == false && m_scheduleCore.getColumnConst(column).sort == COLUMN_SORT_NONE) {
                 ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::colorInvisible);
                 pushedStyleColors++;
             } else {  // If the column header is hovered OR the column has a sort direction, display the correct sort icon
-                guiTextures.exists(columnSort == COLUMN_SORT_NONE
-                                       ? "icon_sort_none"
-                                       : (columnSort == COLUMN_SORT_ASCENDING ? "icon_sort_ascending" : "icon_sort_descending"),
-                                   sortButtonTexture);
+                drawArgs.guiTextures.exists(
+                    columnSort == COLUMN_SORT_NONE
+                        ? "icon_sort_none"
+                        : (columnSort == COLUMN_SORT_ASCENDING ? "icon_sort_ascending" : "icon_sort_descending"),
+                    sortButtonTexture);
             }
             // Sort button!
             const float sortButtonSize = ImGui::GetFrameHeight() - style.FramePadding.y * 2.0f;
@@ -326,7 +329,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f));
                 pushedColorCount++;
                 if (gui_templates::ImageButtonStyleColored("##RemoveColumn",
-                                                           guiTextures.getOrLoad("icon_remove").ImID,
+                                                           drawArgs.guiTextures.getOrLoad("icon_remove").ImID,
                                                            ImVec2(headerButtonSize, headerButtonSize)))
                 {
                     removeColumn.invoke(column);
@@ -369,7 +372,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
                                           ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
             ImGui::TableHeader("+ Add column");
             if (ImGui::BeginPopup("AddColumnTypePopup")) {
-                drawAddColumnHeaderContext(input);
+                drawAddColumnHeaderContext(drawArgs.input);
                 ImGui::EndPopup();
             }
             if (isColumnHeaderHovered  // Hovering the column header
@@ -404,10 +407,16 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
             }
 
             ImGui::TableNextRow();
+            if (drawArgs.preferences.getRowHighlightingEnabled()) {
+                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0,
+                                       ImGui::ColorConvertFloat4ToU32(
+                                           gui_colors::scheduleItemStateColors.at(m_scheduleCore.getRowItemState(row))));
+            }
+
             for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++)
             {
                 ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(column).value());
-                if (drawTableCellContents(column, row, windowSize, input, guiTextures) == false) {
+                if (drawTableCellContents(column, row, drawArgs) == false) {
                     // Failed to draw the entire row. Probably shouldn't draw the others, either.
                     ImGui::EndTable();
                     return;
@@ -432,7 +441,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
         }
         // "Add row" row
         ImGui::TableNextRow();
-        // for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
+
         ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(0).value());
         ImGui::PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f, 0.5f));
         if (ImGui::Selectable("+ Add row", false, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0.0f, ImGui::GetFrameHeight()))) {
@@ -440,6 +449,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
         }
         ImGui::PopStyleVar();
         ImGui::EndTable();
+
         ImGuiTableColumn& lastColumn =
             m_scheduleTable->Columns[m_scheduleTable->DisplayOrderToIndex[m_scheduleTable->RightMostEnabledColumn]];
         ImVec2 topLeft = ImVec2(m_scheduleTable->InnerRect.GetTL());
@@ -448,8 +458,7 @@ void ScheduleGui::drawScheduleTable(const WindowSize& windowSize, Input& input, 
     }
 }
 
-bool ScheduleGui::drawTableCellContents(
-    size_t column, size_t row, const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+bool ScheduleGui::drawTableCellContents(size_t column, size_t row, GuiDrawArgs& drawArgs) {
     ImGuiStyle& style = ImGui::GetStyle();
     bool rowMenuButtonHovered = false;
     // Row button is displayed in the first column
@@ -463,11 +472,12 @@ bool ScheduleGui::drawTableCellContents(
         }
         const float labelSize = ImGui::CalcTextSize("X").y;
         const float rowMenuButtonSize = labelSize - (int)labelSize % 8;  //+ style.FramePadding.y * 2.0f;
-        const bool showAltButton = (input.buttonStates.ctrlDown || input.buttonStates.shiftDown);
-        if (gui_templates::ImageButtonStyleColored(
-                std::format("##RowMenu{}", row).c_str(),
-                (showAltButton ? guiTextures.getOrLoad("icon_remove") : guiTextures.getOrLoad("icon_menu_kebab")).ImID,
-                ImVec2(rowMenuButtonSize, rowMenuButtonSize)))
+        const bool showAltButton = (drawArgs.input.buttonStates.ctrlDown || drawArgs.input.buttonStates.shiftDown);
+        if (gui_templates::ImageButtonStyleColored(std::format("##RowMenu{}", row).c_str(),
+                                                   (showAltButton ? drawArgs.guiTextures.getOrLoad("icon_remove")
+                                                                  : drawArgs.guiTextures.getOrLoad("icon_menu_kebab"))
+                                                       .ImID,
+                                                   ImVec2(rowMenuButtonSize, rowMenuButtonSize)))
         {
             if (showAltButton) {
                 removeRow.invoke(row);
@@ -477,10 +487,6 @@ bool ScheduleGui::drawTableCellContents(
                 // TODO: Start row drag & drop
                 openRowContextPopup(row);
             }
-        }
-        if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-            // printf("DRAGGING %zu\n", row);
-            m_draggedRow = row;
         }
 
         ImGui::PopStyleVar(pushedStyleVars);
@@ -522,7 +528,6 @@ bool ScheduleGui::drawTableCellContents(
     }
 
     ScheduleCoordinates coords = ScheduleCoordinates(column, row);
-    GuiPassReferences guiPass = GuiPassReferences(windowSize, input, guiTextures);
 
     switch (columnType) {
         case (SCH_BOOL): {
@@ -570,7 +575,7 @@ bool ScheduleGui::drawTableCellContents(
                     value,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
                     ImGui::GetColumnWidth(column),
                     ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnIndex()))))
@@ -587,7 +592,7 @@ bool ScheduleGui::drawTableCellContents(
                     m_scheduleCore,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)))
             {
                 setElementValueSelect.invoke(column, row, value);
@@ -602,7 +607,7 @@ bool ScheduleGui::drawTableCellContents(
                     m_scheduleCore,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     ImGui::GetColumnWidth(column),
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
                     ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnIndex()))))
@@ -618,7 +623,7 @@ bool ScheduleGui::drawTableCellContents(
                     value,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     ImGui::GetColumnWidth(column),
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false),
                     ImRect(ImGui::TableGetCellBgRect(ImGui::GetCurrentTable(), ImGui::TableGetColumnIndex()))))
@@ -634,7 +639,7 @@ bool ScheduleGui::drawTableCellContents(
                     value,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)))
             {
                 setElementValueTime.invoke(column, row, value);
@@ -648,7 +653,7 @@ bool ScheduleGui::drawTableCellContents(
                     value,
                     coords,
                     getSubGui<ElementEditorSubGui>("ElementEditorSubGui"),
-                    guiPass,
+                    drawArgs,
                     (isEditableElementClicked(columnEditDisabled) && rowMenuButtonHovered == false)))
             {
                 setElementValueDate.invoke(column, row, value);

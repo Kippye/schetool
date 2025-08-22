@@ -34,7 +34,7 @@ class ConfirmationModalSubGui : public Gui {
         Event<std::string> appliedEvent;
         Event<std::string> cancelledEvent;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         // Just call ImGui::OpenPopup with the ID of this popup.
         // Optionally, pass the string that is passed to events and used in the bodyFormat here.
         void open(const std::string& eventArg = "");

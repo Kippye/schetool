@@ -1,5 +1,9 @@
 #include <gui.h>
 
+GuiDrawArgs::GuiDrawArgs(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures, Preferences preferences)
+    : windowSize(windowSize), input(input), guiTextures(guiTextures), preferences(preferences) {
+}
+
 Gui::Gui() {
 }
 
@@ -20,7 +24,7 @@ void Gui::setVisible(bool visible) {
     m_visible = visible;
 }
 
-void Gui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void Gui::draw(GuiDrawArgs& args) {
 }
 
 std::string Gui::addSubGui(Gui* subGui) {

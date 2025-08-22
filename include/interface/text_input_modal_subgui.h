@@ -20,7 +20,7 @@ class TextInputModalSubGui : public Gui {
                              size_t textMaxLength = 48,
                              bool showCloseButton = true);
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         void open(const std::string& fillText = "");
         virtual void invokeEvent(const std::string& text);
 };

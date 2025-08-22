@@ -21,7 +21,7 @@ class ViewTabBarGui : public Gui {
         Event<ScheduleView> viewSwitched;
         Event<TimeWrapper> viewedDateChanged;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         // While this gui is meant for choosing the view, it might need to get an external update.
         // This is mostly when a file is read.
         // Note that this DOES NOT INVOKE the viewSwitched event!

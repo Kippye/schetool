@@ -14,6 +14,6 @@ class EditHistoryGui : public Gui {
         Event<> undoEvent;
         Event<> redoEvent;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         void passScheduleEditHistory(const ScheduleEditHistory*);
 };

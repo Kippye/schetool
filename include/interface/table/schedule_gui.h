@@ -7,6 +7,7 @@
 #include "schedule_column.h"
 #include "schedule_coordinates.h"
 #include "event_pipe.h"
+#include "preferences_io.h"
 #include <optional>
 #include <functional>
 
@@ -23,7 +24,6 @@ class ScheduleGui : public Gui {
         std::optional<ScheduleCoordinates> m_cellContextCoords = std::nullopt;
         std::optional<size_t> m_columnDragColumn = std::nullopt;
         std::optional<size_t> m_columnDragBeginOrder = std::nullopt;
-        std::optional<size_t> m_draggedRow = std::nullopt;
         TimeWrapper m_scheduleDateOverride = TimeWrapper();
 
         std::function<void(TimeWrapper)> viewedDateChangedListener = [&](TimeWrapper newDateOverride) {
@@ -32,11 +32,10 @@ class ScheduleGui : public Gui {
 
         void applyTableColumnOrder();
         // Draw the schedule table and set its content rect in m_tableContentRect (excluding empty table area)
-        void drawScheduleTable(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
+        void drawScheduleTable(GuiDrawArgs& drawArgs);
         // Draws the contents of the table cell at the given column and row.
         // Returns true if the row should be continued, false if it was removed or cancelled for some other reason.
-        bool drawTableCellContents(
-            size_t column, size_t row, const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
+        bool drawTableCellContents(size_t column, size_t row, GuiDrawArgs& drawArgs);
         void drawColumnHeaderContext(size_t column, ImGuiTable* table, ImGuiTableFlags tableFlags);
         void drawAddColumnHeaderContext(const Input& input);
         void openRowContextPopup(size_t row);
@@ -102,5 +101,5 @@ class ScheduleGui : public Gui {
 
         bool isEditableElementClicked(bool isEditingDisabled) const;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
 };

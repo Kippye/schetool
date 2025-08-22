@@ -4,7 +4,6 @@
 #include "schedule_core.h"
 #include "schedule_coordinates.h"
 #include "schedule_events.h"
-#include "element_display_templates.h"
 #include "event_pipe.h"
 #include <optional>
 
@@ -23,7 +22,7 @@ class CalendarItemWindowSubGui : public Gui {
         bool m_editingItemName = false;
 
         bool isEditablePropertyClicked(bool isEditingDisabled) const;
-        void drawItemProperty(GuiPassReferences guiPass, ScheduleCoordinates coords);
+        void drawItemProperty(GuiDrawArgs& drawArgs, ScheduleCoordinates coords);
         void drawPropertyContext(size_t col, bool& needToBreak);
         template <typename T>
         T getElementValue(ScheduleCoordinates coords, bool useDefaultValue) const {
@@ -57,7 +56,7 @@ class CalendarItemWindowSubGui : public Gui {
         // Event pipes
         EventPipe<size_t, SelectOptionsModification> modifyColumnSelectOptions;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         std::optional<size_t> getCurrentItemRow() const;
         void passScheduleDateOverride(const TimeWrapper& dateOverride);
         void open(size_t itemRow);

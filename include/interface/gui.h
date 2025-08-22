@@ -4,13 +4,25 @@
 #include <type_traits>
 #include <map>
 #include "imgui/include/imgui.h"
+// These are only here to reduce required includes in gui classes
 #include "imgui/include/imgui_internal.h"
 #include "imgui/include/imgui_impl_glfw.h"
 #include "imgui/include/imgui_impl_opengl3.h"
 #include "event.h"
+// Draw args
 #include "window_size.h"
 #include "input.h"
 #include "gui_textures.h"
+#include "preferences.h"
+
+struct GuiDrawArgs {
+        WindowSize windowSize;
+        Input& input;
+        GuiTextures& guiTextures;
+        Preferences preferences;
+
+        GuiDrawArgs(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures, Preferences preferences);
+};
 
 class Gui {
     protected:
@@ -30,7 +42,7 @@ class Gui {
         std::string getID() const;
         bool getVisible() const;
         void setVisible(bool visible);
-        virtual void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures);
+        virtual void draw(GuiDrawArgs& args);
         // Add a subgui and return its ID so it can be easily retrieved with getSubGui
         std::string addSubGui(Gui* subGui);
         template <typename T>

@@ -11,7 +11,7 @@ ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& sch
     scheduleEvents.editUndone.addListener(columnReorderedListener);
 }
 
-void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void ElementEditorSubGui::draw(GuiDrawArgs& args) {
     // give old current open state to the last frame's state
     m_openLastFrame = m_openThisFrame;
     m_madeEditsThisFrame = false;
@@ -231,7 +231,7 @@ void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTe
                             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f));
                             pushedColorCount++;
                             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(),
-                                                                       guiTextures.getOrLoad("icon_remove").ImID,
+                                                                       args.guiTextures.getOrLoad("icon_remove").ImID,
                                                                        ImVec2(removeButtonSize, removeButtonSize)))
                             {
                                 SelectOptionsModification modificationToApply =
@@ -514,7 +514,7 @@ void ElementEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTe
                             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f));
                             pushedColorCount++;
                             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveSelectOption{}", i).c_str(),
-                                                                       guiTextures.getOrLoad("icon_remove").ImID,
+                                                                       args.guiTextures.getOrLoad("icon_remove").ImID,
                                                                        ImVec2(removeButtonSize, removeButtonSize)))
                             {
                                 SelectOptionsModification modificationToApply =

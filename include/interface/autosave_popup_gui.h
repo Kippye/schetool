@@ -17,6 +17,6 @@ class AutosavePopupGui : public Gui {
         Event<> applyAutosaveEvent;
         Event<> deleteAutosaveEvent;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         void open(const FileInfo& baseInfo, const FileInfo& autosaveInfo);
 };

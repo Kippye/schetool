@@ -6,7 +6,6 @@
 #include "confirmation_modal_subgui.h"
 #include "text_input_modal_subgui.h"
 #include "gui.h"
-#include "input.h"
 #include "event_pipe.h"
 
 class MainMenuBarGui : public Gui {
@@ -25,9 +24,6 @@ class MainMenuBarGui : public Gui {
         bool m_fileHasEdits = false;
         Preferences m_preferences = Preferences::getDefault();
 
-        void showRenameModal();
-        void showNewModal();
-        void showCloseModal();
         void displayScheduleList(GuiTextures& guiTextures);
 
     public:
@@ -47,7 +43,7 @@ class MainMenuBarGui : public Gui {
         EventPipe<std::string> saveAndCloseEventPipe;
         EventPipe<std::string> renameScheduleEventPipe;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         // Static function. Assuming that there is only one MainMenuBarGui instance or they are all the same height.
         // Get the height of the MainMenuBarGui.
         static float getHeight();

@@ -18,6 +18,6 @@ class StartPageGui : public Gui {
         // Event pipes
         EventPipe<std::string> createNewScheduleEventPipe;
 
-        void draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         void passFileNames(const std::vector<std::string>& fileNames);
 };

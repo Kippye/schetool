@@ -47,6 +47,7 @@ void Interface::initEventListeners(std::shared_ptr<PreferencesIO> preferencesIO)
         preferencesIO->preferencesChangedEvent.addListener([&](Preferences preferences) {
             m_styleHandler.applyStyle(preferences.getStyle());
             m_styleHandler.setFontSize(preferences.getFontSize());
+            m_preferences = preferences;
         });
     }
 }
@@ -71,9 +72,11 @@ void Interface::draw(float deltaTime) {
 
     // Apply font
     ImGui::PushFont(m_styleHandler.getFontData(m_styleHandler.getFontSize()));
+    // Create GuiDrawArgs to pass
+    GuiDrawArgs drawArgs = GuiDrawArgs(m_windowManager->getSize(), *m_input, *m_guiTextures.get(), m_preferences);
     for (auto& [id, gui] : m_guis) {
         if (gui->getVisible()) {
-            gui->draw(m_windowManager->getSize(), *m_input, *m_guiTextures.get());
+            gui->draw(drawArgs);
         }
     }
 

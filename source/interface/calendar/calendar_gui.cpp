@@ -6,6 +6,7 @@
 #include "gui_templates.h"
 #include "util.h"
 #include "filters/filter_rule.h"
+#include "element_display_templates.h"
 #include <algorithm>
 #include <format>
 
@@ -71,7 +72,7 @@ CalendarGui::CalendarGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     removeColumnFilterRule.addEvent(filterEditor->removeColumnFilterRule);
 }
 
-void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void CalendarGui::draw(GuiDrawArgs& args) {
     // If for whatever reason the TimeWrapper containing the viewed month + year becomes empty, fill it with the current date.
     if (m_viewedMonth.getIsEmpty()) {
         m_viewedMonth = TimeWrapper(TimeWrapper::getCurrentTime().getDateUTC());
@@ -81,9 +82,10 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
 
     const float offsetFromTop = MainMenuBarGui::getHeight() + ViewTabBarGui::getHeight();
 
-    ImGui::SetNextWindowSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight() - offsetFromTop));
-    ImGui::SetNextWindowContentSize(ImVec2((float)windowSize.getWidth(), (float)windowSize.getHeight() - offsetFromTop) -
-                                    style.WindowPadding * 2.0f);
+    ImGui::SetNextWindowSize(ImVec2((float)args.windowSize.getWidth(), (float)args.windowSize.getHeight() - offsetFromTop));
+    ImGui::SetNextWindowContentSize(
+        ImVec2((float)args.windowSize.getWidth(), (float)args.windowSize.getHeight() - offsetFromTop) -
+        style.WindowPadding * 2.0f);
     ImGui::SetNextWindowPos(ImVec2(0.0f, offsetFromTop));
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
@@ -94,8 +96,8 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
     {
         ImGui::PopStyleVar();  // WindowRounding = 0.0f
         const float SCHEDULE_TOP_MARGIN = offsetFromTop;
-        const float CHILD_WINDOW_WIDTH = (float)windowSize.getWidth();
-        const float CHILD_WINDOW_HEIGHT = (float)(windowSize.getHeight() - SCHEDULE_TOP_MARGIN);
+        const float CHILD_WINDOW_WIDTH = (float)args.windowSize.getWidth();
+        const float CHILD_WINDOW_HEIGHT = (float)(args.windowSize.getHeight() - SCHEDULE_TOP_MARGIN);
 
         ImGui::SetNextWindowPos(ImVec2(0.0, SCHEDULE_TOP_MARGIN));
         ImGui::PushStyleColor(ImGuiCol_Border, gui_colors::colorInvisible);
@@ -249,7 +251,7 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
                 }
                 ImGui::SameLine();
             }
-            filterEditor->draw(windowSize, input, guiTextures);
+            filterEditor->draw(args);
             // Open filter editor if needed.
             // NOTE: All the data here is set in drawFilterGroupButton() lambda!
             if (openFilterEditor) {
@@ -295,7 +297,7 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
 
         drawWeekdayHeaders(ImGui::GetContentRegionAvail().x / 7.0f);
 
-        drawCalendarTable(guiTextures);
+        drawCalendarTable(args);
         ImGui::EndChild();
     } else {
         ImGui::PopStyleVar();  // WindowRounding = 0.0f
@@ -303,7 +305,7 @@ void CalendarGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& 
     ImGui::End();
 
     if (m_itemWindowSubGui) {
-        m_itemWindowSubGui->draw(windowSize, input, guiTextures);
+        m_itemWindowSubGui->draw(args);
         if (m_openItemWindowAtRow.has_value()) {
             m_itemWindowSubGui->open(m_openItemWindowAtRow.value());
             m_openItemWindowAtRow.reset();
@@ -331,7 +333,7 @@ void CalendarGui::drawWeekdayHeaders(float width) {
     ImGui::PopStyleColor();
 }
 
-void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
+void CalendarGui::drawCalendarTable(GuiDrawArgs& drawArgs) {
     // MONTH DAYS
     size_t dayIndex = 0;
     unsigned int daysInMonth = mytime::get_month_day_count(m_viewedMonth.getYearUTC(), m_viewedMonth.getMonthUTC());
@@ -368,7 +370,7 @@ void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
             m_currentTableCoords = {static_cast<size_t>(ImGui::TableGetColumnIndex()),
                                     static_cast<size_t>(ImGui::TableGetRowIndex())};
             drawCalendarDayContent(
-                guiTextures,
+                drawArgs,
                 dayIndex,
                 previousMonth,
                 mytime::get_month_day_count(previousMonth < 12 ? m_viewedMonth.getYearUTC() : m_viewedMonth.getYearUTC() - 1,
@@ -383,7 +385,7 @@ void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
             ImGui::TableSetColumnIndex(dayIndex % 7);
             m_currentTableCoords = {static_cast<size_t>(ImGui::TableGetColumnIndex()),
                                     static_cast<size_t>(ImGui::TableGetRowIndex())};
-            drawCalendarDayContent(guiTextures, dayIndex, m_viewedMonth.getMonthUTC(), i + 1);
+            drawCalendarDayContent(drawArgs, dayIndex, m_viewedMonth.getMonthUTC(), i + 1);
         }
         // Days from next month
         for (size_t i = 0; i < 6 - dayOfTheWeekLast; i++) {
@@ -394,7 +396,7 @@ void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
             ImGui::TableSetColumnIndex(dayIndex % 7);
             m_currentTableCoords = {static_cast<size_t>(ImGui::TableGetColumnIndex()),
                                     static_cast<size_t>(ImGui::TableGetRowIndex())};
-            drawCalendarDayContent(guiTextures, dayIndex, nextMonth, i + 1);
+            drawCalendarDayContent(drawArgs, dayIndex, nextMonth, i + 1);
         }
 
         // Draw dragged item at the cursor
@@ -423,7 +425,7 @@ void CalendarGui::drawCalendarTable(GuiTextures& guiTextures) {
     }
 }
 
-void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIndex, int month, int dayNumber) {
+void CalendarGui::drawCalendarDayContent(GuiDrawArgs& drawArgs, size_t& dayIndex, int month, int dayNumber) {
     ImGuiStyle& style = ImGui::GetStyle();
     unsigned int pushedVarCount = 0;
     bool isDisabled = false;
@@ -509,12 +511,14 @@ void CalendarGui::drawCalendarDayContent(GuiTextures& guiTextures, size_t& dayIn
         m_dragDropState.reset();
     }
 
-    drawCalendarDayItems(guiTextures, DateContainer(calendarDayTime));
+    drawCalendarDayItems(drawArgs, DateContainer(calendarDayTime));
     ImGui::PopStyleVar(pushedVarCount);
     dayIndex++;
 }
 
-void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateContainer& calendarDayDate) {
+// TODO: Optimization - Could precalculate a list of rows for each calendar date and pass it here.
+// That way, each calendar day won't have to loop through EVERY row in the schedule (could be quite a hit when multiplied by 31)
+void CalendarGui::drawCalendarDayItems(GuiDrawArgs& drawArgs, const DateContainer& calendarDayDate) {
     const size_t dateColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Date);
 
     FilterRule<DateContainer> isThisDate = FilterRule<DateContainer>(calendarDayDate);
@@ -532,7 +536,7 @@ void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateConta
         bool itemRemoved = false;
         std::string itemIdSuffix = std::format(
             "{};{};{}", row, calendarDayDate.getTimeConst().getMonthUTC(), calendarDayDate.getTimeConst().getMonthDayUTC());
-        drawCalendarDayItem(row, itemIdSuffix, itemRemoved, guiTextures);
+        drawCalendarDayItem(drawArgs, row, itemIdSuffix, itemRemoved);
         if (itemRemoved) {
             removeRow.invoke(row);
             // JIC (Just In Case)
@@ -557,13 +561,15 @@ void CalendarGui::drawCalendarDayItems(GuiTextures& guiTextures, const DateConta
     }
 }
 
-void CalendarGui::drawCalendarDayItem(size_t itemRow, const std::string& idSuffix, bool& wasRemoved, GuiTextures& guiTextures) {
+void CalendarGui::drawCalendarDayItem(GuiDrawArgs& drawArgs, size_t itemRow, const std::string& idSuffix, bool& wasRemoved) {
     wasRemoved = false;
     ImGuiStyle& style = ImGui::GetStyle();
 
     const size_t dateColumnIndex = m_scheduleCore.getFlaggedColumnIndex(ScheduleColumnFlags_Date);
     std::string childLabelString = std::string("CalendarItem##") + idSuffix;
     unsigned int pushedColorCount = 0;
+    ImVec4 stateBackgroundColor = gui_colors::scheduleItemStateColors.at(m_scheduleCore.getRowItemState(itemRow));
+
     if (m_hoveredItemChildID.has_value() && m_hoveredItemChildID.value() == ImGui::GetID(childLabelString.c_str())) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_ButtonHovered]);
         pushedColorCount++;
@@ -572,6 +578,9 @@ void CalendarGui::drawCalendarDayItem(size_t itemRow, const std::string& idSuffi
             ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_ButtonActive]);
             pushedColorCount++;
         }
+    } else if (drawArgs.preferences.getRowHighlightingEnabled() && stateBackgroundColor.w > 0.0f) {
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, stateBackgroundColor);
+        pushedColorCount++;
     } else {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_WindowBg]);
         pushedColorCount++;
@@ -595,7 +604,7 @@ void CalendarGui::drawCalendarDayItem(size_t itemRow, const std::string& idSuffi
             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveCalendarItem{}", idSuffix).c_str(),
-                                                       guiTextures.getOrLoad("icon_remove").ImID,
+                                                       drawArgs.guiTextures.getOrLoad("icon_remove").ImID,
                                                        ImVec2(removeButtonSize, removeButtonSize)))
             {
                 wasRemoved = true;

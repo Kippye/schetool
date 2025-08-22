@@ -1,6 +1,6 @@
 #include "confirmation_modal_subgui.h"
 
-void ConfirmationModalSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void ConfirmationModalSubGui::draw(GuiDrawArgs& args) {
     ImGui::SetNextWindowSize(ImVec2(386.0f, 100.0f));
     if (ImGui::BeginPopupModal(m_title.c_str(), NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
         ImGuiStyle& style = ImGui::GetStyle();

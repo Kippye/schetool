@@ -1,11 +1,11 @@
 #include "autosave_popup_gui.h"
 #include "gui_templates.h"
 
-void AutosavePopupGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void AutosavePopupGui::draw(GuiDrawArgs& args) {
     ImVec2 popupSize = ImVec2(256.0f, 0.0f);
     ImGui::SetNextWindowContentSize(popupSize);
     ImGui::SetNextWindowPos(
-        ImVec2(((float)windowSize.getWidth()) / 2.0f, ((float)windowSize.getHeight()) / 2.0f), 0, ImVec2(0.5f, 0.5f));
+        ImVec2(((float)args.windowSize.getWidth()) / 2.0f, ((float)args.windowSize.getHeight()) / 2.0f), 0, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal("Autosave found", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
         const ImVec2 labelSize = ImVec2(128.0f, 0.0f);
         const ImVec2 buttonSize = ImVec2(128.0f, 0.0f);

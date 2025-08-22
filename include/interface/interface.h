@@ -20,11 +20,12 @@
 
 class Interface {
     private:
+        InterfaceStyleHandler m_styleHandler;
+        std::map<std::string, std::shared_ptr<Gui>> m_guis = {};
         Window* m_windowManager;
         Input* m_input;
-        InterfaceStyleHandler m_styleHandler;
         std::unique_ptr<GuiTextures> m_guiTextures;
-        std::map<std::string, std::shared_ptr<Gui>> m_guis = {};
+        Preferences m_preferences = Preferences::getDefault();
 
         void addGui(std::shared_ptr<Gui> gui);
 

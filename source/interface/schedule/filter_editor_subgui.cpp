@@ -68,7 +68,7 @@ FilterRuleEditorSubGui::FilterRuleEditorSubGui(const char* ID,
     scheduleEvents.editRedone.addListener(editRedoListener);
 }
 
-void FilterRuleEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void FilterRuleEditorSubGui::draw(GuiDrawArgs& args) {
     if (ImGui::BeginPopupEx(ImGui::GetID("FilterRule Editor"),
                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration |
                                 ImGuiWindowFlags_AlwaysAutoResize))
@@ -678,7 +678,7 @@ FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore& sched
     editColumnFilterRule.addEvent(filterRuleEditor->editColumnFilterRule);
 }
 
-void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures) {
+void FilterEditorSubGui::draw(GuiDrawArgs& args) {
     if (ImGui::BeginPopupEx(ImGui::GetID("FilterGroup Editor"),
                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration |
                                 ImGuiWindowFlags_AlwaysAutoResize))
@@ -741,7 +741,7 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
         ImGui::SameLine();  // Remove button after name input
         const float removeGroupButtonSize = ImGui::GetItemRectSize().y - ImGui::GetStyle().FramePadding.y * 2.0f;
         if (gui_templates::ImageButtonStyleColored("##RemoveFilterGroup",
-                                                   guiTextures.getOrLoad("icon_remove").ImID,
+                                                   args.guiTextures.getOrLoad("icon_remove").ImID,
                                                    ImVec2(removeGroupButtonSize, removeGroupButtonSize)))
         {
             removeColumnFilterGroup.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex());
@@ -774,7 +774,7 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
             const float removeRuleButtonSize = ImGui::CalcTextSize("X").y;
             // Remove FilterRule button
             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveFilterRule{}", ruleIndex).c_str(),
-                                                       guiTextures.getOrLoad("icon_remove").ImID,
+                                                       args.guiTextures.getOrLoad("icon_remove").ImID,
                                                        ImVec2(removeRuleButtonSize, removeRuleButtonSize)))
             {
                 m_filterGroupState.getFilterGroup().getFilter(filterIndex).removeRule(ruleIndex);
@@ -864,7 +864,7 @@ void FilterEditorSubGui::draw(const WindowSize& windowSize, Input& input, GuiTex
         }
 
         if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui")) {
-            filterRuleEditor->draw(windowSize, input, guiTextures);
+            filterRuleEditor->draw(args);
         }
         ImGui::EndPopup();
     } else {
