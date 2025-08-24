@@ -50,9 +50,7 @@ void EditHistoryGui::draw(GuiDrawArgs& args) {
                                 ? "Name"
                                 : (editedProperty == COLUMN_PROPERTY_TYPE
                                        ? "Type"
-                                       : (editedProperty == COLUMN_PROPERTY_SELECT_OPTIONS
-                                              ? "Select options"
-                                              : (editedProperty == COLUMN_PROPERTY_SORT ? "Sort" : "Reset option"))),
+                                       : (editedProperty == COLUMN_PROPERTY_SORT ? "Sort" : "Reset option")),
                             columnPropertyEdit->getColumn(),
                             i);
                     break;
@@ -74,6 +72,11 @@ void EditHistoryGui::draw(GuiDrawArgs& args) {
                             columnReorderEdit->getPreviousOrder(),
                             columnReorderEdit->getNewOrder(),
                             i);
+                    break;
+                }
+                case (ScheduleEditType::SelectOptionsChange): {
+                    auto selectOptionsChangeEdit = std::dynamic_pointer_cast<SelectOptionsChangeEdit>(editHistory[i]);
+                    sprintf(buf, "Column select options at %zu##%zu", selectOptionsChangeEdit->getColumn(), i);
                     break;
                 }
                 case (ScheduleEditType::FilterGroupAddOrRemove): {

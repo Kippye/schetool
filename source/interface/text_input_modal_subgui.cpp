@@ -18,8 +18,9 @@ void TextInputModalSubGui::draw(GuiDrawArgs& args) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGui::SetNextWindowSize(ImVec2(nameInputWidth + style.FramePadding.x * 2.0f, 100));
     // ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), 0, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal(
-            m_popupName, m_showCloseButton ? &m_visible : NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+    if (ImGui::BeginPopupModal(m_popupName,
+                               m_showCloseButton ? &m_visible : NULL,
+                               ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
     {
         m_textBuffer.reserve(m_textMaxLength);
         char* buf = m_textBuffer.data();

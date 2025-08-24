@@ -9,6 +9,9 @@ ElementEditorSubGui::ElementEditorSubGui(const char* ID, const ScheduleCore& sch
     : m_scheduleCore(scheduleCore), Gui(ID) {
     scheduleEvents.editRedone.addListener(columnReorderedListener);
     scheduleEvents.editUndone.addListener(columnReorderedListener);
+    scheduleEvents.editRedone.addListener(selectOptionsEditListener);
+    scheduleEvents.editUndone.addListener(selectOptionsEditListener);
+    scheduleEvents.selectOptionsChanged.addListener(selectOptionsChangedListener);
 }
 
 void ElementEditorSubGui::draw(GuiDrawArgs& args) {
@@ -108,29 +111,16 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                                     ? 1
                                     : (lastOptionColor * 2 < SelectColor_Last ? lastOptionColor * 2 : 0);
                             }
-                            SelectOptionsModification prevModification = selectOptions.getLastModification().value_or(
-                                SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE));
                             SelectOptionsModification modificationToApply =
                                 SelectOptionsModification(OPTION_MODIFICATION_ADD)
                                     .options({SelectOption(std::string(buf), addedOptionColor)});
 
                             modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
 
-                            // HACK: There's currently no way of knowing that the option was successfully added.
-                            // We just check the things that we can and if they are true, assume that it did succeed.
-                            SelectOptionsModification newModification = selectOptions.getLastModification().value_or(
-                                SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE));
-                            if (newModification == modificationToApply && prevModification != newModification) {
-                                m_editorSingleSelect.update(modificationToApply.getUpdateInfo(),
-                                                            selectOptions.getOptionCount());
-                                // Select the added option if nothing else is selected
-                                if (m_editorSingleSelect.getSelection().has_value() == false) {
-                                    m_editorSingleSelect.setSelected(selectOptions.getOptions().size() - 1, true);
-                                }
-                                m_madeEditsThisFrame = m_madeEdits = true;
-                                // NOTE: break here because otherwise the start and end of the function kind of go out of sync
-                                break;
-                            }
+                            // TODO: Check if the modification was actually applied
+                            m_madeEditsThisFrame = m_madeEdits = true;
+                            // NOTE: break here because otherwise the start and end of the function kind of go out of sync
+                            break;
                         }
                     }
                 }
@@ -237,9 +227,6 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i);
                                 modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
-                                m_editorSingleSelect.update(
-                                    modificationToApply.getUpdateInfo(),
-                                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEditsThisFrame = m_madeEdits = true;
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
@@ -318,9 +305,6 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                                         .firstIndex(activeOptionIndex.value())
                                         .secondIndex(activeOptionIndex.value() + indexDelta);
                                 modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
-                                m_editorSingleSelect.update(
-                                    modificationToApply.getUpdateInfo(),
-                                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEditsThisFrame = m_madeEdits = true;
                                 ImGui::ResetMouseDragDelta();
                             }
@@ -395,25 +379,16 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                                     ? 1
                                     : (lastOptionColor * 2 < SelectColor_Last ? lastOptionColor * 2 : 0);
                             }
-                            SelectOptionsModification prevModification = selectOptions.getLastModification().value_or(
-                                SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE));
                             SelectOptionsModification modificationToApply =
                                 SelectOptionsModification(OPTION_MODIFICATION_ADD)
                                     .options({SelectOption(std::string(buf), addedOptionColor)});
 
                             modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
 
-                            // HACK: There's currently no way of knowing that the option was successfully added.
-                            // We just check the things that we can and if they are true, assume that it did succeed.
-                            SelectOptionsModification newModification = selectOptions.getLastModification().value_or(
-                                SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE));
-                            if (newModification == modificationToApply && prevModification != newModification) {
-                                m_editorSelect.update(modificationToApply.getUpdateInfo(), selectOptions.getOptionCount());
-                                m_editorSelect.setSelected(selectOptions.getOptions().size() - 1, true);
-                                m_madeEditsThisFrame = m_madeEdits = true;
-                                // NOTE: break here because otherwise the start and end of the function kind of go out of sync
-                                break;
-                            }
+                            // TODO: Check if the modification was actually applied
+                            m_madeEditsThisFrame = m_madeEdits = true;
+                            // NOTE: break here because otherwise the start and end of the function kind of go out of sync
+                            break;
                         }
                     }
                 }
@@ -520,9 +495,6 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                                 SelectOptionsModification modificationToApply =
                                     SelectOptionsModification(OPTION_MODIFICATION_REMOVE).firstIndex(i);
                                 modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
-                                m_editorSelect.update(
-                                    modificationToApply.getUpdateInfo(),
-                                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEditsThisFrame = m_madeEdits = true;
                                 ImGui::PopStyleColor(pushedColorCount);
                                 // break because the whole thing must be restarted now
@@ -600,9 +572,6 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                                         .firstIndex(activeOptionIndex.value())
                                         .secondIndex(activeOptionIndex.value() + indexDelta);
                                 modifyColumnSelectOptions.invoke(m_currentElementCoords->column(), modificationToApply);
-                                m_editorSelect.update(
-                                    modificationToApply.getUpdateInfo(),
-                                    m_scheduleCore.getColumnSelectOptions(m_currentElementCoords->column()).getOptionCount());
                                 m_madeEditsThisFrame = m_madeEdits = true;
                                 ImGui::ResetMouseDragDelta();
                             }

@@ -5,7 +5,10 @@
 std::string SelectOptionsModification::getDataString() const {
     std::string dataString = "SelectOptionsModification {\n";
     // Required components
-    dataString.append(std::format("    Type: {}\n    First index: {}\n", (int)m_type, m_firstIndex));
+    dataString.append(std::format("    Type: {}\n", (int)m_type));
+    if (m_firstIndex.has_value()) {
+        dataString.append(std::format("    First index: {}\n", m_firstIndex.value()));
+    }
     if (m_secondIndex.has_value()) {
         dataString.append(std::format("    Second index: {}\n", m_secondIndex.value()));
     }
@@ -29,7 +32,7 @@ std::string SelectOptionsModification::getDataString() const {
 }
 
 SelectOptionUpdateInfo SelectOptionsModification::getUpdateInfo() const {
-    return SelectOptionUpdateInfo{m_type, m_firstIndex, m_secondIndex.value_or(0)};
+    return SelectOptionUpdateInfo{m_type, m_firstIndex, m_secondIndex};
 }
 
 SelectOptions::SelectOptions() {
@@ -47,11 +50,7 @@ size_t SelectOptions::getOptionCount() const {
     return m_options.size();
 }
 
-const std::optional<SelectOptionsModification>& SelectOptions::getLastModification() const {
-    return m_lastModification;
-}
-
-bool SelectOptions::applyModification(const SelectOptionsModification& modification) {
+bool SelectOptions::applyModification(SelectOptionsModification modification) {
     bool appliedSuccessfully = false;
 
     switch (modification.m_type) {
@@ -62,23 +61,47 @@ bool SelectOptions::applyModification(const SelectOptionsModification& modificat
                 appliedSuccessfully = false;
                 break;
             }
-            appliedSuccessfully = addOption(modification.m_options.value()[0]);
+            // If no index is provided, it will be at the end of the options vector
+            if (modification.m_firstIndex.has_value() == false) {
+                modification.m_firstIndex = m_options.size();
+            }
+            appliedSuccessfully = addOption(modification.m_options.value()[0], modification.m_firstIndex.value());
             break;
         }
         case (OPTION_MODIFICATION_REMOVE): {
-            appliedSuccessfully = removeOption(modification.m_firstIndex);
+            if (modification.m_firstIndex.has_value() == false) {
+                appliedSuccessfully = false;
+                break;
+            }
+            appliedSuccessfully = removeOption(modification.m_firstIndex.value());
             break;
         }
         case (OPTION_MODIFICATION_MOVE): {
-            appliedSuccessfully = moveOption(modification.m_firstIndex, modification.m_secondIndex.value());
+            if (modification.m_firstIndex.has_value() == false) {
+                appliedSuccessfully = false;
+                break;
+            }
+            if (modification.m_secondIndex.has_value() == false) {
+                appliedSuccessfully = false;
+                break;
+            }
+            appliedSuccessfully = moveOption(modification.m_firstIndex.value(), modification.m_secondIndex.value());
             break;
         }
         case (OPTION_MODIFICATION_RENAME): {
-            appliedSuccessfully = renameOption(modification.m_firstIndex, modification.m_name.value());
+            if (modification.m_firstIndex.has_value() == false) {
+                appliedSuccessfully = false;
+                break;
+            }
+            appliedSuccessfully = renameOption(modification.m_firstIndex.value(), modification.m_name.value());
             break;
         }
         case (OPTION_MODIFICATION_RECOLOR): {
-            appliedSuccessfully = recolorOption(modification.m_firstIndex, modification.m_color.value());
+            if (modification.m_firstIndex.has_value() == false) {
+                appliedSuccessfully = false;
+                break;
+            }
+            appliedSuccessfully = recolorOption(modification.m_firstIndex.value(), modification.m_color.value());
             break;
         }
         case (OPTION_MODIFICATION_CLEAR): {
@@ -87,15 +110,16 @@ bool SelectOptions::applyModification(const SelectOptionsModification& modificat
             break;
         }
         case (OPTION_MODIFICATION_REPLACE): {
+            if (modification.m_options.has_value() == false) {
+                appliedSuccessfully = false;
+                break;
+            }
             replaceOptions(modification.m_options.value());
             appliedSuccessfully = true;
             break;
         }
     }
 
-    if (appliedSuccessfully) {
-        m_lastModification = modification;
-    }
     return appliedSuccessfully;
 }
 
@@ -107,12 +131,19 @@ bool SelectOptions::getIsMutable() const {
     return m_mutable;
 }
 
-bool SelectOptions::addOption(const SelectOption& option) {
+bool SelectOptions::addOption(const SelectOption& option, size_t index) {
+    if (index > m_options.size()) {
+        return false;
+    }
     // Select options can't have identical names.
     if (std::ranges::any_of(m_options, [&option](const SelectOption& existing) { return existing.name == option.name; })) {
         return false;
     }
-    m_options.push_back(option);
+    if (index < m_options.size()) {
+        m_options.insert(m_options.begin() + index, option);
+    } else {
+        m_options.push_back(option);
+    }
     return true;
 }
 

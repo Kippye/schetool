@@ -2,6 +2,7 @@
 
 #include <set>
 #include <cstddef>
+#include <optional>
 
 enum OPTION_MODIFICATION {
     OPTION_MODIFICATION_ADD,
@@ -9,7 +10,9 @@ enum OPTION_MODIFICATION {
     OPTION_MODIFICATION_MOVE,
     OPTION_MODIFICATION_RENAME,
     OPTION_MODIFICATION_RECOLOR,
+    // UNUSED
     OPTION_MODIFICATION_REPLACE,
+    // UNUSED
     OPTION_MODIFICATION_CLEAR,
     OPTION_MODIFICATION_COUNT_UPDATE
 };
@@ -17,8 +20,8 @@ enum OPTION_MODIFICATION {
 // Argument struct to pass limited info from SelectOptionsModification
 struct SelectOptionUpdateInfo {
         OPTION_MODIFICATION type = OPTION_MODIFICATION_ADD;
-        size_t firstIndex = 0;
-        size_t secondIndex = 0;
+        std::optional<size_t> firstIndex = 0;
+        std::optional<size_t> secondIndex = 0;
 };
 
 struct SelectContainer {

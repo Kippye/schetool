@@ -39,6 +39,7 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
 
     bool openNewNameModal = false;
     bool openRenameModal = false;
+    std::optional<std::string> openDeleteModal = std::nullopt;
     bool openCloseWithEditsModal = false;
 
     if (ImGui::BeginMainMenuBar()) {
@@ -63,7 +64,11 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
                 openNewNameModal = true;
             }
             if (ImGui::BeginMenu("Open", m_fileNames.empty() == false)) {
-                displayScheduleList(args.guiTextures);
+                auto filenameToDelete = displayScheduleList(args.guiTextures);
+
+                if (filenameToDelete.has_value()) {
+                    openDeleteModal = filenameToDelete;
+                }
             }
             auto saveShortcuts = args.input.getEventShortcuts(INPUT_EVENT_SC_SAVE);
             if (disableFileSpecificItems) {
@@ -179,6 +184,9 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
     if (openRenameModal) {
         m_renameModalSubGui->open(m_openFileName.value_or(""));
     }
+    if (openDeleteModal.has_value()) {
+        m_deleteModalSubGui->open(openDeleteModal.value());
+    }
     if (openCloseWithEditsModal) {
         m_closeWithEditsModalSubGui->open();
     }
@@ -188,7 +196,9 @@ float MainMenuBarGui::getHeight() {
     return height;
 }  // STATIC
 
-void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
+std::optional<std::string> MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
+    std::optional<std::string> fileToDelete = std::nullopt;
+
     for (size_t i = 0; i < m_fileNames.size(); i++) {
         ImGui::SetNextItemAllowOverlap();
         if (ImGui::MenuItem(m_fileNames[i].c_str())) {
@@ -215,11 +225,12 @@ void MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
                                                    ImVec4(),
                                                    ImGuiButtonFlags_AlignTextBaseLine))
         {
-            m_deleteModalSubGui->open(m_fileNames[i]);
+            fileToDelete = m_fileNames[i];
         }
         ImGui::PopStyleVar(2);
     }
     ImGui::EndMenu();
+    return fileToDelete;
 }
 
 void MainMenuBarGui::closeModal() {

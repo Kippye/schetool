@@ -2,7 +2,9 @@
 
 void ConfirmationModalSubGui::draw(GuiDrawArgs& args) {
     ImGui::SetNextWindowSize(ImVec2(386.0f, 100.0f));
-    if (ImGui::BeginPopupModal(m_title.c_str(), NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+    if (ImGui::BeginPopupModal(
+            m_title.c_str(), NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+    {
         ImGuiStyle& style = ImGui::GetStyle();
         ImGui::Text("%s", m_bodyText.c_str());
         ImGui::NewLine();

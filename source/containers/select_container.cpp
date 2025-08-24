@@ -37,21 +37,33 @@ void SelectContainer::replaceSelection(const std::set<size_t>& selection) {
 void SelectContainer::update(const SelectOptionUpdateInfo& lastChange, size_t optionCount) {
     m_optionCount = optionCount;
 
+    // NOTE: Here, we assume that the required indices HAVE values.
+    // The SelectOptions or whatever is updating this SelectContainer must correctly fill these values.
     switch (lastChange.type) {
         case (OPTION_MODIFICATION_COUNT_UPDATE): {
             return;
         }
         case (OPTION_MODIFICATION_ADD): {
-            // Currently, options can only be "pushed back" so no selections are invalidated. We chillin.
+            // Added at end, we can chill
+            if (lastChange.firstIndex.value_or(optionCount - 1) == optionCount - 1) {
+                return;
+            }
+            // Added in the middle, we need to do some moving
+            for (int i = optionCount - 1; i >= (int)lastChange.firstIndex.value(); i--) {
+                if (m_selection.find(i) != m_selection.end()) {
+                    m_selection.erase(i);
+                    m_selection.insert(i + 1);
+                }
+            }
             break;
         }
         // An option was removed. Reduce all indices after the removed by 1
         case (OPTION_MODIFICATION_REMOVE): {
-            if (m_selection.find(lastChange.firstIndex) != m_selection.end()) {
-                m_selection.erase(lastChange.firstIndex);
+            if (m_selection.find(lastChange.firstIndex.value()) != m_selection.end()) {
+                m_selection.erase(lastChange.firstIndex.value());
             }
 
-            for (size_t i = lastChange.firstIndex + 1; i < optionCount + 1; i++) {
+            for (size_t i = lastChange.firstIndex.value() + 1; i < optionCount + 1; i++) {
                 if (m_selection.find(i) != m_selection.end()) {
                     m_selection.erase(i);
                     m_selection.insert(i - 1);
@@ -63,14 +75,14 @@ void SelectContainer::update(const SelectOptionUpdateInfo& lastChange, size_t op
         case (OPTION_MODIFICATION_MOVE): {
             bool addSecondIndex = false;
 
-            if (m_selection.find(lastChange.firstIndex) != m_selection.end()) {
-                m_selection.erase(lastChange.firstIndex);
+            if (m_selection.find(lastChange.firstIndex.value()) != m_selection.end()) {
+                m_selection.erase(lastChange.firstIndex.value());
                 addSecondIndex = true;
             }
 
             // If firstIndex > secondIndex, add 1 to every index between firstIndex (excluded) and secondIndex (included).
-            if (lastChange.firstIndex > lastChange.secondIndex) {
-                for (size_t i = lastChange.secondIndex; i < lastChange.firstIndex; i++) {
+            if (lastChange.firstIndex.value() > lastChange.secondIndex.value()) {
+                for (size_t i = lastChange.secondIndex.value(); i < lastChange.firstIndex.value(); i++) {
                     if (m_selection.find(i) != m_selection.end()) {
                         m_selection.erase(i);
                         m_selection.insert(i + 1);
@@ -78,9 +90,9 @@ void SelectContainer::update(const SelectOptionUpdateInfo& lastChange, size_t op
                 }
             }
             // If firstIndex < secondIndex, subtract 1 from every index between firstIndex (excluded) and lastIndex (included).
-            else if (lastChange.firstIndex < lastChange.secondIndex)
+            else if (lastChange.firstIndex.value() < lastChange.secondIndex.value())
             {
-                for (size_t i = lastChange.secondIndex; i > lastChange.firstIndex; i--) {
+                for (size_t i = lastChange.secondIndex.value(); i > lastChange.firstIndex.value(); i--) {
                     if (m_selection.find(i) != m_selection.end()) {
                         m_selection.erase(i);
                         m_selection.insert(i - 1);
@@ -90,7 +102,7 @@ void SelectContainer::update(const SelectOptionUpdateInfo& lastChange, size_t op
 
             // add the index that the (selected) option was moved to
             if (addSecondIndex) {
-                m_selection.insert(lastChange.secondIndex);
+                m_selection.insert(lastChange.secondIndex.value());
             }
             break;
         }

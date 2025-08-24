@@ -76,6 +76,62 @@ class ElementEditorSubGui : public Gui {
                 }
             };
 
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> selectOptionsEditListener =
+            [this](std::shared_ptr<const ScheduleEdit> edit) {
+                if (m_currentElementCoords.has_value() == false) {
+                    return;
+                }
+                if (edit->getType() != ScheduleEditType::SelectOptionsChange) {
+                    return;
+                }
+
+                auto selectOptionsChangeEdit = std::dynamic_pointer_cast<const SelectOptionsChangeEdit>(edit);
+                SelectOptionsModification modification = selectOptionsChangeEdit->getModification();
+
+                if (selectOptionsChangeEdit->getColumn() != m_currentElementCoords->column()) {
+                    return;
+                }
+
+                SelectOptions selectOptions = m_scheduleCore.getColumnSelectOptions(selectOptionsChangeEdit->getColumn());
+
+                if (m_editedType == SCH_SELECT) {
+                    m_editorSingleSelect.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                }
+                if (m_editedType == SCH_MULTISELECT) {
+                    m_editorSelect.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                }
+            };
+
+        std::function<void(size_t, SelectOptionsModification)> selectOptionsChangedListener =
+            [this](size_t column, SelectOptionsModification modification) {
+                if (m_currentElementCoords.has_value() == false) {
+                    return;
+                }
+                if (column != m_currentElementCoords->column()) {
+                    return;
+                }
+
+                SelectOptions selectOptions = m_scheduleCore.getColumnSelectOptions(column);
+
+                if (m_editedType == SCH_SELECT) {
+                    m_editorSingleSelect.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                    // Select the added option if nothing else is selected
+                    if (modification.getUpdateInfo().type == OPTION_MODIFICATION_ADD) {
+                        if (m_editorSingleSelect.getSelection().has_value() == false) {
+                            m_editorSingleSelect.setSelected(
+                                modification.getUpdateInfo().firstIndex.value_or(selectOptions.getOptionCount() - 1), true);
+                        }
+                    }
+                }
+                if (m_editedType == SCH_MULTISELECT) {
+                    m_editorSelect.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                    if (modification.getUpdateInfo().type == OPTION_MODIFICATION_ADD) {
+                        m_editorSelect.setSelected(
+                            modification.getUpdateInfo().firstIndex.value_or(selectOptions.getOptionCount() - 1), true);
+                    }
+                }
+            };
+
         void closeAndReset();
 
     public:

@@ -24,7 +24,9 @@ class MainMenuBarGui : public Gui {
         bool m_fileHasEdits = false;
         Preferences m_preferences = Preferences::getDefault();
 
-        void displayScheduleList(GuiTextures& guiTextures);
+        // Display a list of schedules for the Open menu.
+        // Returns the file name to be opened in the delete confirmation modal.
+        std::optional<std::string> displayScheduleList(GuiTextures& guiTextures);
 
     public:
         MainMenuBarGui(const char* ID, const InterfaceStyleHandler& styleHandler);

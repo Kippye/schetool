@@ -376,13 +376,14 @@ const SelectOptions& Schedule::getColumnSelectOptions(size_t column) {
 void Schedule::modifyColumnSelectOptions(size_t columnIndex,
                                          const SelectOptionsModification& selectOptionsModification,
                                          bool addToHistory) {
-    Column previousData = Column(m_core.getColumnConst(columnIndex));
+    SelectOptions previousOptions = m_core.getColumnConst(columnIndex).selectOptions;
 
     if (m_core.modifyColumnSelectOptions(columnIndex, selectOptionsModification)) {
         if (addToHistory) {
-            m_editHistory.addEdit<ColumnPropertyEdit>(
-                columnIndex, COLUMN_PROPERTY_SELECT_OPTIONS, previousData, m_core.getColumnConst(columnIndex));
+            m_editHistory.addEdit<SelectOptionsChangeEdit>(columnIndex, previousOptions, selectOptionsModification);
         }
+
+        m_scheduleEvents.selectOptionsChanged.invoke(columnIndex, selectOptionsModification);
     }
 }
 

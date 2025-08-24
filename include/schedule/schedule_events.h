@@ -14,4 +14,5 @@ struct ScheduleEvents {
         Event<std::shared_ptr<const ScheduleEdit>> editUndone;
         Event<std::shared_ptr<const ScheduleEdit>> editRedone;
         EventPipe<TimeWrapper> viewedDateChanged;
+        Event<size_t, SelectOptionsModification> selectOptionsChanged;
 };

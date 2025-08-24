@@ -162,21 +162,28 @@ std::vector<size_t> Column::getSortedIndices() const {
 }
 
 bool Column::modifySelectOptions(const SelectOptionsModification& modification) {
-    if (selectOptions.applyModification(modification)) {
+    SelectOptionsModification modificationToApply = modification;
+
+    // Default no index in ADD modification to add at the end of options
+    if (modificationToApply.m_type == OPTION_MODIFICATION_ADD && modificationToApply.m_firstIndex.has_value() == false) {
+        modificationToApply.firstIndex(selectOptions.getOptionCount());
+    }
+
+    if (selectOptions.applyModification(modificationToApply)) {
         // If this column is a select column, update all the (Single)SelectContainers
         if (type == SCH_SELECT) {
             // Update elements
             for (auto element : m_rows) {
                 ((Element<SingleSelectContainer>&)*element)
                     .getValueReference()
-                    .update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                    .update(modificationToApply.getUpdateInfo(), selectOptions.getOptionCount());
             }
             // Update filters
             for (FilterGroup& filterGroup : getFilterGroups()) {
                 for (Filter& filter : filterGroup.getFilters()) {
                     for (FilterRuleContainer& filterRule : filter.getRules()) {
                         SingleSelectContainer updatedValue = filterRule.getPassValue<SingleSelectContainer>();
-                        updatedValue.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                        updatedValue.update(modificationToApply.getUpdateInfo(), selectOptions.getOptionCount());
                         filterRule.setPassValue(updatedValue);
                     }
                 }
@@ -187,14 +194,14 @@ bool Column::modifySelectOptions(const SelectOptionsModification& modification) 
             for (auto element : m_rows) {
                 ((Element<SelectContainer>&)*element)
                     .getValueReference()
-                    .update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                    .update(modificationToApply.getUpdateInfo(), selectOptions.getOptionCount());
             }
             // Update filters
             for (FilterGroup& filterGroup : getFilterGroups()) {
                 for (Filter& filter : filterGroup.getFilters()) {
                     for (FilterRuleContainer& filterRule : filter.getRules()) {
                         SelectContainer updatedValue = filterRule.getPassValue<SelectContainer>();
-                        updatedValue.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                        updatedValue.update(modificationToApply.getUpdateInfo(), selectOptions.getOptionCount());
                         filterRule.setPassValue(updatedValue);
                     }
                 }
