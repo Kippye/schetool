@@ -312,7 +312,27 @@ void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
                                          : (columnSort == COLUMN_SORT_DESCENDING ? COLUMN_SORT_ASCENDING : COLUMN_SORT_NONE));
             }
             ImGui::PopStyleColor(pushedStyleColors);
+            pushedStyleColors = 0;
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+            // Only show the reset button if the column has a reset option applied
+            const ColumnResetOption columnResetOption = m_scheduleCore.getColumnConst(column).resetOption;
+            if (columnResetOption != ColumnResetOption::Never) {
+                GuiTextureInfo resetButtonTexture;
+
+                drawArgs.guiTextures.exists("icon_reset", resetButtonTexture);
+                ImGui::PushStyleColor(ImGuiCol_Button, gui_colors::colorInvisible);
+                // Reset option button!
+                if (gui_templates::ImageButtonStyleColored(std::format("##columnResetIcon{}", column).c_str(),
+                                                           resetButtonTexture.ImID,
+                                                           ImVec2(sortButtonSize, sortButtonSize)))
+                {
+                }
+                ImGui::PopStyleColor();
+                std::string resetOptionName = schedule_consts::columnResetOptionStrings.at(columnResetOption);
+                std::transform(resetOptionName.begin(), resetOptionName.end(), resetOptionName.begin(), ::tolower);
+                ImGui::SetItemTooltip("Column resets %s", resetOptionName.c_str());
+                ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+            }
             // TODO: Align this header text to the sort button better
             ImGui::TableHeader(m_scheduleCore.getColumnConst(column).name.c_str());
             ImGuiID tableHeaderID = ImGui::GetItemID();
