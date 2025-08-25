@@ -22,7 +22,18 @@ void StartPageGui::draw(GuiDrawArgs& args) {
                  ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
     ImGui::NewLine();
+    ImFont* pageTitleFont = InterfaceStyleHandler::getFontData(InterfaceStyleHandler::getFontSize() == FontSize::Large
+                                                                   ? FontSize::Large
+                                                                   : (FontSize)((int)InterfaceStyleHandler::getFontSize() + 1));
+
+    ImGui::PushFont(pageTitleFont);
+    const float iconSize = ImGui::CalcTextSize("Schetool").y * 2.0f;
+    ImGui::Image(args.guiTextures.getOrLoad("icon").ImID, ImVec2(iconSize, iconSize));
+    ImGui::SameLine();
+    ImGui::SetCursorScreenPos(
+        ImVec2(ImGui::GetCursorScreenPos().x, ImGui::GetItemRectMin().y + ImGui::GetItemRectSize().y / 4.0f));
     ImGui::Text("Schetool");
+    ImGui::PopFont();
     ImGui::Text("Create a new file");
     if (ImGui::Button("New##StartPageGuiNewButton")) {
         m_openScheduleNameModal = true;
