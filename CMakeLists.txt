@@ -4,7 +4,7 @@ include(FetchContent)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ############ PROJECT DEFINITION ############
-project(schetool VERSION 0.9.1)
+project(schetool VERSION 1.0.0)
 set(CPP_VERSION "c++20")
 
 ######### OPTIONS #########

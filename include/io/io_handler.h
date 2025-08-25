@@ -26,7 +26,7 @@ class IO_Handler {
         double m_timeSinceAutosave = 0.0;
 
         std::function<void(FileInfo)> openFileInfoChangeListener = [&](FileInfo fileInfo) {
-            m_windowManager->setTitleSuffix(std::string(" - ").append(fileInfo.getName()));
+            m_windowManager->setTitleSuffix(fileInfo.empty() ? "" : std::string(" - ").append(fileInfo.getName()));
             m_schedule->setName(fileInfo.getName());
             m_mainMenuBarGui->passOpenFileName(fileInfo.empty() ? std::nullopt
                                                                 : std::optional<std::string>(fileInfo.getName()));

@@ -49,9 +49,6 @@ void Window::init() {
                              m_glfwPlatformNames.contains(glfwPlatform) ? m_glfwPlatformNames.at(glfwPlatform)
                                                                         : std::to_string(glfwPlatform))
               << std::endl;
-    // #ifdef SCHETOOL_LINUX
-    //                      glfwWindowHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
-    // #endif
     glfwWindowHint(GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
     glfwWindowHintString(GLFW_WAYLAND_APP_ID, "schetool");
