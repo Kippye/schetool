@@ -12,7 +12,7 @@ The latest stable releases for Windows and Linux are available under [Releases](
 * [CMake](https://cmake.org/) version 3.25 or later for project file generation.
 
 **MSVC (Recommended)**
-* Visual Studio, at least its C++ development [build tools](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022). The project has a preset for Visual Studio 17 2022. No other versions have been tested, but might work if a preset is added.
+* Visual Studio, at least its C++ development [build tools](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022). The project has a preset for Visual Studio 17 2022. No other versions have been tested, but they might work.
 
 **Makefile**
 * MinGW64 (recommended to get it from [MSYS2](https://www.msys2.org/))
@@ -67,7 +67,6 @@ cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ --preset make
 * [CMake](https://cmake.org/) version 3.25 or later for project file generation.
 * A compiler such as GCC (version 1.14.1 or later).
 * [GLFW dependency packages](https://www.glfw.org/docs/3.3/compile.html#compile_deps) - get the list for your distro and desktop environment.
-* Depending on your graphics drivers (or lack of any), you may also need ``mesa``. 
 
 ### Building
 

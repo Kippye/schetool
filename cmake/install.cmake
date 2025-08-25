@@ -10,6 +10,12 @@ install(FILES "README.md"
 install(DIRECTORY "fonts"
     DESTINATION "."
 )
+install(DIRECTORY "sounds"
+    DESTINATION "."
+)
+install(DIRECTORY "styles"
+    DESTINATION "."
+)
 install(DIRECTORY "textures"
     DESTINATION "."
 )
