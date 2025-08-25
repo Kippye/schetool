@@ -67,7 +67,7 @@ namespace gui_templates {
     // Returns true if the button was pressed.
     bool ImageButtonStyleColored(const char* idLabel,
                                  ImTextureID textureID,
-                                 ImVec2 size,
+                                 ImVec2 imageSize,
                                  ImVec2 uv0 = ImVec2(0, 0),
                                  ImVec2 uv1 = ImVec2(1, 1),
                                  ImVec4 bgColor = ImVec4(0, 0, 0, 0),

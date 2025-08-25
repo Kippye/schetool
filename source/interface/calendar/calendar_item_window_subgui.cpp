@@ -208,7 +208,7 @@ void CalendarItemWindowSubGui::draw(GuiDrawArgs& args) {
             const float tableWidth = ImGui::GetCurrentTable()->OuterRect.GetWidth();
             ImGui::EndTable();
             // Add property / column button
-            ImGui::Button("+", ImVec2(tableWidth, contextButtonSize + style.FramePadding.y * 2.0f));
+            ImGui::Button("+ Add property", ImVec2(tableWidth, contextButtonSize + style.FramePadding.y * 2.0f));
             if (ImGui::BeginPopupContextItem("SelectAddedPropertyTypeContext", ImGuiPopupFlags_MouseButtonLeft)) {
                 ImGui::Text("Add property");
                 float propertyTypeButtonSize = 1.0f;

@@ -160,11 +160,8 @@ void CalendarGui::draw(GuiDrawArgs& args) {
             // Available space for all filter buttons
             const float availableSpace = ImGui::GetWindowWidth() - (ImGui::GetCursorScreenPos().x + offsetFromRight);
             const float filterListButtonWidth = gui_size_calculations::getTextButtonWidth("+ 99 more");
-            const ImVec2 plusLabelSize = ImGui::CalcTextSize("+");
-            const float filterAddButtonSize =
-                ImGui::CalcItemSize(
-                    ImVec2(), plusLabelSize.x + style.FramePadding.x * 2.0f, plusLabelSize.y + style.FramePadding.y * 2.0f)
-                    .y;
+            const float plusLabelSize = ImGui::CalcTextSize("+").y;
+            const float filterAddButtonSize = ImGui::CalcItemSize(ImVec2(), plusLabelSize, plusLabelSize).y;
             // We will draw n filter buttons, the add button and sometimes a button between the 2
             // This means there will be (n + 3) * ItemSpacing.x as well
             const float filterGroupButtonsSpace =
@@ -259,7 +256,10 @@ void CalendarGui::draw(GuiDrawArgs& args) {
             }
             ImGui::SameLine();
             bool createGroupOpenFilterEditor = false;
-            ImGui::Button("+##addFilterGroup", ImVec2(filterAddButtonSize, filterAddButtonSize));
+            GuiTextureInfo addIcon;
+            args.guiTextures.exists("icon_add", addIcon);
+            gui_templates::ImageButtonStyleColored(
+                "addFilterGroup", addIcon.ImID, ImVec2(filterAddButtonSize, filterAddButtonSize));
             if (ImGui::BeginPopupContextItem("AddFilterGroupColumnSelection", ImGuiPopupFlags_MouseButtonLeft)) {
                 ImGui::Text("%s", "Select property");
                 for (size_t col = 0; col < m_scheduleCore.getColumnCount(); col++) {
@@ -465,22 +465,23 @@ void CalendarGui::drawCalendarDayContent(GuiDrawArgs& drawArgs, size_t& dayIndex
     TimeWrapper calendarDayTime = TimeWrapper(calendarDayDate);
     std::string dayNumberText = dayNumber == 1 ? calendarDayTime.getDynamicFmtStringUTC("{:%b} 1") : std::to_string(dayNumber);
     ImGui::Text("%s", dayNumberText.c_str());
-    const float calendayDayTextWidth = ImGui::GetItemRectSize().x;
+    const float calendarDayTextWidth = ImGui::GetItemRectSize().x;
     // + button to add a calendar item to this calendar day
-    const ImVec2 label_size = ImGui::CalcTextSize("+");
-    const float addItemButtonSize =
-        ImGui::CalcItemSize(
-            ImVec2(0.0f, 0.0f), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f)
-            .y;
-    ImGui::SameLine(0.0f, ImGui::GetColumnWidth(ImGui::TableGetColumnIndex()) - calendayDayTextWidth - addItemButtonSize);
+    const float addItemButtonSize = ImGui::CalcTextSize("+").y;
+    ImGui::SameLine(0.0f,
+                    ImGui::GetColumnWidth(ImGui::TableGetColumnIndex()) - calendarDayTextWidth - addItemButtonSize -
+                        style.FramePadding.x * 2.0f);
     bool isTableCellHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
                                ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex());
     if (!isTableCellHovered) {
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.0f);
     }
+    GuiTextureInfo addIcon;
+    drawArgs.guiTextures.exists("icon_add", addIcon);
     // Adds a row and then sets its Date column value to this calendar day's date
-    if (ImGui::Button(std::format("+##addCalendarItem{};{}", month, dayNumber).c_str(),
-                      ImVec2(addItemButtonSize, addItemButtonSize)))
+    if (gui_templates::ImageButtonStyleColored(std::format("addCalendarItem{};{}", month, dayNumber).c_str(),
+                                               addIcon.ImID,
+                                               ImVec2(addItemButtonSize, addItemButtonSize)))
     {
         size_t rowsBefore = m_scheduleCore.getRowCount();
         addRow.invoke(m_scheduleCore.getRowCount());

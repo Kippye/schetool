@@ -180,18 +180,26 @@ void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
         for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
             ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(column).value());
 
-            const ImVec2 label_size = ImGui::CalcTextSize("+");
-            float addFilterButtonSize =
-                ImGui::CalcItemSize(
-                    ImVec2(0.0f, 0.0f), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f)
-                    .y;
-            if (ImGui::Button(std::format("+##addFilterGroup{}", column).c_str(),
-                              ImVec2(addFilterButtonSize, addFilterButtonSize)))
-            {
-                // display the FilterGroup editor to add a filter group to this Column
-                if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui")) {
-                    filterEditor->createGroupAndEdit(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+            bool isEntireHeaderHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
+                                          (ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() ||
+                                           ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() + 1));
+
+            // Only draw the + FilterGroup button if either of the column header rows is hovered.
+            if (isEntireHeaderHovered) {
+                GuiTextureInfo addIcon;
+                drawArgs.guiTextures.exists("icon_add", addIcon);
+                const float plusLabelSize = ImGui::CalcTextSize("+").y;
+                float addFilterButtonSize = ImGui::CalcItemSize(ImVec2(0.0f, 0.0f), plusLabelSize, plusLabelSize).y;
+                if (gui_templates::ImageButtonStyleColored(std::format("addFilterGroup{}", column).c_str(),
+                                                           addIcon.ImID,
+                                                           ImVec2(addFilterButtonSize, addFilterButtonSize)))
+                {
+                    // display the FilterGroup editor to add a filter group to this Column
+                    if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui")) {
+                        filterEditor->createGroupAndEdit(column, ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax()));
+                    }
                 }
+                ImGui::SameLine(0.0f, style.CellPadding.x);
             }
 
             if (auto filterEditor = getSubGui<FilterEditorSubGui>("FilterEditorSubGui")) {
@@ -199,8 +207,6 @@ void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
                     filterEditor->draw(drawArgs);
                 }
             }
-
-            ImGui::SameLine();
 
             const Column& currentColumn = m_scheduleCore.getColumnConst(column);
             const auto& columnFilterGroups = currentColumn.getFilterGroupsConst();
@@ -239,9 +245,9 @@ void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
                 }
             };
 
+            const float spaceBetweenButtons = ImGui::GetStyle().ItemSpacing.x * (columnFilterGroups.size() - 1);
             const float filterButtonWidth =
-                (ImGui::GetColumnWidth() - (ImGui::GetStyle().ItemSpacing.x * columnFilterGroups.size() - 1)) /
-                columnFilterGroups.size();
+                (ImGui::GetColumnWidth() - spaceBetweenButtons) / std::max(1ul, columnFilterGroups.size());
 
             if (columnFilterGroups.size() <= 3) {
                 drawFilterGroupButtons(true, filterButtonWidth);
