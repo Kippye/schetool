@@ -166,7 +166,14 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate,
         unsigned int pushedVarCount = 0;
         // Highlight the selected day in its correct month
         if (editorDate.getIsEmpty() == false && (DateWrapper(viewedYear, month, dayDisplayNumber) == editorDate.getDateUTC())) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+            pushedColorCount++;
+        }
+        // Highlight the current date (today) in its correct month
+        if (DateWrapper(viewedYear, month, dayDisplayNumber) == TimeWrapper::getCurrentTime().getDateUTC()) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.0f);
+            pushedVarCount++;
+            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_Text));
             pushedColorCount++;
         }
         // Display days from other months as slightly darker, even if selected
