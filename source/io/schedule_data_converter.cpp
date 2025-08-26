@@ -101,7 +101,7 @@ int ScheduleDataConverter::writeSchedule(const char* path,
         }
     }
 
-    File file(data, m_definitions.getObjectTable(), {blf::CompressionType::None, blf::EncryptionType::None});
+    File file(data, m_definitions.getObjectTable());
 
     file.serialize(stream);
 
