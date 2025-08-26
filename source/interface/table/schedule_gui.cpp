@@ -176,20 +176,20 @@ void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
         ImGui::TableSetupScrollFreeze(0, 2);
 
         // ROW 0: Filters
-        ImGui::TableNextRow();
+        const float plusLabelSize = ImGui::CalcTextSize("+").y;
+        float addFilterButtonSize = ImGui::CalcItemSize(ImVec2(0.0f, 0.0f), plusLabelSize, plusLabelSize).y;
+        ImGui::TableNextRow(ImGuiTableRowFlags_None,
+                            addFilterButtonSize + style.FramePadding.y * 2.0f + style.CellPadding.y * 2.0f);
         for (size_t column = 0; column < m_scheduleCore.getColumnCount() && column < ImGui::TableGetColumnCount(); column++) {
             ImGui::TableSetColumnIndex(m_scheduleCore.getInternalIndexFor(column).value());
 
-            bool isEntireHeaderHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
-                                          (ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() ||
-                                           ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex() + 1));
+            bool isFilterRowHovered = (ImGui::TableGetHoveredColumn() == ImGui::TableGetColumnIndex() &&
+                                       (ImGui::TableGetHoveredRow() == ImGui::TableGetRowIndex()));
 
             // Only draw the + FilterGroup button if either of the column header rows is hovered.
-            if (isEntireHeaderHovered) {
+            if (isFilterRowHovered) {
                 GuiTextureInfo addIcon;
                 drawArgs.guiTextures.exists("icon_add", addIcon);
-                const float plusLabelSize = ImGui::CalcTextSize("+").y;
-                float addFilterButtonSize = ImGui::CalcItemSize(ImVec2(0.0f, 0.0f), plusLabelSize, plusLabelSize).y;
                 if (gui_templates::ImageButtonStyleColored(std::format("addFilterGroup{}", column).c_str(),
                                                            addIcon.ImID,
                                                            ImVec2(addFilterButtonSize, addFilterButtonSize)))

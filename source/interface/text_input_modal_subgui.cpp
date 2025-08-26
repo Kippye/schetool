@@ -16,11 +16,12 @@ void TextInputModalSubGui::draw(GuiDrawArgs& args) {
     m_visible = true;
 
     ImGuiStyle& style = ImGui::GetStyle();
-    ImGui::SetNextWindowSize(ImVec2(nameInputWidth + style.FramePadding.x * 2.0f, 100));
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     // ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f), 0, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal(m_popupName,
                                m_showCloseButton ? &m_visible : NULL,
-                               ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+                               ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize |
+                                   ImGuiWindowFlags_NoSavedSettings))
     {
         m_textBuffer.reserve(m_textMaxLength);
         char* buf = m_textBuffer.data();
@@ -36,13 +37,13 @@ void TextInputModalSubGui::draw(GuiDrawArgs& args) {
                          gui_callbacks::filterAlphanumerics);
         ImGui::PopItemWidth();
         if (std::string(buf).empty() == false) {
-            float size = 128.0f + style.FramePadding.x * 2.0f;
+            float width = ImGui::CalcTextSize(m_acceptButtonText.c_str()).x + style.FramePadding.x * 2.0f;
             float avail = ImGui::GetContentRegionAvail().x;
-            float off = (avail - size) * 0.5f;
+            float off = (avail - width) * 0.5f;
             if (off > 0.0f) {
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
             }
-            if (ImGui::Button(m_acceptButtonText.c_str(), ImVec2(128, 0))) {
+            if (ImGui::Button(m_acceptButtonText.c_str())) {
                 invokeEvent(std::string(buf));
             }
         }

@@ -106,7 +106,7 @@ namespace gui_style_vars {
 }  // namespace gui_style_vars
 
 enum class FontSize {
-    // Font size of 8px
+    // Font size of 12px
     Small,
     // Font size of 16px
     Normal,
@@ -126,7 +126,7 @@ namespace gui_fonts {
         {FontSize::Large, "Large"},
     };
     const std::map<FontSize, size_t> fontSizePixelSizes = {
-        {FontSize::Small, 8},
+        {FontSize::Small, 12},
         {FontSize::Normal, 16},
         {FontSize::Big, 24},
         {FontSize::Large, 32},

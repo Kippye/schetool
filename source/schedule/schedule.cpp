@@ -215,10 +215,6 @@ void Schedule::createDefaultSchedule() {
                             COLUMN_SORT_NONE,
                             SelectOptions(),
                             ColumnResetOption::Daily));
-    // Add the default filter to hide finished elements
-    Filter isUnfinishedFilter = Filter();
-    isUnfinishedFilter.addRule(FilterRule<bool>(false));
-    m_core.addColumnFilterGroup(getColumnCount() - 1, FilterGroup({isUnfinishedFilter}, "Hide finished rows"));
     m_core.addColumn(getColumnCount(), Column({}, SCH_TIME, std::string("Start"), true, ScheduleColumnFlags_Start));
     m_core.addColumn(getColumnCount(), Column({}, SCH_TIME, std::string("Duration"), true, ScheduleColumnFlags_Duration));
     m_core.addColumn(getColumnCount(), Column({}, SCH_TIME, std::string("End"), true, ScheduleColumnFlags_End));
