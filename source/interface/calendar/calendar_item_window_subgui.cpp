@@ -29,6 +29,7 @@ void CalendarItemWindowSubGui::draw(GuiDrawArgs& args) {
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, style.WindowPadding * 4.0f);
     ImGui::SetNextWindowSize(ImVec2(args.windowSize.getWidth() * 0.5f, args.windowSize.getHeight() * 0.8f));
+    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style.WindowRounding);
 
     if (ImGui::BeginPopupModal("CalendarItemWindowPopup", NULL, windowFlags)) {
@@ -173,7 +174,10 @@ void CalendarItemWindowSubGui::draw(GuiDrawArgs& args) {
                     }
                 }
                 bool needToBreak = false;
-                if (!isRemoveButton && ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).y == 0.0f) {
+                if (!isRemoveButton &&
+                    (ImGui::IsPopupOpen(ImGui::GetItemID(), ImGuiPopupFlags_None) ||
+                     ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).y == 0.0f))
+                {
                     drawPropertyContext(col, needToBreak);
                 }
                 // Quit early if the property context menu adds or removes a column
