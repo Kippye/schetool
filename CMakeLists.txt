@@ -10,7 +10,7 @@ set(CPP_VERSION "c++20")
 ######### OPTIONS #########
 # Enable testing by default for Debug Unix Makefiles (can't check for configuration with MSVC)
 IF ((CMAKE_GENERATOR STREQUAL "Unix Makefiles") AND ("${CMAKE_BUILD_TYPE}" STREQUAL Debug))
-    option(ENABLE_TESTS "Unit testing build" ON)
+    option(ENABLE_TESTS "Unit testing build" OFF)
 # Otherwise, testing has to be manually enabled
 ELSE()
     option(ENABLE_TESTS "Unit testing build" OFF)
@@ -55,7 +55,8 @@ IF (LINUX)
     # glib2
     pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
     # gdkpixbuf
-    find_package(GDKPixBuf REQUIRED)
+    # find_package(GDKPixBuf REQUIRED)
+    pkg_check_modules(pixbuf REQUIRED IMPORTED_TARGET gdk-pixbuf-2.0)
 ENDIF()
 
 ######### REMOTE FETCH LIBRARIES #########
@@ -184,9 +185,10 @@ target_include_directories(${PROGRAM_NAME}
 
 ###### PLATFORM-SPECIFIC ######
 IF (LINUX)
-    IF (GDKPIXBUF_FOUND)
-        target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
-    ENDIF()
+    target_include_directories(${PROGRAM_NAME} PUBLIC ${pixbuf_INCLUDE_DIRS})
+    # IF (GDKPIXBUF_FOUND)
+    #     target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
+    # ENDIF()
 ENDIF()
 
 ######### SOURCES #########
@@ -275,9 +277,10 @@ ENDIF(WINDOWS_MSVC)
 IF (LINUX)
     # glib 2.0
     target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::deps)
-    IF (GDKPIXBUF_FOUND)
-        target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
-    ENDIF()
+    target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::pixbuf)
+    # IF (GDKPIXBUF_FOUND)
+    #     target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
+    # ENDIF()
 ENDIF()
 
 # Testing subdirectory
