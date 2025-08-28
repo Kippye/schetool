@@ -119,6 +119,21 @@ struct Column {
             return true;
         }
 
+        // Atempt to completely replace an element with a new one.
+        // Internally: resets the shared_ptr for that element to the new value.
+        template <typename T>
+        bool replaceElement(size_t index, Element<T> newElement) {
+            if (hasElement(index) == false) {
+                return false;
+            }
+            if (newElement.getType() != type || Element<T>::getType() != type) {
+                return false;
+            }
+
+            m_rows.at(index).reset(new Element<T>(newElement));
+            return true;
+        }
+
         bool removeElement(size_t index);
 
         template <typename T>

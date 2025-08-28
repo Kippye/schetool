@@ -337,30 +337,33 @@ bool ScheduleCore::setColumnType(size_t col, SCHEDULE_TYPE type) {
     // TODO: try to convert types..? i guess there's no point in doing that. only really numbers could be turned into text.
     // Reset values to defaults of the target type
     Column& column = getColumn(col);
-    size_t rowCount = column.getRowCount();
+    const SCHEDULE_TYPE prevType = column.type;
+    const size_t rowCount = column.getRowCount();
+    // FIX: This must be BEFORE setElement calls to avoid a type mismatch error
+    column.type = type;
 
     switch (type) {
         case (SCH_BOOL): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, Element<bool>(type, Element<bool>::getDefaultValue()), false);
+                replaceElement(col, row, Element<bool>(type, Element<bool>::getDefaultValue()));
             }
             break;
         }
         case (SCH_NUMBER): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, Element<int>(type, Element<int>::getDefaultValue()), false);
+                replaceElement(col, row, Element<int>(type, Element<int>::getDefaultValue()));
             }
             break;
         }
         case (SCH_DECIMAL): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, Element<double>(type, Element<double>::getDefaultValue()), false);
+                replaceElement(col, row, Element<double>(type, Element<double>::getDefaultValue()));
             }
             break;
         }
         case (SCH_TEXT): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, Element<std::string>(type, Element<std::string>::getDefaultValue()), false);
+                replaceElement(col, row, Element<std::string>(type, Element<std::string>::getDefaultValue()));
             }
             break;
         }
@@ -372,7 +375,7 @@ bool ScheduleCore::setColumnType(size_t col, SCHEDULE_TYPE type) {
                 selectElement.getValueReference().update(
                     SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
                     column.selectOptions.getOptionCount());
-                setElement(col, row, selectElement, false);
+                replaceElement(col, row, selectElement);
             }
             break;
         }
@@ -384,7 +387,7 @@ bool ScheduleCore::setColumnType(size_t col, SCHEDULE_TYPE type) {
                 selectElement.getValueReference().update(
                     SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
                     column.selectOptions.getOptionCount());
-                setElement(col, row, selectElement, false);
+                replaceElement(col, row, selectElement);
             }
             break;
         }
@@ -392,30 +395,30 @@ bool ScheduleCore::setColumnType(size_t col, SCHEDULE_TYPE type) {
             for (size_t row = 0; row < rowCount; row++) {
                 Element<WeekdayContainer> weekdayElement =
                     Element<WeekdayContainer>(type, Element<WeekdayContainer>::getDefaultValue());
-                setElement(col, row, weekdayElement, false);
+                replaceElement(col, row, weekdayElement);
             }
             break;
         }
         case (SCH_TIME): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, Element<TimeContainer>(type, Element<TimeContainer>::getDefaultValue()), false);
+                replaceElement(col, row, Element<TimeContainer>(type, Element<TimeContainer>::getDefaultValue()));
             }
             break;
         }
         case (SCH_DATE): {
             for (size_t row = 0; row < rowCount; row++) {
-                setElement(col, row, Element<DateContainer>(type, Element<DateContainer>::getDefaultValue()), false);
+                replaceElement(col, row, Element<DateContainer>(type, Element<DateContainer>::getDefaultValue()));
             }
             break;
         }
         default: {
             std::cout << "ScheduleCore::setColumnType: Setting a column to type: " << type << " has not been implemented!"
                       << std::endl;
+            column.type = prevType;  // Revert type since it wasn't actually changed
             return false;
         }
     }
 
-    column.type = type;
     sortColumns();
     return true;
 }
@@ -818,7 +821,60 @@ bool ScheduleCore::setRow(size_t index, std::vector<std::shared_ptr<ElementBase>
     }
 
     for (size_t col = 0; col < getColumnCount(); col++) {
-        setElement(col, index, elementData[col], false);
+        std::shared_ptr<ElementBase> element = elementData[col];
+        SCHEDULE_TYPE type = element->getType();
+        switch (type) {
+            case (SCH_BOOL): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<bool>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            case (SCH_NUMBER): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<int>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            case (SCH_DECIMAL): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<double>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            case (SCH_TEXT): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<std::string>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            case (SCH_SELECT): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<SingleSelectContainer>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            case (SCH_MULTISELECT): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<SelectContainer>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            case (SCH_WEEKDAY): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<WeekdayContainer>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            case (SCH_TIME): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<TimeContainer>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            case (SCH_DATE): {
+                auto typedElementPtr = std::dynamic_pointer_cast<Element<DateContainer>>(element);
+                replaceElement(col, index, *typedElementPtr);
+                break;
+            }
+            default: {
+                std::cout << "ScheduleCore::setRow: Replacing an element with one of type: " << type
+                          << " has not been implemented!" << std::endl;
+                return false;
+            }
+        }
     }
 
     sortColumns();

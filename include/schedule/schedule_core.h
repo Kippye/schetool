@@ -25,6 +25,33 @@ class ScheduleCore {
         Column& getColumn(size_t index);
         std::vector<size_t> getColumnSortedNewIndices(size_t index);
 
+        // INTERNAL: Use this function to completely replace the element at column; row.
+        // The target element pointer will point to the provided value.
+        // NOTE: Your provided pointer will contain the column element's previous value. It essentially becomes garbage!
+        template <typename T>
+        bool replaceElement(size_t column, size_t row, Element<T> otherValue) {
+            if (getElement(column, row).expired()) {
+                std::cout << std::format("ScheduleCore::setElement(): Failed to set element at {}; {} - element does not exist",
+                                         column,
+                                         row)
+                          << std::endl;
+                return false;
+            }
+            const SCHEDULE_TYPE columnType = getColumn(column).type;
+
+            if (otherValue.getType() != columnType) {
+                std::cout
+                    << std::format(
+                           "ScheduleCore::setElement(): Failed to set element at {}; {} - provided element's type is incorrect",
+                           column,
+                           row)
+                    << std::endl;
+                return false;
+            }
+
+            return getColumn(column).replaceElement(row, otherValue);
+        }
+
     public:
         ScheduleCore();
         // WHOLE-SCHEDULE FUNCTIONS
@@ -238,82 +265,6 @@ class ScheduleCore {
                 sortColumns();
             }
             return true;
-        }
-
-        // Use this function to completely replace the element at column; row.
-        // The target element's contents will be replaced by the Element stored in the provided pointer.
-        bool setElement(size_t column, size_t row, std::shared_ptr<ElementBase> other, bool resort = true) {
-            if (getElement(column, row).expired()) {
-                std::cout << std::format("ScheduleCore::setElement(): Failed to set element at {}; {} - element does not exist",
-                                         column,
-                                         row)
-                          << std::endl;
-                return false;
-            }
-            if (!other) {
-                std::cout
-                    << std::format(
-                           "ScheduleCore::setElement(): Failed to set element at {}; {} - provided element pointer is nullptr",
-                           column,
-                           row)
-                    << std::endl;
-                return false;
-            }
-            const SCHEDULE_TYPE columnType = getColumn(column).type;
-
-            if (other->getType() != columnType) {
-                std::cout
-                    << std::format(
-                           "ScheduleCore::setElement(): Failed to set element at {}; {} - provided element's type is incorrect",
-                           column,
-                           row)
-                    << std::endl;
-                return false;
-            }
-
-            switch (columnType) {
-                case (SCH_BOOL): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<bool>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                case (SCH_NUMBER): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<int>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                case (SCH_DECIMAL): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<double>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                case (SCH_TEXT): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<std::string>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                case (SCH_SELECT): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<SingleSelectContainer>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                case (SCH_MULTISELECT): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<SelectContainer>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                case (SCH_WEEKDAY): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<WeekdayContainer>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                case (SCH_TIME): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<TimeContainer>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                case (SCH_DATE): {
-                    auto typeElement = std::dynamic_pointer_cast<Element<DateContainer>>(other);
-                    return setElement(column, row, *typeElement, resort);
-                }
-                default: {
-                    std::cout << "ScheduleCore::setElement(): Setting an element of type: '" << columnType
-                              << "' has not been implemented!" << std::endl;
-                    return false;
-                }
-            }
         }
 
         // Shortcut for getting the value of an Element at col; row
