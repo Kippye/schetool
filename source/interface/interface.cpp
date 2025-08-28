@@ -29,7 +29,7 @@ void Interface::init(Window* windowManager, Input* input, TextureLoader& texture
     ImGui_ImplGlfw_InitForOpenGL(m_windowManager->getGlfwWindow(), true);
     ImGui_ImplOpenGL3_Init(windowManager->getGlslVersionString().c_str());
     // Load fonts
-    m_styleHandler.loadFontSizes("./fonts/Noto_Sans_Mono/NotoSansMono-VariableFont.ttf");
+    m_styleHandler.loadFontSizes("./fonts/Roboto_Mono/RobotoMono-VariableFont_wght.ttf");
 
     // ADD GUIS
     addGui<StartPageGui>("StartPageGui");
