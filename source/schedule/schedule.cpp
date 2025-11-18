@@ -203,6 +203,7 @@ void Schedule::redo() {
 
 void Schedule::createDefaultSchedule() {
     clearSchedule();
+    m_scheduleGui->resetTableSettings();
     m_editHistory.clearEditHistory();
 
     m_core.addColumn(getColumnCount(), Column({}, SCH_TEXT, std::string("Name"), true, ScheduleColumnFlags_Name));

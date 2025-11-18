@@ -12,6 +12,7 @@
 #include "element_display_templates.h"
 #include "gui_constants.h"
 #include "schedule_coordinates.h"
+#include "util.h"
 
 ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents)
     : m_scheduleCore(scheduleCore), Gui(ID) {
@@ -36,6 +37,16 @@ ScheduleGui::ScheduleGui(const char* ID, const ScheduleCore& scheduleCore, Sched
     addColumnFilterRule.addEvent(filterEditor->addColumnFilterRule);
     editColumnFilterRule.addEvent(filterEditor->editColumnFilterRule);
     removeColumnFilterRule.addEvent(filterEditor->removeColumnFilterRule);
+}
+
+void ScheduleGui::setVisible(bool to) {
+    Gui::setVisible(to);
+    m_scheduleTable = nullptr;
+}
+
+void ScheduleGui::resetTableSettings() {
+    // Reset table settings on next draw call.
+    m_resetTableSettings = true;
 }
 
 // Checks if the current table cell was clicked to edit.
@@ -166,6 +177,10 @@ void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
     if (ImGui::BeginTable("ScheduleTable", m_scheduleCore.getColumnCount() + 1, tableFlags, ImGui::GetContentRegionAvail())) {
         ImGuiTable* currentTable = ImGui::GetCurrentTable();
         m_scheduleTable = currentTable;
+        if (m_resetTableSettings) {
+            ImGui::TableResetSettings(m_scheduleTable);
+            m_resetTableSettings = false;
+        }
         currentTable->DisableDefaultContextMenu = true;
         for (size_t column = 0; column < m_scheduleCore.getColumnCount(); column++) {
             ImGui::TableSetupColumn(m_scheduleCore.getColumnConst(column).name.c_str());

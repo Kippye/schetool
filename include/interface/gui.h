@@ -41,7 +41,7 @@ class Gui {
 
         std::string getID() const;
         bool getVisible() const;
-        void setVisible(bool visible);
+        virtual void setVisible(bool visible);
         virtual void draw(GuiDrawArgs& args);
         // Add a subgui and return its ID so it can be easily retrieved with getSubGui
         std::string addSubGui(Gui* subGui);

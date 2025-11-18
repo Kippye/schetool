@@ -7,7 +7,6 @@
 #include "schedule_column.h"
 #include "schedule_coordinates.h"
 #include "event_pipe.h"
-#include "preferences_io.h"
 #include <optional>
 #include <functional>
 
@@ -16,6 +15,7 @@ class ScheduleGui : public Gui {
         // Table state info
         ImGuiTable* m_scheduleTable = nullptr;
         ImRect m_tableContentRect = ImRect();
+        bool m_resetTableSettings = false;
 
         const ScheduleCore& m_scheduleCore;
         bool m_nextMouseReleaseOpenColumnContext = true;
@@ -100,6 +100,8 @@ class ScheduleGui : public Gui {
         EventPipe<size_t, size_t, size_t, size_t> removeColumnFilterRule;
 
         bool isEditableElementClicked(bool isEditingDisabled) const;
+        void resetTableSettings();
 
+        void setVisible(bool to) override;
         void draw(GuiDrawArgs& args) override;
 };
