@@ -3,12 +3,13 @@
 #include "gui.h"
 #include "input.h"
 #include "file_info.h"
+#include <optional>
 
 class AutosavePopupGui : public Gui {
     private:
         bool m_openNextFrame = false;
-        FileInfo m_baseInfo;
-        FileInfo m_autosaveInfo;
+        std::optional<FileInfo> m_baseInfo = std::nullopt;
+        std::optional<FileInfo> m_autosaveInfo = std::nullopt;
 
     public:
         AutosavePopupGui(const char* ID) : Gui(ID) {

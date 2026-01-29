@@ -104,7 +104,7 @@ void IO_Handler::addToAutosaveTimer(double delta) {
 
     if (m_timeSinceAutosave > (double)AUTOSAVE_DELAY_SECONDS) {
         if (m_scheduleIO) {
-            m_scheduleIO->createAutosave();
+            m_scheduleIO->createCurrentFileAutosave();
         }
         m_timeSinceAutosave = 0;
     }

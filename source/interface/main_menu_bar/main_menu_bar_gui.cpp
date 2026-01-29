@@ -39,12 +39,12 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
 
     bool openNewNameModal = false;
     bool openRenameModal = false;
-    std::optional<std::string> openDeleteModal = std::nullopt;
+    std::optional<FileInfo> openDeleteModal = std::nullopt;
     bool openCloseWithEditsModal = false;
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            bool disableFileSpecificItems = !m_openFileName.has_value();
+            bool disableFileSpecificItems = !m_openFile.has_value();
             if (disableFileSpecificItems) {
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
             }
@@ -63,7 +63,7 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
             {
                 openNewNameModal = true;
             }
-            if (ImGui::BeginMenu("Open", m_fileNames.empty() == false)) {
+            if (ImGui::BeginMenu("Open", m_fileInfoList.empty() == false)) {
                 auto filenameToDelete = displayScheduleList(args.guiTextures);
 
                 if (filenameToDelete.has_value()) {
@@ -164,13 +164,13 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
     ImGui::EndMainMenuBar();
 
     // Check shortcuts (dunno if this is the best place for this? TODO )
-    if (m_openFileName.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
+    if (m_openFile.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
         openRenameModal = true;
     }
     if (args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) {
         openNewNameModal = true;
     }
-    if (m_openFileName.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_CLOSE)) {
+    if (m_openFile.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_CLOSE)) {
         if (m_fileHasEdits == false) {
             saveAndCloseEventPipe.invoke("");
         } else {
@@ -182,10 +182,10 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
         m_newNameModalSubGui->open();
     }
     if (openRenameModal) {
-        m_renameModalSubGui->open(m_openFileName.value_or(""));
+        m_renameModalSubGui->open(m_openFile.has_value() ? m_openFile->getStem() : "");
     }
     if (openDeleteModal.has_value()) {
-        m_deleteModalSubGui->open(openDeleteModal.value());
+        m_deleteModalSubGui->open(openDeleteModal->getStem());
     }
     if (openCloseWithEditsModal) {
         m_closeWithEditsModalSubGui->open();
@@ -196,13 +196,13 @@ float MainMenuBarGui::getHeight() {
     return height;
 }  // STATIC
 
-std::optional<std::string> MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
-    std::optional<std::string> fileToDelete = std::nullopt;
+std::optional<FileInfo> MainMenuBarGui::displayScheduleList(GuiTextures& guiTextures) {
+    std::optional<FileInfo> fileToDelete = std::nullopt;
 
-    for (size_t i = 0; i < m_fileNames.size(); i++) {
+    for (size_t i = 0; i < m_fileInfoList.size(); i++) {
         ImGui::SetNextItemAllowOverlap();
-        if (ImGui::MenuItem(m_fileNames[i].c_str())) {
-            openScheduleFileEvent.invoke(std::string(m_fileNames[i]));
+        if (ImGui::MenuItem(m_fileInfoList[i].getStem().c_str())) {
+            openScheduleFileEvent.invoke(m_fileInfoList[i]);
         }
         // Show a remove button on the right when the menu item is hovered
         ImGui::PushStyleVar(
@@ -225,7 +225,7 @@ std::optional<std::string> MainMenuBarGui::displayScheduleList(GuiTextures& guiT
                                                    ImVec4(),
                                                    ImGuiButtonFlags_AlignTextBaseLine))
         {
-            fileToDelete = m_fileNames[i];
+            fileToDelete = m_fileInfoList[i];
         }
         ImGui::PopStyleVar(2);
     }
@@ -237,12 +237,12 @@ void MainMenuBarGui::closeModal() {
     ImGui::CloseCurrentPopup();
 }
 
-void MainMenuBarGui::passFileNames(const std::vector<std::string>& fileNames) {
-    m_fileNames = fileNames;
+void MainMenuBarGui::passFileInfoList(const std::vector<FileInfo>& fileInfoList) {
+    m_fileInfoList = fileInfoList;
 }
 
-void MainMenuBarGui::passOpenFileName(const std::optional<std::string>& openFileName) {
-    m_openFileName = openFileName;
+void MainMenuBarGui::passOpenFileInfo(const std::optional<FileInfo>& openFile) {
+    m_openFile = openFile;
 }
 
 void MainMenuBarGui::passFileHasEdits(bool hasEdits) {

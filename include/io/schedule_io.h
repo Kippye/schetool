@@ -36,9 +36,9 @@ class ScheduleIO {
         const std::map<ScheduleFileFilter, filter_func> m_scheduleFileFilterFunctions = {
             {ScheduleFileFilter::All, [](const directory_entry&) -> bool { return true; }},
             {ScheduleFileFilter::Base,
-             [&](const directory_entry& entry) -> bool { return !isAutosave(entry.path().stem().string()); }},
+             [&](const directory_entry& entry) -> bool { return !isAutosave(FileInfo(entry.path())); }},
             {ScheduleFileFilter::Autosave,
-             [&](const directory_entry& entry) -> bool { return isAutosave(entry.path().stem().string()); }},
+             [&](const directory_entry& entry) -> bool { return isAutosave(FileInfo(entry.path())); }},
         };
         const std::map<ScheduleFileSort, sort_func> m_scheduleFileSortFunctions = {
             // This function shouldn't be used since calling sort can be avoided entirely, but this is here just in case.
@@ -61,19 +61,19 @@ class ScheduleIO {
              }},
         };
         Schedule& m_schedule;
+        std::filesystem::path m_saveDir;  // Set in constructor
         ScheduleDataConverter m_converter;
         std::shared_ptr<StartPageGui> m_startPageGui = nullptr;
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = nullptr;
         std::shared_ptr<AutosavePopupGui> m_autosavePopupGui = nullptr;
-        FileInfo m_currentFileInfo = FileInfo();
-        std::filesystem::path m_saveDir = std::filesystem::path();
+        std::optional<FileInfo> m_currentFileInfo = std::nullopt;
         const char* m_autosaveSuffix = "_auto";
 
         std::function<void()> saveListener = [&]() {
-            if (m_currentFileInfo.empty()) {
+            if (!isThereFileOpen()) {
                 return;
             }
-            writeSchedule(m_currentFileInfo.getName().c_str());
+            writeSchedule(m_currentFileInfo.value());
         };
         // gui listeners
         // ScheduleNameModalSubGui
@@ -89,24 +89,24 @@ class ScheduleIO {
             }
         };
         // DeleteModalSubGui
-        std::function<void(std::string)> deleteListener = [&](std::string name) {
-            deleteSchedule(name.c_str());
+        std::function<void(std::string)> deleteListener = [this](std::string name) {
+            deleteSchedule(FileInfo(nameToSchedulePath(name.c_str())));
             // Modal hides itself
         };
         // MainMenuBarGui
-        std::function<void(std::string)> openListener = [&](std::string name) {
+        std::function<void(FileInfo)> openListener = [&](FileInfo fileInfo) {
             closeCurrentFile();
-            readSchedule(name.c_str());
+            readSchedule(fileInfo);
         };
         std::function<void(std::string)> saveAndCloseListener = [&](std::string) {
             closeCurrentFile();
             goToStartPage();
         };
         std::function<void(std::string)> closeWithoutSaveListener = [&](std::string) {
-            if (m_currentFileInfo.empty()) {
+            if (!isThereFileOpen()) {
                 return;
             }
-            deleteAutosaveFor(m_currentFileInfo.getName().c_str());
+            deleteAutosaveFor(m_currentFileInfo.value());
             unloadCurrentFile();
             goToStartPage();
         };
@@ -123,14 +123,17 @@ class ScheduleIO {
         // NOTE: all of these assume that the most recently edited file is still an autosave
         // TODO: handle the (rare?) case where it isn't
         std::function<void()> applyAutosaveListener = [&]() {
-            std::string lastEditedFileName = getLastEditedScheduleStemName();
+            std::optional<FileInfo> lastEditedFileInfo = getLastEditedFileInfo();
+            if (!lastEditedFileInfo.has_value()) {
+                return;
+            }
             // 99% of the time, the autosave will be the most recent
-            if (isAutosave(lastEditedFileName)) {
-                std::string baseFileName = getFileBaseName(lastEditedFileName.c_str());
+            if (isAutosave(lastEditedFileInfo.value())) {
+                FileInfo baseFileInfo = FileInfo(getFileBasePath(lastEditedFileInfo.value()));
                 // Apply autosave to file
-                applyAutosaveToFile(baseFileName.c_str());
+                applyAutosaveToFile(baseFileInfo);
                 // Read the updated base file
-                readSchedule(baseFileName.c_str());
+                readSchedule(baseFileInfo);
             }
             // Somehow, the most recently edited file was an autosave but now isn't?
             else
@@ -138,27 +141,32 @@ class ScheduleIO {
             }
         };
         std::function<void()> deleteAutosaveListener = [&]() {
-            std::string lastEditedFileName = getLastEditedScheduleStemName();
-            std::string baseFileName = getFileBaseName(lastEditedFileName.c_str());
+            std::optional<FileInfo> lastEditedFileInfo = getLastEditedFileInfo();
+            if (!lastEditedFileInfo.has_value()) {
+                return;
+            }
 
-            deleteAutosaveFor(baseFileName.c_str());
-            readSchedule(baseFileName.c_str());
+            FileInfo baseFileInfo = FileInfo(getFileBasePath(lastEditedFileInfo.value()));
+            deleteAutosaveFor(baseFileInfo);
+            readSchedule(baseFileInfo);
         };
 
-        // Returns true if the path has the schedule file extension.
-        bool isScheduleFilePath(const std::filesystem::path& path) const;
         // Returns true if the path points to a file that can be loaded by the ScheduleDataConverter.
         bool isValidScheduleFile(const std::filesystem::path& path) const;
-        std::filesystem::path makeSchedulePathFromName(const char* name) const;
-        std::filesystem::path makeIniPathFromScheduleName(const char* name) const;
+        bool isAutosave(const FileInfo& fileInfo);
+        std::filesystem::path nameToSchedulePath(const char* name) const;
+        std::filesystem::path nameToIniPath(const char* name) const;
+        std::string getFileAutosaveName(const FileInfo& fileInfo);
+        std::filesystem::path getFileAutosavePath(const FileInfo& fileInfo);
+        std::string getFileBaseName(const FileInfo& autosaveInfo);
+        std::filesystem::path getFileBasePath(const FileInfo& autosaveInfo);
         // Apply the autosave of the given file to it.
-        // NOTE: The requested name is the name of the *base file*.
-        bool applyAutosaveToFile(const char* name);
-        // Delete the autosave for the file with the provided name.
+        bool applyAutosaveToFile(const FileInfo& baseFile);
+        // Delete the autosave for the provided file.
         // Return true if the autosave was deleted; false if no file was found or it wasn't deleted.
-        bool deleteAutosaveFor(const char* baseName);
-        // Pass the file name of a schedule file to create an imgui .ini file for it.
-        void createIniForFile(const char* name);
+        bool deleteAutosaveFor(const FileInfo& baseFile);
+        // Pass a schedule file to create an imgui .ini file for it.
+        void createIniForFile(const FileInfo& file);
         void sendFileInfoUpdates();
         void passFileNamesToGui();
         void goToStartPage();
@@ -170,17 +178,22 @@ class ScheduleIO {
     public:
         const char* INI_FILE_EXTENSION = ".ini";
 
-        Event<FileInfo> openFileInfoChangeEvent;
+        Event<std::optional<FileInfo>> openFileInfoChangeEvent;
         Event<FileInfo> fileReadEvent;
         Event<FileInfo> fileCreatedEvent;
         Event<> fileUnloadEvent;
 
+        ScheduleIO() = delete;
         ScheduleIO(Schedule& schedule, Interface& interface, std::filesystem::path saveDir);
 
+        // Semi-deprecated. This overload should only be used when *creating new files*.
         bool writeSchedule(const char* name);
-        bool readSchedule(const char* name);
+        bool writeSchedule(const FileInfo& fileInfo);
+        bool readSchedule(const FileInfo& fileInfo);
         bool createNewSchedule(const char* name);
-        bool deleteSchedule(const char* name);
+        bool deleteSchedule(const FileInfo& fileInfo);
+        // Returns true if a schedule file is currently loaded
+        bool isThereFileOpen() const;
         // Rename the currently open file to the provided name.
         // Cancelled if a file with that name already exists.
         // If the open file doesn't exist, write a file with the new name.
@@ -188,20 +201,20 @@ class ScheduleIO {
         bool renameCurrentFile(const std::string& newName);
         // Mostly just creates and applies an autosave of the file before it is unloaded by calling unloadCurrentFile().
         void closeCurrentFile();
-        FileInfo getCurrentFileInfo() const;
+        std::optional<FileInfo> getCurrentFileInfo() const;
         void openMostRecentFile();
-        bool createAutosave();
-        bool isAutosave(const std::string& fileName);
-        std::string getFileAutosaveName(const char* fileName);
-        // Remove the autosave suffix from a file name.
-        // If the file name already isn't that of an autosave, the initial name is be returned.
-        std::string getFileBaseName(const char* autosaveName);
+        bool createCurrentFileAutosave();
         // Get the edit time of the file at filePath, wrapped in a TimeWrapper.
-        TimeWrapper getFileEditTimeWrapped(std::filesystem::path filePath);
-        // Get a list of all schedule file stem names.
-        // Use the filter and sort enums to filter and sort the names, respectively.
-        // If no arguments are provided, returns a list of all schedule stem names, unsorted.
-        std::vector<std::string> getScheduleStemNames(ScheduleFileFilter filter = ScheduleFileFilter::All,
-                                                      ScheduleFileSort sort = ScheduleFileSort::None);
-        std::string getLastEditedScheduleStemName();
+        TimeWrapper getFileEditTime(std::filesystem::path filePath) const;
+        // Get the edit time of the directory entry, wrapped in a TimeWrapper.
+        TimeWrapper getFileEditTime(const std::filesystem::directory_entry& file) const;
+
+        // Get a list of FileInfo for all schedule files.
+        // Use the filter and sort enums to filter files and sort the list, respectively.
+        // If no arguments are provided, returns a list of all schedule file infos, unsorted.
+        std::vector<FileInfo> getScheduleFileInfoList(ScheduleFileFilter filter = ScheduleFileFilter::All,
+                                                      ScheduleFileSort sort = ScheduleFileSort::None) const;
+        // Shortcut for getting the first element of getScheduleFileInfoList sorted by edit time.
+        // Returns nullopt if there are no schedule files.
+        std::optional<FileInfo> getLastEditedFileInfo() const;
 };

@@ -298,7 +298,7 @@ class Schedule {
         // WHOLE-SCHEDULE FUNCTIONS
         void init(Input& input, Interface& interface);
 
-        // Set the schedule's name to the provided name. NOTE: Does not affect filename. Only called by IO_Manager and MainMenuBarGui through IO_Manager.
+        // Set the schedule's name to the provided name.
         void setName(const std::string& name);
         void updatePreferences(const SchedulePreferences& preferences);
         SchedulePreferences getPreferences() const;
@@ -457,7 +457,5 @@ class Schedule {
             }
 
             m_core.setElementValue<T>(column, row, value);
-
-            m_editHistory.setEditedSinceWrite(true);
         }
 };

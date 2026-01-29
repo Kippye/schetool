@@ -25,21 +25,17 @@ class IO_Handler {
         std::shared_ptr<StyleIO> m_styleIO = nullptr;
         double m_timeSinceAutosave = 0.0;
 
-        std::function<void(FileInfo)> openFileInfoChangeListener = [&](FileInfo fileInfo) {
-            m_windowManager->setTitleSuffix(fileInfo.empty() ? "" : std::string(" - ").append(fileInfo.getName()));
-            m_schedule->setName(fileInfo.getName());
-            m_mainMenuBarGui->passOpenFileName(fileInfo.empty() ? std::nullopt
-                                                                : std::optional<std::string>(fileInfo.getName()));
+        std::function<void(std::optional<FileInfo>)> openFileInfoChangeListener = [&](std::optional<FileInfo> fileInfo) {
+            m_windowManager->setTitleSuffix(!fileInfo.has_value() ? "" : std::string(" - ").append(fileInfo->getStem()));
+            m_schedule->setName(fileInfo.has_value() ? fileInfo->getStem() : "");
+            m_mainMenuBarGui->passOpenFileInfo(fileInfo);
         };
 
         // input listeners
         std::function<void()> saveInputListener = std::function<void()>([&]() {
-            if (m_scheduleIO) {
-                FileInfo currentFileInfo = m_scheduleIO->getCurrentFileInfo();
-                if (currentFileInfo.empty()) {
-                    return;
-                }
-                m_scheduleIO->writeSchedule(currentFileInfo.getName().c_str());
+            if (m_scheduleIO && m_scheduleIO->isThereFileOpen()) {
+                FileInfo currentFileInfo = m_scheduleIO->getCurrentFileInfo().value();
+                m_scheduleIO->writeSchedule(currentFileInfo);
             }
         });
         // window event listeners

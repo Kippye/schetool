@@ -39,9 +39,9 @@ void StartPageGui::draw(GuiDrawArgs& args) {
         m_openScheduleNameModal = true;
     }
     ImGui::Text("Open a file");
-    for (size_t i = 0; i < m_fileNames.size(); i++) {
-        if (ImGui::Button(std::string(m_fileNames[i]).append("##StartPageGuiFileListButton").c_str())) {
-            openScheduleFileEvent.invoke(std::string(m_fileNames[i]));
+    for (size_t i = 0; i < m_fileInfoList.size(); i++) {
+        if (ImGui::Button(m_fileInfoList[i].getStem().append("##StartPageGuiFileListButton").c_str())) {
+            openScheduleFileEvent.invoke(m_fileInfoList[i]);
         }
     }
     ImGui::End();
@@ -56,6 +56,6 @@ void StartPageGui::draw(GuiDrawArgs& args) {
     }
 }
 
-void StartPageGui::passFileNames(const std::vector<std::string>& fileNames) {
-    m_fileNames = fileNames;
+void StartPageGui::passFileInfoList(const std::vector<FileInfo>& fileInfoList) {
+    m_fileInfoList = fileInfoList;
 }

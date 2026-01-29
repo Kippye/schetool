@@ -1,26 +1,45 @@
 #include "file_info.h"
 
-FileInfo::FileInfo() : m_isEmpty(true) {
+FileInfo::FileInfo(const std::filesystem::path& path,
+                   const TimeWrapper& fileEditTime,
+                   const std::optional<TimeWrapper>& scheduleEditTime) {
+    m_path = path;
+    m_fileEditTime = fileEditTime;
+    m_scheduleEditTime = scheduleEditTime;
 }
 
-FileInfo::FileInfo(const std::string& filename, const TimeWrapper& fileEditTime, const TimeWrapper& scheduleEditTime) {
-    fill(filename, fileEditTime, scheduleEditTime);
+std::filesystem::path FileInfo::getPath() const {
+    return m_path;
 }
 
-bool FileInfo::empty() const {
-    return m_isEmpty;
+std::string FileInfo::getStem() const {
+    return m_path.stem();
 }
 
-std::string FileInfo::getName() const {
-    return m_filename;
+std::string FileInfo::getFilename() const {
+    return m_path.filename();
 }
 
 void FileInfo::rename(const std::string& name) {
-    if (empty() || name.empty()) {
+    if (name.empty()) {
         return;
     }
 
-    m_filename = name;
+    std::string extension = m_path.extension();
+
+    m_path.replace_filename(name);
+
+    // Allow file extension to be *changed*, but not *removed*
+    if (!m_path.has_extension()) {
+        m_path.replace_extension(extension);
+    }
+}
+
+FileInfo FileInfo::getRenamed(const std::string& name) {
+    auto newInfo = FileInfo(*this);
+
+    newInfo.rename(name);
+    return newInfo;
 }
 
 TimeWrapper FileInfo::getFileEditTime() const {
@@ -28,35 +47,21 @@ TimeWrapper FileInfo::getFileEditTime() const {
 }
 
 void FileInfo::setFileEditTime(const TimeWrapper& editTime) {
-    if (empty()) {
-        return;
-    }
-
     m_fileEditTime = editTime;
 }
 
-TimeWrapper FileInfo::getScheduleEditTime() const {
+std::optional<TimeWrapper> FileInfo::getScheduleEditTime() const {
     return m_scheduleEditTime;
 }
 
 void FileInfo::setScheduleEditTime(const TimeWrapper& editTime) {
-    if (empty()) {
-        return;
-    }
-
     m_scheduleEditTime = editTime;
 }
 
-void FileInfo::clear() {
-    m_filename = "";
-    m_fileEditTime = TimeWrapper();
-    m_scheduleEditTime = TimeWrapper();
-    m_isEmpty = true;
-}
-
-void FileInfo::fill(const std::string& filename, const TimeWrapper& fileEditTime, const TimeWrapper& scheduleEditTime) {
-    m_filename = filename;
+void FileInfo::fill(const std::filesystem::path& path,
+                    const TimeWrapper& fileEditTime,
+                    const std::optional<TimeWrapper>& scheduleEditTime) {
+    m_path = path;
     m_fileEditTime = fileEditTime;
     m_scheduleEditTime = scheduleEditTime;
-    m_isEmpty = false;
 }

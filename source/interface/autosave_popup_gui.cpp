@@ -6,14 +6,22 @@ void AutosavePopupGui::draw(GuiDrawArgs& args) {
     ImGui::SetNextWindowContentSize(popupSize);
     ImGui::SetNextWindowPos(
         ImVec2(((float)args.windowSize.getWidth()) / 2.0f, ((float)args.windowSize.getHeight()) / 2.0f), 0, ImVec2(0.5f, 0.5f));
+
+    if (!(m_baseInfo.has_value() && m_autosaveInfo.has_value())) {
+        if (ImGui::BeginPopupModal("Autosave found", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::Text("Error: No file info for base file / autosave");
+            ImGui::EndPopup();
+        }
+        return;
+    }
     if (ImGui::BeginPopupModal("Autosave found", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
         const ImVec2 labelSize = ImVec2(128.0f, 0.0f);
         const ImVec2 buttonSize = ImVec2(128.0f, 0.0f);
         ImGui::BeginColumns("testColumns", 2, ImGuiOldColumnFlags_NoResize);
         gui_templates::TextWithBackground(labelSize, "Autosave file");
-        gui_templates::TextWithBackground(labelSize, "%s##Autosave", m_autosaveInfo.getName().c_str());
+        gui_templates::TextWithBackground(labelSize, "%s##Autosave", m_autosaveInfo->getStem().c_str());
         gui_templates::TextWithBackground(
-            labelSize, "%s##Autosave", m_autosaveInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
+            labelSize, "%s##Autosave", m_autosaveInfo->getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
         if (ImGui::Button("Apply autosave", buttonSize)) {
             applyAutosaveEvent.invoke();
             ImGui::CloseCurrentPopup();
@@ -25,9 +33,9 @@ void AutosavePopupGui::draw(GuiDrawArgs& args) {
         ImGui::NextColumn();
 
         gui_templates::TextWithBackground(labelSize, "Base file");
-        gui_templates::TextWithBackground(labelSize, "%s##Base", m_baseInfo.getName().c_str());
+        gui_templates::TextWithBackground(labelSize, "%s##Base", m_baseInfo->getStem().c_str());
         gui_templates::TextWithBackground(
-            labelSize, "%s##Base", m_baseInfo.getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
+            labelSize, "%s##Base", m_baseInfo->getFileEditTime().getString(TIME_FORMAT_FULL).c_str());
         if (ImGui::Button("Open file", buttonSize)) {
             deleteAutosaveEvent.invoke();
             ImGui::CloseCurrentPopup();

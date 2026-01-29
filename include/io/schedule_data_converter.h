@@ -731,12 +731,12 @@ class ScheduleDataConverter {
             BLF_Column<T> blfColumn = BLF_Column<T>(column, columnIndex);
             data.insert(getObjectDefinition<BLF_Column<T>>().serialize(blfColumn));
         }
-        bool isValidScheduleFile(const char* path) const;
+        bool isValidScheduleFile(const std::filesystem::path& path) const;
         // Write the Columns of a Schedule to a file at the given path.
-        int writeSchedule(const char* path, const std::vector<Column>&, const SchedulePreferences&);
+        int writeSchedule(const FileInfo& fileInfo, const std::vector<Column>&, const SchedulePreferences&);
         // Read a Schedule from path and fill the provided vector with its data.
         // Fills the provided FilePreferences class with the preferences loaded from the file
         // NOTE: The function clears and modifies the argument schedule directly. Consider its contents lost.
-        // Returns a partial FileInfo containing the file path and schedule edit time, if successful.
-        std::optional<FileInfo> readSchedule(const char* path, std::vector<Column>&, SchedulePreferences&);
+        // Returns a FileInfo containing the file path, file edit time and schedule edit time, if successful.
+        std::optional<FileInfo> readSchedule(const FileInfo& fileInfo, std::vector<Column>&, SchedulePreferences&);
 };

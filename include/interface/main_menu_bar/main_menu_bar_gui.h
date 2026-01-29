@@ -7,6 +7,7 @@
 #include "text_input_modal_subgui.h"
 #include "gui.h"
 #include "event_pipe.h"
+#include "file_info.h"
 
 class MainMenuBarGui : public Gui {
     private:
@@ -19,19 +20,19 @@ class MainMenuBarGui : public Gui {
         std::shared_ptr<TextInputModalSubGui> m_newNameModalSubGui = nullptr;
         std::shared_ptr<TextInputModalSubGui> m_renameModalSubGui = nullptr;
         // STATE PASSED FROM OUTSIDE
-        std::optional<std::string> m_openFileName = std::nullopt;
-        std::vector<std::string> m_fileNames = {};
+        std::optional<FileInfo> m_openFile = std::nullopt;
+        std::vector<FileInfo> m_fileInfoList = {};
         bool m_fileHasEdits = false;
         Preferences m_preferences = Preferences::getDefault();
 
         // Display a list of schedules for the Open menu.
-        // Returns the file name to be opened in the delete confirmation modal.
-        std::optional<std::string> displayScheduleList(GuiTextures& guiTextures);
+        // Returns the file info to be opened in the delete confirmation modal.
+        std::optional<FileInfo> displayScheduleList(GuiTextures& guiTextures);
 
     public:
         MainMenuBarGui(const char* ID, const InterfaceStyleHandler& styleHandler);
 
-        Event<std::string> openScheduleFileEvent;
+        Event<FileInfo> openScheduleFileEvent;
         Event<> saveEvent;
         Event<> undoEvent;
         Event<> redoEvent;
@@ -50,8 +51,8 @@ class MainMenuBarGui : public Gui {
         // Get the height of the MainMenuBarGui.
         static float getHeight();
         void closeModal();
-        void passFileNames(const std::vector<std::string>& fileNames);
-        void passOpenFileName(const std::optional<std::string>& openFileName);
+        void passFileInfoList(const std::vector<FileInfo>& fileInfoList);
+        void passOpenFileInfo(const std::optional<FileInfo>& openFile);
         void passFileHasEdits(bool hasEdits);
         void passPreferences(const Preferences& preferences);
 };

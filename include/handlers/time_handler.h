@@ -14,7 +14,7 @@ class TimeHandler {
         NotificationHandler* m_notificationHandler;
 
         std::function<void(FileInfo)> fileOpenListener = [&](FileInfo fileInfo) {
-            applyResetsSinceEditTime(fileInfo.getScheduleEditTime());
+            applyResetsSinceEditTime(fileInfo.getScheduleEditTime().value());
         };
         std::function<void()> fileUnloadListener = [&]() { handleFileUnloaded(); };
 

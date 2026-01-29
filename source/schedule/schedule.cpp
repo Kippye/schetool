@@ -9,6 +9,8 @@ Schedule::Schedule() : m_core(), m_editHistory(m_core), m_scheduleGui(nullptr) {
 }
 
 void Schedule::init(Input& input, Interface& interface) {
+    m_scheduleEvents.editAdded.addEvent(m_editHistory.editAddedEvent);
+
     m_scheduleGui = interface.addGui<ScheduleGui>("ScheduleGui", m_core, m_scheduleEvents);
 
     if (m_scheduleGui) {
