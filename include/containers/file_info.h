@@ -18,6 +18,14 @@ class FileInfo {
                  const TimeWrapper& fileEditTime = TimeWrapper::getCurrentTime(),
                  const std::optional<TimeWrapper>& scheduleEditTime = std::nullopt);
 
+        bool operator==(const FileInfo& other) {
+            return m_path == other.m_path;
+        }
+
+        bool operator!=(const FileInfo& other) {
+            return m_path != other.m_path;
+        }
+
         // Get the full file path
         std::filesystem::path getPath() const;
         // Get the filename stem (no extension)

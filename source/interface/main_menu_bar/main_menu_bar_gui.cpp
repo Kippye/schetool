@@ -161,6 +161,13 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
         }
         height = ImGui::GetWindowHeight();
     }
+
+    m_saveIndicatorDurationLeft = std::max(0.0f, m_saveIndicatorDurationLeft - args.deltaTime);
+    if (m_saveIndicatorDurationLeft > 0.0f) {
+        ImGui::SetCursorPos(
+            ImVec2(ImGui::GetWindowWidth() / 2.0f - gui_size_calculations::getTextButtonWidth("Saved!") / 2.0f, 0.0f));
+        ImGui::Text("Saved!");
+    }
     ImGui::EndMainMenuBar();
 
     // Check shortcuts (dunno if this is the best place for this? TODO )
@@ -235,6 +242,10 @@ std::optional<FileInfo> MainMenuBarGui::displayScheduleList(GuiTextures& guiText
 
 void MainMenuBarGui::closeModal() {
     ImGui::CloseCurrentPopup();
+}
+
+void MainMenuBarGui::onCurrentFileSaved() {
+    m_saveIndicatorDurationLeft = SAVE_INDICATOR_DISPLAY_DURATION;
 }
 
 void MainMenuBarGui::passFileInfoList(const std::vector<FileInfo>& fileInfoList) {

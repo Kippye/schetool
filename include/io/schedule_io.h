@@ -69,12 +69,7 @@ class ScheduleIO {
         std::optional<FileInfo> m_currentFileInfo = std::nullopt;
         const char* m_autosaveSuffix = "_auto";
 
-        std::function<void()> saveListener = [&]() {
-            if (!isThereFileOpen()) {
-                return;
-            }
-            writeSchedule(m_currentFileInfo.value());
-        };
+        std::function<void()> saveListener = [&]() { saveCurrentFile(); };
         // gui listeners
         // ScheduleNameModalSubGui
         std::function<void(std::string)> renameListener = [&](std::string name) {
@@ -154,12 +149,21 @@ class ScheduleIO {
         // Returns true if the path points to a file that can be loaded by the ScheduleDataConverter.
         bool isValidScheduleFile(const std::filesystem::path& path) const;
         bool isAutosave(const FileInfo& fileInfo);
+
         std::filesystem::path nameToSchedulePath(const char* name) const;
         std::filesystem::path nameToIniPath(const char* name) const;
-        std::string getFileAutosaveName(const FileInfo& fileInfo);
         std::filesystem::path getFileAutosavePath(const FileInfo& fileInfo);
+        // Get the name (stem) of the file or its base file (if it's an autosave)
         std::string getFileBaseName(const FileInfo& autosaveInfo);
         std::filesystem::path getFileBasePath(const FileInfo& autosaveInfo);
+
+        void onCurrentFileSaveSuccess();
+        void onCurrentFileInfoChange();
+        void onBaseFileListChange();
+        void goToStartPage();
+
+        std::optional<FileInfo> writeSchedule(const std::filesystem::path& path, Schedule& schedule);
+
         // Apply the autosave of the given file to it.
         bool applyAutosaveToFile(const FileInfo& baseFile);
         // Delete the autosave for the provided file.
@@ -167,9 +171,7 @@ class ScheduleIO {
         bool deleteAutosaveFor(const FileInfo& baseFile);
         // Pass a schedule file to create an imgui .ini file for it.
         void createIniForFile(const FileInfo& file);
-        void sendFileInfoUpdates();
-        void passFileNamesToGui();
-        void goToStartPage();
+
         // Cleans everything about the currently open file (clears the schedule, edit history, etc)
         void unloadCurrentFile();
         const filter_func& getScheduleFileFilter(ScheduleFileFilter filter) const;
@@ -186,14 +188,17 @@ class ScheduleIO {
         ScheduleIO() = delete;
         ScheduleIO(Schedule& schedule, Interface& interface, std::filesystem::path saveDir);
 
-        // Semi-deprecated. This overload should only be used when *creating new files*.
-        bool writeSchedule(const char* name);
-        bool writeSchedule(const FileInfo& fileInfo);
+        std::optional<FileInfo> getCurrentFileInfo() const;
+        // Returns true if a schedule file is currently loaded
+        bool isThereFileOpen() const;
+
         bool readSchedule(const FileInfo& fileInfo);
         bool createNewSchedule(const char* name);
         bool deleteSchedule(const FileInfo& fileInfo);
-        // Returns true if a schedule file is currently loaded
-        bool isThereFileOpen() const;
+
+        // Save the currently loaded file or do nothing if no file is loaded.
+        bool saveCurrentFile();
+        bool createCurrentFileAutosave();
         // Rename the currently open file to the provided name.
         // Cancelled if a file with that name already exists.
         // If the open file doesn't exist, write a file with the new name.
@@ -201,9 +206,8 @@ class ScheduleIO {
         bool renameCurrentFile(const std::string& newName);
         // Mostly just creates and applies an autosave of the file before it is unloaded by calling unloadCurrentFile().
         void closeCurrentFile();
-        std::optional<FileInfo> getCurrentFileInfo() const;
         void openMostRecentFile();
-        bool createCurrentFileAutosave();
+
         // Get the edit time of the file at filePath, wrapped in a TimeWrapper.
         TimeWrapper getFileEditTime(std::filesystem::path filePath) const;
         // Get the edit time of the directory entry, wrapped in a TimeWrapper.

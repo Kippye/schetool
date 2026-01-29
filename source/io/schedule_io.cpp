@@ -31,11 +31,15 @@ ScheduleIO::ScheduleIO(Schedule& schedule, Interface& programInterface, std::fil
     m_schedule.getScheduleEvents().editRedone.addListener(editListener);
     m_schedule.getScheduleEvents().editUndone.addListener(editListener);
 
-    passFileNamesToGui();
+    onBaseFileListChange();
 }
 
 bool ScheduleIO::isValidScheduleFile(const std::filesystem::path& path) const {
     return m_converter.isValidScheduleFile(path.string().c_str());
+}
+
+bool ScheduleIO::isAutosave(const FileInfo& fileInfo) {
+    return fileInfo.getStem().rfind(m_autosaveSuffix) != std::string::npos;
 }
 
 fs::path ScheduleIO::nameToSchedulePath(const char* name) const {
@@ -46,14 +50,43 @@ fs::path ScheduleIO::nameToIniPath(const char* name) const {
     return fs::path(m_saveDir) / std::format("{}{}", name, INI_FILE_EXTENSION).c_str();
 }
 
-void ScheduleIO::passFileNamesToGui() {
-    m_startPageGui->passFileInfoList(getScheduleFileInfoList(ScheduleFileFilter::Base, ScheduleFileSort::EditTime_Descending));
-    m_mainMenuBarGui->passFileInfoList(
-        getScheduleFileInfoList(ScheduleFileFilter::Base, ScheduleFileSort::EditTime_Descending));
+std::filesystem::path ScheduleIO::getFileAutosavePath(const FileInfo& fileInfo) {
+    std::string autosaveName = fileInfo.getStem().append(m_autosaveSuffix);
+    auto autosaveInfo = FileInfo(fileInfo);
+    autosaveInfo.rename(autosaveName);
+    return autosaveInfo.getPath();
 }
 
-void ScheduleIO::sendFileInfoUpdates() {
+std::string ScheduleIO::getFileBaseName(const FileInfo& autosaveInfo) {
+    if (isAutosave(autosaveInfo) == false) {
+        std::cout << std::format("ScheduleIO::getFileBaseName(): File at '{}' is not an autosave",
+                                 autosaveInfo.getPath().string())
+                  << std::endl;
+        return autosaveInfo.getStem();
+    }
+
+    return autosaveInfo.getStem().substr(0, autosaveInfo.getStem().rfind(m_autosaveSuffix));
+}
+
+std::filesystem::path ScheduleIO::getFileBasePath(const FileInfo& autosaveInfo) {
+    std::string fileBaseName = getFileBaseName(autosaveInfo);
+    auto fileBaseInfo = FileInfo(autosaveInfo);
+    fileBaseInfo.rename(fileBaseName);
+    return fileBaseInfo.getPath();
+}
+
+void ScheduleIO::onCurrentFileSaveSuccess() {
+    m_mainMenuBarGui->onCurrentFileSaved();
+}
+
+void ScheduleIO::onCurrentFileInfoChange() {
     openFileInfoChangeEvent.invoke(m_currentFileInfo);
+}
+
+void ScheduleIO::onBaseFileListChange() {
+    auto baseFileInfoList = getScheduleFileInfoList(ScheduleFileFilter::Base, ScheduleFileSort::EditTime_Descending);
+    m_startPageGui->passFileInfoList(baseFileInfoList);
+    m_mainMenuBarGui->passFileInfoList(baseFileInfoList);
 }
 
 void ScheduleIO::goToStartPage() {
@@ -61,32 +94,42 @@ void ScheduleIO::goToStartPage() {
     m_startPageGui->setVisible(true);
 }
 
-bool ScheduleIO::isThereFileOpen() const {
-    return m_currentFileInfo.has_value();
-}
-
-void ScheduleIO::unloadCurrentFile() {
-    m_schedule.clearSchedule();
-    m_schedule.clearDateOverride();
-    m_schedule.getEditHistoryMutable().clearEditHistory();
-    m_currentFileInfo.reset();
-    sendFileInfoUpdates();
-    fileUnloadEvent.invoke();
-}
-
-void ScheduleIO::closeCurrentFile() {
-    printf("ScheduleIO::closeCurrentFile(): Closing current file...\n");
-    if (!isThereFileOpen()) {
-        return;
+std::optional<FileInfo> ScheduleIO::writeSchedule(const fs::path& path, Schedule& schedule) {
+    if (path.parent_path() != m_saveDir) {
+        std::cout << std::format("ScheduleIO::writeSchedule(): Target path '{}' is not in save dir: '{}'",
+                                 path.string(),
+                                 m_saveDir.string())
+                  << std::endl;
+        return std::nullopt;
+    }
+    if (fs::exists(m_saveDir) == false) {
+        if (fs::create_directories(m_saveDir)) {
+            std::cout
+                << std::format(
+                       "ScheduleIO::writeSchedule(): Schedule save directory did not exist. Created a 'schedules' directory at: '{}'",
+                       m_saveDir.string())
+                << std::endl;
+        } else {
+            std::cout
+                << std::format(
+                       "ScheduleIO::writeSchedule(): Schedule save directory did not exist. FAILED to create a 'schedules' directory at: '{}'",
+                       m_saveDir.string())
+                << std::endl;
+            return std::nullopt;
+        }
     }
 
-    createCurrentFileAutosave();
-    if (!isAutosave(m_currentFileInfo.value())) {
-        applyAutosaveToFile(m_currentFileInfo.value());
+    if (auto writtenFileInfo = m_converter.writeSchedule(path, schedule.getAllColumns(), schedule.getPreferences())) {
+        createIniForFile(writtenFileInfo.value());
+        std::cout << std::format("ScheduleIO::writeSchedule(): Wrote Schedule to file: '{}'",
+                                 writtenFileInfo->getPath().string())
+                  << std::endl;
+        schedule.getEditHistoryMutable().setEditedSinceWrite(false);
+        onBaseFileListChange();
+        return writtenFileInfo;
     }
-    createIniForFile(m_currentFileInfo.value());
 
-    unloadCurrentFile();
+    return std::nullopt;
 }
 
 bool ScheduleIO::applyAutosaveToFile(const FileInfo& fileInfo) {
@@ -121,7 +164,11 @@ bool ScheduleIO::applyAutosaveToFile(const FileInfo& fileInfo) {
         if (fs::copy_file(pathToAutosaveFile, fileInfo.getPath(), fs::copy_options::update_existing)) {
             // The file was successfully copied, which means the autosave can be removed
             fs::remove(pathToAutosaveFile);
-            passFileNamesToGui();
+            // Applied autosave to current file
+            if (isThereFileOpen() && m_currentFileInfo.value() == fileInfo) {
+                onCurrentFileSaveSuccess();
+            }
+            onBaseFileListChange();
             std::cout << std::format("ScheduleIO::applyAutosaveToFile(): Applied autosave to Schedule '{}'", fileInfo.getStem())
                       << std::endl;
             return true;
@@ -136,11 +183,21 @@ bool ScheduleIO::applyAutosaveToFile(const FileInfo& fileInfo) {
                          fileInfo.getPath().string(),
                          e.what())
                   << std::endl;
-        return false;
     }
-    passFileNamesToGui();
+    onBaseFileListChange();
 
     return false;
+}
+
+bool ScheduleIO::deleteAutosaveFor(const FileInfo& fileInfo) {
+    fs::path pathToAutosaveFile = getFileAutosavePath(fileInfo);
+
+    // A Schedule file with this path does not exist. stop.
+    if (fs::exists(pathToAutosaveFile) == false) {
+        return false;
+    }
+
+    return fs::remove(pathToAutosaveFile);
 }
 
 void ScheduleIO::createIniForFile(const FileInfo& fileInfo) {
@@ -156,39 +213,21 @@ void ScheduleIO::createIniForFile(const FileInfo& fileInfo) {
     }
 }
 
-bool ScheduleIO::writeSchedule(const char* name) {
-    fs::path schedulePath = nameToSchedulePath(name);
-    return writeSchedule(FileInfo(schedulePath));
+void ScheduleIO::unloadCurrentFile() {
+    m_schedule.clearSchedule();
+    m_schedule.clearDateOverride();
+    m_schedule.getEditHistoryMutable().clearEditHistory();
+    m_currentFileInfo.reset();
+    onCurrentFileInfoChange();
+    fileUnloadEvent.invoke();
 }
 
-bool ScheduleIO::writeSchedule(const FileInfo& fileInfo) {
-    if (fs::exists(m_saveDir) == false) {
-        if (fs::create_directories(m_saveDir)) {
-            std::cout
-                << std::format(
-                       "ScheduleIO::writeSchedule(): Schedule save directory did not exist. Created a 'schedules' directory at: '{}'",
-                       m_saveDir.string())
-                << std::endl;
-        } else {
-            std::cout
-                << std::format(
-                       "ScheduleIO::writeSchedule(): Schedule save directory did not exist. FAILED to create a 'schedules' directory at: '{}'",
-                       m_saveDir.string())
-                << std::endl;
-            return false;
-        }
-    }
+std::optional<FileInfo> ScheduleIO::getCurrentFileInfo() const {
+    return m_currentFileInfo;
+}
 
-    if (m_converter.writeSchedule(fileInfo, m_schedule.getAllColumns(), m_schedule.getPreferences()) == 0) {
-        createIniForFile(fileInfo);
-        std::cout << std::format("ScheduleIO::writeSchedule(): Wrote Schedule to file: '{}'", fileInfo.getPath().string())
-                  << std::endl;
-    }
-    // TODO: make some event that the Schedule can listen to?
-    m_schedule.getEditHistoryMutable().setEditedSinceWrite(false);
-    fileHasEditsStateChanged();
-    passFileNamesToGui();
-    return true;
+bool ScheduleIO::isThereFileOpen() const {
+    return m_currentFileInfo.has_value();
 }
 
 // Reads a schedule from file and applies / opens it
@@ -214,7 +253,7 @@ bool ScheduleIO::readSchedule(const FileInfo& fileInfo) {
         m_schedule.sortColumns();
         m_currentFileInfo =
             FileInfo(fileInfo.getPath(), getFileEditTime(fileInfo.getPath()), readFileInfo->getScheduleEditTime());
-        sendFileInfoUpdates();
+        onCurrentFileInfoChange();
         m_startPageGui->setVisible(false);
         m_schedule.getEditHistoryMutable().setEditedSinceWrite(false);
         fileHasEditsStateChanged();
@@ -231,12 +270,12 @@ bool ScheduleIO::readSchedule(const FileInfo& fileInfo) {
 bool ScheduleIO::createNewSchedule(const char* name) {
     m_schedule.createDefaultSchedule();
 
-    if (writeSchedule(name))  // passes new list of file names to gui
+    if (auto createdFileInfo = writeSchedule(nameToSchedulePath(name), m_schedule))  // passes new list of file names to gui
     {
-        fs::path createdFilePath = nameToSchedulePath(name);
-        m_currentFileInfo = FileInfo(createdFilePath, getFileEditTime(createdFilePath), TimeWrapper::getCurrentTime());
-        sendFileInfoUpdates();
-        passFileNamesToGui();
+        m_currentFileInfo = createdFileInfo;
+        onCurrentFileInfoChange();
+        onBaseFileListChange();
+        onCurrentFileSaveSuccess();
         m_startPageGui->setVisible(false);
         // Update with default preferences for a new file
         m_schedule.updatePreferences(SchedulePreferences());
@@ -257,21 +296,21 @@ bool ScheduleIO::deleteSchedule(const FileInfo& fileInfo) {
 
     fs::path autosavePath = getFileAutosavePath(fileInfo);
 
-    // delete the file's autosave if it exists
+    // Delete the file's autosave if it exists
     if (fs::exists(autosavePath)) {
         fs::remove(autosavePath);
     }
 
     fs::path iniFilePath = nameToIniPath(getFileBaseName(fileInfo).c_str());
 
-    // delete the file's ini file if it exists
+    // Delete the file's ini file if it exists
     if (fs::exists(iniFilePath)) {
         fs::remove(iniFilePath);
     }
 
     if (fs::remove(fileInfo.getPath())) {
-        passFileNamesToGui();
-        // deleted the file that was open
+        onBaseFileListChange();
+        // Deleted the file that was open
         if (m_currentFileInfo.has_value() && m_currentFileInfo->getPath() == fileInfo.getPath()) {
             unloadCurrentFile();
             goToStartPage();
@@ -282,20 +321,40 @@ bool ScheduleIO::deleteSchedule(const FileInfo& fileInfo) {
     return false;
 }
 
-bool ScheduleIO::deleteAutosaveFor(const FileInfo& fileInfo) {
-    fs::path pathToAutosaveFile = getFileAutosavePath(fileInfo);
-
-    // A Schedule file with this path does not exist. stop.
-    if (fs::exists(pathToAutosaveFile) == false) {
+bool ScheduleIO::saveCurrentFile() {
+    if (!isThereFileOpen()) {
         return false;
     }
 
-    if (fs::remove(pathToAutosaveFile)) {
-        passFileNamesToGui();
+    if (auto updatedFileInfo = writeSchedule(m_currentFileInfo->getPath(), m_schedule)) {
+        m_currentFileInfo = updatedFileInfo;
+        onBaseFileListChange();
+        fileHasEditsStateChanged();
+        onCurrentFileSaveSuccess();
         return true;
     }
-
     return false;
+}
+
+bool ScheduleIO::createCurrentFileAutosave() {
+    if (!isThereFileOpen()) {
+        return false;
+    }
+    if (m_schedule.getEditHistory().getEditedSinceWrite() == false) {
+        return false;
+    }
+    printf("ScheduleIO::createAutosave(): Creating autosave...\n");
+
+    // Save to open file name if the open file is itself an autosave
+    if (isAutosave(m_currentFileInfo.value())) {
+        return saveCurrentFile();
+    }
+    // Get autosave name / path and save to it
+    else
+    {
+        std::filesystem::path autosavePath = getFileAutosavePath(m_currentFileInfo.value());
+        return writeSchedule(autosavePath, m_schedule).has_value();
+    }
 }
 
 bool ScheduleIO::renameCurrentFile(const std::string& newName) {
@@ -304,67 +363,79 @@ bool ScheduleIO::renameCurrentFile(const std::string& newName) {
     }
 
     FileInfo renamedFileInfo = m_currentFileInfo->getRenamed(newName);
-    bool schedulesDirWasCreated = false;
 
     // Write-operation: Create schedules directory if it doesn't exist.
     if (fs::exists(m_saveDir) == false) {
         if (fs::create_directories(m_saveDir)) {
-            std::cout
-                << std::format(
-                       "ScheduleIO::renameCurrentFile(): Tried to rename a Schedule but the schedules directory did not exist. Created a schedules directory at: '{}'",
-                       m_saveDir.string())
-                << std::endl;
-            schedulesDirWasCreated = true;
+            std::cout << std::format("ScheduleIO::renameCurrentFile(): Had to create missing schedules directory at: '{}'",
+                                     m_saveDir.string())
+                      << std::endl;
         } else {
-            std::cout
-                << std::format(
-                       "ScheduleIO::renameCurrentFile(): Tried to rename a Schedule but the schedules directory did not exist. FAILED to create a schedules directory at: '{}'",
-                       m_saveDir.string())
-                << std::endl;
+            std::cout << std::format("ScheduleIO::renameCurrentFile(): Failed to create missing schedules directory at: '{}'",
+                                     m_saveDir.string())
+                      << std::endl;
+            return false;
         }
     }
-    //  A Schedule file with this name already exists, don't overwrite it. Just stop.
+
+    //  A Schedule file with the new name already exists, don't overwrite it. Just stop.
     if (fs::exists(renamedFileInfo.getPath())) {
         return false;
     }
+
     // If the file to rename doesn't exist, just write the Schedule to the file with the provided new name
-    if (schedulesDirWasCreated || fs::exists(m_currentFileInfo->getPath()) == false) {
+    if (fs::exists(m_currentFileInfo->getPath()) == false) {
         std::cout
             << std::format(
                    "ScheduleIO::renameCurrentFile(): Tried to change the name of the Schedule file, but the file was not found at its previous path: '{}'",
                    m_currentFileInfo->getPath().string())
             << std::endl;
-        writeSchedule(newName.c_str());
-        std::cout << std::format("ScheduleIO::renameCurrentFile(): Wrote current file to renamed path: '{}'",
-                                 renamedFileInfo.getPath().string())
-                  << std::endl;
+
+        if (writeSchedule(renamedFileInfo.getPath(), m_schedule)) {
+            std::cout << std::format("ScheduleIO::renameCurrentFile(): Wrote current file to renamed path: '{}'",
+                                     renamedFileInfo.getPath().string())
+                      << std::endl;
+        } else {
+            return false;
+        }
     } else  // All is fine, rename the file
     {
         fs::rename(m_currentFileInfo->getPath(), renamedFileInfo.getPath());
     }
     // Rename the autosave as well, if it exists
     fs::path pathToAutosave = getFileAutosavePath(m_currentFileInfo.value());
-    fs::path pathToRenamedAutosave = getFileAutosavePath(renamedFileInfo);
     if (fs::exists(pathToAutosave)) {
+        fs::path pathToRenamedAutosave = getFileAutosavePath(renamedFileInfo);
         fs::rename(pathToAutosave, pathToRenamedAutosave);
     }
     // Rename the ini file as well, if it exists
     fs::path pathToIniFile = fs::path(nameToIniPath(m_currentFileInfo->getStem().c_str()));
-    fs::path pathToRenamedIniFile = fs::path(nameToIniPath(renamedFileInfo.getStem().c_str()));
     if (fs::exists(pathToIniFile)) {
+        fs::path pathToRenamedIniFile = fs::path(nameToIniPath(renamedFileInfo.getStem().c_str()));
         fs::rename(pathToIniFile, pathToRenamedIniFile);
     }
 
-    passFileNamesToGui();
-
+    onBaseFileListChange();
     m_currentFileInfo = renamedFileInfo;
-    sendFileInfoUpdates();
+    onCurrentFileInfoChange();
+    onCurrentFileSaveSuccess();
 
     return true;
 }
 
-std::optional<FileInfo> ScheduleIO::getCurrentFileInfo() const {
-    return m_currentFileInfo;
+void ScheduleIO::closeCurrentFile() {
+    printf("ScheduleIO::closeCurrentFile(): Closing current file...\n");
+    if (!isThereFileOpen()) {
+        return;
+    }
+
+    createCurrentFileAutosave();
+    if (!isAutosave(m_currentFileInfo.value())) {
+        applyAutosaveToFile(m_currentFileInfo.value());
+    }
+    createIniForFile(m_currentFileInfo.value());
+
+    unloadCurrentFile();
 }
 
 void ScheduleIO::openMostRecentFile() {
@@ -404,60 +475,6 @@ void ScheduleIO::openMostRecentFile() {
             goToStartPage();
         }
     }
-}
-
-bool ScheduleIO::createCurrentFileAutosave() {
-    if (!isThereFileOpen()) {
-        return false;
-    }
-    if (m_schedule.getEditHistory().getEditedSinceWrite() == false) {
-        return false;
-    }
-    printf("ScheduleIO::createAutosave(): Creating autosave...\n");
-
-    // Save to open file name if the open file is itself an autosave
-    if (isAutosave(m_currentFileInfo.value())) {
-        return writeSchedule(m_currentFileInfo.value());
-    }
-    // Get autosave name / path and save to it
-    else
-    {
-        std::string autosaveName = getFileAutosaveName(m_currentFileInfo.value());
-        return writeSchedule(autosaveName.c_str());
-    }
-}
-
-bool ScheduleIO::isAutosave(const FileInfo& fileInfo) {
-    return fileInfo.getStem().rfind(m_autosaveSuffix) != std::string::npos;
-}
-
-std::string ScheduleIO::getFileAutosaveName(const FileInfo& fileInfo) {
-    return fileInfo.getStem().append(m_autosaveSuffix);
-}
-
-std::filesystem::path ScheduleIO::getFileAutosavePath(const FileInfo& fileInfo) {
-    std::string autosaveName = getFileAutosaveName(fileInfo);
-    auto autosaveInfo = FileInfo(fileInfo);
-    autosaveInfo.rename(autosaveName);
-    return autosaveInfo.getPath();
-}
-
-std::string ScheduleIO::getFileBaseName(const FileInfo& autosaveInfo) {
-    if (isAutosave(autosaveInfo) == false) {
-        std::cout << std::format("ScheduleIO::getFileBaseName(): File at '{}' is not an autosave",
-                                 autosaveInfo.getPath().string())
-                  << std::endl;
-        return autosaveInfo.getStem();
-    }
-
-    return autosaveInfo.getStem().substr(0, autosaveInfo.getStem().rfind(m_autosaveSuffix));
-}
-
-std::filesystem::path ScheduleIO::getFileBasePath(const FileInfo& autosaveInfo) {
-    std::string fileBaseName = getFileBaseName(autosaveInfo);
-    auto fileBaseInfo = FileInfo(autosaveInfo);
-    fileBaseInfo.rename(fileBaseName);
-    return fileBaseInfo.getPath();
 }
 
 TimeWrapper ScheduleIO::getFileEditTime(fs::path path) const {

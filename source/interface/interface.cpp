@@ -73,7 +73,7 @@ void Interface::draw(float deltaTime) {
     // Apply font
     ImGui::PushFont(m_styleHandler.getFontData(m_styleHandler.getFontSize()));
     // Create GuiDrawArgs to pass
-    GuiDrawArgs drawArgs = GuiDrawArgs(m_windowManager->getSize(), *m_input, *m_guiTextures.get(), m_preferences);
+    GuiDrawArgs drawArgs = GuiDrawArgs(m_windowManager->getSize(), *m_input, *m_guiTextures.get(), m_preferences, deltaTime);
     for (auto& [id, gui] : m_guis) {
         if (gui->getVisible()) {
             gui->draw(drawArgs);

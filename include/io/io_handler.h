@@ -33,9 +33,8 @@ class IO_Handler {
 
         // input listeners
         std::function<void()> saveInputListener = std::function<void()>([&]() {
-            if (m_scheduleIO && m_scheduleIO->isThereFileOpen()) {
-                FileInfo currentFileInfo = m_scheduleIO->getCurrentFileInfo().value();
-                m_scheduleIO->writeSchedule(currentFileInfo);
+            if (m_scheduleIO) {
+                m_scheduleIO->saveCurrentFile();
             }
         });
         // window event listeners

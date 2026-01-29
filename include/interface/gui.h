@@ -20,8 +20,10 @@ struct GuiDrawArgs {
         Input& input;
         GuiTextures& guiTextures;
         Preferences preferences;
+        float deltaTime;
 
-        GuiDrawArgs(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures, Preferences preferences);
+        GuiDrawArgs(
+            const WindowSize& windowSize, Input& input, GuiTextures& guiTextures, Preferences preferences, float deltaTime);
 };
 
 class Gui {

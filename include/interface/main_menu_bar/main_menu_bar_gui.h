@@ -12,6 +12,8 @@
 class MainMenuBarGui : public Gui {
     private:
         static float height;
+        const float SAVE_INDICATOR_DISPLAY_DURATION = 1.0f;
+        float m_saveIndicatorDurationLeft = 0.0f;
 
         const InterfaceStyleHandler& m_styleHandler;
         // MODALS
@@ -51,6 +53,7 @@ class MainMenuBarGui : public Gui {
         // Get the height of the MainMenuBarGui.
         static float getHeight();
         void closeModal();
+        void onCurrentFileSaved();
         void passFileInfoList(const std::vector<FileInfo>& fileInfoList);
         void passOpenFileInfo(const std::optional<FileInfo>& openFile);
         void passFileHasEdits(bool hasEdits);

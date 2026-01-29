@@ -49,10 +49,10 @@ bool ScheduleDataConverter::isValidScheduleFile(const std::filesystem::path& pat
     }
 }
 
-int ScheduleDataConverter::writeSchedule(const FileInfo& fileInfo,
-                                         const std::vector<Column>& schedule,
-                                         const SchedulePreferences& preferences) {
-    FileWriteStream stream(fileInfo.getPath());
+std::optional<FileInfo> ScheduleDataConverter::writeSchedule(const std::filesystem::path& path,
+                                                             const std::vector<Column>& schedule,
+                                                             const SchedulePreferences& preferences) {
+    FileWriteStream stream(path);
 
     DataTable data;
 
@@ -95,7 +95,7 @@ int ScheduleDataConverter::writeSchedule(const FileInfo& fileInfo,
             default:
                 printf(
                     "ScheduleDataConverter::writeSchedule(%s, schedule): Writing Columns of type %d has not been implemented\n",
-                    fileInfo.getPath().string().c_str(),
+                    path.string().c_str(),
                     schedule[c].type);
                 break;
         }
@@ -105,7 +105,7 @@ int ScheduleDataConverter::writeSchedule(const FileInfo& fileInfo,
 
     file.serialize(stream);
 
-    return 0;
+    return FileInfo(path, TimeWrapper::getCurrentTime(), blfFileInfo.getEditTime());
 }
 
 std::optional<FileInfo> ScheduleDataConverter::readSchedule(const FileInfo& fileInfo,

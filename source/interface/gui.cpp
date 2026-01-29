@@ -1,7 +1,8 @@
 #include <gui.h>
 
-GuiDrawArgs::GuiDrawArgs(const WindowSize& windowSize, Input& input, GuiTextures& guiTextures, Preferences preferences)
-    : windowSize(windowSize), input(input), guiTextures(guiTextures), preferences(preferences) {
+GuiDrawArgs::GuiDrawArgs(
+    const WindowSize& windowSize, Input& input, GuiTextures& guiTextures, Preferences preferences, float deltaTime)
+    : windowSize(windowSize), input(input), guiTextures(guiTextures), preferences(preferences), deltaTime(deltaTime) {
 }
 
 Gui::Gui() {
