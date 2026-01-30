@@ -162,22 +162,51 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
         height = ImGui::GetWindowHeight();
     }
 
-    m_saveIndicatorDurationLeft = std::max(0.0f, m_saveIndicatorDurationLeft - args.deltaTime);
-    if (m_saveIndicatorDurationLeft > 0.0f) {
-        ImGui::SetCursorPos(
-            ImVec2(ImGui::GetWindowWidth() / 2.0f - gui_size_calculations::getTextButtonWidth("Saved!") / 2.0f, 0.0f));
-        ImGui::Text("Saved!");
+    // Get status message from logger queue
+    if (m_currentMessage.has_value() == false) {
+        m_currentMessage = StatusMessageQueue::pop();
+        if (m_currentMessage.has_value()) {
+            m_currentMsgDurationLeft = STATUS_MSG_TYPE_DURATIONS.at(m_currentMessage->messageType);
+        }
     }
+    // Display current status message
+    if (m_currentMessage.has_value()) {
+        m_currentMsgDurationLeft = std::max(0.0f, m_currentMsgDurationLeft - args.deltaTime);
+
+        if (m_currentMsgDurationLeft > 0.0f) {
+            ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() / 2.0f -
+                                           gui_size_calculations::getTextButtonWidth(m_currentMessage->message.c_str()) / 2.0f,
+                                       0.0f));
+            int pushedColorCount = 0;
+            if (m_currentMessage->messageType == StatusMessageType::Warning) {
+                ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorWarning);
+                pushedColorCount++;
+            }
+            if (m_currentMessage->messageType == StatusMessageType::Error) {
+                ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorError);
+                pushedColorCount++;
+            }
+            ImGui::Text("%s", m_currentMessage->message.c_str());
+            ImGui::PopStyleColor(pushedColorCount);
+        } else {
+            m_currentMessage.reset();
+        }
+    }
+
     ImGui::EndMainMenuBar();
 
     // Check shortcuts (dunno if this is the best place for this? TODO )
     if (m_openFile.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
+        StatusMessageQueue::push(StatusMessage::warning(std::format("Failed to rename file!")));
+
         openRenameModal = true;
     }
     if (args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) {
         openNewNameModal = true;
     }
     if (m_openFile.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_CLOSE)) {
+        StatusMessageQueue::push(StatusMessage::error(std::format("Failed to save file!")));
+
         if (m_fileHasEdits == false) {
             saveAndCloseEventPipe.invoke("");
         } else {
@@ -242,10 +271,6 @@ std::optional<FileInfo> MainMenuBarGui::displayScheduleList(GuiTextures& guiText
 
 void MainMenuBarGui::closeModal() {
     ImGui::CloseCurrentPopup();
-}
-
-void MainMenuBarGui::onCurrentFileSaved() {
-    m_saveIndicatorDurationLeft = SAVE_INDICATOR_DISPLAY_DURATION;
 }
 
 void MainMenuBarGui::passFileInfoList(const std::vector<FileInfo>& fileInfoList) {

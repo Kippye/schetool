@@ -83,8 +83,13 @@ namespace gui_colors {
     extern const float disabledAlpha;
     // RGB color for black text
     const ImVec4 textColorBlack = {10.0f / 255, 10.0f / 255, 10.0f / 255, 1};
+    // RGB color for warning text
+    const ImVec4 textColorWarning = {252.0f / 255, 186.0f / 255, 3.0f / 255, 1};
+    // RGB color for error text
+    const ImVec4 textColorError = {232.0f / 255, 28.0f / 255, 28.0f / 255, 1};
     // RGB invisible color
     const ImVec4 colorInvisible = {0.0f, 0.0f, 0.0f, 0.0f};
+
 }  // namespace gui_colors
 
 namespace gui_sizes {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <map>
 #include "interface_style.h"
 #include "preferences.h"
 #include "confirmation_modal_subgui.h"
@@ -8,12 +9,16 @@
 #include "gui.h"
 #include "event_pipe.h"
 #include "file_info.h"
+#include "messages/status_message_queue.h"
 
 class MainMenuBarGui : public Gui {
     private:
         static float height;
-        const float SAVE_INDICATOR_DISPLAY_DURATION = 1.0f;
-        float m_saveIndicatorDurationLeft = 0.0f;
+
+        const std::map<StatusMessageType, float> STATUS_MSG_TYPE_DURATIONS = {
+            {StatusMessageType::Info, 1.0f}, {StatusMessageType::Warning, 2.0f}, {StatusMessageType::Error, 5.0f}};
+        std::optional<StatusMessage> m_currentMessage = std::nullopt;
+        float m_currentMsgDurationLeft = 0.0f;
 
         const InterfaceStyleHandler& m_styleHandler;
         // MODALS
@@ -53,7 +58,6 @@ class MainMenuBarGui : public Gui {
         // Get the height of the MainMenuBarGui.
         static float getHeight();
         void closeModal();
-        void onCurrentFileSaved();
         void passFileInfoList(const std::vector<FileInfo>& fileInfoList);
         void passOpenFileInfo(const std::optional<FileInfo>& openFile);
         void passFileHasEdits(bool hasEdits);

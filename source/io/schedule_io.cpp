@@ -4,6 +4,7 @@
 #include <format>
 #include <stdexcept>
 #include "schedule_io.h"
+#include "messages/status_message_queue.h"
 
 namespace fs = std::filesystem;
 
@@ -76,7 +77,7 @@ std::filesystem::path ScheduleIO::getFileBasePath(const FileInfo& autosaveInfo) 
 }
 
 void ScheduleIO::onCurrentFileSaveSuccess() {
-    m_mainMenuBarGui->onCurrentFileSaved();
+    StatusMessageQueue::push(StatusMessage::info("Saved!"));
 }
 
 void ScheduleIO::onCurrentFileInfoChange() {
@@ -329,6 +330,7 @@ bool ScheduleIO::saveCurrentFile() {
         onCurrentFileSaveSuccess();
         return true;
     }
+    StatusMessageQueue::push(StatusMessage::error(std::format("Failed to save file!")));
     return false;
 }
 
@@ -349,7 +351,13 @@ bool ScheduleIO::createCurrentFileAutosave() {
     else
     {
         std::filesystem::path autosavePath = getFileAutosavePath(m_currentFileInfo.value());
-        return writeSchedule(autosavePath, m_schedule).has_value();
+        if (writeSchedule(autosavePath, m_schedule)) {
+            StatusMessageQueue::push(StatusMessage::info("Autosave created!"));
+            return true;
+        }
+
+        StatusMessageQueue::push(StatusMessage::warning("Failed to create autosave!"));
+        return false;
     }
 }
 
@@ -414,6 +422,7 @@ bool ScheduleIO::renameCurrentFile(const std::string& newName) {
     onBaseFileListChange();
     m_currentFileInfo = renamedFileInfo;
     onCurrentFileInfoChange();
+    StatusMessageQueue::push(StatusMessage::info(std::format("Renamed file to '{}'", renamedFileInfo.getStem())));
     onCurrentFileSaveSuccess();
 
     return true;
