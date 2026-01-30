@@ -39,6 +39,7 @@ class Schedule {
 
         std::function<void(ScheduleView)> viewSwitchListener = [&](ScheduleView view) {
             // Kinda HACK but eh
+            // Why is it one?
             SchedulePreferences newPreferences = m_preferences;
             newPreferences.setView(view);
             updatePreferences(newPreferences);

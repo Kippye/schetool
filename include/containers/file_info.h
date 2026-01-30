@@ -45,10 +45,4 @@ class FileInfo {
         std::optional<TimeWrapper> getScheduleEditTime() const;
         // Changes schedule edit time if the FileInfo is full
         void setScheduleEditTime(const TimeWrapper& editTime);
-
-        // Fill the FileInfo with new information. Might be preferrable to creating a new instance.
-        // TODO: Remove
-        void fill(const std::filesystem::path& path,
-                  const TimeWrapper& fileEditTime,
-                  const std::optional<TimeWrapper>& scheduleEditTime = std::nullopt);
 };

@@ -204,11 +204,7 @@ void ScheduleIO::createIniForFile(const FileInfo& fileInfo) {
     // TODO: This function is ugly with the .c_str() spam
     // I think it would really be better to just have separate dirs with the same stem but different extension
     if (ImGui::GetIO().WantSaveIniSettings) {
-        if (isAutosave(fileInfo)) {
-            ImGui::SaveIniSettingsToDisk(nameToIniPath(getFileBaseName(fileInfo).c_str()).string().c_str());
-        } else {
-            ImGui::SaveIniSettingsToDisk(nameToIniPath(fileInfo.getStem().c_str()).string().c_str());
-        }
+        ImGui::SaveIniSettingsToDisk(nameToIniPath(getFileBaseName(fileInfo).c_str()).string().c_str());
         ImGui::GetIO().WantSaveIniSettings = false;
     }
 }

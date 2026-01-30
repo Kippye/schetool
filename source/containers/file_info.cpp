@@ -57,11 +57,3 @@ std::optional<TimeWrapper> FileInfo::getScheduleEditTime() const {
 void FileInfo::setScheduleEditTime(const TimeWrapper& editTime) {
     m_scheduleEditTime = editTime;
 }
-
-void FileInfo::fill(const std::filesystem::path& path,
-                    const TimeWrapper& fileEditTime,
-                    const std::optional<TimeWrapper>& scheduleEditTime) {
-    m_path = path;
-    m_fileEditTime = fileEditTime;
-    m_scheduleEditTime = scheduleEditTime;
-}

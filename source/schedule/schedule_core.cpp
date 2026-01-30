@@ -124,7 +124,15 @@ std::optional<size_t> ScheduleCore::getInternalIndexFor(size_t displayOrder) con
 
 // Add a column from previous data. NOTE: Creates copies of all passed values, because this will probably mostly be used for duplicating columns
 void ScheduleCore::addColumn(size_t index, const Column& column) {
-    // TODO: make sure that EVERY column has the same amount of rows!!!
+    if (column.getRowCount() != getRowCount()) {
+        std::cout
+            << std::format(
+                   "ScheduleCore::addColumn(): Column row count ({}) differs from getRowCount() result ({}). Column not added!",
+                   column.getRowCount(),
+                   getRowCount())
+            << std::endl;
+        return;
+    }
     // TODO: give the new column correct creation date & time
 
     m_schedule.emplace_back(column);

@@ -133,6 +133,8 @@ class ScheduleIO {
             // Somehow, the most recently edited file was an autosave but now isn't?
             else
             {
+                // Let's give up! :D
+                goToStartPage();
             }
         };
         std::function<void()> deleteAutosaveListener = [&]() {
