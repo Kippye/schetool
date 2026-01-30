@@ -197,16 +197,12 @@ void MainMenuBarGui::draw(GuiDrawArgs& args) {
 
     // Check shortcuts (dunno if this is the best place for this? TODO )
     if (m_openFile.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_RENAME)) {
-        StatusMessageQueue::push(StatusMessage::warning(std::format("Failed to rename file!")));
-
         openRenameModal = true;
     }
     if (args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_NEW)) {
         openNewNameModal = true;
     }
     if (m_openFile.has_value() && args.input.getEventInvokedLastFrame(INPUT_EVENT_SC_CLOSE)) {
-        StatusMessageQueue::push(StatusMessage::error(std::format("Failed to save file!")));
-
         if (m_fileHasEdits == false) {
             saveAndCloseEventPipe.invoke("");
         } else {
