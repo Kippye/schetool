@@ -241,14 +241,16 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                     if (ImGui::ColorButton(
                             std::format("##EditSelectOptionColor{}", i).c_str(),
                             gui_color_calculations::hslToRgb(gui_colors::selectOptionColors.at(options[i].color)),
-                            ImGuiColorEditFlags_NoTooltip))
+                            ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop))
                     {
                         m_selectEditState.colorChooserOptionIndex = i;
                         ImGui::OpenPopup("SelectOptionColorChooserPopup");
                     }
                     ImRect colorChooserButtonAvoidRect = ImRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
                     // Color chooser popup, shows a list of available select option colors.
-                    if (m_selectEditState.colorChooserOptionIndex == i && ImGui::BeginPopup("SelectOptionColorChooserPopup")) {
+                    if (m_selectEditState.colorChooserOptionIndex == i &&
+                        ImGui::BeginPopup("SelectOptionColorChooserPopup", ImGuiWindowFlags_NoMove))
+                    {
                         ImGuiWindow* popup = ImGui::GetCurrentWindow();
                         ImRect r_outer = ImGui::GetPopupAllowedExtentRect(popup);
                         ImVec2 autoFitSize = ImGui::CalcWindowNextAutoFitSize(popup);
@@ -265,7 +267,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                         for (auto [colorEnum, colorHsl] : gui_colors::selectOptionColors) {
                             if (ImGui::ColorButton(std::format("##ColorChooserPopupColor{}", colorEnum).c_str(),
                                                    gui_color_calculations::hslToRgb(colorHsl),
-                                                   ImGuiColorEditFlags_NoTooltip))
+                                                   ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop))
                             {
                                 modifyColumnSelectOptions.invoke(
                                     m_currentElementCoords->column(),
@@ -509,7 +511,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                     if (ImGui::ColorButton(
                             std::format("##EditSelectOptionColor{}", i).c_str(),
                             gui_color_calculations::hslToRgb(gui_colors::selectOptionColors.at(options[i].color)),
-                            ImGuiColorEditFlags_NoTooltip))
+                            ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop))
                     {
                         m_selectEditState.colorChooserOptionIndex = i;
                         ImGui::OpenPopup("SelectOptionColorChooserPopup");
