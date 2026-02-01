@@ -166,6 +166,7 @@ class ScheduleIO {
 
         std::optional<FileInfo> writeSchedule(const std::filesystem::path& path, Schedule& schedule);
 
+        bool checkFileHasAutosave(const FileInfo& baseFile);
         // Apply the autosave of the given file to it.
         bool applyAutosaveToFile(const FileInfo& baseFile);
         // Delete the autosave for the provided file.

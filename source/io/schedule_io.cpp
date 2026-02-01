@@ -133,6 +133,12 @@ std::optional<FileInfo> ScheduleIO::writeSchedule(const fs::path& path, Schedule
     return std::nullopt;
 }
 
+bool ScheduleIO::checkFileHasAutosave(const FileInfo& baseFile) {
+    fs::path pathToAutosaveFile = getFileAutosavePath(baseFile);
+
+    return fs::exists(pathToAutosaveFile);
+}
+
 bool ScheduleIO::applyAutosaveToFile(const FileInfo& fileInfo) {
     std::cout << std::format("ScheduleIO::applyAutosaveToFile(): Applying autosave to file: '{}'", fileInfo.getPath().string())
               << std::endl;
@@ -327,7 +333,13 @@ bool ScheduleIO::saveCurrentFile() {
         m_currentFileInfo = updatedFileInfo;
         onBaseFileListChange();
         fileHasEditsStateChanged();
-        onCurrentFileSaveSuccess();
+        // The file's (outdated) autosave must be deleted if it exists
+        if (checkFileHasAutosave(m_currentFileInfo.value()) == false || deleteAutosaveFor(m_currentFileInfo.value())) {
+            onCurrentFileSaveSuccess();
+        } else {
+            StatusMessageQueue::push(StatusMessage::warning(std::format("Saved file but failed to delete its autosave!")));
+        }
+        // Should this return true even if there is technically inevitable data loss?
         return true;
     }
     StatusMessageQueue::push(StatusMessage::error(std::format("Failed to save file!")));
