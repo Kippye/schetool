@@ -315,7 +315,8 @@ class Schedule {
         void redo();
         // Clear the current Schedule and replace it with default Columns and no rows.
         // NOTE: For compatibility with tests, this function needs to work even if init() has not been called.
-        void createDefaultSchedule();
+        // NOTE: Pass resetState = true if edit history and table column widths should also be reset.
+        void createDefaultSchedule(bool resetState = true);
 
         /// CORE WRAPPERS
         // Clears the Schedule and deletes all the Columns.

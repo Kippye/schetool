@@ -211,7 +211,8 @@ void ScheduleIO::createIniForFile(const FileInfo& fileInfo) {
     // TODO: This function is ugly with the .c_str() spam
     // I think it would really be better to just have separate dirs with the same stem but different extension
     if (ImGui::GetIO().WantSaveIniSettings) {
-        ImGui::SaveIniSettingsToDisk(nameToIniPath(getFileBaseName(fileInfo).c_str()).string().c_str());
+        const fs::path iniPath = nameToIniPath(getFileBaseName(fileInfo).c_str()).string();
+        ImGui::SaveIniSettingsToDisk(iniPath.c_str());
         ImGui::GetIO().WantSaveIniSettings = false;
     }
 }
@@ -249,7 +250,10 @@ bool ScheduleIO::readSchedule(const FileInfo& fileInfo) {
         m_schedule.replaceSchedule(readSchedule);
         m_schedule.updatePreferences(readSchedulePreferences);
         if (!isAutosave(fileInfo)) {
-            ImGui::LoadIniSettingsFromDisk(nameToIniPath(getFileBaseName(fileInfo).c_str()).string().c_str());
+            // TEMP This doesn't seem *necessary*, but it also doesn't hurt
+            ImGui::ClearIniSettings();
+            const fs::path iniPath = nameToIniPath(getFileBaseName(fileInfo).c_str());
+            ImGui::LoadIniSettingsFromDisk(iniPath.string().c_str());
         }
         std::cout << std::format("ScheduleIO::readSchedule(): Read Schedule from file: '{}'", fileInfo.getPath().string())
                   << std::endl;

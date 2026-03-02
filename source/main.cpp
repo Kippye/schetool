@@ -38,7 +38,7 @@ Program::Program() {
     notificationHandler.initEventListeners(ioHandler.getPreferencesIO());
     timeHandler.init(ioHandler, schedule, notificationHandler);
 
-    schedule.createDefaultSchedule();
+    schedule.createDefaultSchedule(false);
 
     auto scheduleIO = ioHandler.getScheduleIO();
     if (scheduleIO) {

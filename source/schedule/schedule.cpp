@@ -203,10 +203,14 @@ void Schedule::redo() {
     }
 }
 
-void Schedule::createDefaultSchedule() {
+void Schedule::createDefaultSchedule(bool resetState) {
     clearSchedule();
-    m_scheduleGui->resetTableSettings();
-    m_editHistory.clearEditHistory();
+    if (resetState) {
+        if (m_scheduleGui) {
+            m_scheduleGui->resetTableSettings();
+        }
+        m_editHistory.clearEditHistory();
+    }
 
     m_core.addColumn(getColumnCount(), Column({}, SCH_TEXT, std::string("Name"), true, ScheduleColumnFlags_Name));
     m_core.addColumn(getColumnCount(),
