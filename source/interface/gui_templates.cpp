@@ -170,7 +170,7 @@ bool gui_templates::DateEditor(TimeWrapper& editorDate,
             pushedColorCount++;
         }
         // Highlight the current date (today) in its correct month
-        if (DateWrapper(viewedYear, month, dayDisplayNumber) == TimeWrapper::getCurrentTime().getDateUTC()) {
+        if (DateWrapper(viewedYear, month, dayDisplayNumber) == TimeWrapper::getCurrentTime().getLocalDate()) {
             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.0f);
             pushedVarCount++;
             ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_Text));
