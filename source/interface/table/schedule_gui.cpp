@@ -169,7 +169,7 @@ void ScheduleGui::applyTableColumnOrder() {
 void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiTableFlags tableFlags = ImGuiTableFlags_Reorderable | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
-        ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoSavedOrder |
+        ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoSavedOrder |
         ImGuiTableFlags_HighlightHoveredColumn;
     // Correctly order the table columns
     applyTableColumnOrder();
@@ -549,16 +549,16 @@ bool ScheduleGui::drawTableCellContents(size_t column, size_t row, GuiDrawArgs& 
     ImGui::SetNextItemWidth(-FLT_MIN);
 
     bool isTableCellHighlighted = false;
-    // Hightlight the table cell that is currently being edited in the element editor subgui
+    // Highlight the table cell that is currently being edited in the element editor subgui
     if (auto elementEditor = getSubGui<ElementEditorSubGui>("ElementEditorSubGui")) {
         isTableCellHighlighted = isTableCellHighlighted ||
             (elementEditor->getOpenThisFrame() && elementEditor->getCoordinates().has_value() &&
              elementEditor->getCoordinates()->is(column, row));
     }
-    // Hightlight table cells in the row that currently has its row context menu open
+    // Highlight table cells in the row that currently has its row context menu open
     isTableCellHighlighted = isTableCellHighlighted ||
         (m_rowContextRow.has_value() && m_rowContextRow.value() == row && ImGui::IsPopupOpen("ScheduleTableRowContextPopup"));
-    // Hightlight the table cell that currently has its context menu open
+    // Highlight the table cell that currently has its context menu open
     isTableCellHighlighted = isTableCellHighlighted ||
         (m_cellContextCoords.has_value() && m_cellContextCoords->is(column, row) &&
          ImGui::IsPopupOpen("ScheduleTableCellContextPopup"));
