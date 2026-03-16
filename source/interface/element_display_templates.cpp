@@ -64,7 +64,7 @@ bool element_display_templates::ElementDisplay(SingleSelectContainer& value,
 
     if (selection.has_value()) {
         if (gui_templates::SelectOptionButton(options[selection.value()],
-                                              std::format("##{}", coords.getString()).c_str(),
+                                              std::format("SelectOption{}", coords.getString()).c_str(),
                                               ImVec2(0, 0),
                                               ImGuiButtonFlags_MouseButtonMiddle))
         {
@@ -109,7 +109,8 @@ void element_display_templates::ElementDisplay(SingleSelectContainer& value,
 
     if (selection.has_value()) {
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        gui_templates::SelectOptionButton(options[selection.value()], std::format("##{}", coords.getString()).c_str());
+        gui_templates::SelectOptionButton(options[selection.value()],
+                                          std::format("SelectOption{}", coords.getString()).c_str());
         ImGui::PopItemFlag();
     } else {
         addEmptyItem();
@@ -159,7 +160,7 @@ bool element_display_templates::ElementDisplay(SelectContainer& value,
                 currentRowWidth = 0;
             }
             if (gui_templates::SelectOptionButton(options[selectionIndices[i]],
-                                                  std::format("##{}", coords.getString()).c_str(),
+                                                  std::format("SelectOption{};{}", i, coords.getString()).c_str(),
                                                   ImVec2(0, 0),
                                                   ImGuiButtonFlags_MouseButtonMiddle))
             {
@@ -243,7 +244,8 @@ void element_display_templates::ElementDisplay(SelectContainer& value,
             currentRowWidth = 0;
         }
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-        gui_templates::SelectOptionButton(options[selectionIndices[i]], std::format("##{}", coords.getString()).c_str());
+        gui_templates::SelectOptionButton(options[selectionIndices[i]],
+                                          std::format("SelectOption{};{}", i, coords.getString()).c_str());
         ImGui::PopItemFlag();
 
         currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x
@@ -294,7 +296,7 @@ bool element_display_templates::ElementDisplay(WeekdayContainer& value,
             }
             if (gui_templates::SelectOptionButton(
                     SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]},
-                    std::format("##{}", coords.getString()).c_str(),
+                    std::format("SelectOption{};{}", i, coords.getString()).c_str(),
                     ImVec2(),
                     ImGuiButtonFlags_MouseButtonMiddle))
             {
@@ -378,7 +380,7 @@ void element_display_templates::ElementDisplay(WeekdayContainer& value, Schedule
         ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
         gui_templates::SelectOptionButton(
             SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]},
-            std::format("##{}", coords.getString()).c_str());
+            std::format("SelectOption{};{}", i, coords.getString()).c_str());
         ImGui::PopItemFlag();
 
         currentRowWidth = currentRowWidth == 0 ? ImGui::GetItemRectSize().x

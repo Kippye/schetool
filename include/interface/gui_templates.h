@@ -62,6 +62,11 @@ namespace gui_templates {
     bool TimeEditor(TimeContainer& editorTime, TimeContainer& bufferTime);
     void TextWithBackground(const char* fmt, ...);
     void TextWithBackground(const ImVec2& size, const char* fmt, ...);
+    // Draw a Button with an ID and separate text (that can contain any characters)
+    bool ButtonWithCustomText(const char* id,
+                              const char* label,
+                              ImVec2 size = ImVec2(0, 0),
+                              ImGuiButtonFlags flags = ImGuiButtonFlags_None);
     // Displays an image button that is tinted to match the style color of ImGuiCol_CheckMark.
     // This is because the text color is typically too extreme to use for normal textures (text is thin and anti-aliased)
     // Returns true if the button was pressed.
@@ -74,15 +79,15 @@ namespace gui_templates {
                                  ImGuiButtonFlags buttonFlags = ImGuiButtonFlags_None);
     // Displays a button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Returns true if the button was clicked.
     bool SelectOptionButton(const SelectOption& selectOption,
-                            const char* idLabel,
+                            const char* id,
                             ImVec2 size = ImVec2(0, 0),
                             ImGuiButtonFlags flags = ImGuiButtonFlags_None);
     // Displays a selectable button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Toggles selected when the button is clicked. Returns true if the button was clicked.
     bool SelectOptionSelectable(const SelectOption& selectOption,
-                                const char* idLabel,
+                                const char* id,
                                 bool* selected,
                                 ImVec2 size = ImVec2(0, 0),
-                                ImGuiSelectableFlags flags = ImGuiButtonFlags_None);
+                                ImGuiButtonFlags flags = ImGuiButtonFlags_None);
 
     // Displays two segmented buttons representing 2 different options of a switch.
     // A label must be provided for each button.

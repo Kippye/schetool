@@ -358,6 +358,41 @@ void gui_templates::TextWithBackground(const ImVec2& size, const char* fmt, ...)
     ImGui::PopItemFlag();
 }
 
+bool gui_templates::ButtonWithCustomText(const char* id, const char* label, ImVec2 size, ImGuiButtonFlags flags) {
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const ImVec2 labelSize = ImGui::CalcTextSize(label, NULL, false);
+    const ImVec2 pad = style.FramePadding;
+
+    size = ImGui::CalcItemSize(size, labelSize.x + pad.x * 2.0f, labelSize.y + pad.y * 2.0f);
+
+    // Button (no text - just ID and click handling)
+    // Need to make the ID hash from data, not from text (that would still use the hashtag rules)
+    ImGuiID idHash = ImHashData(id, strlen(id), ImGui::GetCurrentWindow()->IDStack.back());
+
+    ImGui::PushOverrideID(idHash);
+    bool pressed = ImGui::ButtonEx("##", size, flags);
+    ImGui::PopID();
+
+    // Text label (clipped to button area, draws hashtags, aligned with ButtonTextAlign)
+    ImVec2 min = ImGui::GetItemRectMin();
+    ImVec2 max = ImGui::GetItemRectMax();
+    ImRect bb = ImRect(min, max);
+
+    ImVec2 pos = ImVec2(min.x + pad.x, min.y + pad.y);
+    ImVec2 posMax = bb.Max - pad;
+    ImVec2 align = style.ButtonTextAlign;
+    if (align.x > 0.0f) {
+        pos.x = ImMax(pos.x, pos.x + (posMax.x - pos.x - labelSize.x) * align.x);
+    }
+    if (align.y > 0.0f) {
+        pos.y = ImMax(pos.y, pos.y + (posMax.y - pos.y - labelSize.y) * align.y);
+    }
+    ImGui::PushClipRect(min, max, true);
+    ImGui::GetWindowDrawList()->AddText(pos, ImGui::GetColorU32(ImGuiCol_Text), label);
+    ImGui::PopClipRect();
+    return pressed;
+}
+
 bool gui_templates::ImageButtonStyleColored(const char* idLabel,
                                             ImTextureID textureID,
                                             ImVec2 size,
@@ -369,10 +404,7 @@ bool gui_templates::ImageButtonStyleColored(const char* idLabel,
         ImGui::GetID(idLabel), textureID, size, uv0, uv1, bgColor, ImGui::GetStyleColorVec4(ImGuiCol_CheckMark), buttonFlags);
 }
 
-bool gui_templates::SelectOptionButton(const SelectOption& selectOption,
-                                       const char* idLabel,
-                                       ImVec2 size,
-                                       ImGuiButtonFlags flags) {
+bool gui_templates::SelectOptionButton(const SelectOption& selectOption, const char* id, ImVec2 size, ImGuiButtonFlags flags) {
     bool buttonPressed = false;
     size_t pushedColorCount = 0;
     ImVec4 baseColor = gui_colors::selectOptionColors.at(selectOption.color);
@@ -385,16 +417,16 @@ bool gui_templates::SelectOptionButton(const SelectOption& selectOption,
     pushedColorCount++;
     ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorBlack);
     pushedColorCount++;
-    if (ImGui::ButtonEx(std::string(selectOption.name).append(idLabel).c_str(), ImVec2(0, 0), flags)) {
-        buttonPressed = true;
-    }
+
+    buttonPressed = gui_templates::ButtonWithCustomText(id, selectOption.name.c_str(), size, flags);
+
     ImGui::PopStyleColor(pushedColorCount);
 
     return buttonPressed;
 }
 
 bool gui_templates::SelectOptionSelectable(
-    const SelectOption& selectOption, const char* idLabel, bool* selected, ImVec2 size, ImGuiButtonFlags flags) {
+    const SelectOption& selectOption, const char* id, bool* selected, ImVec2 size, ImGuiButtonFlags flags) {
     bool selectablePressed = false;
     size_t pushedColorCount = 0;
     ImVec4 baseColor = gui_colors::selectOptionColors.at(selectOption.color);
@@ -409,10 +441,12 @@ bool gui_templates::SelectOptionSelectable(
     pushedColorCount++;
     ImGui::PushStyleColor(ImGuiCol_Text, gui_colors::textColorBlack);
     pushedColorCount++;
-    if (ImGui::ButtonEx(std::string(selectOption.name).append(idLabel).c_str(), size, flags)) {
+
+    if (gui_templates::ButtonWithCustomText(id, selectOption.name.c_str(), size, flags)) {
         *selected = !*selected;
         selectablePressed = true;
     }
+
     ImGui::PopStyleColor(pushedColorCount);
 
     return selectablePressed;

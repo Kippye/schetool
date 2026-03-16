@@ -73,7 +73,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
 
                 if (selection.has_value()) {
                     if (gui_templates::SelectOptionButton(options[selection.value()],
-                                                          "##EditorSelectedOption",
+                                                          "EditorSelectedOption",
                                                           ImVec2(0, 0),
                                                           ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                     {
@@ -133,7 +133,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                 for (size_t i = 0; i < options.size(); i++) {
                     bool selected = selection.has_value() && selection.value() == i;
 
-                    std::string optionButtonID = std::string(options[i].name).append("##EditorOption");
+                    std::string optionButtonID = std::string("EditorOption").append(options[i].name);
 
                     // Draw a name input in place of the usual selectable
                     if (m_selectEditState.editingOptionName && m_selectEditState.editedOptionIndex == i) {
@@ -165,13 +165,12 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                         }
                     }
                     // Draw the selectable for this select option
-                    else
-                    {
+                    else {
                         bool prevSelected = selected;
                         ImGui::SetNextItemAllowOverlap();
                         if (gui_templates::SelectOptionSelectable(
                                 options[i],
-                                "##EditorOption",
+                                optionButtonID.c_str(),
                                 &selected,
                                 ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0)))
                         {
@@ -313,8 +312,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                         }
                     }
                     // Drag ended
-                    else
-                    {
+                    else {
                         m_selectEditState.draggedOptionID = "";
                         m_selectEditState.hasOptionBeenDragged = false;
                     }
@@ -343,7 +341,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
 
                 for (size_t i = 0; i < selectionIndices.size(); i++) {
                     if (gui_templates::SelectOptionButton(options[selectionIndices[i]],
-                                                          "##EditorSelectedOption",
+                                                          std::format("EditorSelectedOption{}", i).c_str(),
                                                           ImVec2(0, 0),
                                                           ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                     {
@@ -403,7 +401,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                 for (size_t i = 0; i < options.size(); i++) {
                     bool selected = selection.find(i) != selection.end();
 
-                    std::string optionButtonID = std::string(options[i].name).append("##EditorOption");
+                    std::string optionButtonID = std::string("EditorOption").append(options[i].name);
 
                     // Draw a name input in place of the usual selectable
                     if (m_selectEditState.editingOptionName && m_selectEditState.editedOptionIndex == i) {
@@ -435,13 +433,12 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                         }
                     }
                     // Draw the selectable for this select option
-                    else
-                    {
+                    else {
                         bool prevSelected = selected;
                         ImGui::SetNextItemAllowOverlap();
                         if (gui_templates::SelectOptionSelectable(
                                 options[i],
-                                "##EditorOption",
+                                optionButtonID.c_str(),
                                 &selected,
                                 ImVec2(gui_size_calculations::getSelectOptionSelectableWidth(), 0)))
                         {
@@ -580,8 +577,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                         }
                     }
                     // Drag ended
-                    else
-                    {
+                    else {
                         m_selectEditState.draggedOptionID = "";
                         m_selectEditState.hasOptionBeenDragged = false;
                     }
@@ -606,7 +602,7 @@ void ElementEditorSubGui::draw(GuiDrawArgs& args) {
                 for (size_t i = 0; i < selectedCount; i++) {
                     if (gui_templates::SelectOptionButton(
                             SelectOption{optionNames[selectionIndices[i]], gui_colors::dayColors[selectionIndices[i]]},
-                            std::format("##EditorSelectedOption{}", i).c_str(),
+                            std::format("EditorSelectedOption{}", i).c_str(),
                             ImVec2(0, 0),
                             ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight))
                     {
