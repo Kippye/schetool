@@ -262,7 +262,7 @@ void ScheduleGui::drawScheduleTable(GuiDrawArgs& drawArgs) {
 
             const float spaceBetweenButtons = ImGui::GetStyle().ItemSpacing.x * (columnFilterGroups.size() - 1);
             const float filterButtonWidth =
-                (ImGui::GetColumnWidth() - spaceBetweenButtons) / std::max(1ul, columnFilterGroups.size());
+                (ImGui::GetColumnWidth() - spaceBetweenButtons) / std::max(std::size_t{1}, columnFilterGroups.size());
 
             if (columnFilterGroups.size() <= 3) {
                 drawFilterGroupButtons(true, filterButtonWidth);

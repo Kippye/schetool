@@ -211,8 +211,8 @@ void ScheduleIO::createIniForFile(const FileInfo& fileInfo) {
     // TODO: This function is ugly with the .c_str() spam
     // I think it would really be better to just have separate dirs with the same stem but different extension
     if (ImGui::GetIO().WantSaveIniSettings) {
-        const fs::path iniPath = nameToIniPath(getFileBaseName(fileInfo).c_str()).string();
-        ImGui::SaveIniSettingsToDisk(iniPath.c_str());
+        const fs::path iniPath = nameToIniPath(getFileBaseName(fileInfo).c_str());
+        ImGui::SaveIniSettingsToDisk(iniPath.string().c_str());
         ImGui::GetIO().WantSaveIniSettings = false;
     }
 }
@@ -364,8 +364,7 @@ bool ScheduleIO::createCurrentFileAutosave() {
         return saveCurrentFile();
     }
     // Get autosave name / path and save to it
-    else
-    {
+    else {
         std::filesystem::path autosavePath = getFileAutosavePath(m_currentFileInfo.value());
         if (writeSchedule(autosavePath, m_schedule)) {
             StatusMessageQueue::push(StatusMessage::info("Autosave created!"));
@@ -483,14 +482,12 @@ void ScheduleIO::openMostRecentFile() {
         }
         // Somehow there is only an autosave and no base file.
         // Don't know what to do, open the start page and let the user decide?
-        else
-        {
+        else {
             goToStartPage();
         }
     }
     // The most recent file is a normal file, read it
-    else
-    {
+    else {
         if (!readSchedule(lastEditedFileInfo.value())) {
             // Go to start page if there was a failure to read the file
             goToStartPage();

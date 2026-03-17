@@ -35,7 +35,7 @@ void ScheduleDataConverter::setupObjectTable() {
 bool ScheduleDataConverter::isValidScheduleFile(const std::filesystem::path& path) const {
     try {
         // Try to load the file
-        FileReadStream stream(path);
+        FileReadStream stream(path.string());
         File file = File::fromData(stream);
         // Try to deserialize the file
         file.deserializeBody(m_definitions.getObjectTableConst());
@@ -52,7 +52,7 @@ bool ScheduleDataConverter::isValidScheduleFile(const std::filesystem::path& pat
 std::optional<FileInfo> ScheduleDataConverter::writeSchedule(const std::filesystem::path& path,
                                                              const std::vector<Column>& schedule,
                                                              const SchedulePreferences& preferences) {
-    FileWriteStream stream(path);
+    FileWriteStream stream(path.string());
 
     DataTable data;
 
@@ -114,7 +114,7 @@ std::optional<FileInfo> ScheduleDataConverter::readSchedule(const FileInfo& file
     // Clear the provided schedule just in case
     schedule.clear();
 
-    FileReadStream stream(fileInfo.getPath());
+    FileReadStream stream(fileInfo.getPath().string());
 
     auto file = File::fromData(stream);
 

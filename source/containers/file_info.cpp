@@ -13,11 +13,11 @@ std::filesystem::path FileInfo::getPath() const {
 }
 
 std::string FileInfo::getStem() const {
-    return m_path.stem();
+    return m_path.stem().string();
 }
 
 std::string FileInfo::getFilename() const {
-    return m_path.filename();
+    return m_path.filename().string();
 }
 
 void FileInfo::rename(const std::string& name) {
@@ -25,7 +25,7 @@ void FileInfo::rename(const std::string& name) {
         return;
     }
 
-    std::string extension = m_path.extension();
+    std::string extension = m_path.extension().string();
 
     m_path.replace_filename(name);
 
