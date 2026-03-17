@@ -16,8 +16,6 @@ IF (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         # set(CPACK_WIX_LICENSE_RTF) TODO: Add license
         set(CPACK_WIX_PRODUCT_ICON "${CMAKE_SOURCE_DIR}/textures/icon.ico")
         set(CPACK_VERBATIM_VARIABLES TRUE)
-        # UPDATE this GUID whenever a new version of the installer is made so that it can replace the old installation
-        set(CPACK_WIX_PRODUCT_GUID "E2267656-4703-4A40-B337-AD89B3AA2442")
         set(CPACK_WIX_UPGRADE_GUID "79A832A4-47BC-46CD-998A-73DCD7CAF255")
         # The name of the folder in start menu containing the exe, uninstaller and maybe other things
         set(CPACK_WIX_PROGRAM_MENU_FOLDER "${PROGRAM_NAME}")
