@@ -15,7 +15,7 @@ class Filter {
         Filter() = default;
         Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnum logicalOperator = LogicalOperatorEnum::Or);
 
-        bool checkPasses(const ElementBase* element,
+        bool checkPasses(std::weak_ptr<const ElementBase> element,
                          const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(),
                          bool useDefaultValue = false) const;
 
@@ -39,7 +39,8 @@ class Filter {
         template <typename T>
         void replaceRule(size_t index, const FilterRule<T>& filterRule) {
             if (index >= m_rules.size()) {
-                throw std::out_of_range(std::format("Filter::replaceRule({}): Index out of range (size {})\n", index, m_rules.size()));
+                throw std::out_of_range(
+                    std::format("Filter::replaceRule({}): Index out of range (size {})\n", index, m_rules.size()));
             }
 
             m_rules.at(index) = FilterRuleContainer(filterRule);

@@ -6,7 +6,7 @@ Filter::Filter(const std::vector<FilterRuleContainer>& rules, LogicalOperatorEnu
     : m_rules(rules), m_operator(logicalOperator) {
 }
 
-bool Filter::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const {
+bool Filter::checkPasses(std::weak_ptr<const ElementBase> element, const TimeWrapper& currentTime, bool useDefaultValue) const {
     bool passes = true;  // true by default so having 0 rules returns true
 
     for (size_t i = 0; i < m_rules.size(); i++) {

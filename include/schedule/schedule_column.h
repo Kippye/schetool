@@ -1,9 +1,10 @@
 #pragma once
 
 #include <vector>
-#include <functional>
+#include <format>
 #include <memory>
 #include <optional>
+#include <iterator>
 #include "schedule_constants.h"
 #include "filters/filter_group.h"
 #include "element_base.h"
@@ -24,7 +25,8 @@ enum ScheduleColumnFlags_ {
     ScheduleColumnFlags_Finished = 1 << 1,
     ScheduleColumnFlags_Start = 1 << 2,
     ScheduleColumnFlags_Duration = 1 << 3,
-    ScheduleColumnFlags_End = 1 << 4,
+    ScheduleColumnFlags_Date = 1 << 4,
+    ScheduleColumnFlags_End = 1 << 5,
 };
 
 typedef int COLUMN_SORT;
@@ -39,9 +41,9 @@ struct Column {
     private:
         void setupFiltersPerType();
         std::map<SCHEDULE_TYPE, std::vector<FilterGroup>> m_filterGroupsPerType = {};
+        std::vector<std::shared_ptr<ElementBase>> m_rows = {};
 
     public:
-        std::vector<ElementBase*> rows = {};
         SCHEDULE_TYPE type;
         std::string name;
         bool permanent = false;
@@ -51,7 +53,7 @@ struct Column {
         ColumnResetOption resetOption = ColumnResetOption::Never;
 
         Column();
-        Column(const std::vector<ElementBase*>& rows,
+        Column(const std::vector<std::shared_ptr<ElementBase>>& rows,
                SCHEDULE_TYPE type,
                const std::string& name,
                bool permanent = false,
@@ -74,14 +76,10 @@ struct Column {
                 selectOptions = other.selectOptions;
                 resetOption = other.resetOption;
 
-                for (size_t i = 0; i < rows.size(); i++) {
-                    delete rows[i];
-                }
+                m_rows.clear();
 
-                rows.clear();
-
-                for (size_t i = 0; i < other.rows.size(); i++) {
-                    rows.push_back(other.rows[i]->getCopy());
+                for (size_t i = 0; i < other.m_rows.size(); i++) {
+                    m_rows.push_back(other.m_rows[i]->getCopy());
                 }
             }
 
@@ -89,22 +87,70 @@ struct Column {
             return *this;
         }
 
-        ~Column();
-
         // ELEMENTS
-        ElementBase* operator[](size_t index) {
-            return getElement(index);
-        }
+        size_t getRowCount() const;
 
         bool hasElement(size_t index) const;
 
-        // Add an element to the column. The column will handle any special cases and initialising the elements.
-        // Returns true if the element was added.
-        bool addElement(size_t index, ElementBase* element);
+        template <typename T>
+        bool addElement(Element<T> element) {
+            return addElement(m_rows.size(), element);
+        }
 
-        ElementBase* getElement(size_t index);
+        template <typename T>
+        bool addElement(size_t index, Element<T> element) {
+            if (index <= m_rows.size() == false) {
+                return false;
+            }
+            if (element.getType() != type || Element<T>::getType() != type) {
+                return false;
+            }
 
-        const ElementBase* getElementConst(size_t index) const;
+            // Update added selects to have the correct number of options
+            if constexpr (std::is_same<T, SingleSelectContainer>::value) {
+                element.getValueReference().update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
+                                                   selectOptions.getOptionCount());
+            } else if constexpr (std::is_same<T, SelectContainer>::value) {
+                element.getValueReference().update(SelectOptionsModification(OPTION_MODIFICATION_COUNT_UPDATE).getUpdateInfo(),
+                                                   selectOptions.getOptionCount());
+            }
+
+            m_rows.insert(m_rows.begin() + index, std::make_shared<Element<T>>(element));
+            return true;
+        }
+
+        // Atempt to completely replace an element with a new one.
+        // Internally: resets the shared_ptr for that element to the new value.
+        template <typename T>
+        bool replaceElement(size_t index, Element<T> newElement) {
+            if (hasElement(index) == false) {
+                return false;
+            }
+            if (newElement.getType() != type || Element<T>::getType() != type) {
+                return false;
+            }
+
+            m_rows.at(index).reset(new Element<T>(newElement));
+            return true;
+        }
+
+        bool removeElement(size_t index);
+
+        template <typename T>
+        T getElementValue(size_t index) const {
+            if (hasElement(index) == false) {
+                throw std::out_of_range(
+                    std::format("Column::getElementValue(): The column {} has no element at index {}", name.c_str(), index));
+            }
+            auto typeElementPtr = std::dynamic_pointer_cast<const Element<T>>(m_rows[index]);
+            return typeElementPtr->getValue();
+        }
+
+        std::weak_ptr<ElementBase> getElement(size_t index);
+        std::weak_ptr<const ElementBase> getElementConst(size_t index) const;
+
+        // SORT
+        std::vector<size_t> getSortedIndices() const;
 
         // SELECT OPTIONS
         // Applies a modification to this column's SelectOptions and updates its select elements if the modification is applied successfully
@@ -179,71 +225,19 @@ struct Column {
         bool removeFilterRule(size_t groupIndex, size_t filterIndex, size_t ruleIndex);
 };
 
-struct ColumnSortComparison {
-        SCHEDULE_TYPE type;
-        COLUMN_SORT sortDirection;
+template <typename T>
+class ColumnSortComparison {
+    private:
+        COLUMN_SORT m_sortDirection;
 
-        bool operator()(const ElementBase* const left, const ElementBase* const right) {
-            switch (type) {
-                case (SCH_BOOL): {
-                    return sortDirection == COLUMN_SORT_DESCENDING
-                        ? ((const Element<bool>*)left)->getValue() > ((const Element<bool>*)right)->getValue()
-                        : ((const Element<bool>*)left)->getValue() < ((const Element<bool>*)right)->getValue();
-                }
-                case (SCH_NUMBER): {
-                    return sortDirection == COLUMN_SORT_DESCENDING
-                        ? ((const Element<int>*)left)->getValue() > ((const Element<int>*)right)->getValue()
-                        : ((const Element<int>*)left)->getValue() < ((const Element<int>*)right)->getValue();
-                }
-                case (SCH_DECIMAL): {
-                    return sortDirection == COLUMN_SORT_DESCENDING
-                        ? ((const Element<double>*)left)->getValue() > ((const Element<double>*)right)->getValue()
-                        : ((const Element<double>*)left)->getValue() < ((const Element<double>*)right)->getValue();
-                }
-                case (SCH_TEXT): {
-                    return sortDirection == COLUMN_SORT_DESCENDING
-                        ? ((const Element<std::string>*)left)->getValue() > ((const Element<std::string>*)right)->getValue()
-                        : ((const Element<std::string>*)left)->getValue() < ((const Element<std::string>*)right)->getValue();
-                }
-                case (SCH_SELECT): {
-                    return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SingleSelectContainer>*)left)->getValue() >
-                            ((const Element<SingleSelectContainer>*)right)->getValue()
-                                                                   : ((const Element<SingleSelectContainer>*)left)->getValue() <
-                            ((const Element<SingleSelectContainer>*)right)->getValue();
-                }
-                case (SCH_MULTISELECT): {
-                    return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<SelectContainer>*)left)->getValue() >
-                            ((const Element<SelectContainer>*)right)->getValue()
-                                                                   : ((const Element<SelectContainer>*)left)->getValue() <
-                            ((const Element<SelectContainer>*)right)->getValue();
-                }
-                case (SCH_WEEKDAY): {
-                    return sortDirection == COLUMN_SORT_DESCENDING ? ((const Element<WeekdayContainer>*)left)->getValue() >
-                            ((const Element<WeekdayContainer>*)right)->getValue()
-                                                                   : ((const Element<WeekdayContainer>*)left)->getValue() <
-                            ((const Element<WeekdayContainer>*)right)->getValue();
-                }
-                case (SCH_TIME): {
-                    return sortDirection == COLUMN_SORT_DESCENDING
-                        ? ((const Element<TimeContainer>*)left)->getValue() > ((const Element<TimeContainer>*)right)->getValue()
-                        : ((const Element<TimeContainer>*)left)->getValue() <
-                            ((const Element<TimeContainer>*)right)->getValue();
-                }
-                case (SCH_DATE): {
-                    return sortDirection == COLUMN_SORT_DESCENDING
-                        ? ((const Element<DateContainer>*)left)->getValue() > ((const Element<DateContainer>*)right)->getValue()
-                        : ((const Element<DateContainer>*)left)->getValue() <
-                            ((const Element<DateContainer>*)right)->getValue();
-                }
-                default: {
-                    return false;
-                }
-            }
+    public:
+        ColumnSortComparison(COLUMN_SORT sort) : m_sortDirection(sort) {
         }
 
-        // Setup the sort comparison information before using it
-        void setup(SCHEDULE_TYPE _type, COLUMN_SORT _sortDirection) {
-            type = _type;
-            sortDirection = _sortDirection;
+        bool operator()(std::shared_ptr<const ElementBase> left, std::shared_ptr<const ElementBase> right) {
+            std::shared_ptr<const Element<T>> leftOfType = std::dynamic_pointer_cast<const Element<T>>(left);
+            std::shared_ptr<const Element<T>> rightOfType = std::dynamic_pointer_cast<const Element<T>>(right);
+            return m_sortDirection == COLUMN_SORT_DESCENDING ? leftOfType->getValue() > rightOfType->getValue()
+                                                             : leftOfType->getValue() < rightOfType->getValue();
         }
 };

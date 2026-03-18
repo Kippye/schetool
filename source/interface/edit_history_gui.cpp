@@ -4,7 +4,7 @@
 #include "schedule_constants.h"
 #include "filter_constants.h"
 
-void EditHistoryGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void EditHistoryGui::draw(GuiDrawArgs& args) {
     if (ImGui::Begin("Edit History", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
         auto editHistory = m_scheduleEditHistory->getEditHistory();
 
@@ -50,9 +50,7 @@ void EditHistoryGui::draw(Window& window, Input& input, GuiTextures& guiTextures
                                 ? "Name"
                                 : (editedProperty == COLUMN_PROPERTY_TYPE
                                        ? "Type"
-                                       : (editedProperty == COLUMN_PROPERTY_SELECT_OPTIONS
-                                              ? "Select options"
-                                              : (editedProperty == COLUMN_PROPERTY_SORT ? "Sort" : "Reset option"))),
+                                       : (editedProperty == COLUMN_PROPERTY_SORT ? "Sort" : "Reset option")),
                             columnPropertyEdit->getColumn(),
                             i);
                     break;
@@ -65,6 +63,20 @@ void EditHistoryGui::draw(Window& window, Input& input, GuiTextures& guiTextures
                             schedule_consts::scheduleTypeNames.at(columnResetEdit->getColumnData().type),
                             columnResetEdit->getColumn(),
                             i);
+                    break;
+                }
+                case (ScheduleEditType::ColumnReorder): {
+                    auto columnReorderEdit = std::dynamic_pointer_cast<ColumnReorderEdit>(editHistory[i]);
+                    sprintf(buf,
+                            "Move Column display index %zu -> %zu##%zu",
+                            columnReorderEdit->getPreviousOrder(),
+                            columnReorderEdit->getNewOrder(),
+                            i);
+                    break;
+                }
+                case (ScheduleEditType::SelectOptionsChange): {
+                    auto selectOptionsChangeEdit = std::dynamic_pointer_cast<SelectOptionsChangeEdit>(editHistory[i]);
+                    sprintf(buf, "Column select options at %zu##%zu", selectOptionsChangeEdit->getColumn(), i);
                     break;
                 }
                 case (ScheduleEditType::FilterGroupAddOrRemove): {

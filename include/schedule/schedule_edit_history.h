@@ -1,8 +1,9 @@
 #pragma once
 #include <deque>
 #include <memory>
-#include <schedule_edit.h>
-#include <schedule_core.h>
+#include "schedule_edit.h"
+#include "schedule_core.h"
+#include "event.h"
 
 class ScheduleEditHistory {
     private:
@@ -16,6 +17,8 @@ class ScheduleEditHistory {
     public:
         ScheduleEditHistory() = delete;
         ScheduleEditHistory(ScheduleCore& scheduleCore);
+
+        Event<std::shared_ptr<const ScheduleEdit>> editAddedEvent;
 
         const std::deque<std::shared_ptr<ScheduleEdit>>& getEditHistory() const;
         size_t getEditHistoryIndex() const;

@@ -3,6 +3,10 @@
 using namespace blf;
 using namespace blf::file;
 
+PreferencesDataConverter::PreferencesDataConverter() {
+    setupObjectTable();
+}
+
 const std::string& PreferencesDataConverter::getExtension() const {
     return m_extension;
 }
@@ -36,7 +40,7 @@ int PreferencesDataConverter::writePreferences(const char* path, const Preferenc
 
     data.insert(getObjectDefinition<BLF_Preferences>().serialize(preferences));
 
-    File file(data, m_definitions.getObjectTable(), {blf::CompressionType::None, blf::EncryptionType::None});
+    File file(data, m_definitions.getObjectTable());
 
     file.serialize(stream);
 

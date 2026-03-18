@@ -1,9 +1,7 @@
-#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do \
-    // this in one cpp file
+#define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/reporters/catch_reporter_event_listener.hpp>
 #include <catch2/reporters/catch_reporter_registrars.hpp>
-#include "main.h"
 
 #include "events/test_event.h"
 #include "events/test_event_pipe.h"
@@ -13,6 +11,9 @@
 #include "filters/test_filter.h"  // tested before FilterGroups since they are contained
 #include "filters/test_filter_group.h"
 #include "test_time_handler.h"
+
+#include "window.h"
+#include "input.h"
 
 class testListener : public Catch::EventListenerBase {
     public:
@@ -25,15 +26,12 @@ class testListener : public Catch::EventListenerBase {
 
         void testRunEnded(const Catch::TestRunStats &test) override {
             std::cout << "TESTS END" << std::endl;
-            Program program = Program();
-            program.loop();
         }
 };
 
 CATCH_REGISTER_LISTENER(testListener)
 
 TEST_CASE("Input system", "[input]") {
-    TextureLoader textureLoader;
     Window windowManager;  // dummy window manager, not initalised, should do nothing with glfw.
     Input input;
     input.init(&windowManager);  // init because input sets up its event map in init()

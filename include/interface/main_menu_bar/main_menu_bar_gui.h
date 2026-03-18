@@ -1,34 +1,46 @@
 #pragma once
 
 #include <optional>
+#include <map>
 #include "interface_style.h"
 #include "preferences.h"
+#include "confirmation_modal_subgui.h"
+#include "text_input_modal_subgui.h"
 #include "gui.h"
-#include "window.h"
-#include "input.h"
 #include "event_pipe.h"
+#include "file_info.h"
+#include "messages/status_message_queue.h"
 
 class MainMenuBarGui : public Gui {
     private:
-        float m_height = 0.0f;
-        bool m_openNewNameModal = false;
-        bool m_openRenameModal = false;
-        bool m_openDeleteConfirmationModal = false;
-        std::shared_ptr<const InterfaceStyleHandler> m_styleHandler = nullptr;
-        std::optional<std::string> m_openFileName = std::nullopt;
-        std::vector<std::string> m_fileNames = {};
+        static float height;
+
+        const std::map<StatusMessageType, float> STATUS_MSG_TYPE_DURATIONS = {
+            {StatusMessageType::Info, 1.0f}, {StatusMessageType::Warning, 2.0f}, {StatusMessageType::Error, 5.0f}};
+        std::optional<StatusMessage> m_currentMessage = std::nullopt;
+        float m_currentMsgDurationLeft = 0.0f;
+
+        const InterfaceStyleHandler& m_styleHandler;
+        // MODALS
+        std::shared_ptr<ConfirmationModalSubGui> m_deleteModalSubGui = nullptr;
+        std::shared_ptr<ConfirmationModalSubGui> m_closeWithEditsModalSubGui = nullptr;
+        std::shared_ptr<TextInputModalSubGui> m_newNameModalSubGui = nullptr;
+        std::shared_ptr<TextInputModalSubGui> m_renameModalSubGui = nullptr;
+        // STATE PASSED FROM OUTSIDE
+        std::optional<FileInfo> m_openFile = std::nullopt;
+        std::vector<FileInfo> m_fileInfoList = {};
+        bool m_fileHasEdits = false;
         Preferences m_preferences = Preferences::getDefault();
 
-        void renameSchedule();
-        void newSchedule();
-        void displayScheduleList(GuiTextures& guiTextures);
+        // Display a list of schedules for the Open menu.
+        // Returns the file info to be opened in the delete confirmation modal.
+        std::optional<FileInfo> displayScheduleList(GuiTextures& guiTextures);
 
     public:
-        MainMenuBarGui(const char* ID, std::shared_ptr<const InterfaceStyleHandler> styleHandler);
+        MainMenuBarGui(const char* ID, const InterfaceStyleHandler& styleHandler);
 
-        Event<std::string> openScheduleFileEvent;
+        Event<FileInfo> openScheduleFileEvent;
         Event<> saveEvent;
-
         Event<> undoEvent;
         Event<> redoEvent;
 
@@ -37,12 +49,17 @@ class MainMenuBarGui : public Gui {
         // Event pipes
         EventPipe<std::string> createNewScheduleEventPipe;
         EventPipe<std::string> deleteScheduleEventPipe;
+        EventPipe<std::string> closeWithoutSaveEventPipe;
+        EventPipe<std::string> saveAndCloseEventPipe;
         EventPipe<std::string> renameScheduleEventPipe;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
-        float getHeight() const;
+        void draw(GuiDrawArgs& args) override;
+        // Static function. Assuming that there is only one MainMenuBarGui instance or they are all the same height.
+        // Get the height of the MainMenuBarGui.
+        static float getHeight();
         void closeModal();
-        void passFileNames(const std::vector<std::string>& fileNames);
-        void passOpenFileName(const std::optional<std::string>& openFileName);
+        void passFileInfoList(const std::vector<FileInfo>& fileInfoList);
+        void passOpenFileInfo(const std::optional<FileInfo>& openFile);
+        void passFileHasEdits(bool hasEdits);
         void passPreferences(const Preferences& preferences);
 };

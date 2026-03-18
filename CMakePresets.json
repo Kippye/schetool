@@ -7,12 +7,9 @@
   },
   "configurePresets": [
     {
-      "name": "base-vcpkg",
-      "displayName": "Base with vcpkg",
+      "name": "base",
+      "displayName": "Base",
       "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      },
       "hidden": true
     },
     {
@@ -21,7 +18,7 @@
       "description": "Debug configuration using Make and vcpkg",
       "generator": "Unix Makefiles",
       "inherits": [
-        "base-vcpkg"
+        "base"
       ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
@@ -34,7 +31,7 @@
       "description": "Release configuration using Make and vcpkg",
       "generator": "Unix Makefiles",
       "inherits": [
-        "base-vcpkg"
+        "base"
       ],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
@@ -46,7 +43,7 @@
       "description": "Configuration using Visual Studio / MSVC and vcpkg",
       "generator": "Visual Studio 17 2022",
       "inherits": [
-        "base-vcpkg"
+        "base"
       ],
       "cacheVariables": {
         "PRESET_ADD_COMPILE_OPTIONS": "/nologo /verbosity:minimal /maxcpucount"

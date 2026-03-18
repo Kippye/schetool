@@ -3,11 +3,32 @@
 #include "util_types.h"
 #include "filters/filter_rule_base.h"
 #include "element.h"
+#include <iostream>
 
 template <typename T>
 class FilterRule : public FilterRuleBase {
     private:
         T m_passValue;
+        bool isValidElement(std::weak_ptr<const ElementBase> element) const {
+            if (element.expired()) {
+                std::cout << "FilterRule::isValidElement(): Element has been deleted" << std::endl;
+                return false;
+            }
+
+            auto elementAccess = element.lock();
+
+            if (elementAccess->getType() != Element<T>::getType()) {
+                std::cout << "FilterRule::isValidElement(): Element type does not match template type" << std::endl;
+                return false;
+            }
+
+            if (isComparisonValidForElement(element) == false) {
+                std::cout << "FilterRule::isValidElement(): The selected comparison is not valid for the element" << std::endl;
+                return false;
+            }
+
+            return true;
+        }
 
     public:
         FilterRule() = delete;
@@ -15,14 +36,18 @@ class FilterRule : public FilterRuleBase {
             m_passValue = passValue;
         }
 
-        bool checkPasses(const ElementBase* element,
+        bool checkPasses(std::weak_ptr<const ElementBase> element,
                          const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(),
                          bool useDefaultValue = false) const override {
-            T value = useDefaultValue == false ? ((const Element<T>*)element)->getValue() : Element<T>::getDefaultValue();
-            if (isComparisonValidForElement(element) == false) {
+            if (!isValidElement(element)) {
+                std::cout << "FilterRule::checkPasses(): Invalid element" << std::endl;
                 return false;
             }
-            // TODO: Check if the provided ElementBase is of the correct type.
+
+            auto elementAccess = element.lock();
+            auto typeElementAccess = std::dynamic_pointer_cast<const Element<T>>(elementAccess);
+            T value = useDefaultValue ? Element<T>::getDefaultValue() : typeElementAccess->getValue();
+
             switch (m_comparison) {
                 case Comparison::Is: {
                     if constexpr (has_operator_equal<T>::value)
@@ -113,11 +138,18 @@ inline std::string FilterRule<DateContainer>::getString() const {
 }
 
 template <>
-inline bool FilterRule<SingleSelectContainer>::checkPasses(const ElementBase* element,
+inline bool FilterRule<SingleSelectContainer>::checkPasses(std::weak_ptr<const ElementBase> element,
                                                            const TimeWrapper& currentTime,
                                                            bool useDefaultValue) const {
-    SingleSelectContainer value = useDefaultValue == false ? ((const Element<SingleSelectContainer>*)element)->getValue()
-                                                           : Element<SingleSelectContainer>::getDefaultValue();
+    if (!isValidElement(element)) {
+        std::cout << "FilterRule::checkPasses(): Invalid element" << std::endl;
+        return false;
+    }
+
+    auto elementAccess = element.lock();
+    auto typeElementAccess = std::dynamic_pointer_cast<const Element<SingleSelectContainer>>(elementAccess);
+    SingleSelectContainer value =
+        useDefaultValue ? Element<SingleSelectContainer>::getDefaultValue() : typeElementAccess->getValue();
 
     switch (m_comparison) {
         case Comparison::Is: {
@@ -136,11 +168,17 @@ inline bool FilterRule<SingleSelectContainer>::checkPasses(const ElementBase* el
 }
 
 template <>
-inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element,
+inline bool FilterRule<SelectContainer>::checkPasses(std::weak_ptr<const ElementBase> element,
                                                      const TimeWrapper& currentTime,
                                                      bool useDefaultValue) const {
-    SelectContainer value = useDefaultValue == false ? ((const Element<SelectContainer>*)element)->getValue()
-                                                     : Element<SelectContainer>::getDefaultValue();
+    if (!isValidElement(element)) {
+        std::cout << "FilterRule::checkPasses(): Invalid element" << std::endl;
+        return false;
+    }
+
+    auto elementAccess = element.lock();
+    auto typeElementAccess = std::dynamic_pointer_cast<const Element<SelectContainer>>(elementAccess);
+    SelectContainer value = useDefaultValue ? Element<SelectContainer>::getDefaultValue() : typeElementAccess->getValue();
 
     switch (m_comparison) {
         case Comparison::Is: {
@@ -165,11 +203,17 @@ inline bool FilterRule<SelectContainer>::checkPasses(const ElementBase* element,
 }
 
 template <>
-inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element,
+inline bool FilterRule<WeekdayContainer>::checkPasses(std::weak_ptr<const ElementBase> element,
                                                       const TimeWrapper& currentTime,
                                                       bool useDefaultValue) const {
-    WeekdayContainer value = useDefaultValue == false ? ((const Element<WeekdayContainer>*)element)->getValue()
-                                                      : Element<WeekdayContainer>::getDefaultValue();
+    if (!isValidElement(element)) {
+        std::cout << "FilterRule::checkPasses(): Invalid element" << std::endl;
+        return false;
+    }
+
+    auto elementAccess = element.lock();
+    auto typeElementAccess = std::dynamic_pointer_cast<const Element<WeekdayContainer>>(elementAccess);
+    WeekdayContainer value = useDefaultValue ? Element<WeekdayContainer>::getDefaultValue() : typeElementAccess->getValue();
 
     switch (m_comparison) {
         case Comparison::Is: {
@@ -197,11 +241,17 @@ inline bool FilterRule<WeekdayContainer>::checkPasses(const ElementBase* element
 }
 
 template <>
-inline bool FilterRule<DateContainer>::checkPasses(const ElementBase* element,
+inline bool FilterRule<DateContainer>::checkPasses(std::weak_ptr<const ElementBase> element,
                                                    const TimeWrapper& currentTime,
                                                    bool useDefaultValue) const {
-    DateContainer value = useDefaultValue == false ? ((const Element<DateContainer>*)element)->getValue()
-                                                   : Element<DateContainer>::getDefaultValue();
+    if (!isValidElement(element)) {
+        std::cout << "FilterRule::checkPasses(): Invalid element" << std::endl;
+        return false;
+    }
+
+    auto elementAccess = element.lock();
+    auto typeElementAccess = std::dynamic_pointer_cast<const Element<DateContainer>>(elementAccess);
+    DateContainer value = useDefaultValue ? Element<DateContainer>::getDefaultValue() : typeElementAccess->getValue();
 
     switch (m_comparison) {
         case Comparison::Is: {

@@ -4,8 +4,13 @@
 
 #include "event_pipe.h"
 
-#if defined(NDEBUG) && (defined(_WIN32) || defined(_WIN64))
+#if defined(_WIN32) || defined(_WIN64)
+#ifdef NDEBUG
 #define WIN_RELEASE
+#endif
+#ifdef _DEBUG
+#define WIN_DEBUG
+#endif
 #endif
 
 Program::Program() {
@@ -16,7 +21,6 @@ Program::Program() {
     gContext = g_main_context_default();
     notifyLoop = g_main_loop_new(nullptr, false);
 #endif
-
 
     // setup and initialize components
     windowManager.init();
@@ -34,12 +38,18 @@ Program::Program() {
     notificationHandler.initEventListeners(ioHandler.getPreferencesIO());
     timeHandler.init(ioHandler, schedule, notificationHandler);
 
-    schedule.createDefaultSchedule();
+    schedule.createDefaultSchedule(false);
 
     auto scheduleIO = ioHandler.getScheduleIO();
     if (scheduleIO) {
         scheduleIO->openMostRecentFile();
     }
+    auto styleIO = ioHandler.getStyleIO();
+    if (styleIO) {
+        InterfaceStyleHandler::setStyleDefinitions(styleIO->readAllStyles());
+        programInterface.applyDefaultStyle();
+    }
+    // ^ Must be before v because v applies the preferred style and it would otherwise be replaced by the default
     auto preferencesIO = ioHandler.getPreferencesIO();
     if (preferencesIO) {
         preferencesIO->readPreferences();
@@ -84,14 +94,16 @@ void Program::handleSignal(Signal signal) {
 
 void Program::loop() {
     while (quitProgram == false) {
-        input.processInput(windowManager.window);
+        input.processInput();
 
-        if (glfwWindowShouldClose(windowManager.window)) {
+        if (windowManager.getShouldClose()) {
             std::cout << "GLFW window should close. Quitting program." << std::endl;
             quitProgram = true;
         }
-        if (quitProgram)
+        if (quitProgram) {
             break;
+        }
+
         render.render();
         ioHandler.addToAutosaveTimer(render.deltaTime);
         timeHandler.timeTick();
@@ -103,6 +115,10 @@ void Program::loop() {
         glfwPollEvents();
     }
 
+    terminate();
+}
+
+void Program::terminate() {
     auto time = TimeWrapper(std::chrono::system_clock::now()).getLocalTime();
     auto floorMinutes = std::chrono::floor<std::chrono::minutes>(time);
     auto secs = std::chrono::seconds(std::chrono::floor<std::chrono::seconds>(time - floorMinutes));
@@ -112,6 +128,9 @@ void Program::loop() {
         std::format("{}:{}:{}ms", TimeWrapper::getString(time, TIME_FORMAT_TIME), secs.count(), millis.count());
     std::cout << "Terminating program at " << timeString << "..." << std::endl;
     windowManager.terminate();
+#ifdef SCHETOOL_LINUX
+    // TODO: Free notifyLoop and gContext somehow?
+#endif
 }
 
 #ifndef PERFORM_UNIT_TESTS

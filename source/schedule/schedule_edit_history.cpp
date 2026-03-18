@@ -33,6 +33,7 @@ void ScheduleEditHistory::addEdit(std::shared_ptr<ScheduleEdit> edit) {
     m_editHistory.push_back(edit);
     m_editHistoryIndex = m_editHistory.size() - 1;
     setEditedSinceWrite(true);
+    editAddedEvent.invoke(edit);
 }
 
 void ScheduleEditHistory::removeFollowingEditHistory() {

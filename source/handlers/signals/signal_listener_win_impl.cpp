@@ -113,9 +113,9 @@ LRESULT SubWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 }
 
 bool SignalListenerWinImpl::init() {
-    gGlfwWndProc = (WNDPROC)GetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC);
-    SetWindowLongPtr(glfwGetWin32Window(m_window.window), GWLP_WNDPROC, (LONG_PTR)SubWndProc);
-    // if (SetWindowSubclass(glfwGetWin32Window(m_window.window), Subclassproc, gSubClassID, (DWORD_PTR)nullptr))
+    gGlfwWndProc = (WNDPROC)GetWindowLongPtr(glfwGetWin32Window(m_window.getGlfwWindow()), GWLP_WNDPROC);
+    SetWindowLongPtr(glfwGetWin32Window(m_window.getGlfwWindow()), GWLP_WNDPROC, (LONG_PTR)SubWndProc);
+    // if (SetWindowSubclass(glfwGetWin32Window(m_window.getGlfwWindow()), Subclassproc, gSubClassID, (DWORD_PTR)nullptr))
     // {
     //     // printf("Window subclass successfully created!\n");
     // }

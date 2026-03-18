@@ -9,8 +9,8 @@ class FilterRuleBase {
         bool m_dateCompareCurrent = false;
 
     public:
-        bool isComparisonValidForElement(const ElementBase* element, bool printInvalidWarning = true) const;
-        virtual bool checkPasses(const ElementBase* element,
+        bool isComparisonValidForElement(std::weak_ptr<const ElementBase> element, bool printInvalidWarning = true) const;
+        virtual bool checkPasses(std::weak_ptr<const ElementBase> element,
                                  const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(),
                                  bool useDefaultValue = false) const;
         virtual std::string getString() const;

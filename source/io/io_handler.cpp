@@ -66,6 +66,10 @@ fs::path IO_Handler::getBestConfigSavePath() const {
 #endif
 }
 
+fs::path IO_Handler::getStylesPath() const {
+    return "./styles";
+}
+
 void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interface& programInterface) {
     m_schedule = schedule;
     m_windowManager = window;
@@ -81,12 +85,15 @@ void IO_Handler::init(Schedule* schedule, Window* window, Input& input, Interfac
 
     fs::path savesDir = getBestScheduleSavePath();
     fs::path configDir = getBestConfigSavePath();
-    std::cout << std::format("Schedules save path is: '{}'", savesDir.string()) << std::endl;
-    std::cout << std::format("Config save path is: '{}'", configDir.string()) << std::endl;
+    fs::path stylesDir = getStylesPath();
+    std::cout << std::format("Schedules path is: '{}'", savesDir.string()) << std::endl;
+    std::cout << std::format("Config path is: '{}'", configDir.string()) << std::endl;
+    std::cout << std::format("Styles path is: '{}'", stylesDir.string()) << std::endl;
 
     // TODO: I don't like this pointer dereferencing
     m_scheduleIO = std::make_shared<ScheduleIO>(*schedule, programInterface, savesDir);
     m_preferencesIO = std::make_shared<PreferencesIO>(configDir);
+    m_styleIO = std::make_shared<StyleIO>(stylesDir);
 
     m_scheduleIO->openFileInfoChangeEvent.addListener(openFileInfoChangeListener);
     m_preferencesIO->preferencesLoadedEvent.addListener(preferencesLoadedListener);
@@ -97,7 +104,7 @@ void IO_Handler::addToAutosaveTimer(double delta) {
 
     if (m_timeSinceAutosave > (double)AUTOSAVE_DELAY_SECONDS) {
         if (m_scheduleIO) {
-            m_scheduleIO->createAutosave();
+            m_scheduleIO->createCurrentFileAutosave();
         }
         m_timeSinceAutosave = 0;
     }
@@ -115,4 +122,11 @@ std::shared_ptr<PreferencesIO> IO_Handler::getPreferencesIO() {
         std::cout << "WARNING: IO_Handler::getPreferencesIO(): Returned shared_ptr is empty." << std::endl;
     }
     return m_preferencesIO;
+}
+
+std::shared_ptr<StyleIO> IO_Handler::getStyleIO() {
+    if (!m_styleIO) {
+        std::cout << "WARNING: IO_Handler::getStyleIO(): Returned shared_ptr is empty." << std::endl;
+    }
+    return m_styleIO;
 }

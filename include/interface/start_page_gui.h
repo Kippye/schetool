@@ -4,21 +4,20 @@
 #include "event.h"
 #include "event_pipe.h"
 #include "gui.h"
-#include "window.h"
-#include "input.h"
+#include "file_info.h"
 
 class StartPageGui : public Gui {
     private:
-        std::vector<std::string> m_fileNames = {};
+        std::vector<FileInfo> m_fileInfoList = {};
         bool m_openScheduleNameModal = false;
 
     public:
         StartPageGui(const char* ID);
 
-        Event<std::string> openScheduleFileEvent;
+        Event<FileInfo> openScheduleFileEvent;
         // Event pipes
         EventPipe<std::string> createNewScheduleEventPipe;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
-        void passFileNames(const std::vector<std::string>& fileNames);
+        void draw(GuiDrawArgs& args) override;
+        void passFileInfoList(const std::vector<FileInfo>& fileInfoList);
 };

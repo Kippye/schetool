@@ -1,0 +1,46 @@
+{
+    "name": "default_light",
+    "displayName": "Light",
+    "colors": {
+        "Text": [0.18, 0.18, 0.18, 1.00],
+
+        "WindowBg" : [0.95, 0.95, 0.95, 0.94],
+        "PopupBg" : [1.00, 1.00, 1.00, 0.94],
+        "TitleBg" : [0.82, 0.82, 0.82, 1.00],
+        "TitleBgActive" : [0.44, 0.75, 0.87, 1.00],
+        "TitleBgCollapsed" : [0.16, 0.16, 0.16, 0.51],
+        "ScrollbarBg" : [0.84, 0.83, 0.83, 0.53],
+        "ScrollbarGrab" : [0.64, 0.64, 0.64, 1.00],
+        "ScrollbarGrabHovered" : [0.50, 0.50, 0.50, 1.00],
+        "ScrollbarGrabActive" : [0.43, 0.43, 0.43, 1.00],
+        "MenuBarBg" : [0.54, 0.68, 0.90, 1.00],
+
+        "FrameBg" : [0.81, 0.81, 0.81, 0.54],
+        "FrameBgHovered" : [0.69, 0.83, 0.87, 0.54],
+        "FrameBgActive" : [0.56, 0.67, 0.71, 0.67],
+
+        "Button" : [0.85, 0.92, 0.93, 1.00],
+        "ButtonHovered" : [0.79, 0.86, 0.87, 1.00],
+        "ButtonActive" : [0.66, 0.71, 0.72, 1.00],
+
+        "Header" : [0.48, 0.73, 0.78, 0.31],
+        "HeaderHovered" : [0.50, 0.77, 0.82, 0.80],
+        "HeaderActive" : [0.55, 0.84, 0.90, 1.00],
+
+        "TableHeaderBg" : [0.48, 0.73, 0.78, 0.31],
+        "TableBorderLight" : [0.77, 0.77, 0.77, 1.00],
+
+        "Tab" : [0.851, 0.922, 0.929, 1.00],
+        "TabHovered" : [0.782, 0.927, 0.943, 1.00],
+        "TabSelected" : [0.719, 0.907, 0.948, 1.00],
+        "TabSelectedOverline" : [0.898, 0.931, 0.938, 1.00],
+
+        "CheckMark" : [0.32, 0.32, 0.32, 1.00]
+    },
+    "vars": {
+        "ChildRounding": 4.0,
+        "FrameRounding": 4.0,
+        "PopupRounding": 4.0,
+        "WindowRounding": 4.0
+    }
+}

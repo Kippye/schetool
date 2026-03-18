@@ -42,7 +42,7 @@ class FilterRuleContainer {
         // FilterRuleBase "API"
 
         //
-        bool checkPasses(const ElementBase* element,
+        bool checkPasses(std::weak_ptr<const ElementBase> element,
                          const TimeWrapper& currentTime = TimeWrapper::getCurrentTime(),
                          bool useDefaultValue = false) const {
             if (isEmpty()) {

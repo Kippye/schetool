@@ -4,6 +4,9 @@
 #include <vector>
 #include <string>
 
+constexpr int YEAR_MIN = 1678;
+constexpr int YEAR_MAX = 2261;
+
 enum SCHEDULE_TYPE {
     SCH_BOOL,
     SCH_NUMBER,

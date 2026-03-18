@@ -9,7 +9,9 @@ FilterGroup::FilterGroup(const std::vector<Filter>& filters,
     : m_filters(filters), m_name(name), m_operator(logicalOperator), m_enabled(enabled) {
 }
 
-bool FilterGroup::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const {
+bool FilterGroup::checkPasses(std::weak_ptr<const ElementBase> element,
+                              const TimeWrapper& currentTime,
+                              bool useDefaultValue) const {
     // If the FilterGroup is disabled, it will always return true as if it wasn't there.
     if (m_enabled == false) {
         return true;

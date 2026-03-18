@@ -13,21 +13,37 @@
 #include "interface.h"
 #include "schedule_column.h"
 #include "schedule_core.h"
-#include "schedule/schedule_gui.h"
-
-const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
+#include "schedule_preferences.h"
+#include "schedule_constants.h"
+#include "view_tab_bar_gui.h"
+#include "table/schedule_gui.h"
+#include "calendar/calendar_gui.h"
 
 class Schedule {
     private:
         ScheduleEditHistory m_editHistory;
         ScheduleCore m_core;
         ScheduleEvents m_scheduleEvents;
+        std::shared_ptr<ViewTabBarGui> m_viewTabBarGui;
         std::shared_ptr<ScheduleGui> m_scheduleGui;
+        std::shared_ptr<CalendarGui> m_calendarGui;
         std::string m_scheduleName;
 
+        SchedulePreferences m_preferences = SchedulePreferences();
+
+        std::map<ScheduleView, std::shared_ptr<Gui>> m_viewGuis = {};
+
         // input listeners AND gui listeners
-        std::function<void()> undoListener = std::function<void()>([&]() { undo(); });
-        std::function<void()> redoListener = std::function<void()>([&]() { redo(); });
+        std::function<void()> undoListener = [&]() { undo(); };
+        std::function<void()> redoListener = [&]() { redo(); };
+
+        std::function<void(ScheduleView)> viewSwitchListener = [&](ScheduleView view) {
+            // Kinda HACK but eh
+            // Why is it one?
+            SchedulePreferences newPreferences = m_preferences;
+            newPreferences.setView(view);
+            updatePreferences(newPreferences);
+        };
 
         // modifyColumnSelectOptions (ElementEditorSubGui)
         std::function<void(size_t, SelectOptionsModification)> modifyColumnSelectOptionsListener =
@@ -64,7 +80,7 @@ class Schedule {
                                                                                                      size_t filterIndex,
                                                                                                      FilterRuleContainer
                                                                                                          filterRule) {
-            SCHEDULE_TYPE columnType = getColumn(col)->type;
+            SCHEDULE_TYPE columnType = getColumnConst(col).type;
             switch (columnType) {
                 case SCH_BOOL:
                     addColumnFilterRule<bool>(col, groupIndex, filterIndex, filterRule.getAsType<bool>());
@@ -109,7 +125,7 @@ class Schedule {
                 size_t ruleIndex,
                 FilterRuleContainer previousRule,
                 FilterRuleContainer rule) {
-                SCHEDULE_TYPE columnType = getColumn(col)->type;
+                SCHEDULE_TYPE columnType = getColumnConst(col).type;
                 switch (columnType) {
                     case SCH_BOOL:
                         replaceColumnFilterRule<bool>(
@@ -186,7 +202,7 @@ class Schedule {
                                                                                            size_t groupIndex,
                                                                                            size_t filterIndex,
                                                                                            size_t ruleIndex) {
-            SCHEDULE_TYPE columnType = getColumn(col)->type;
+            SCHEDULE_TYPE columnType = getColumnConst(col).type;
             switch (columnType) {
                 case SCH_BOOL:
                     removeColumnFilterRule<bool>(col, groupIndex, filterIndex, ruleIndex);
@@ -235,7 +251,9 @@ class Schedule {
         };
         std::function<void(size_t, size_t, std::string)> setElementValueListenerText =
             [&](size_t col, size_t row, std::string val) { setElementValue(col, row, val); };
-        std::function<void(size_t, size_t, SelectContainer)> setElementValueListenerSelect =
+        std::function<void(size_t, size_t, SingleSelectContainer)> setElementValueListenerSelect =
+            [&](size_t col, size_t row, SingleSelectContainer val) { setElementValue(col, row, val); };
+        std::function<void(size_t, size_t, SelectContainer)> setElementValueListenerMultiselect =
             [&](size_t col, size_t row, SelectContainer val) { setElementValue(col, row, val); };
         std::function<void(size_t, size_t, WeekdayContainer)> setElementValueListenerWeekday =
             [&](size_t col, size_t row, WeekdayContainer val) { setElementValue(col, row, val); };
@@ -261,6 +279,12 @@ class Schedule {
         };
         std::function<void(size_t, ColumnResetOption)> setColumnResetOptionListener =
             [&](size_t col, ColumnResetOption option) { setColumnResetOption(col, option); };
+        std::function<void(size_t, size_t)> setColumnOrderListener = [&](size_t oldOrder, size_t newOrder) {
+            setColumnDisplayOrder(oldOrder, newOrder, false);
+        };
+        std::function<void(size_t, size_t)> createColumnReorderEditListener = [&](size_t oldOrder, size_t newOrder) {
+            m_editHistory.addEdit<ColumnReorderEdit>(oldOrder, newOrder);
+        };
         // whole column modification
         std::function<void(size_t, bool)> resetColumnListener = [&](size_t col, bool addToHistory) {
             resetColumn(col, addToHistory);
@@ -275,8 +299,14 @@ class Schedule {
         // WHOLE-SCHEDULE FUNCTIONS
         void init(Input& input, Interface& interface);
 
-        // Set the schedule's name to the provided name. NOTE: Does not affect filename. Only called by IO_Manager and MainMenuBarGui through IO_Manager.
+        // Set the schedule's name to the provided name.
         void setName(const std::string& name);
+        void updatePreferences(const SchedulePreferences& preferences);
+        SchedulePreferences getPreferences() const;
+        // Wrapper for ViewTabBarGui::clearDateOverride()
+        void clearDateOverride();
+        // TEMP just a function to hide all views of the schedule. i don't like this.
+        void hideAllViews();
         std::string getName();
         const ScheduleEditHistory& getEditHistory();
         ScheduleEditHistory& getEditHistoryMutable();
@@ -284,18 +314,24 @@ class Schedule {
         void undo();
         void redo();
         // Clear the current Schedule and replace it with default Columns and no rows.
-        void createDefaultSchedule();
+        // NOTE: For compatibility with tests, this function needs to work even if init() has not been called.
+        // NOTE: Pass resetState = true if edit history and table column widths should also be reset.
+        void createDefaultSchedule(bool resetState = true);
 
         /// CORE WRAPPERS
         // Clears the Schedule and deletes all the Columns.
         void clearSchedule();
         // Replaces the vector of Columns with the provided. NOTE: ALSO DELETES ALL PREVIOUS ELEMENTS
         void replaceSchedule(std::vector<Column>& columns);
-        // Get a constant reference to every Column in the Schedule
-        const std::vector<Column>& getAllColumns();
-        // Generally do not use this. It's meant for reading from file only.
-        std::vector<Column>& getAllColumnsMutable();
+        // Get a copy of the schedule Column vector
+        std::vector<Column> getAllColumns();
         void sortColumns();
+
+        // Checks if the row at the given index passes every FilterGroup in every column.
+        // Optionally, pass a vector of indices of columns whose filters should not be applied. Invalid indices in this vector will simply have no effect.
+        bool checkPassesAllFilters(size_t row,
+                                   const std::optional<TimeWrapper>& currentTime = std::nullopt,
+                                   const std::vector<size_t>& ignoredColumnIndices = {}) const;
 
         // COLUMNS
         size_t getColumnCount();
@@ -304,13 +340,14 @@ class Schedule {
         void removeColumn(size_t column, bool addToHistory = true);
         void duplicateColumn(size_t index, bool addToHistory = true);
         // Get a constant pointer to the Column at the index.
-        const Column* getColumn(size_t column);
+        const Column& getColumnConst(size_t column);
         // Get the index of the first column with the given flags
         size_t getFlaggedColumnIndex(ScheduleColumnFlags flags) const;
         void setColumnType(size_t column, SCHEDULE_TYPE type, bool addToHistory = true);
         void setColumnName(size_t column, const std::string& name, bool addToHistory = true);
         void setColumnSort(size_t column, COLUMN_SORT sortDirection, bool addToHistory = true);
         void setColumnResetOption(size_t column, ColumnResetOption option, bool addToHistory = true);
+        void setColumnDisplayOrder(size_t oldOrder, size_t newOrder, bool addToHistory = true);
         const SelectOptions& getColumnSelectOptions(size_t column);
         // NOTE: For OPTION_MODIFICATION_ADD the first string in optionName is used as the name.
         void modifyColumnSelectOptions(size_t column,
@@ -340,8 +377,7 @@ class Schedule {
             if (m_core.addColumnFilterRule(column, groupIndex, filterIndex, filterRule)) {
                 if (addToHistory) {
                     size_t filterRuleIndex =
-                        m_core.getColumn(column)->getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount() -
-                        1;
+                        getColumnConst(column).getFilterGroupConst(groupIndex).getFilterConst(filterIndex).getRuleCount() - 1;
                     m_editHistory.addEdit<FilterRuleAddOrRemoveEdit<T>>(
                         false, column, groupIndex, filterIndex, filterRuleIndex, filterRule);
                 }
@@ -365,8 +401,8 @@ class Schedule {
         template <typename T>
         void removeColumnFilterRule(
             size_t column, size_t groupIndex, size_t filterIndex, size_t ruleIndex, bool addToHistory = true) {
-            FilterRule<T> filterRule = m_core.getColumn(column)
-                                           ->getFilterGroupConst(groupIndex)
+            FilterRule<T> filterRule = getColumnConst(column)
+                                           .getFilterGroupConst(groupIndex)
                                            .getFilterConst(filterIndex)
                                            .getRuleConst(ruleIndex)
                                            .getAsType<T>();
@@ -378,7 +414,7 @@ class Schedule {
                 }
             }
         }
-        // Sets every Element in the Column index to a default value of the given type. Do NOT change the column's type before running this. The Column type should only be changed after every row of it IS that type.
+        // Sets every Element in the Column index to a default value of its type.
         void resetColumn(size_t index, bool addToHistory);
 
         // ROWS
@@ -388,64 +424,40 @@ class Schedule {
         void addRow(size_t index, bool addToHistory = true);
         void removeRow(size_t index, bool addToHistory = true);
         void duplicateRow(size_t index, bool addToHistory = true);
-        // Get all elements of a row. If the row doesn't exist, an empty vector is returned.
-        std::vector<ElementBase*> getRow(size_t index);
-        // Set all elements of a row. NOTE: The element data must be in the correct order. If the row doesn't exist, nothing happens.
-        void setRow(size_t index, std::vector<ElementBase*> elementData);
         std::vector<size_t> getSortedRowIndices();
 
         // Interface methods
         void applyColumnTimeBasedReset(size_t columnIndex);
 
         // ELEMENTS.
-        // Get the value of the element as Element<T>. NOTE: You MUST provide the correct type.
-        template <typename T>
-        T getValue(ElementBase* element) {
-            return m_core.getValue<T>(element);
-        }
-
-        // Get a pointer to the ElementBase at column; row
-        ElementBase* getElement(size_t column, size_t row) {
-            return m_core.getElement(column, row);
-        }
-
-        // Simple function that gets an ElementBase* at column; row and casts it to Element<T>*. In the future, this might check that the returned type is actually correct.
-        template <typename T>
-        Element<T>* getElementAsSpecial(size_t column, size_t row) {
-            return m_core.getElementAsSpecial<T>(column, row);
-        }
-
         // Shortcut for getting the value of an Element at column; row
         template <typename T>
         T getElementValue(size_t column, size_t row) {
             return m_core.getElementValue<T>(column, row);
         }
 
-        // Shortcut for getting the value of an Element at column; row by const reference
-        template <typename T>
-        const T& getElementValueConstRef(size_t column, size_t row) {
-            return m_core.getElementValue<T>(column, row);
-        }
-
-        // Shortcut for setting the value of the Element at column; row to value. You must provide the correct type for the Element.
+        // Shortcut for setting the value of the Element at column; row to value.
         template <typename T>
         void setElementValue(size_t column, size_t row, const T& value, bool addToHistory = true) {
-            ElementBase* element = m_core.getElement(column, row);
+            auto element = m_core.getElement(column, row);
 
-            if (element == nullptr) {
-                printf("Schedule::setElementValue failed to set element at %zu; %zu - element does not exist\n", column, row);
+            if (element.expired()) {
+                std::cout << std::format("Schedule::setElementValue failed to set element at {}; {} - element has been deleted",
+                                         column,
+                                         row)
+                          << std::endl;
                 return;
             }
+            auto elementAccess = element.lock();
+            auto typeElementAccess = std::dynamic_pointer_cast<Element<T>>(elementAccess);
 
             // TODO: this might add to edit history even if it fails in the core
             // add the edit to history
             if (addToHistory) {
                 m_editHistory.addEdit<ElementEdit<T>>(
-                    column, row, element->getType(), ((Element<T>*)element)->getValue(), value);
+                    column, row, typeElementAccess->getType(), typeElementAccess->getValue(), value);
             }
 
             m_core.setElementValue<T>(column, row, value);
-
-            m_editHistory.setEditedSinceWrite(true);
         }
 };

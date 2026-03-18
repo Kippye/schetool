@@ -15,13 +15,10 @@ class NotificationHandlerLinuxImpl : public NotificationHandlerImpl {
             [&](NotifyNotification* notification, char* action, gpointer userData) {
                 if (action == std::string("default")) {
                     notificationActivatedEvent.invoke(NotificationActivation::Clicked, *(NotificationInfo*)userData);
+                } else if (action == std::string("markDone")) {
+                    notificationActivatedEvent.invoke(NotificationActivation::MarkedDone, *(NotificationInfo*)userData);
                 } else if (action == std::string("markPreviousDone")) {
                     notificationActivatedEvent.invoke(NotificationActivation::PreviousMarkedDone, *(NotificationInfo*)userData);
-                } else if (action == std::string("dismiss")) {
-                    notificationActivatedEvent.invoke(NotificationActivation::Dismissed, *(NotificationInfo*)userData);
-                    // Close the notification.
-                    // We don't so much care if it ACTUALLY closed so we don't handle errors or check the return value.
-                    notify_notification_close(notification, NULL);
                 }
             };
 

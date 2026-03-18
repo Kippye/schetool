@@ -8,6 +8,9 @@
 #include "time_container.h"
 #include "date_container.h"
 
+typedef bool OptionSwitchSelection;
+constexpr OptionSwitchSelection LeftOption = 0;
+constexpr OptionSwitchSelection RightOption = 1;
 typedef int DateEditorFlags;
 enum DateEditorFlags_ {
     DateEditorFlags_None = 0,
@@ -26,7 +29,17 @@ namespace gui_templates {
         bool textEditorActivated = false;
     }  // namespace
 
-    bool TextEditor(std::string& editorText, ImVec2 inputBoxSize = ImVec2(0, 0), bool captureKeyboardFocus = false);
+    /* Display a multi-line text input box.
+    *  Returns true on edit / submit, depending on flags.
+    *  - std::string& editorText - string to use as the buffer and to modify
+    *  - ImVec2 inputBoxSize = ImVec2(0, 0) - The size of the input box
+    *  - bool captureKeyboardFocus = false - Pass "true" when the TextEditor should gain focus (usually the first frame it is shown)
+    *  - ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine - Flags to pass to ImGui (in addition to ImGuiInputTextFlags_CallbackAlways)
+    */
+    bool TextEditor(std::string& editorText,
+                    ImVec2 inputBoxSize = ImVec2(0, 0),
+                    bool captureKeyboardFocus = false,
+                    ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CtrlEnterForNewLine);
     bool InputInt(const char* label, int* value, bool drawBackground = true, ImGuiInputTextFlags flags = 0);
     bool InputDouble(const char* label,
                      double* value,
@@ -45,36 +58,76 @@ namespace gui_templates {
                     DateEditorFlags flags = DateEditorFlags_None);
     // Displays a time editor, applies edits to the provided TimeContainer&. Returns true if the TimeContainer was modified.
     bool TimeEditor(TimeContainer& editorTime);
+    // Displays a time editor, applies edits to the provided TimeContainer&. Returns true and modifies the TimeContainer only on submit (enter pressed).
+    bool TimeEditor(TimeContainer& editorTime, TimeContainer& bufferTime);
     void TextWithBackground(const char* fmt, ...);
     void TextWithBackground(const ImVec2& size, const char* fmt, ...);
-    // Displays an image button that is tinted to match the style color of text. Returns true if the button was pressed.
+    // Draw a Button with an ID and separate text (that can contain any characters)
+    bool ButtonWithCustomText(const char* id,
+                              const char* label,
+                              ImVec2 size = ImVec2(0, 0),
+                              ImGuiButtonFlags flags = ImGuiButtonFlags_None);
+    // Displays an image button that is tinted to match the style color of ImGuiCol_CheckMark.
+    // This is because the text color is typically too extreme to use for normal textures (text is thin and anti-aliased)
+    // Returns true if the button was pressed.
     bool ImageButtonStyleColored(const char* idLabel,
                                  ImTextureID textureID,
-                                 ImVec2 size,
+                                 ImVec2 imageSize,
                                  ImVec2 uv0 = ImVec2(0, 0),
                                  ImVec2 uv1 = ImVec2(1, 1),
                                  ImVec4 bgColor = ImVec4(0, 0, 0, 0),
                                  ImGuiButtonFlags buttonFlags = ImGuiButtonFlags_None);
     // Displays a button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Returns true if the button was clicked.
     bool SelectOptionButton(const SelectOption& selectOption,
-                            const char* idLabel,
+                            const char* id,
                             ImVec2 size = ImVec2(0, 0),
                             ImGuiButtonFlags flags = ImGuiButtonFlags_None);
     // Displays a selectable button using a select option's name and color. The idLabel is appended to the option's name (i.e. "Select" + "##ID"). Toggles selected when the button is clicked. Returns true if the button was clicked.
     bool SelectOptionSelectable(const SelectOption& selectOption,
-                                const char* idLabel,
+                                const char* id,
                                 bool* selected,
                                 ImVec2 size = ImVec2(0, 0),
-                                ImGuiSelectableFlags flags = ImGuiButtonFlags_None);
+                                ImGuiButtonFlags flags = ImGuiButtonFlags_None);
+
+    // Displays two segmented buttons representing 2 different options of a switch.
+    // A label must be provided for each button.
+    // Clicking anywhere in the item switches the selected state to the other value.
+    // Returns an std::optional<OptionSwitchSelection> on the frame that a new option is selected, containing the new selection (LeftOption or RightOption).
+    // Returns std::nullopt otherwise.
+    std::optional<OptionSwitchSelection> OptionSwitch(const char* labelLeft,
+                                                      const char* labelRight,
+                                                      OptionSwitchSelection currentSelection);
+
+    // Displays two segmented buttons representing 2 different options of a switch.
+    // This is a special function that supports using a type (preferrably an enum) and switching between 2 options of said type.
+    // A label must be provided for each button.
+    // Clicking anywhere in the item switches the selected state to the other value.
+    // Returns an std::optional<OptionSwitchSelection> on the frame that a new option is selected, containing the new selection (LeftOption or RightOption).
+    // Returns std::nullopt otherwise.
+    template <typename OptionType>
+    std::optional<OptionType> OptionSwitch(const char* labelLeft,
+                                           const char* labelRight,
+                                           std::pair<OptionType, OptionType> optionValues,
+                                           OptionType currentSelection) {
+        std::optional<OptionSwitchSelection> selectedOption =
+            OptionSwitch(labelLeft, labelRight, currentSelection == optionValues.first ? LeftOption : RightOption);
+
+        if (selectedOption.has_value()) {
+            return selectedOption.value() == LeftOption ? optionValues.first : optionValues.second;
+        }
+        return std::nullopt;
+    }
+
     // Displays a Combo dropdown menu. The optionStrings parameter is a map of objects of a type to strings representing their display names. The currentSelection parameter must be an object of that type which is contained in the optionStrings map.
     // Returns an std::optional of the option type on the frame a new option is selected, containing the new selection.
     // Returns std::nullopt otherwise.
     template <typename OptionType>
     std::optional<OptionType> Dropdown(const char* idLabel,
                                        OptionType currentSelection,
-                                       const std::map<OptionType, const char*>& optionStrings) {
+                                       const std::map<OptionType, const char*>& optionStrings,
+                                       ImGuiComboFlags flags = ImGuiComboFlags_None) {
         std::optional<OptionType> newSelection = std::nullopt;
-        if (ImGui::BeginCombo(idLabel, optionStrings.at(currentSelection))) {
+        if (ImGui::BeginCombo(idLabel, optionStrings.at(currentSelection), flags)) {
             for (const auto& [option, optionName] : optionStrings) {
                 bool isSelected = option == currentSelection;
                 // Use idLabel with "##" removed to make sure that the Selectable has a unique ID
@@ -129,6 +182,6 @@ namespace gui_color_calculations {
     ImVec4 getActiveColorFromBase(ImVec4 base);
     ImVec4 getDisabledColorFromBase(ImVec4 base);
     // Calculate a likely suitable table cell highlight color (RGB) based on the text color (RGB) and window background color (RGB).
-    // Essentially gets the average of those two colors.
+    // Essentially gets the (biased) average of those two colors.
     ImVec4 getTableCellHighlightColor(ImVec4 backgroundColor, ImVec4 fontColor);
 }  // namespace gui_color_calculations

@@ -2,6 +2,7 @@
 
 #include "schedule_io.h"
 #include "preferences_io.h"
+#include "style_io.h"
 #include "file_info.h"
 #include "schedule.h"
 #include "window.h"
@@ -21,23 +22,19 @@ class IO_Handler {
         std::shared_ptr<MainMenuBarGui> m_mainMenuBarGui = NULL;
         std::shared_ptr<ScheduleIO> m_scheduleIO = nullptr;
         std::shared_ptr<PreferencesIO> m_preferencesIO = nullptr;
+        std::shared_ptr<StyleIO> m_styleIO = nullptr;
         double m_timeSinceAutosave = 0.0;
 
-        std::function<void(FileInfo)> openFileInfoChangeListener = [&](FileInfo fileInfo) {
-            m_windowManager->setTitleSuffix(std::string(" - ").append(fileInfo.getName()));
-            m_schedule->setName(fileInfo.getName());
-            m_mainMenuBarGui->passOpenFileName(fileInfo.empty() ? std::nullopt
-                                                                : std::optional<std::string>(fileInfo.getName()));
+        std::function<void(std::optional<FileInfo>)> openFileInfoChangeListener = [&](std::optional<FileInfo> fileInfo) {
+            m_windowManager->setTitleSuffix(!fileInfo.has_value() ? "" : std::string(" - ").append(fileInfo->getStem()));
+            m_schedule->setName(fileInfo.has_value() ? fileInfo->getStem() : "");
+            m_mainMenuBarGui->passOpenFileInfo(fileInfo);
         };
 
         // input listeners
         std::function<void()> saveInputListener = std::function<void()>([&]() {
             if (m_scheduleIO) {
-                FileInfo currentFileInfo = m_scheduleIO->getCurrentFileInfo();
-                if (currentFileInfo.empty()) {
-                    return;
-                }
-                m_scheduleIO->writeSchedule(currentFileInfo.getName().c_str());
+                m_scheduleIO->saveCurrentFile();
             }
         });
         // window event listeners
@@ -65,6 +62,8 @@ class IO_Handler {
         std::filesystem::path getBestScheduleSavePath() const;
         // Appends the configs save subdirectory to the best available data dir path.
         std::filesystem::path getBestConfigSavePath() const;
+        // Appends the styles subdirectory to the styles path.
+        std::filesystem::path getStylesPath() const;
 
     public:
         // Initialise the IO handler and the specific IO classes.
@@ -72,4 +71,5 @@ class IO_Handler {
         void addToAutosaveTimer(double delta);
         std::shared_ptr<ScheduleIO> getScheduleIO();
         std::shared_ptr<PreferencesIO> getPreferencesIO();
+        std::shared_ptr<StyleIO> getStyleIO();
 };

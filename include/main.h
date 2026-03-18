@@ -37,4 +37,5 @@ class Program {
         Program();
         void handleSignal(Signal signal);
         void loop();
+        void terminate();
 };

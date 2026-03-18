@@ -3,15 +3,19 @@
 #include "notifications/notification_handler_base_impl.h"
 #include "preferences_io.h"
 #include "preferences.h"
+#include "audio.h"
 #include <memory>
 
 class NotificationHandler {
     private:
         bool m_notificationsEnabled = Preferences::getDefault().getNotificationsEnabled();
+        bool m_notificationSoundEnabled = Preferences::getDefault().getNotificationSoundEnabled();
         std::shared_ptr<NotificationHandlerImpl> m_implementation = nullptr;
+        AudioEngine m_audioEngine;
 
         std::function<void(Preferences)> preferencesChangedListener = [&](Preferences preferences) {
             m_notificationsEnabled = preferences.getNotificationsEnabled();
+            m_notificationSoundEnabled = preferences.getNotificationSoundEnabled();
         };
 
         std::function<void(NotificationActivation, NotificationInfo)> notificationActivatedListener =

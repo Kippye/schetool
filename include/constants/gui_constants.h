@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include "imgui.h"
-#include "imgui_internal.h"
+#include "constants/schedule_constants.h"
 
 const std::string GUI_TEXTURE_DIR = "textures/gui/";
 
@@ -25,23 +25,48 @@ enum SelectColor_ {
     SelectColor_Last = 1 << 9,
 };
 
-// Full definition in interface_style.cpp
-enum class GuiStyle;
+const std::map<std::string, ImGuiStyleVar> styleVarNameToEnum = {
+    {"Alpha", ImGuiStyleVar_Alpha},
+    {"DisabledAlpha", ImGuiStyleVar_DisabledAlpha},
+    {"WindowPadding", ImGuiStyleVar_WindowPadding},
+    {"WindowRounding", ImGuiStyleVar_WindowRounding},
+    {"WindowBorderSize", ImGuiStyleVar_WindowBorderSize},
+    {"WindowMinSize", ImGuiStyleVar_WindowMinSize},
+    {"WindowTitleAlign", ImGuiStyleVar_WindowTitleAlign},
+    {"ChildRounding", ImGuiStyleVar_ChildRounding},
+    {"ChildBorderSize", ImGuiStyleVar_ChildBorderSize},
+    {"PopupRounding", ImGuiStyleVar_PopupRounding},
+    {"PopupBorderSize", ImGuiStyleVar_PopupBorderSize},
+    {"FramePadding", ImGuiStyleVar_FramePadding},
+    {"FrameRounding", ImGuiStyleVar_FrameRounding},
+    {"FrameBorderSize", ImGuiStyleVar_FrameBorderSize},
+    {"ItemSpacing", ImGuiStyleVar_ItemSpacing},
+    {"ItemInnerSpacing", ImGuiStyleVar_ItemInnerSpacing},
+    {"IndentSpacing", ImGuiStyleVar_IndentSpacing},
+    {"CellPadding", ImGuiStyleVar_CellPadding},
+    {"ScrollbarSize", ImGuiStyleVar_ScrollbarSize},
+    {"ScrollbarRounding", ImGuiStyleVar_ScrollbarRounding},
+    {"GrabMinSize", ImGuiStyleVar_GrabMinSize},
+    {"GrabRounding", ImGuiStyleVar_GrabRounding},
+    {"ImageBorderSize", ImGuiStyleVar_ImageBorderSize},
+    {"TabRounding", ImGuiStyleVar_TabRounding},
+    {"TabBorderSize", ImGuiStyleVar_TabBorderSize},
+    {"TabBarBorderSize", ImGuiStyleVar_TabBarBorderSize},
+    {"TabBarOverlineSize", ImGuiStyleVar_TabBarOverlineSize},
+    {"TableAngledHeadersAngle", ImGuiStyleVar_TableAngledHeadersAngle},
+    {"TableAngledHeadersTextAlign", ImGuiStyleVar_TableAngledHeadersTextAlign},
+    {"ButtonTextAlign", ImGuiStyleVar_ButtonTextAlign},
+    {"SelectableTextAlign", ImGuiStyleVar_SelectableTextAlign},
+    {"SeparatorTextBorderSize", ImGuiStyleVar_SeparatorTextBorderSize},
+    {"SeparatorTextAlign", ImGuiStyleVar_SeparatorTextAlign},
+    {"SeparatorTextPadding", ImGuiStyleVar_SeparatorTextPadding},
+};
 
 namespace gui_colors {
     // Select option colors in HSL (w is not really used but could be alpha).
-    const std::map<SelectColor, ImVec4> selectOptionColors = {
-        {SelectColor_White, {0.00f / 360, 0.00f, 0.92f, 255}},
-        {SelectColor_Gray, {0.00f / 360, 0.00f, 0.65f, 255}},
-        {SelectColor_Brown, {20.0f / 360, 0.22f, 0.47f, 255}},
-        {SelectColor_Orange, {19.0f / 360, 0.61f, 0.60f, 255}},
-        {SelectColor_Yellow, {47.0f / 360, 0.61f, 0.60f, 255}},
-        {SelectColor_Green, {123.f / 360, 0.48f, 0.64f, 255}},
-        {SelectColor_Blue, {197.f / 360, 0.50f, 0.63f, 255}},
-        {SelectColor_Purple, {270.f / 360, 0.50f, 0.63f, 255}},
-        {SelectColor_Pink, {325.f / 360, 0.43f, 0.72f, 255}},
-        {SelectColor_Red, {0.00f / 360, 0.58f, 0.65f, 255}},
-    };
+    extern const std::map<SelectColor, ImVec4> selectOptionColors;
+    // Background colors for schedule items based on their state
+    extern const std::map<ScheduleItemState, ImVec4> scheduleItemStateColors;
     // Colors of the days (equivalent select colors)
     const SelectColor dayColors[7] = {
         SelectColor_Blue,
@@ -53,41 +78,49 @@ namespace gui_colors {
         SelectColor_Yellow,
     };
     // Use for elements that can be interacted with but are inactive in some way.
-    const float inactiveAlpha = 0.5f;
+    extern const float inactiveAlpha;
     // Use for elements that are completely disabled.
-    const float disabledAlpha = 0.25f;
+    extern const float disabledAlpha;
     // RGB color for black text
     const ImVec4 textColorBlack = {10.0f / 255, 10.0f / 255, 10.0f / 255, 1};
+    // RGB color for warning text
+    const ImVec4 textColorWarning = {252.0f / 255, 186.0f / 255, 3.0f / 255, 1};
+    // RGB color for error text
+    const ImVec4 textColorError = {232.0f / 255, 28.0f / 255, 28.0f / 255, 1};
     // RGB invisible color
     const ImVec4 colorInvisible = {0.0f, 0.0f, 0.0f, 0.0f};
+
 }  // namespace gui_colors
 
 namespace gui_sizes {
-    const ImVec2 emptyLabelSize = ImVec2(64, 0);
+    extern const ImVec2 emptyLabelSize;
     namespace date_editor {
-        const ImVec2 monthDayButtonSpacing = ImVec2(0.0f, 0.0f);
-        const float monthNameComboWidth = 108.0f;
-        const float yearInputWidth = 108.0f;
+        extern const ImVec2 monthDayButtonSpacing;
+        extern const float monthNameComboWidth;
+        extern const float yearInputWidth;
     };  // namespace date_editor
     namespace filter_editor {
-        const float ruleButtonWidthOffset = 30.0f;
-        const float ruleComparisonComboWidth = 144.0f;
+        extern const float ruleButtonWidthOffset;
+        extern const float ruleComparisonComboWidth;
     }  // namespace filter_editor
 }  // namespace gui_sizes
 
 namespace gui_style_vars {
-    const float labelButtonRounding = 4.0f;
-}
+    // Window padding to use for the padding from the actual program window
+    extern const ImVec2 windowEdgePadding;
+}  // namespace gui_style_vars
 
 enum class FontSize {
-    // Font size of 8px
+    // Font size of 12px
     Small,
     // Font size of 16px
     Normal,
     // Font size of 24px
     Big,
     // Font size of 32px
-    Large
+    Large,
+    // Font size of 40px
+    Huge,
 };
 
 namespace gui_fonts {
@@ -98,10 +131,11 @@ namespace gui_fonts {
         {FontSize::Large, "Large"},
     };
     const std::map<FontSize, size_t> fontSizePixelSizes = {
-        {FontSize::Small, 8},
+        {FontSize::Small, 12},
         {FontSize::Normal, 16},
         {FontSize::Big, 24},
         {FontSize::Large, 32},
+        {FontSize::Huge, 40},
     };
 }  // namespace gui_fonts
 

@@ -21,7 +21,7 @@ class SelectOptionsModification {
         friend class SelectOptions;
         friend class Column;
         OPTION_MODIFICATION m_type = OPTION_MODIFICATION_COUNT_UPDATE;
-        size_t m_firstIndex = 0;
+        std::optional<size_t> m_firstIndex = std::nullopt;
         std::optional<size_t> m_secondIndex = std::nullopt;
         std::optional<std::string> m_name = std::nullopt;
         std::optional<SelectColor> m_color = std::nullopt;
@@ -58,11 +58,11 @@ class SelectOptionsModification {
             return !(*this == other);
         }
 
-        // Every modification requires at least a type. If no other function is applied, the first index will be 0.
+        // Every modification requires at least a type.
         // This empty modification is good for OPTION_MODIFICATION_COUNT_UPDATE.
         SelectOptionsModification(OPTION_MODIFICATION type);
 
-        // Set the first index (for most modifications)
+        // Set the first index (for all except OPTION_MODIFICATION_REPLACE, OPTION_MODIFICATION_CLEAR and OPTION_MODIFICATION_COUNT_UPDATE)
         SelectOptionsModification& firstIndex(size_t index);
         // Add a second index (for OPTION_MODIFICATION_MOVE)
         SelectOptionsModification& secondIndex(size_t index);
@@ -110,21 +110,17 @@ inline SelectOptionsModification& SelectOptionsModification::options(const std::
 class SelectOptions {
     private:
         std::vector<SelectOption> m_options = {};
-        std::optional<SelectOptionsModification> m_lastModification = std::nullopt;
         bool m_mutable = true;
 
     public:
         SelectOptions();
         SelectOptions(const std::vector<SelectOption>& options);
 
-        Event<SelectOptionsModification> selectOptionModified;
-
         const std::vector<SelectOption>& getOptions() const;
         size_t getOptionCount() const;
-        const std::optional<SelectOptionsModification>& getLastModification() const;
         // Apply a SelectOptionsModification to this SelectOptions. Returns true if the modification was applied, false otherwise.
-        bool applyModification(const SelectOptionsModification& modification);
-        bool addOption(const SelectOption& option);
+        bool applyModification(SelectOptionsModification modification);
+        bool addOption(const SelectOption& option, size_t index);
         bool removeOption(const SelectOption& option);
         bool removeOption(size_t option);
         bool moveOption(size_t firstIndex, size_t secondIndex);

@@ -1,14 +1,16 @@
 cmake_minimum_required(VERSION 3.25)
+include(FetchContent)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ############ PROJECT DEFINITION ############
-project(schetool VERSION 0.9.0)
+project(schetool VERSION 1.0.0)
 set(CPP_VERSION "c++20")
 
 ######### OPTIONS #########
 # Enable testing by default for Debug Unix Makefiles (can't check for configuration with MSVC)
 IF ((CMAKE_GENERATOR STREQUAL "Unix Makefiles") AND ("${CMAKE_BUILD_TYPE}" STREQUAL Debug))
-    option(ENABLE_TESTS "Unit testing build" ON)
+    option(ENABLE_TESTS "Unit testing build" OFF)
 # Otherwise, testing has to be manually enabled
 ELSE()
     option(ENABLE_TESTS "Unit testing build" OFF)
@@ -53,11 +55,24 @@ IF (LINUX)
     # glib2
     pkg_check_modules(deps REQUIRED IMPORTED_TARGET glib-2.0)
     # gdkpixbuf
-    find_package(GDKPixBuf REQUIRED)
+    # find_package(GDKPixBuf REQUIRED)
+    pkg_check_modules(pixbuf REQUIRED IMPORTED_TARGET gdk-pixbuf-2.0)
 ENDIF()
 
+######### REMOTE FETCH LIBRARIES #########
+FetchContent_Declare(
+    GLFW
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG e7ea71be039836da3a98cea55ae5569cb5eb885c # latest as of 23.06.2025; GLFW 3.5
+)
+FetchContent_GetProperties(GLFW)
+IF (NOT glfw_POPULATED)
+  FetchContent_Populate(GLFW)
+  add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR} EXCLUDE_FROM_ALL)
+ENDIF()
+# FetchContent_MakeAvailable(GLFW)
 ######### SUBDIRS / LOCAL LIBRARIES #########
-add_subdirectory("${LIBRARY_DIR}/blf")
+add_subdirectory("${LIBRARY_DIR}/blf" EXCLUDE_FROM_ALL)
 add_subdirectory("${LIBRARY_DIR}/glad")
 IF (WINDOWS_MSVC)
     add_subdirectory("${LIBRARY_DIR}/notificationcompat")
@@ -84,7 +99,6 @@ IF (WINDOWS_MSVC)
     ENDIF()
 ENDIF()
 
-find_package(glfw3 REQUIRED)
 add_subdirectory("${LIBRARY_DIR}/imgui") # imgui 1.90.4
 target_link_libraries(imgui glfw) # imgui is dependent on glfw and causes a compile error if not linked with it here
 
@@ -165,19 +179,23 @@ target_include_directories(${PROGRAM_NAME}
     PUBLIC "include/${SCHEDULE_DIR}"
     PUBLIC "include/${UTIL_DIR}"
     PUBLIC "libs"
+    PUBLIC "libs/miniaudio"
+    PUBLIC "libs/json"
     PUBLIC "libs/stb")
 
 ###### PLATFORM-SPECIFIC ######
 IF (LINUX)
-    IF (GDKPIXBUF_FOUND)
-        target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
-    ENDIF()
+    target_include_directories(${PROGRAM_NAME} PUBLIC ${pixbuf_INCLUDE_DIRS})
+    # IF (GDKPIXBUF_FOUND)
+    #     target_include_directories(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_INCLUDE_DIR})
+    # ENDIF()
 ENDIF()
 
 ######### SOURCES #########
 target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/main.cpp"
     "${SCHETOOL_SRC}/${CONSTANTS_DIR}/filter_constants.cpp"
+    "${SCHETOOL_SRC}/${CONSTANTS_DIR}/gui_constants.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/date_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/file_info.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/select_container.cpp"
@@ -186,47 +204,60 @@ target_sources(${PROGRAM_NAME} PRIVATE
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_container.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/time_wrapper.cpp"
     "${SCHETOOL_SRC}/${CONTAINERS_DIR}/weekday_container.cpp"
-    "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
-    "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/notifications/notification_handler_linux_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/notifications/notification_handler_win_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/notifications/notification_handler.cpp"
-    "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener_linux_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener_win_impl.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/signals/signal_listener.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/audio.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/gui_textures.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/input.cpp"
+    "${SCHETOOL_SRC}/${HANDLERS_DIR}/render.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/time_handler.cpp"
     "${SCHETOOL_SRC}/${HANDLERS_DIR}/window.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/autosave_popup_gui.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/edit_history_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/calendar/calendar_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/calendar/calendar_item_window_subgui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar/main_menu_bar_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule/element_editor_subgui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule/filter_editor_subgui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/table/schedule_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/autosave_popup_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/confirmation_modal_subgui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/edit_history_gui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/element_display_templates.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/gui_templates.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/interface.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/interface_style.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar/delete_modal_subgui.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/main_menu_bar/main_menu_bar_gui.cpp"
-    "${SCHETOOL_SRC}/${INTERFACE_DIR}/schedule/schedule_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/start_page_gui.cpp"
     "${SCHETOOL_SRC}/${INTERFACE_DIR}/text_input_modal_subgui.cpp"
+    "${SCHETOOL_SRC}/${INTERFACE_DIR}/view_tab_bar_gui.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/io_handler.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/preferences_data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/preferences_io.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/schedule_data_converter.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/schedule_io.cpp"
+    "${SCHETOOL_SRC}/${IO_DIR}/style_data_converter.cpp"
+    "${SCHETOOL_SRC}/${IO_DIR}/style_io.cpp"
     "${SCHETOOL_SRC}/${IO_DIR}/textures.cpp"
-    "${SCHETOOL_SRC}/${SCHEDULE_DIR}/element_base.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filters/filter.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filters/filter_group.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/filters/filter_rule_base.cpp"
+    "${SCHETOOL_SRC}/${SCHEDULE_DIR}/element_base.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_column.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_core.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit.cpp"
     "${SCHETOOL_SRC}/${SCHEDULE_DIR}/schedule_edit_history.cpp"
-    "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp"
 )
+
+# Include imgui_demo.cpp on non-Release builds if the build type is known
+IF (CMAKE_BUILD_TYPE)
+    IF (NOT ${CMAKE_BUILD_TYPE} STREQUAL Release)
+        target_sources(${PROGRAM_NAME} PRIVATE "${LIBRARY_DIR}/imgui/src/imgui_demo.cpp")
+    ENDIF()
+ENDIF()
 
 ######### LINKS #########
 target_link_libraries(${PROGRAM_NAME} PUBLIC compiler_flags 
@@ -246,9 +277,10 @@ ENDIF(WINDOWS_MSVC)
 IF (LINUX)
     # glib 2.0
     target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::deps)
-    IF (GDKPIXBUF_FOUND)
-        target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
-    ENDIF()
+    target_link_libraries(${PROGRAM_NAME} PUBLIC PkgConfig::pixbuf)
+    # IF (GDKPIXBUF_FOUND)
+    #     target_link_libraries(${PROGRAM_NAME} PUBLIC ${GDKPIXBUF_LIBRARY})
+    # ENDIF()
 ENDIF()
 
 # Testing subdirectory

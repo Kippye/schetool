@@ -1,0 +1,38 @@
+{
+    "name": "bright",
+    "displayName": "Bright",
+    "base": "default_light",
+    "colors": {
+        "WindowBg": [252,252,252,240],
+
+        "TitleBg" : [191, 191, 191, 1.00],
+        "TitleBgActive" : [225, 227, 225, 1.00],
+        "TitleBgCollapsed" : [0.16, 0.16, 0.16, 0.51],
+        "ScrollbarBg" : [0, 0, 0, 0],
+        "MenuBarBg" : [231,231,231,255],
+        "ResizeGrip" : [0, 0, 0, 0],
+        "ResizeGripHovered" : [0, 0, 0, 0],
+        "ResizeGripActive" : [0, 0, 0, 0],
+
+        "FrameBg" : [207,207,207,56],
+        "FrameBgHovered" : [207,207,207,84],
+        "FrameBgActive" : [207,207,207,200],
+
+        "Button" : [240,240,240,255],
+        "ButtonHovered" : [224,224,224,255],
+        "ButtonActive" : [188,188,188,255],
+        
+        "SliderGrab" : [185,185,185,255],
+        "SliderGrabActive" : [163,163,163,255],
+
+        "Header" : [219,219,219,79],
+        "HeaderHovered" : [219,219,219,204],
+        "HeaderActive" : [219,219,219,255],
+
+        "TableHeaderBg" : [228,228,228,79],
+
+        "Tab" : [226,226,226,255],
+        "TabHovered" : [240,240,240,255],
+        "TabSelected" : [242,242,242,255]
+    }
+}

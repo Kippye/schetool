@@ -24,22 +24,12 @@ ElementEditBase::ElementEditBase(size_t column, size_t row, SCHEDULE_TYPE elemen
 }
 
 // RowEdit
-RowEdit::RowEdit(bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataToCopy)
+RowEdit::RowEdit(bool isRemove, size_t row, const std::vector<std::shared_ptr<ElementBase>>& elementDataToCopy)
     : ScheduleEdit(ScheduleEditType::RowAddOrRemove) {
     m_isRemove = isRemove;
     m_row = row;
-    for (ElementBase* element : elementDataToCopy) {
+    for (std::shared_ptr<ElementBase> element : elementDataToCopy) {
         m_elementData.push_back(element->getCopy());
-    }
-}
-
-RowEdit::~RowEdit() {
-    if (m_elementData.size() == 0) {
-        return;
-    }
-
-    for (size_t i = m_elementData.size() - 1; i > 0; i--) {
-        delete m_elementData[i];
     }
 }
 
@@ -47,7 +37,13 @@ void RowEdit::revert(ScheduleCore& scheduleCore) {
     // reverting a removal means adding the row back
     if (m_isRemove) {
         scheduleCore.addRow(m_row);
-        scheduleCore.setRow(m_row, m_elementData);
+        // Set row to COPIES of the element data.
+        // This way, switching the row's pointers again won't delete the elements contained in this edit.
+        std::vector<std::shared_ptr<ElementBase>> dataCopy = {};
+        for (std::shared_ptr<ElementBase> element : m_elementData) {
+            dataCopy.push_back(element->getCopy());
+        }
+        scheduleCore.setRow(m_row, dataCopy);
     }
     // reverting an addition means removing the row again
     else
@@ -67,7 +63,13 @@ void RowEdit::apply(ScheduleCore& scheduleCore) {
     else
     {
         scheduleCore.addRow(m_row);
-        scheduleCore.setRow(m_row, m_elementData);
+        // Set row to COPIES of the element data.
+        // This way, switching the row's pointers again won't delete the elements contained in this edit.
+        std::vector<std::shared_ptr<ElementBase>> dataCopy = {};
+        for (std::shared_ptr<ElementBase> element : m_elementData) {
+            dataCopy.push_back(element->getCopy());
+        }
+        scheduleCore.setRow(m_row, dataCopy);
     }
 
     m_isReverted = false;
@@ -127,17 +129,17 @@ ColumnPropertyEdit::ColumnPropertyEdit(size_t column,
             break;
         }
         case (COLUMN_PROPERTY_TYPE): {
-            m_previousColumnData.type = previousData.type;
-            m_columnData.type = newData.type;
+            std::vector<std::shared_ptr<ElementBase>> columnRowsCopy = {};
+
             // copy ROWS for previous data too.. >:(
-            for (size_t i = 0; i < previousData.rows.size(); i++) {
-                m_previousColumnData.rows.push_back(previousData.rows[i]->getCopy());
+            for (size_t i = 0; i < previousData.getRowCount(); i++) {
+                auto element = previousData.getElementConst(i);
+                auto elementAccess = element.lock();
+                columnRowsCopy.push_back(elementAccess->getCopy());
             }
-            break;
-        }
-        case (COLUMN_PROPERTY_SELECT_OPTIONS): {
-            m_previousColumnData.selectOptions = previousData.selectOptions;
-            m_columnData.selectOptions = newData.selectOptions;
+
+            m_previousColumnData = Column(columnRowsCopy, previousData.type, "");
+            m_columnData.type = newData.type;
             break;
         }
         case (COLUMN_PROPERTY_SORT): {
@@ -166,12 +168,6 @@ void ColumnPropertyEdit::revert(ScheduleCore& scheduleCore) {
             scheduleCore.setColumnElements(m_column, m_previousColumnData);
             break;
         }
-        case (COLUMN_PROPERTY_SELECT_OPTIONS): {
-            scheduleCore.modifyColumnSelectOptions(m_column,
-                                                   SelectOptionsModification(OPTION_MODIFICATION_REPLACE)
-                                                       .options(m_previousColumnData.selectOptions.getOptions()));
-            break;
-        }
         case (COLUMN_PROPERTY_SORT): {
             scheduleCore.setColumnSort(m_column, m_previousColumnData.sort);
             break;
@@ -195,12 +191,6 @@ void ColumnPropertyEdit::apply(ScheduleCore& scheduleCore) {
             scheduleCore.setColumnType(
                 m_column,
                 m_columnData.type);  // NOTE: TODO: will probably cause unrecoverable data loss with the resets involved
-            break;
-        }
-        case (COLUMN_PROPERTY_SELECT_OPTIONS): {
-            scheduleCore.modifyColumnSelectOptions(
-                m_column,
-                SelectOptionsModification(OPTION_MODIFICATION_REPLACE).options(m_columnData.selectOptions.getOptions()));
             break;
         }
         case (COLUMN_PROPERTY_SORT): {
@@ -235,8 +225,88 @@ void ColumnResetEdit::revert(ScheduleCore& scheduleCore) {
 
 void ColumnResetEdit::apply(ScheduleCore& scheduleCore) {
     // applying a reset means resetting again
-    scheduleCore.resetColumn(m_column, m_columnData.type);
+    scheduleCore.resetColumn(m_column);
 
+    m_isReverted = false;
+}
+
+// ColumnReorderEdit
+ColumnReorderEdit::ColumnReorderEdit(size_t previousOrder, size_t newOrder) : ScheduleEdit(ScheduleEditType::ColumnReorder) {
+    m_previousOrder = previousOrder;
+    m_newOrder = newOrder;
+}
+
+void ColumnReorderEdit::revert(ScheduleCore& scheduleCore) {
+    scheduleCore.setColumnDisplayOrder(m_newOrder, m_previousOrder);
+
+    m_isReverted = true;
+}
+
+void ColumnReorderEdit::apply(ScheduleCore& scheduleCore) {
+    scheduleCore.setColumnDisplayOrder(m_previousOrder, m_newOrder);
+
+    m_isReverted = false;
+}
+
+// SelectOptionsModificationEdit
+SelectOptionsChangeEdit::SelectOptionsChangeEdit(size_t column,
+                                                 const SelectOptions& prevOptions,
+                                                 const SelectOptionsModification& modification)
+    : m_applyModification(modification),
+      m_undoModification(modification.getUpdateInfo().type),
+      ScheduleEdit(ScheduleEditType::SelectOptionsChange) {
+    m_columnIndex = column;
+    m_prevOptions = prevOptions;
+
+    switch (m_applyModification.getUpdateInfo().type) {
+        case OPTION_MODIFICATION_ADD:  // ADD -> Remove at add index
+            m_undoModification =
+                SelectOptionsModification(OPTION_MODIFICATION_REMOVE)
+                    .firstIndex(m_applyModification.getUpdateInfo().firstIndex.value_or(m_prevOptions.getOptions().size()));
+            break;
+        case OPTION_MODIFICATION_REMOVE:  // REMOVE -> Add at remove index
+            m_undoModification =
+                SelectOptionsModification(OPTION_MODIFICATION_ADD)
+                    .firstIndex(m_applyModification.getUpdateInfo().firstIndex.value())
+                    .options({m_prevOptions.getOptions().at(m_applyModification.getUpdateInfo().firstIndex.value())});
+            break;
+        case OPTION_MODIFICATION_MOVE:  // MOVE -> Move back to first index
+            m_undoModification = SelectOptionsModification(OPTION_MODIFICATION_MOVE)
+                                     .firstIndex(m_applyModification.getUpdateInfo().secondIndex.value())
+                                     .secondIndex(m_applyModification.getUpdateInfo().firstIndex.value());
+            break;
+        case OPTION_MODIFICATION_RENAME:  // RENAME -> Rename back to old name
+            m_undoModification =
+                SelectOptionsModification(OPTION_MODIFICATION_RENAME)
+                    .firstIndex(m_applyModification.getUpdateInfo().firstIndex.value())
+                    .name(m_prevOptions.getOptions().at(m_applyModification.getUpdateInfo().firstIndex.value()).name);
+            break;
+        case OPTION_MODIFICATION_RECOLOR:  // RECOLOR -> Recolor back to old color
+            m_undoModification =
+                SelectOptionsModification(OPTION_MODIFICATION_RECOLOR)
+                    .firstIndex(m_applyModification.getUpdateInfo().firstIndex.value())
+                    .color(m_prevOptions.getOptions().at(m_applyModification.getUpdateInfo().firstIndex.value()).color);
+            break;
+        case OPTION_MODIFICATION_REPLACE:  // REPLACE -> Restore previous options with a REPLACE mod
+            m_undoModification = SelectOptionsModification(OPTION_MODIFICATION_REPLACE).options(m_prevOptions.getOptions());
+            break;
+        case OPTION_MODIFICATION_CLEAR:  // CLEAR -> Restore previous options with a REPLACE mod
+            m_undoModification = SelectOptionsModification(OPTION_MODIFICATION_REPLACE).options(m_prevOptions.getOptions());
+            break;
+        default:
+            std::cout << "No SelectOptionsChangeEdit implementation for edit: " << m_applyModification.getDataString()
+                      << std::endl;
+            break;
+    }
+}
+
+void SelectOptionsChangeEdit::revert(ScheduleCore& scheduleCore) {
+    scheduleCore.modifyColumnSelectOptions(m_columnIndex, m_undoModification);
+    m_isReverted = true;
+}
+
+void SelectOptionsChangeEdit::apply(ScheduleCore& scheduleCore) {
+    scheduleCore.modifyColumnSelectOptions(m_columnIndex, m_applyModification);
     m_isReverted = false;
 }
 

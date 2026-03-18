@@ -2,20 +2,23 @@
 #include <cstring>
 #include <algorithm>
 
-bool FilterRuleBase::isComparisonValidForElement(const ElementBase* element, bool printInvalidWarning) const {
-    bool validForElement = std::ranges::any_of(filter_consts::getComparisonInfo(element->getType()).comparisons,
+bool FilterRuleBase::isComparisonValidForElement(std::weak_ptr<const ElementBase> element, bool printInvalidWarning) const {
+    auto elementAccess = element.lock();
+    bool validForElement = std::ranges::any_of(filter_consts::getComparisonInfo(elementAccess->getType()).comparisons,
                                                [this](Comparison comparison) { return comparison == m_comparison; });
 
     if (validForElement == false && printInvalidWarning) {
         printf("FilterRuleBase::isComparisonValidForElement(): Comparison %s is not valid for element type %d\n",
                filter_consts::comparisonStrings.at(m_comparison),
-               element->getType());
+               elementAccess->getType());
     }
 
     return validForElement;
 }
 
-bool FilterRuleBase::checkPasses(const ElementBase* element, const TimeWrapper& currentTime, bool useDefaultValue) const {
+bool FilterRuleBase::checkPasses(std::weak_ptr<const ElementBase> element,
+                                 const TimeWrapper& currentTime,
+                                 bool useDefaultValue) const {
     return isComparisonValidForElement(element);
 }
 

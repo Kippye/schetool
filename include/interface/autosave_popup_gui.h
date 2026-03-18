@@ -1,15 +1,15 @@
 #pragma once
 
 #include "gui.h"
-#include "window.h"
 #include "input.h"
 #include "file_info.h"
+#include <optional>
 
 class AutosavePopupGui : public Gui {
     private:
         bool m_openNextFrame = false;
-        FileInfo m_baseInfo;
-        FileInfo m_autosaveInfo;
+        std::optional<FileInfo> m_baseInfo = std::nullopt;
+        std::optional<FileInfo> m_autosaveInfo = std::nullopt;
 
     public:
         AutosavePopupGui(const char* ID) : Gui(ID) {
@@ -18,7 +18,6 @@ class AutosavePopupGui : public Gui {
         Event<> applyAutosaveEvent;
         Event<> deleteAutosaveEvent;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
-        void open(const FileInfo& baseInfo,
-                  const FileInfo& autosaveInfo);
+        void draw(GuiDrawArgs& args) override;
+        void open(const FileInfo& baseInfo, const FileInfo& autosaveInfo);
 };

@@ -9,9 +9,13 @@ enum INPUT_EVENT {
     INPUT_EVENT_SC_RENAME,
     INPUT_EVENT_SC_NEW,
     INPUT_EVENT_SC_SAVE,
-    INPUT_EVENT_SC_OPEN,
+    INPUT_EVENT_SC_CLOSE,
     INPUT_EVENT_SC_UNDO,
     INPUT_EVENT_SC_REDO,
+    INPUT_EVENT_SC_VIEW_NEXT,
+    INPUT_EVENT_SC_VIEW_PREV,
+
+    _INPUT_EVENT_LAST
 };
 
 struct InputShortcut {
@@ -54,13 +58,15 @@ class Input {
         bool m_guiWantKeyboard = false;
         bool m_firstMouseMovement = true;
         std::vector<InputShortcut> m_shortcuts = {
-            InputShortcut{INPUT_EVENT_SC_RENAME, GLFW_KEY_R, true},
-            InputShortcut{INPUT_EVENT_SC_NEW, GLFW_KEY_N, true},
-            InputShortcut{INPUT_EVENT_SC_SAVE, GLFW_KEY_S, true},
-            InputShortcut{INPUT_EVENT_SC_OPEN, GLFW_KEY_O, true},
-            InputShortcut{INPUT_EVENT_SC_UNDO, GLFW_KEY_Z, true},  // CTRL + Z
-            InputShortcut{INPUT_EVENT_SC_REDO, GLFW_KEY_Z, true, false, true},  // CTRL + SHIFT + Z
-            InputShortcut{INPUT_EVENT_SC_REDO, GLFW_KEY_Y, true},  // CTRL + Y
+            {INPUT_EVENT_SC_RENAME, GLFW_KEY_R, true},
+            {INPUT_EVENT_SC_NEW, GLFW_KEY_N, true},
+            {INPUT_EVENT_SC_SAVE, GLFW_KEY_S, true},
+            {INPUT_EVENT_SC_CLOSE, GLFW_KEY_W, true},
+            {INPUT_EVENT_SC_UNDO, GLFW_KEY_Z, true},  // CTRL + Z
+            {INPUT_EVENT_SC_REDO, GLFW_KEY_Z, true, false, true},  // CTRL + SHIFT + Z
+            {INPUT_EVENT_SC_REDO, GLFW_KEY_Y, true},  // CTRL + Y
+            {INPUT_EVENT_SC_VIEW_NEXT, GLFW_KEY_TAB, true},  // CTRL + TAB
+            {INPUT_EVENT_SC_VIEW_PREV, GLFW_KEY_TAB, true, false, true},  // CTRL + SHIFT + TAB
         };
         std::map<INPUT_EVENT, std::vector<std::function<void()>>> m_listeners = {};
         std::map<INPUT_EVENT, bool> m_eventStates = {};
@@ -73,7 +79,7 @@ class Input {
         const float mouseRepeatDelay = 0.05f;
 
         void init(Window*);
-        void processInput(GLFWwindow* window);
+        void processInput();
         // Get a vector of all InputShortcuts that activate the given INPUT_EVENT
         std::vector<InputShortcut> getEventShortcuts(INPUT_EVENT event) const;
         // Get a vector of shortcut strings for each InputShortcut in the given vector.
@@ -86,8 +92,8 @@ class Input {
 
         void setGuiWantKeyboard(bool to);
 
-        void key_event(GLFWwindow* window, int key, int scancode, int action, int mods);
-        void mouse_button_event(GLFWwindow* window, int button, int action, int mods);
-        void cursor_pos_event(GLFWwindow* window, double xPos, double yPos);
-        void scroll_event(GLFWwindow* window, double xOffset, double yOffset);
+        void key_event(int key, int scancode, int action, int mods);
+        void mouse_button_event(int button, int action, int mods);
+        void cursor_pos_event(double xPos, double yPos);
+        void scroll_event(double xOffset, double yOffset);
 };

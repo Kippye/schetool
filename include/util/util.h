@@ -87,16 +87,4 @@ class mytime {
                 }
             }
         }
-
-        static unsigned int get_year_day(unsigned int year, unsigned int month, unsigned int monthDay) {
-            unsigned int yearDay = 0;
-
-            for (size_t m = 1; m < month; m++) {
-                yearDay += get_month_day_count(year, m);
-            }
-
-            yearDay += monthDay;
-
-            return yearDay;
-        }
 };

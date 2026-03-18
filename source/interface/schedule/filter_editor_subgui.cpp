@@ -68,7 +68,7 @@ FilterRuleEditorSubGui::FilterRuleEditorSubGui(const char* ID,
     scheduleEvents.editRedone.addListener(editRedoListener);
 }
 
-void FilterRuleEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void FilterRuleEditorSubGui::draw(GuiDrawArgs& args) {
     if (ImGui::BeginPopupEx(ImGui::GetID("FilterRule Editor"),
                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration |
                                 ImGuiWindowFlags_AlwaysAutoResize))
@@ -673,9 +673,12 @@ FilterEditorSubGui::FilterEditorSubGui(const char* ID, const ScheduleCore& sched
     scheduleEvents.columnAdded.addListener(columnAddedListener);
     scheduleEvents.columnRemoved.addListener(columnRemovedListener);
     addSubGui(new FilterRuleEditorSubGui("FilterRuleEditorSubGui", scheduleCore, scheduleEvents, m_filterGroupState));
+    auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui");
+    addColumnFilterRule.addEvent(filterRuleEditor->addColumnFilterRule);
+    editColumnFilterRule.addEvent(filterRuleEditor->editColumnFilterRule);
 }
 
-void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiTextures) {
+void FilterEditorSubGui::draw(GuiDrawArgs& args) {
     if (ImGui::BeginPopupEx(ImGui::GetID("FilterGroup Editor"),
                             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDecoration |
                                 ImGuiWindowFlags_AlwaysAutoResize))
@@ -695,10 +698,10 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
             ImGui::EndPopup();
             return;
         }
-        if (m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->type != m_filterGroupState.getType()) {
+        if (m_scheduleCore.getColumnConst(m_filterGroupState.getColumnIndex()).type != m_filterGroupState.getType()) {
             printf(
                 "FilterEditorSubGui::draw(): The types of the Column (%d) and the editor's filter state (%d) do not match!\n",
-                m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->type,
+                m_scheduleCore.getColumnConst(m_filterGroupState.getColumnIndex()).type,
                 m_filterGroupState.getType());
             close();
             ImGui::EndPopup();
@@ -736,20 +739,14 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
         }
 
         ImGui::SameLine();  // Remove button after name input
-        const float removeGroupButtonSize = ImGui::GetItemRectSize().y;
-        // size_t pushedColorCount = 0;
-        // ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); pushedColorCount++;
-        // ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 1.0f, 1.0f, 0.2f)); pushedColorCount++;
-        // ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(1.0f, 1.0f, 1.0f, 0.4f)); pushedColorCount++;
-        if (gui_templates::ImageButtonStyleColored(
-                "##RemoveFilterGroup",
-                guiTextures.getOrLoad("icon_remove").ImID,
-                ImVec2(removeGroupButtonSize, removeGroupButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
+        const float removeGroupButtonSize = ImGui::GetItemRectSize().y - ImGui::GetStyle().FramePadding.y * 2.0f;
+        if (gui_templates::ImageButtonStyleColored("##RemoveFilterGroup",
+                                                   args.guiTextures.getOrLoad("icon_remove").ImID,
+                                                   ImVec2(removeGroupButtonSize, removeGroupButtonSize)))
         {
             removeColumnFilterGroup.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex());
             ImGui::CloseCurrentPopup();
         }
-        // ImGui::PopStyleColor(pushedColorCount);
 
         auto drawFilterRule = [&](size_t filterIndex, size_t ruleIndex) {
             Filter& filter = m_filterGroupState.getFilterGroup().getFilter(filterIndex);
@@ -767,17 +764,17 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
                 if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui")) {
                     // TODO: Pass correct avoid rect
                     filterRuleEditor->openEdit(m_filterGroupState.getType(),
-                                               m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->name,
+                                               m_scheduleCore.getColumnConst(m_filterGroupState.getColumnIndex()).name,
                                                filterIndex,
                                                ruleIndex,
                                                m_avoidRect);
                 }
             }
             ImGui::SameLine();
-            const float removeRuleButtonSize = ImGui::CalcTextSize("W").y;
+            const float removeRuleButtonSize = ImGui::CalcTextSize("X").y;
             // Remove FilterRule button
             if (gui_templates::ImageButtonStyleColored(std::format("##RemoveFilterRule{}", ruleIndex).c_str(),
-                                                       guiTextures.getOrLoad("icon_remove").ImID,
+                                                       args.guiTextures.getOrLoad("icon_remove").ImID,
                                                        ImVec2(removeRuleButtonSize, removeRuleButtonSize)))
             {
                 m_filterGroupState.getFilterGroup().getFilter(filterIndex).removeRule(ruleIndex);
@@ -801,10 +798,18 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
                     drawFilterRule(f, r);
                     // display operator between each rule except the last
                     if (r < filter.getRules().size() - 1) {
+                        std::string leftOptionLabel = std::format(
+                            "{}##FilterOperator{};{}", filter_consts::logicalOperatorStrings.at(LogicalOperatorEnum::Or), f, r);
+                        std::string rightOptionLabel =
+                            std::format("{}##FilterOperator{};{}",
+                                        filter_consts::logicalOperatorStrings.at(LogicalOperatorEnum::And),
+                                        f,
+                                        r);
                         if (std::optional<LogicalOperatorEnum> newOperator =
-                                gui_templates::Dropdown(std::format("##FilterOperator{};{}", f, r).c_str(),
-                                                        filter.getOperatorType(),
-                                                        filter_consts::logicalOperatorStrings))
+                                gui_templates::OptionSwitch(leftOptionLabel.c_str(),
+                                                            rightOptionLabel.c_str(),
+                                                            {LogicalOperatorEnum::Or, LogicalOperatorEnum::And},
+                                                            filter.getOperatorType()))
                         {
                             filter.setOperator(newOperator.value());
                             setColumnFilterOperator.invoke(m_filterGroupState.getColumnIndex(),
@@ -815,25 +820,20 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
                     }
                 }
                 // Add new rule button
-                if (ImGui::Button(std::string("+ Add rule##").append(std::to_string(f)).c_str())) {
+                if (ImGui::Button(std::format("+ Add rule##{}", f).c_str())) {
                     // DONT add a rule. Open the FilterRule editor with create. If the user creates it, THEN it will be added!
                     if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui")) {
                         // TODO: Pass correct avoid rect
                         filterRuleEditor->openCreate(m_filterGroupState.getType(),
-                                                     m_scheduleCore.getColumn(m_filterGroupState.getColumnIndex())->name,
+                                                     m_scheduleCore.getColumnConst(m_filterGroupState.getColumnIndex()).name,
                                                      f,
                                                      m_avoidRect);
                     }
                 }
 
-                ImGui::SameLine(ImGui::GetWindowWidth() - 30);
+                ImGui::SameLine();
                 // Remove filter button
-                const float removeFilterButtonSize = ImGui::GetItemRectSize().y;
-                if (gui_templates::ImageButtonStyleColored(
-                        std::format("##RemoveFilter{}", f).c_str(),
-                        guiTextures.getOrLoad("icon_remove").ImID,
-                        ImVec2(removeFilterButtonSize, removeFilterButtonSize) - ImGui::GetStyle().FramePadding * 2.0f))
-                {
+                if (ImGui::Button(std::format("- Remove filter##{}", f).c_str())) {
                     m_filterGroupState.getFilterGroup().removeFilter(f);
                     removeColumnFilter.invoke(m_filterGroupState.getColumnIndex(), m_filterGroupState.getFilterGroupIndex(), f);
                 }
@@ -841,10 +841,15 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
             ImGui::EndChild();
             // display operator between each Filter except the last
             if (f < m_filterGroupState.getFilterGroup().getFilters().size() - 1) {
+                std::string leftOptionLabel = std::format(
+                    "{}##FilterGroupOperator{}", filter_consts::logicalOperatorStrings.at(LogicalOperatorEnum::Or), f);
+                std::string rightOptionLabel = std::format(
+                    "{}##FilterGroupOperator{}", filter_consts::logicalOperatorStrings.at(LogicalOperatorEnum::And), f);
                 if (std::optional<LogicalOperatorEnum> newOperator =
-                        gui_templates::Dropdown(std::format("##FilterGroupOperator{}", f).c_str(),
-                                                m_filterGroupState.getFilterGroup().getOperatorType(),
-                                                filter_consts::logicalOperatorStrings))
+                        gui_templates::OptionSwitch(leftOptionLabel.c_str(),
+                                                    rightOptionLabel.c_str(),
+                                                    {LogicalOperatorEnum::Or, LogicalOperatorEnum::And},
+                                                    m_filterGroupState.getFilterGroup().getOperatorType()))
                 {
                     m_filterGroupState.getFilterGroup().setOperator(newOperator.value());
                     setColumnFilterGroupOperator.invoke(
@@ -859,7 +864,7 @@ void FilterEditorSubGui::draw(Window& window, Input& input, GuiTextures& guiText
         }
 
         if (auto filterRuleEditor = getSubGui<FilterRuleEditorSubGui>("FilterRuleEditorSubGui")) {
-            filterRuleEditor->draw(window, input, guiTextures);
+            filterRuleEditor->draw(args);
         }
         ImGui::EndPopup();
     } else {
@@ -872,16 +877,16 @@ void FilterEditorSubGui::openGroupEdit(size_t column, size_t filterGroupIndex, c
     if (m_scheduleCore.existsColumnAtIndex(column) == false) {
         return;
     }
-    if (m_scheduleCore.getColumn(column)->hasFilterGroupAt(filterGroupIndex) == false) {
+    if (m_scheduleCore.getColumnConst(column).hasFilterGroupAt(filterGroupIndex) == false) {
         return;
     }
 
     m_avoidRect = avoidRect;
 
-    m_filterGroupState.setup(m_scheduleCore.getColumn(column)->type,
+    m_filterGroupState.setup(m_scheduleCore.getColumnConst(column).type,
                              column,
                              filterGroupIndex,
-                             m_scheduleCore.getColumn(column)->getFilterGroupsConst().at(filterGroupIndex));
+                             m_scheduleCore.getColumnConst(column).getFilterGroupsConst().at(filterGroupIndex));
 
     ImGui::OpenPopup("FilterGroup Editor");
 }
@@ -894,13 +899,13 @@ void FilterEditorSubGui::createGroupAndEdit(size_t column, const ImRect& avoidRe
     addColumnFilterGroup.invoke(column, FilterGroup());
 
     // Event has no listeners or they failed somewhere, can't edit a non-existant FilterGroup so quit.
-    if (m_scheduleCore.getColumn(column)->getFilterGroupsConst().size() == 0) {
+    if (m_scheduleCore.getColumnConst(column).getFilterGroupsConst().size() == 0) {
         return;
     }
 
     // NOTE: Just assuming that the FilterGroup was actually added..
     // Not the best idea, but eh.
-    openGroupEdit(column, m_scheduleCore.getColumn(column)->getFilterGroupCount() - 1, avoidRect);
+    openGroupEdit(column, m_scheduleCore.getColumnConst(column).getFilterGroupCount() - 1, avoidRect);
 }
 
 void FilterEditorSubGui::close() {

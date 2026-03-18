@@ -3,44 +3,43 @@
 void Input::init(Window* windowManager) {
     m_windowManager = windowManager;
 
-    for (size_t i = 0; i <= INPUT_EVENT_SC_REDO; i++) {
+    for (size_t i = 0; i < _INPUT_EVENT_LAST; i++) {
         m_listeners.insert({(INPUT_EVENT)i, std::vector<std::function<void()>>{}});
         m_eventStates.insert({(INPUT_EVENT)i, false});
         m_eventLastFrameStates.insert({(INPUT_EVENT)i, false});
     }
 
     m_windowManager->key_callback = [this](auto self, int key, int scancode, int action, int mods) {
-        this->key_event(self->window, key, scancode, action, mods);
+        this->key_event(key, scancode, action, mods);
     };
 
     m_windowManager->mouse_button_callback = [this](auto self, int button, int action, int mods) {
-        this->mouse_button_event(self->window, button, action, mods);
+        this->mouse_button_event(button, action, mods);
     };
 
-    m_windowManager->cursor_pos_callback = [this](auto self, double xPos, double yPos) {
-        this->cursor_pos_event(self->window, xPos, yPos);
-    };
+    m_windowManager->cursor_pos_callback = [this](auto self, double xPos, double yPos) { this->cursor_pos_event(xPos, yPos); };
 
     m_windowManager->scroll_callback = [this](auto self, double xOffset, double yOffset) {
-        this->scroll_event(self->window, xOffset, yOffset);
+        this->scroll_event(xOffset, yOffset);
     };
 }
 
-void Input::processInput(GLFWwindow* window) {
+void Input::processInput() {
     for (auto event : m_eventLastFrameStates) {
         m_eventLastFrameStates.at(event.first) = m_eventStates.at(event.first);
         m_eventStates.at(event.first) = false;
     }
 
+    auto glfwWindow = m_windowManager->getGlfwWindow();
     // modifiers
-    buttonStates.shiftDown = (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
-    buttonStates.ctrlDown = (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
-    buttonStates.altDown = (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS);
+    buttonStates.shiftDown = (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
+    buttonStates.ctrlDown = (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS);
+    buttonStates.altDown = (glfwGetKey(glfwWindow, GLFW_KEY_LEFT_ALT) == GLFW_PRESS);
 
     buttonStates.lmbDownLast = buttonStates.lmbDown;
-    buttonStates.lmbDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+    buttonStates.lmbDown = glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     buttonStates.rmbDownLast = buttonStates.rmbDown;
-    buttonStates.rmbDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+    buttonStates.rmbDown = glfwGetMouseButton(glfwWindow, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 
     /// check any situations in which we would not want to control the camera or send inputs to other listeners
     if (m_guiWantKeyboard) {
@@ -99,7 +98,7 @@ void Input::setGuiWantKeyboard(bool to) {
     m_guiWantKeyboard = to;
 }
 
-void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void Input::key_event(int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS) {
         if (m_guiWantKeyboard) {
             return;
@@ -126,12 +125,12 @@ void Input::key_event(GLFWwindow* window, int key, int scancode, int action, int
     }
 }
 
-void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods) {
+void Input::mouse_button_event(int key, int action, int mods) {
     if (action == GLFW_PRESS) {
         if (key == GLFW_MOUSE_BUTTON_LEFT) {
-            m_windowManager->hasFocus = true;
+            m_windowManager->giveFocus();
         } else if (key == GLFW_MOUSE_BUTTON_RIGHT) {
-            m_windowManager->hasFocus = true;
+            m_windowManager->giveFocus();
         }
     } else if (action == GLFW_RELEASE) {
         switch (key) {
@@ -145,8 +144,8 @@ void Input::mouse_button_event(GLFWwindow* window, int key, int action, int mods
     }
 }
 
-void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos) {
-    if (m_windowManager->hasFocus) {
+void Input::cursor_pos_event(double xPos, double yPos) {
+    if (m_windowManager->getHasFocus()) {
         mouseMoveX = xPos - mousePosX;
         mouseMoveY = yPos - mousePosY;
         mousePosX = xPos;
@@ -154,6 +153,6 @@ void Input::cursor_pos_event(GLFWwindow* window, double xPos, double yPos) {
     }
 }
 
-void Input::scroll_event(GLFWwindow* window, double xOffset, double yOffset) {
+void Input::scroll_event(double xOffset, double yOffset) {
     return;
 }

@@ -3,6 +3,7 @@
 #include <catch2/reporters/catch_reporter_registrars.hpp>
 
 #include "filters/filter_group.h"
+#include <memory>
 
 TEST_CASE("FilterGroup") {
     FilterGroup filterGroup = FilterGroup();
@@ -25,7 +26,7 @@ TEST_CASE("FilterGroup") {
         CHECK(filterGroup.getFilterCount() == 1);  // size stays the same
     }
     SECTION("FilterGroup operators") {
-        Element<std::string> element = Element<std::string>(SCH_TEXT, "PASS");
+        std::shared_ptr<Element<std::string>> element = std::make_shared<Element<std::string>>(SCH_TEXT, "PASS");
         FilterRule<std::string> failRule = FilterRule<std::string>("FAILURE");
         FilterRule<std::string> passRule = FilterRule<std::string>("PASS");
         FilterRule<std::string> passIsNotRule = FilterRule<std::string>("");
@@ -41,22 +42,22 @@ TEST_CASE("FilterGroup") {
             filterGroup.addFilter(failFilter);
             SECTION("'And' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::And);
-                CHECK(filterGroup.checkPasses(&element) == false);
+                CHECK(filterGroup.checkPasses(element) == false);
             }
             SECTION("'Or' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::Or);
-                CHECK(filterGroup.checkPasses(&element) == false);
+                CHECK(filterGroup.checkPasses(element) == false);
             }
         }
         SECTION("One pass Filter") {
             filterGroup.addFilter(passFilter);
             SECTION("'And' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::And);
-                CHECK(filterGroup.checkPasses(&element) == true);
+                CHECK(filterGroup.checkPasses(element) == true);
             }
             SECTION("'Or' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::Or);
-                CHECK(filterGroup.checkPasses(&element) == true);
+                CHECK(filterGroup.checkPasses(element) == true);
             }
         }
         SECTION("One fail, one pass Filter") {
@@ -64,11 +65,11 @@ TEST_CASE("FilterGroup") {
             filterGroup.addFilter(passFilter);
             SECTION("'And' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::And);
-                CHECK(filterGroup.checkPasses(&element) == false);
+                CHECK(filterGroup.checkPasses(element) == false);
             }
             SECTION("'Or' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::Or);
-                CHECK(filterGroup.checkPasses(&element) == true);
+                CHECK(filterGroup.checkPasses(element) == true);
             }
         }
         SECTION("Two fail Filters") {
@@ -76,11 +77,11 @@ TEST_CASE("FilterGroup") {
             filterGroup.addFilter(failFilter);
             SECTION("'And' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::And);
-                CHECK(filterGroup.checkPasses(&element) == false);
+                CHECK(filterGroup.checkPasses(element) == false);
             }
             SECTION("'Or' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::Or);
-                CHECK(filterGroup.checkPasses(&element) == false);
+                CHECK(filterGroup.checkPasses(element) == false);
             }
         }
         SECTION("Two pass Filters") {
@@ -88,11 +89,11 @@ TEST_CASE("FilterGroup") {
             filterGroup.addFilter(passFilter);
             SECTION("'And' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::And);
-                CHECK(filterGroup.checkPasses(&element) == true);
+                CHECK(filterGroup.checkPasses(element) == true);
             }
             SECTION("'Or' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::Or);
-                CHECK(filterGroup.checkPasses(&element) == true);
+                CHECK(filterGroup.checkPasses(element) == true);
             }
         }
         SECTION("Three Filters") {
@@ -101,11 +102,11 @@ TEST_CASE("FilterGroup") {
             filterGroup.addFilter(passFilter);
             SECTION("'And' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::And);
-                CHECK(filterGroup.checkPasses(&element) == false);
+                CHECK(filterGroup.checkPasses(element) == false);
             }
             SECTION("'Or' operator") {
                 filterGroup.setOperator(LogicalOperatorEnum::Or);
-                CHECK(filterGroup.checkPasses(&element) == true);
+                CHECK(filterGroup.checkPasses(element) == true);
             }
         }
     }

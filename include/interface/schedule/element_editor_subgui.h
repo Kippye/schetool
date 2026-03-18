@@ -9,7 +9,9 @@
 #include "element_base.h"
 #include "schedule_core.h"
 #include "schedule_coordinates.h"
+#include "schedule_events.h"
 #include <optional>
+#include <functional>
 
 struct SelectEditState {
         // Used to automatically focus the input textbox one frame after it was made visible. Set to false after doing so!
@@ -34,11 +36,13 @@ class ElementEditorSubGui : public Gui {
         bool m_openLastFrame = false;
         bool m_openThisFrame = false;
         bool m_madeEdits = false;
+        bool m_madeEditsThisFrame = false;
 
         std::optional<ScheduleCoordinates> m_currentElementCoords = std::nullopt;
         unsigned int m_viewedYear = 0;
         unsigned int m_viewedMonth = 0;
         std::string m_editorText;
+        TimeContainer m_editorBufferTime;
         TimeContainer m_editorTime;
         DateContainer m_editorDate;
         SingleSelectContainer m_editorSingleSelect;
@@ -48,16 +52,96 @@ class ElementEditorSubGui : public Gui {
         SelectEditState m_selectEditState;
 
         ImRect m_avoidRect;
-        ImVec2 m_textInputBoxSize = ImVec2(0, 0);
+        ImVec2 m_textInputBoxSize = ImVec2();
+
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> columnReorderedListener =
+            [this](std::shared_ptr<const ScheduleEdit> edit) {
+                if (m_currentElementCoords.has_value() == false) {
+                    return;
+                }
+                if (edit->getType() != ScheduleEditType::ColumnReorder) {
+                    return;
+                }
+
+                auto columnReorderEdit = std::dynamic_pointer_cast<const ColumnReorderEdit>(edit);
+
+                // Reverting = new order -> old order
+                // actually...
+                size_t lowerOrder = std::min(columnReorderEdit->getPreviousOrder(), columnReorderEdit->getNewOrder());
+                size_t higherOrder = std::max(columnReorderEdit->getPreviousOrder(), columnReorderEdit->getNewOrder());
+
+                // If the column between (or equal to) the two indices is being edited, close the editor
+                if (lowerOrder <= m_currentElementCoords->column() && m_currentElementCoords->column() <= higherOrder) {
+                    closeAndReset();
+                }
+            };
+
+        std::function<void(std::shared_ptr<const ScheduleEdit>)> selectOptionsEditListener =
+            [this](std::shared_ptr<const ScheduleEdit> edit) {
+                if (m_currentElementCoords.has_value() == false) {
+                    return;
+                }
+                if (edit->getType() != ScheduleEditType::SelectOptionsChange) {
+                    return;
+                }
+
+                auto selectOptionsChangeEdit = std::dynamic_pointer_cast<const SelectOptionsChangeEdit>(edit);
+                SelectOptionsModification modification = selectOptionsChangeEdit->getModification();
+
+                if (selectOptionsChangeEdit->getColumn() != m_currentElementCoords->column()) {
+                    return;
+                }
+
+                SelectOptions selectOptions = m_scheduleCore.getColumnSelectOptions(selectOptionsChangeEdit->getColumn());
+
+                if (m_editedType == SCH_SELECT) {
+                    m_editorSingleSelect.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                }
+                if (m_editedType == SCH_MULTISELECT) {
+                    m_editorSelect.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                }
+            };
+
+        std::function<void(size_t, SelectOptionsModification)> selectOptionsChangedListener =
+            [this](size_t column, SelectOptionsModification modification) {
+                if (m_currentElementCoords.has_value() == false) {
+                    return;
+                }
+                if (column != m_currentElementCoords->column()) {
+                    return;
+                }
+
+                SelectOptions selectOptions = m_scheduleCore.getColumnSelectOptions(column);
+
+                if (m_editedType == SCH_SELECT) {
+                    m_editorSingleSelect.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                    // Select the added option if nothing else is selected
+                    if (modification.getUpdateInfo().type == OPTION_MODIFICATION_ADD) {
+                        if (m_editorSingleSelect.getSelection().has_value() == false) {
+                            m_editorSingleSelect.setSelected(
+                                modification.getUpdateInfo().firstIndex.value_or(selectOptions.getOptionCount() - 1), true);
+                        }
+                    }
+                }
+                if (m_editedType == SCH_MULTISELECT) {
+                    m_editorSelect.update(modification.getUpdateInfo(), selectOptions.getOptionCount());
+                    if (modification.getUpdateInfo().type == OPTION_MODIFICATION_ADD) {
+                        m_editorSelect.setSelected(
+                            modification.getUpdateInfo().firstIndex.value_or(selectOptions.getOptionCount() - 1), true);
+                    }
+                }
+            };
+
+        void closeAndReset();
 
     public:
-        ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore);
+        ElementEditorSubGui(const char* ID, const ScheduleCore& scheduleCore, ScheduleEvents& scheduleEvents);
 
         // Events
         // modifyColumnSelectOptions
         Event<size_t, SelectOptionsModification> modifyColumnSelectOptions;
 
-        void draw(Window& window, Input& input, GuiTextures& guiTextures) override;
+        void draw(GuiDrawArgs& args) override;
         // Update the element editor before editing a new Element.
         // NOTE: Sets m_madeEdits = false
         void open(size_t column, size_t row, SCHEDULE_TYPE type, const ImRect& avoidRect);
@@ -67,6 +151,7 @@ class ElementEditorSubGui : public Gui {
         }
         void setEditorValue(const TimeContainer& value) {
             m_editorTime = value;
+            m_editorBufferTime = value;
         }
         // NOTE: Also sets m_viewedMonth and m_viewedYear to the DateContainer's month and year
         void setEditorValue(const DateContainer& value) {
@@ -106,5 +191,6 @@ class ElementEditorSubGui : public Gui {
         bool getOpenLastFrame() const;
         bool getOpenThisFrame() const;
         bool getMadeEdits() const;
+        bool getMadeEditsThisFrame() const;
         std::optional<ScheduleCoordinates> getCoordinates() const;
 };

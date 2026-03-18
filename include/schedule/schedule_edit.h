@@ -12,6 +12,8 @@ enum class ScheduleEditType {
     ColumnAddOrRemove,
     ColumnPropertyChange,
     ColumnReset,
+    ColumnReorder,
+    SelectOptionsChange,
     FilterGroupAddOrRemove,
     FilterGroupChange,
     FilterAddOrRemove,
@@ -23,7 +25,6 @@ enum class ScheduleEditType {
 enum COLUMN_PROPERTY {
     COLUMN_PROPERTY_NAME,
     COLUMN_PROPERTY_TYPE,
-    COLUMN_PROPERTY_SELECT_OPTIONS,
     COLUMN_PROPERTY_SORT,
     COLUMN_PROPERTY_RESET_OPTION,
 };
@@ -92,12 +93,10 @@ class RowEdit : public ScheduleEdit {
     private:
         bool m_isRemove = false;
         size_t m_row;
-        std::vector<ElementBase*> m_elementData = {};
+        std::vector<std::shared_ptr<ElementBase>> m_elementData = {};
 
     public:
-        RowEdit(bool isRemove, size_t row, const std::vector<ElementBase*>& elementDataToCopy);
-
-        ~RowEdit() override;
+        RowEdit(bool isRemove, size_t row, const std::vector<std::shared_ptr<ElementBase>>& elementDataToCopy);
 
         void revert(ScheduleCore& scheduleCore) override;
 
@@ -182,6 +181,49 @@ class ColumnResetEdit : public ScheduleEdit {
 
         const Column& getColumnData() const {
             return m_columnData;
+        }
+};
+
+class ColumnReorderEdit : public ScheduleEdit {
+    private:
+        size_t m_previousOrder;
+        size_t m_newOrder;
+
+    public:
+        ColumnReorderEdit(size_t previousOrder, size_t newOrder);
+
+        void revert(ScheduleCore& scheduleCore) override;
+
+        void apply(ScheduleCore& scheduleCore) override;
+
+        size_t getPreviousOrder() const {
+            return m_previousOrder;
+        }
+        size_t getNewOrder() const {
+            return m_newOrder;
+        }
+};
+
+class SelectOptionsChangeEdit : public ScheduleEdit {
+    private:
+        size_t m_columnIndex = 0;
+        SelectOptions m_prevOptions;
+        SelectOptionsModification m_applyModification;
+        SelectOptionsModification m_undoModification;
+
+    public:
+        SelectOptionsChangeEdit(size_t column, const SelectOptions& prevOptions, const SelectOptionsModification& modification);
+
+        void revert(ScheduleCore& scheduleCore) override;
+
+        void apply(ScheduleCore& scheduleCore) override;
+
+        size_t getColumn() const {
+            return m_columnIndex;
+        }
+
+        SelectOptionsModification getModification() const {
+            return m_applyModification;
         }
 };
 

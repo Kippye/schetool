@@ -23,6 +23,6 @@ std::string ElementBase::getString() const {
     return "ElementBase";
 }
 
-ElementBase* ElementBase::getCopy() {
-    return new ElementBase(*this);
+std::shared_ptr<ElementBase> ElementBase::getCopy() const {
+    return std::make_shared<ElementBase>(*this);
 }

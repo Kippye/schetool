@@ -1,9 +1,13 @@
 #ifndef SCHEDULE_CONSTANTS
 #define SCHEDULE_CONSTANTS
-#include <map>
-#include <vector>
-#include <string>
 #include "general_constants.h"
+#include <map>
+
+enum ScheduleView : unsigned short {
+    Table = 0,
+    Calendar = 1,
+    Last = 2
+};
 
 enum class ColumnResetOption {
     Never,
@@ -12,10 +16,15 @@ enum class ColumnResetOption {
     Monthly
 };
 
+enum class ScheduleItemState {
+    Unfinished,
+    Finished,
+    Current,
+    Normal
+};
+
 namespace schedule_consts {
-    // A "soft limit" for a sensible amount of columns that don't look too terrible.
-    // It's not enforced anywhere other than the add column button.
-    const size_t COLUMN_MAX_COUNT = 25;
+    const size_t SCHEDULE_NAME_MAX_LENGTH = 48;
 
     const size_t ELEMENT_TEXT_MAX_LENGTH = 1024;
     const size_t SELECT_OPTION_NAME_MAX_LENGTH = 20;
@@ -29,6 +38,17 @@ namespace schedule_consts {
         {SCH_WEEKDAY, "Weekday"},
         {SCH_TIME, "Time"},
         {SCH_DATE, "Date"},
+    };
+    const std::map<SCHEDULE_TYPE, const char*> scheduleTypeIconNames = {
+        {SCH_BOOL, "icon_type_checkbox"},
+        {SCH_NUMBER, "icon_type_number"},
+        {SCH_DECIMAL, "icon_type_decimal"},
+        {SCH_TEXT, "icon_type_text"},
+        {SCH_SELECT, "icon_type_select"},
+        {SCH_MULTISELECT, "icon_type_multiselect"},
+        {SCH_WEEKDAY, "icon_type_weekday"},
+        {SCH_TIME, "icon_type_time"},
+        {SCH_DATE, "icon_type_date"},
     };
     const std::map<ColumnResetOption, const char*> columnResetOptionStrings = {
         {ColumnResetOption::Never, "Never"},

@@ -10,6 +10,7 @@ constexpr int DEFAULT_NOTIFICATION_TIMEOUT_SEC = 10;
 enum class NotificationActivation {
     Clicked,
     PreviousMarkedDone,
+    MarkedDone,
     Dismissed
 };
 

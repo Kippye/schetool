@@ -40,6 +40,9 @@ void NotificationHandler::initEventListeners(std::shared_ptr<PreferencesIO> pref
 }
 
 bool NotificationHandler::showNotification(const std::string& title, const std::string& content, unsigned int timeout_sec) {
+    if (m_notificationSoundEnabled && m_audioEngine.getIsInitialized()) {
+        m_audioEngine.playSound("notification");
+    }
     if (!m_implementation) {
         return false;
     }
@@ -57,6 +60,9 @@ bool NotificationHandler::showItemNotification(const std::string& name,
                                                const ClockTimeWrapper& beginning,
                                                const ClockTimeWrapper& end,
                                                const ItemNotificationData& itemNotificationData) {
+    if (m_notificationSoundEnabled && m_audioEngine.getIsInitialized()) {
+        m_audioEngine.playSound("notification");
+    }
     if (!m_implementation) {
         return false;
     }

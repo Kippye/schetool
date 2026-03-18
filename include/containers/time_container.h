@@ -71,4 +71,12 @@ struct TimeContainer {
             } else
                 return false;
         }
+
+        friend bool operator<=(const TimeContainer& left, const TimeContainer& right) {
+            return (left < right) || (left == right);
+        }
+
+        friend bool operator>=(const TimeContainer& left, const TimeContainer& right) {
+            return (left > right) || (left == right);
+        }
 };

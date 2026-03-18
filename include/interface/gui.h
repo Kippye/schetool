@@ -4,14 +4,27 @@
 #include <type_traits>
 #include <map>
 #include "imgui/include/imgui.h"
+// These are only here to reduce required includes in gui classes
 #include "imgui/include/imgui_internal.h"
-#include "imgui/include/imgui_impl_glfw.h"
 #include "imgui/include/imgui_impl_glfw.h"
 #include "imgui/include/imgui_impl_opengl3.h"
 #include "event.h"
-#include "window.h"
+// Draw args
+#include "window_size.h"
 #include "input.h"
 #include "gui_textures.h"
+#include "preferences.h"
+
+struct GuiDrawArgs {
+        WindowSize windowSize;
+        Input& input;
+        GuiTextures& guiTextures;
+        Preferences preferences;
+        float deltaTime;
+
+        GuiDrawArgs(
+            const WindowSize& windowSize, Input& input, GuiTextures& guiTextures, Preferences preferences, float deltaTime);
+};
 
 class Gui {
     protected:
@@ -21,6 +34,7 @@ class Gui {
     public:
         Gui();
         Gui(const char* ID);
+        virtual ~Gui() = default;
 
         ImVec2 position;
         ImVec2 size;
@@ -29,9 +43,10 @@ class Gui {
 
         std::string getID() const;
         bool getVisible() const;
-        void setVisible(bool visible);
-        virtual void draw(Window& window, Input& input, GuiTextures& guiTextures);
-        void addSubGui(Gui* subGui);
+        virtual void setVisible(bool visible);
+        virtual void draw(GuiDrawArgs& args);
+        // Add a subgui and return its ID so it can be easily retrieved with getSubGui
+        std::string addSubGui(Gui* subGui);
         template <typename T>
         std::shared_ptr<T> getSubGui(const std::string& ID) {
             static_assert(std::is_base_of_v<Gui, T>, "Gui::getSubGui<T>: Provided type must derive from Gui!");
