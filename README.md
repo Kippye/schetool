@@ -25,7 +25,7 @@ On Linux, using the GCC compiler is recommended.
 
 * [CMake](https://cmake.org/) version 3.25 or later for project file generation.
 * A compiler such as GCC (version 1.14.1 or later).
-* [GLFW dependency packages](https://www.glfw.org/docs/3.3/compile.html#compile_deps) - get the list for your distro and desktop environment.
+* [GLFW dependency packages](https://www.glfw.org/docs/3.4/compile.html#compile_deps) - get the list for your distro and display server.
 
 #### Build commands
 To build using a different compiler, such as clang, pass the compiler as an argument when configuring:
